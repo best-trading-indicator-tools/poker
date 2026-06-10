@@ -238,16 +238,24 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
   #coach.open{transform:translateY(0);}
   #coachClose{display:block;}
 
-  /* smaller seats so 9 fit on a phone */
-  .seat{width:94px;margin-left:-47px;margin-top:-32px;}
-  .seat .plate{min-width:0;gap:5px;padding:4px 8px 4px 5px;border-radius:10px;}
-  .seat .avatar{font-size:17px;}
-  .seat .pname{font-size:10px;}
-  .seat .pchips{font-size:8.5px;}
-  .seat .pstyle{font-size:8px;}
-  .seat .ppos{font-size:8px;padding:1px 4px;}
-  .seat .lastact{font-size:9.5px;margin-top:2px;}
+  /* smaller seats so 9 fit on a phone — but keep the text legible */
+  .seat{width:102px;margin-left:-51px;margin-top:-32px;}
+  .seat .plate{min-width:0;gap:5px;padding:5px 8px 5px 6px;border-radius:10px;}
+  .seat .avatar{font-size:18px;}
+  .seat .pname{font-size:11.5px;}
+  .seat .pchips{font-size:10px;}
+  .seat .pstyle{font-size:9.5px;}
+  .seat .ppos{font-size:9px;padding:1px 4px;}
+  .seat .lastact{font-size:11px;margin-top:2px;font-weight:600;}
   .seat .hole{min-height:46px;gap:3px;}
+  /* short-handed tables (≤6 players) have room for bigger, clearer seats */
+  body.few .seat{width:122px;margin-left:-61px;}
+  body.few .seat .avatar{font-size:21px;}
+  body.few .seat .pname{font-size:13px;}
+  body.few .seat .pchips{font-size:11.5px;}
+  body.few .seat .pstyle{font-size:10.5px;}
+  body.few .seat .ppos{font-size:10px;}
+  body.few .seat .lastact{font-size:12px;}
 
   /* tighter cards */
   .card{width:42px;height:60px;border-radius:6px;}
@@ -283,9 +291,10 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 }
 /* very narrow phones: shrink seats and cards further so 9 seats never collide */
 @media(max-width:390px){
-  .seat{width:82px;margin-left:-41px;margin-top:-28px;}
-  .seat .avatar{font-size:14px;}
-  .seat .pname{font-size:9px;}
+  .seat{width:88px;margin-left:-44px;margin-top:-28px;}
+  .seat .avatar{font-size:15px;}
+  .seat .pname{font-size:10.5px;}
+  .seat .pchips{font-size:9.5px;}
   .seat .hole{min-height:40px;}
   .card{width:36px;height:52px;}
   .card .pip{font-size:18px;}
@@ -1703,6 +1712,7 @@ function setHTML(el,html){ if(el&&el.dataset.h!==html){el.innerHTML=html;el.data
 
 function buildSeats(){
   if(!HAS_DOM)return;
+  document.body.classList.toggle('few',state.players.length<=6);
   const felt=$('felt');
   felt.querySelectorAll('.seat,.betchip').forEach(e=>e.remove());
   for(const p of state.players){
