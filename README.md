@@ -2,6 +2,8 @@
 
 A free, single-file No-Limit Texas Hold'em tournament game vs AI. No install, no ads, works offline — just open `poker.html` in any browser. Engine, AI, GTO solver and UI are all in the one file. Plays on desktop and mobile.
 
+![Gameplay — live coach with per-game stats, GTO advice and order-of-action awareness](docs/screenshot.png)
+
 ## Quick start
 
 Double-click `poker.html`, or serve it from any static host. Set up your table (players, blinds, buy-in, ante, blind speed, AI difficulty) and play.
@@ -71,5 +73,21 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **Big-bet discipline**: facing large bets the coach discounts raw equity (big bets are usually made hands), warns against chasing 4-out gutshots into them, and never tells you to "take a free card" on the river — street-aware advice throughout.
 - **Order of action**: every recommendation shows whether you're first or last to talk on the current street (or the upcoming flop when preflop).
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
+
+## Changelog
+
+### 2026-06-10 — Training & quality of life
+- **Blunder report**: every decision scored against the coach in chip-EV; live "−$X EV" tags on deviations, "EV leaked" total in the coach panel, top-5 costliest mistakes on the game-over screen
+- **Hand replayer**: browse every hand of the current game, step through it street by street with progressive board reveal and per-street action log
+- **Per-game stats**: VPIP, PFR, aggression factor, won-at-showdown in the coach panel
+- **Resume tournament**: auto-saved at every hand boundary; pick up where you left off after a refresh or restart
+- **Keyboard shortcuts**: F fold · C check/call · R raise · 1–4 bet sizes · N next hand
+
+### 2026-06-10 — Smarter coach & table setup
+- Coach reads **bet size as information**: pot-sized raises and overbets narrow the opponent's assumed range sharply; raw equity is discounted against big bets, with an explicit warning against chasing gutshots into them
+- **Order-of-action awareness**: every recommendation shows first/last to act on the current street, and preflop advice accounts for your *future* postflop position
+- Street-aware advice — no more "take a free card" on the river
+- Start menu: selectable **starting blinds** (whole ladder scales), **buy-in in BB**, **ante** (% of BB)
+- **Turbo** now raises blinds every 3 hands
 
 Built with Claude.
