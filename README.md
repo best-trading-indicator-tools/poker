@@ -2,15 +2,17 @@
 
 A free, single-file No-Limit Texas Hold'em tournament game vs AI. No install, no ads, works offline — just open `poker.html` in any browser. Engine, AI, GTO solver and UI are all in the one file. Plays on desktop and mobile.
 
+![Gameplay — live coach, GTO mix and per-game stats](docs/screenshot.png)
+
 ## Quick start
 
-Double-click `poker.html`, or serve it from any static host. Set up your table (players, stack, ante, blind speed, AI difficulty) and play.
+Double-click `poker.html`, or serve it from any static host. Set up your table (players, blinds, buy-in, ante, blind speed, AI difficulty) and play.
 
 ## Features
 
-- **Configurable Sit & Go**: 2–9 players, starting stack in BB (50–200), optional ante, turbo/standard/slow blind schedule
-- **Money display**: $ and BB shown everywhere (100 BB = $2,000), casino-style chip stacks
-- **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, plain-English reasoning
+- **Configurable Sit & Go**: 2–9 players, starting blinds ($10/$20 up to $100/$200 — the whole blind ladder scales), buy-in in BB (50–200), ante as a fraction of the BB (none / 5% / 10% / 20%), turbo/standard/slow blind schedule (turbo raises blinds every 3 hands)
+- **Money display**: $ and BB shown everywhere, casino-style chip stacks
+- **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, order-of-action awareness (first/last to talk, including your *future* postflop position when advising preflop), bet-size-aware range reading, plain-English reasoning
 - **GTO mini-solver**: real CFR (counterfactual regret minimization) for heads-up postflop spots — shows the equilibrium mixed strategy with EVs
 - **Stats & training**: post-hand feedback, session + lifetime stats (persisted), last-hand replay with all hole cards revealed, full hand-history export to JSON
 - **Mobile-first & touch-friendly**: responsive portrait layout, thumb-sized action buttons, slide-down coach sheet, compact table that fits all 9 seats on a phone, notch-safe insets
@@ -61,8 +63,10 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Coach & GTO solver
 
-- **Preflop**: hands are ranked against all 169 starting hands; advice uses position-based GTO opening ranges, 3-bet/fold logic against raises, and Nash push/fold under ~10 BB.
-- **Postflop**: equity is simulated against opponents' *realistic ranges* (each call/raise narrows their assumed range, scaled by their profile), not random cards.
+- **Preflop**: hands are ranked against all 169 starting hands; advice uses position-based GTO opening ranges, 3-bet/fold logic against raises, and Nash push/fold under ~10 BB. The coach also tells you whether you'll act first or last *after* the flop and tightens/loosens accordingly.
+- **Postflop**: equity is simulated against opponents' *realistic ranges* — each call/raise narrows their assumed range, scaled by their profile **and by bet size** (a pot-sized raise or overbet is read far tighter than a small stab), not random cards.
+- **Big-bet discipline**: facing large bets the coach discounts raw equity (big bets are usually made hands), warns against chasing 4-out gutshots into them, and never tells you to "take a free card" on the river — street-aware advice throughout.
+- **Order of action**: every recommendation shows whether you're first or last to talk on the current street (or the upcoming flop when preflop).
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 Built with Claude.
