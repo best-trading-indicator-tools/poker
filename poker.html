@@ -606,12 +606,15 @@ function mcEquityR(hole,board,caps,sims){
   for(let t=0;t<sims;t++){
     const pool=base.slice();
     const oppH=[];
-    for(const cap of caps){
+    for(const o of caps){
+      const cap=typeof o==='number'?o:o.cap;
+      const floor=Math.min(typeof o==='number'?0:(o.floor||0), cap*0.5); // never empty the window
       let i=0,j=1;
       for(let k=0;k<12;k++){
         i=Math.floor(Math.random()*pool.length);
         j=Math.floor(Math.random()*(pool.length-1)); if(j>=i)j++;
-        if((handPct[holeCode([pool[i],pool[j]])]||1)<=cap) break;
+        const pct=handPct[holeCode([pool[i],pool[j]])]||1;
+        if(pct<=cap&&pct>floor) break;
       }
       oppH.push([pool[i],pool[j]]);
       const hi=Math.max(i,j),lo=Math.min(i,j);
@@ -637,14 +640,16 @@ function mcEquityR(hole,board,caps,sims){
    Real CFR (counterfactual regret minimization) on an abstracted tree:
    heads-up, current street, 66%-pot + all-in sizings, 8 strength buckets,
    leaf showdowns valued by board-rollout equity. Directionally GTO. */
-function combosInRange(cap,board,exclude){
+function combosInRange(cap,board,exclude,floor){
   const used=new Set(board.map(c=>c.r*4+c.s));
   for(const c of exclude||[]) used.add(c.r*4+c.s);
+  const f=Math.min(floor||0,cap*0.5);
   const out=[];
   for(let i=0;i<52;i++)for(let j=i+1;j<52;j++){
     const a=FULL_DECK[i],b=FULL_DECK[j];
     if(used.has(a.r*4+a.s)||used.has(b.r*4+b.s))continue;
-    if((handPct[holeCode([a,b])]||1)<=cap) out.push([a,b]);
+    const pct=handPct[holeCode([a,b])]||1;
+    if(pct<=cap&&pct>f) out.push([a,b]);
   }
   return out;
 }
@@ -660,7 +665,7 @@ function comboStrength(combo,board){
 function gtoSolve(opt){
   const {board,P0,toCall,eff,heroCap,villCap,heroHand,villFirst}=opt;
   const NB=8;
-  const villCombos=combosInRange(clamp(villCap,0.03,1),board,heroHand);
+  const villCombos=combosInRange(clamp(villCap,0.03,1),board,heroHand,opt.villFloor||0);
   const heroCombos=combosInRange(clamp(Math.max(heroCap,0.15),0.03,1),board,[]);
   if(villCombos.length<NB*2||heroCombos.length<NB*2||eff<=0) return null;
   const bucketize=(combos)=>{
@@ -947,7 +952,7 @@ function startHand(){
   state.deck=shuffle(makeDeck());
   for(const p of state.players){
     p.hole=[]; p.folded=p.out; p.allIn=false; p.bet=0; p.totalBet=0;
-    p.acted=false; p.lastAct=''; p.revealed=false; p.rangeCap=1;
+    p.acted=false; p.lastAct=''; p.revealed=false; p.rangeCap=1; p.rangeFloor=0; p.checkedStreet=false;
   }
   state.dealerIdx=nextSeat(state.dealerIdx,p=>!p.out);
   const n=alive().length;
@@ -1022,7 +1027,13 @@ function applyAction(p,type,amt){
     const paid=payBet(p,callAmt);
     p.lastAct = callAmt<=0 ? 'Check' : (p.allIn?'All-in '+usd(p.bet):'Call '+usd(paid));
     sfx(callAmt<=0?'check':'chip');
-    if(callAmt>0) narrowRange(p, state.stage==='preflop'?0.35:0.50);
+    if(callAmt>0){
+      narrowRange(p, state.stage==='preflop'?0.35:0.50);
+      p.rangeFloor=(p.rangeFloor||0)*0.5;   // calling after checking: medium strength, weakness read fades
+    }else if(state.stage!=='preflop'){
+      weakenRange(p);                        // a check usually means no strong hand
+      p.checkedStreet=true;
+    }
   }else if(type==='raise'){
     let target=Math.min(amt,p.bet+p.chips);
     const minTarget=state.currentBet+state.lastRaiseSize;
@@ -1046,6 +1057,8 @@ function applyAction(p,type,amt){
     if(ratio>=1.2) cap*=0.35;        // overbet / jam → very strong
     else if(ratio>=0.8) cap*=0.55;   // pot-sized
     else if(ratio>=0.5) cap*=0.8;    // 2/3-pot-ish
+    if(p.checkedStreet){ cap*=0.5; } // check-raise: the check was a trap — extra strong
+    p.rangeFloor=0;                  // betting cancels any weakness read
     narrowRange(p, cap);
   }
   p.acted=true;
@@ -1057,6 +1070,13 @@ function applyAction(p,type,amt){
 function narrowRange(p,cap){
   const mult = p.style ? ({rock:0.7,station:1.4,shark:1.0,maniac:1.7})[p.style.id]||1 : 1;
   p.rangeCap=clamp(Math.min(p.rangeCap, cap*mult),0.03,1);
+}
+/* a check usually denies a strong hand: trim the TOP of the assumed range.
+   Maniacs/stations bet whenever strong, so their checks say the most;
+   sharks trap sometimes, so theirs say the least. */
+function weakenRange(p){
+  const mult = p.style ? ({rock:1.0,station:1.2,shark:0.6,maniac:1.4})[p.style.id]||1 : 1;
+  p.rangeFloor=clamp((p.rangeFloor||0)+0.07*mult, 0, 0.25);
 }
 function refundUncalled(){
   let maxB=0,second=0,who=null;
@@ -1074,7 +1094,7 @@ function refundUncalled(){
 function endRound(){
   refundUncalled();
   if(state.players.some(p=>p.bet>0)) animateChipsToPot();
-  for(const p of state.players){p.bet=0;p.acted=false;}
+  for(const p of state.players){p.bet=0;p.acted=false;p.checkedStreet=false;}
   state.currentBet=0; state.lastRaiseSize=state.bb;
   const live=inHand();
   if(live.length===1) return endHandFold();
@@ -1560,12 +1580,16 @@ function updateCoach(p){
   const ordIdx=ord.indexOf(p);
   const actsFirst=ordIdx===0, actsLast=ordIdx===ord.length-1&&ord.length>1;
 
-  /* equity vs realistic RANGES (not random cards) */
-  const oppCaps=inHand().filter(q=>q!==p).map(q=>clamp(q.rangeCap||1,0.03,1)).sort((a,b)=>a-b).slice(0,4);
+  /* equity vs realistic RANGES (not random cards): caps from bets, floors from checks */
+  const oppCaps=inHand().filter(q=>q!==p)
+    .map(q=>({cap:clamp(q.rangeCap||1,0.03,1),floor:clamp(q.rangeFloor||0,0,0.25)}))
+    .sort((a,b)=>a.cap-b.cap).slice(0,4);
   const code=holeCode(p.hole), pr=handPct[code]||1;
   let eq,handDesc,drawRow='',extra=[];
-  const tightOpps=oppCaps.filter(c=>c<1).length;
-  if(tightOpps>0) extra.push(` Equity is simulated against realistic ranges: ${tightOpps} opponent${tightOpps>1?'s have':' has'} shown strength and ${tightOpps>1?'are':'is'} modeled on roughly the top ${Math.round(Math.min(...oppCaps)*100)}% of hands, not random cards.`);
+  const tightOpps=oppCaps.filter(o=>o.cap<1).length;
+  const weakOpps=oppCaps.filter(o=>o.floor>0).length;
+  if(tightOpps>0) extra.push(` Equity is simulated against realistic ranges: ${tightOpps} opponent${tightOpps>1?'s have':' has'} shown strength and ${tightOpps>1?'are':'is'} modeled on roughly the top ${Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)}% of hands, not random cards.`);
+  if(weakOpps>0) extra.push(` ${weakOpps===1?'One opponent has':weakOpps+' opponents have'} checked — checks usually deny a strong hand, so the very top of ${weakOpps===1?'that range':'those ranges'} is trimmed in the simulation (watch out for traps, though).`);
   if(state.stage==='preflop'){
     eq=mcEquityR(p.hole,[],oppCaps,500);
     handDesc=`${RANK_CH[p.hole[0].r]}${SUIT_CH[p.hole[0].s]} ${RANK_CH[p.hole[1].r]}${SUIT_CH[p.hole[1].s]} — ${code}, top ~${Math.round(pr*100)}%`;
@@ -1675,11 +1699,15 @@ function updateCoach(p){
     }
   }else if(callAmt===0){
     const river=state.stage==='river';
+    const checkedToMe=actsLast&&inHand().filter(q=>q!==p&&!q.allIn).some(q=>q.checkedStreet);
     if(eq>0.62){
       rec='RAISE';
       why.push(river
         ?`With ~${pct(eq)} to win against ${opps} opponent${opps>1?'s':''}, you're likely best at showdown. Bet for value — a check wins you nothing extra, and worse hands may still pay you off.`
         :`With ~${pct(eq)} to win against ${opps} opponent${opps>1?'s':''}, you're likely ahead. Bet for value — checking gives weaker hands and draws a free card to outdraw you.`);
+    }else if(!river&&checkedToMe&&eq>0.38){
+      rec='RAISE';
+      why.push(`Everyone has checked to you, and checks usually mean weakness — their ranges look capped. With ~${pct(eq)} plus all that fold equity, a stab takes this pot down often. If anyone calls or check-raises, slow down: that's real strength.`);
     }else if(eq>0.42){
       rec='CHECK';
       why.push(river
@@ -1770,7 +1798,7 @@ function updateCoach(p){
           const res=gtoSolve({
             board:state.board, P0:pot, toCall:callAmt,
             eff:Math.min(p.chips,villain.chips),
-            heroCap:p.rangeCap||1, villCap:villain.rangeCap||1,
+            heroCap:p.rangeCap||1, villCap:villain.rangeCap||1, villFloor:villain.rangeFloor||0,
             heroHand:p.hole, villFirst:!villain.acted
           });
           if(!res){box.textContent='GTO solve unavailable for this spot.';return;}
