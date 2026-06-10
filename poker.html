@@ -1739,9 +1739,6 @@ function layoutSeats(){
     const x=cx+rx*Math.cos(ang), y=cy+ry*Math.sin(ang);
     const seat=$('seat'+p.i);
     if(seat){seat.style.left=x+'px'; seat.style.top=(y-28)+'px';}
-    const bet=$('bet'+p.i);
-    /* keep bet chips close to their seat so they never overlap the pot/board area */
-    if(bet){bet.style.left=(cx+rx*0.58*Math.cos(ang))+'px'; bet.style.top=(cy+ry*0.66*Math.sin(ang)+6)+'px';}
   }
   /* clamp pass: no seat may leave the felt (bottom seats were spilling onto the action bar on mobile) */
   const fr=felt.getBoundingClientRect();
@@ -1755,6 +1752,22 @@ function layoutSeats(){
     if(r.right+dx>fr.right-1)dx=(fr.right-1)-r.right;
     if(dx)seat.style.left=(parseFloat(seat.style.left)+dx)+'px';
     if(dy)seat.style.top=(parseFloat(seat.style.top)+dy)+'px';
+  }
+  /* bet chips: anchored to the seat's FINAL position, pushed toward the table center,
+     never on top of the seat box and never inside the board/pot zone */
+  for(const p of state.players){
+    const seat=$('seat'+p.i), bet=$('bet'+p.i);
+    if(!seat||!bet)continue;
+    const r=seat.getBoundingClientRect(); if(!r.height)continue;
+    const scx=r.left+r.width/2-fr.left, scy=r.top+r.height/2-fr.top;
+    let ux=cx-scx, uy=cy-scy;
+    const L=Math.hypot(ux,uy)||1; ux/=L; uy/=L;
+    const off=Math.max(r.width,r.height)/2+22;          // just outside the seat, toward the middle
+    let bx=scx+ux*off, by=scy+uy*off;
+    const minR=Math.min(W,H)*0.17;                      // keep out of the board/pot zone
+    const dC=Math.hypot(bx-cx,by-cy);
+    if(dC<minR){ bx=cx+(bx-cx)/(dC||1)*minR; by=cy+(by-cy)/(dC||1)*minR; }
+    bet.style.left=bx+'px'; bet.style.top=by+'px';
   }
   positionDealerBtn();
 }
