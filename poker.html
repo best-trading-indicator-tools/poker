@@ -1823,7 +1823,15 @@ function layoutSeats(){
     const ezX=W*0.30, ezY=H*0.16;
     if(Math.abs(bx-cx)<ezX&&Math.abs(by-cy)<ezY){
       const s=Math.min(ezX/Math.max(Math.abs(bx-cx),1), ezY/Math.max(Math.abs(by-cy),1));
-      bx=cx+(bx-cx)*s; by=cy+(by-cy)*s;
+      const bx2=cx+(bx-cx)*s, by2=cy+(by-cy)*s;
+      /* if escaping the board zone would shove the label back onto its own seat
+         (hero on short screens), put it BESIDE the seat instead */
+      const hitsSeat=Math.abs(bx2-scx)<(r.width+bw)/2+6 && Math.abs(by2-scy)<(r.height+bh)/2+6;
+      if(hitsSeat){
+        const side=scx>cx+5?1:scx<cx-5?-1:(p.i%2?1:-1);
+        bx=scx+side*((r.width+bw)/2+10);
+        by=scy-r.height*0.08;
+      }else{ bx=bx2; by=by2; }
     }
     bet.style.left=bx+'px'; bet.style.top=by+'px';
   }
