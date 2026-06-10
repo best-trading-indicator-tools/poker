@@ -1,6 +1,6 @@
 # Sit & Go Hold'em
 
-A free, single-file No-Limit Texas Hold'em tournament game vs AI. No install, no ads, works offline — just open `poker.html` in any browser. Engine, AI, GTO solver and UI are all in the one file.
+A free, single-file No-Limit Texas Hold'em tournament game vs AI. No install, no ads, works offline — just open `poker.html` in any browser. Engine, AI, GTO solver and UI are all in the one file. Plays on desktop and mobile.
 
 ## Quick start
 
@@ -13,7 +13,9 @@ Double-click `poker.html`, or serve it from any static host. Set up your table (
 - **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, plain-English reasoning
 - **GTO mini-solver**: real CFR (counterfactual regret minimization) for heads-up postflop spots — shows the equilibrium mixed strategy with EVs
 - **Stats & training**: post-hand feedback, session + lifetime stats (persisted), last-hand replay with all hole cards revealed, full hand-history export to JSON
-- **Polish**: card/chip animations, generated sound effects with mute, auto/manual next hand, fast-forward when you fold, position badges (UTG, CO, BTN, SB, BB…)
+- **Mobile-first & touch-friendly**: responsive portrait layout, thumb-sized action buttons, slide-down coach sheet, compact table that fits all 9 seats on a phone, notch-safe insets
+- **Game feel**: chips slide into the pot at the end of each street and push out to the winner, winner-seat pop, animated result banner, cards flip face-up at showdown, plus haptic feedback on mobile (your turn, your action, winning a pot)
+- **More polish**: card/chip deal animations, generated sound effects with mute, auto/manual next hand, fast-forward when you fold, position badges (UTG, CO, BTN, SB, BB…). All motion respects `prefers-reduced-motion`.
 
 ## How the AI works
 
