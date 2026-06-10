@@ -516,6 +516,163 @@ function T(k){return (TR[lang]&&TR[lang][k])!==undefined?TR[lang][k]:TR.en[k];}
 function recWord(r){return r==='RAISE'?T('raiseW').toUpperCase():r==='ALLIN'?T('recALLIN'):(T('rec'+r)||r);}
 function actWord(a){return (a==='raise'?T('raiseW'):T(a)||a).toUpperCase();}
 
+/* ===== coach prose (the "why" explanations), fully translated ===== */
+const CPROSE={
+en:{
+rangesNote:(n,c)=>` Equity is simulated against realistic ranges: ${n} opponent${n>1?'s have':' has'} shown strength and ${n>1?'are':'is'} modeled on roughly the top ${c}% of hands, not random cards.`,
+checksNote:n=>` ${n===1?'One opponent has':n+' opponents have'} checked — checks usually deny a strong hand, so the very top of ${n===1?'that range':'those ranges'} is trimmed in the simulation (watch out for traps, though).`,
+madeBoardPair:' — careful: that pair sits entirely on the board, so every opponent has it too.',
+madeOverpair:' — an overpair, very strong.',madeUnderPair:' — a pocket pair below the top board card.',madeTopPair:' — top pair, solid.',
+madeNotTop:r=>` — not top pair; anyone holding a ${r} is ahead of you.`,
+drawFlush:o=>`flush draw (9 outs, ≈${o})`,drawOESD:o=>`open-ended straight draw (8 outs, ≈${o})`,drawGut:o=>`gutshot straight draw (4 outs, ≈${o})`,
+drawBaked:' Your draw is already baked into the win-chance number — hitting it would likely give you the best hand.',
+warnFlush:' Three of one suit are on the board — be wary of opponents holding a flush.',
+warnPaired:' The board is paired, so full houses and trips are possible.',
+multiway:n=>` With ${n} opponents still in, marginal hands shrink in value — someone usually has something.`,
+posEarly:p=>` You're in early position (${p}) — most of the table acts after you, so play tighter than normal.`,
+posLate:p=>` You're in late position (${p}) — acting after most players is an edge, so you can play slightly looser.`,
+futFirst:' After the flop you will be FIRST to act — playing every street out of position is a real handicap, so enter with a stronger range and prefer raising (to take the initiative) over flat calling.',
+futLast:' After the flop you will be LAST to act — you see everyone’s move before deciding, which lets you play a few more hands profitably.',
+futMid:(o,n)=>` After the flop you will act ${o} of ${n} — middling position, so don’t over-commit with marginal holdings.`,
+stFirst:' You act first on this street (out of position) — opponents get to react to you, so lean toward checking marginal hands.',
+stLast:' You act last on this street (in position) — everyone has already spoken, so their checks are extra information you can use.',
+pfShove:(bb,c,pr,t,p)=>`At ${bb} BB you're in push/fold territory. ${c} (${pr}) is inside the ~${t}% Nash shoving range from ${p} — shove rather than raise small: it maximizes fold equity and avoids being blinded out.`,
+pfShortCheck:(c,p)=>`${c} is below the shoving range for ${p}, but checking is free.`,
+pfShortCall:(c,e,o)=>`${c} is below a standard shoving range, but your simulated equity (${e}) comfortably beats the price (${o}).`,
+pfShortFold:(bb,c,pr,t,p)=>`At ${bb} BB, ${c} (${pr}) is outside the ~${t}% Nash range for ${p}. Fold and wait — even short, patience beats spew.`,
+pfOpen:(c,pr,t,p,pair)=>`No one has raised yet, and ${c} (${pr}) is inside the chart-based ~${t}% opening range for ${p}${pair?' once its set-mining value is counted — pocket pairs play above their raw ranking when stacks are deep, because flopping a set (~12%) is disguised and wins big pots':''}. Come in raising, not limping — it takes the initiative and can win the blinds outright.`,
+pfBBfree:c=>`${c} isn't strong enough to raise from the big blind, but you see the flop for free.`,
+pfOpenFold:(c,pr,t,p)=>`${c} (${pr}) is below the ~${t}% opening range for ${p}. Open-folding here is the textbook play — limping weak hands leaks chips long-term.`,
+pf3bet:c=>`${c} is a premium holding (top 5%). Against a raise the standard play is to re-raise (3-bet) for value — flat calling lets weaker hands in cheaply behind you.`,
+pfCallRange:(p,ct,c,pr,e,o)=>`Facing a raise, ${p} continues with roughly the top ${ct}% — ${c} (${pr}) qualifies, and your equity vs their range (${e}) covers the price (${o}).`,
+pfSetMine:(c,amt,x)=>`${c} doesn't qualify on raw strength, but this is a textbook set-mine: the call is only ${amt} with ~${x}x that behind. You flop a set ~12% of the time — disguised, and it wins stacks. The 15-to-1 rule says the implied odds are there. Miss the flop, and it's an easy fold.`,
+pfFoldRange:(ct,p,c,pr,e,o)=>`Against a raise, the ~top ${ct}% continues from ${p}; ${c} (${pr}) doesn't make it. Your equity vs a raiser's range is ~${e} needing ${o} — let it go.`,
+valRiver:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're likely best at showdown. Bet for value — a check wins you nothing extra, and worse hands may still pay you off.`,
+valBet:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're likely ahead. Bet for value — checking gives weaker hands and draws a free card to outdraw you.`,
+stab:e=>`Everyone has checked to you, and checks usually mean weakness — their ranges look capped. With ~${e} plus all that fold equity, a stab takes this pot down often. If anyone calls or check-raises, slow down: that's real strength.`,
+midRiver:e=>`A decent but unspectacular ~${e}. The board is complete — betting mostly gets called by better hands. Check and try to get to showdown cheaply.`,
+midCheck:e=>`A decent but unspectacular ~${e}. Not strong enough to build a big pot; check and keep the pot small while you see what develops.`,
+weakRiverLast:e=>`Only ~${e} to win and no cards left to come — your hand is final. Everyone has checked to you: check behind and take the free showdown.`,
+weakRiverFirst:e=>`Only ~${e} to win and no cards left to come — your hand can't improve anymore. Check, and fold to any serious bet.`,
+weakFree:e=>`Only ~${e} to win, but checking costs nothing. Take the free card and fold to any serious bet.`,
+bigBet:r=>` This bet is ≈${r}% of the pot — bets that large are usually made hands (two pair or better), so the coach discounts your raw win chance here.`,
+gutWarn:' Chasing a 4-out gutshot into big bets is a long-term money leak — even when you hit, you may not get paid enough to cover all the misses (poor implied odds).',
+airWarn:' You have no made hand and no real draw — players who bet usually have at least a pair, and "pot-odds correct" calls with high cards are one of the biggest leaks in poker. The coach heavily discounts your raw win chance here.',
+raiseVal:e=>`~${e} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`,
+callOk:(amt,pt,o,e,disc,ea)=>`The call costs ${amt} to win a ${pt} pot, so you need ${o} equity to break even. You have ~${e}${disc?` (counted as ~${ea} after discounts)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`,
+foldAdv:(o,amt,pt,ea,resp)=>`You need ${o} equity to call (${amt} into ${pt}) but only have ~${ea}${resp?' once the size of this bet is respected':''}. Every chip you put in here loses value — fold and wait for a better spot.`,
+gtoSolving:'⚖️ Running GTO solve…',gtoUnavail:'GTO solve unavailable for this spot.',gtoFail:'GTO solve failed for this spot.',
+gtoMulti:n=>'⚖️ GTO solving applies heads-up only (like commercial solvers). With '+n+' opponents, advice uses range-equity math.',
+gtoNote:'Equilibrium of your range vs theirs on this exact board. Abstractions: current street only, 66%-pot + all-in sizings, 8 strength buckets, check-down rollouts. Directionally GTO — not solver-exact.',
+coachErr:'Coach unavailable this turn.'},
+fr:{
+rangesNote:(n,c)=>` L'équité est simulée contre des ranges réalistes : ${n} adversaire${n>1?'s ont':' a'} montré de la force et ${n>1?'sont modélisés':'est modélisé'} sur environ le top ${c}% des mains, pas des cartes aléatoires.`,
+checksNote:n=>` ${n===1?'Un adversaire a':n+' adversaires ont'} fait parole — un check exclut généralement une main très forte, donc le haut de ${n===1?'sa range':'leurs ranges'} est retiré de la simulation (attention aux pièges quand même).`,
+madeBoardPair:' — attention : cette paire est entièrement sur le board, tous vos adversaires l’ont aussi.',
+madeOverpair:' — une overpair, très forte.',madeUnderPair:' — une paire servie sous la plus haute carte du board.',madeTopPair:' — top paire, solide.',
+madeNotTop:r=>` — pas la top paire ; quiconque détient un ${r} est devant vous.`,
+drawFlush:o=>`tirage couleur (9 outs, ≈${o})`,drawOESD:o=>`tirage quinte par les deux bouts (8 outs, ≈${o})`,drawGut:o=>`tirage quinte ventral (4 outs, ≈${o})`,
+drawBaked:' Votre tirage est déjà intégré dans la chance de gain — le toucher vous donnerait probablement la meilleure main.',
+warnFlush:' Trois cartes d’une même couleur sur le board — méfiez-vous d’une couleur adverse.',
+warnPaired:' Le board est apparié : full et brelans sont possibles.',
+multiway:n=>` Avec ${n} adversaires encore en jeu, les mains marginales perdent de la valeur — quelqu’un a souvent touché.`,
+posEarly:p=>` Vous êtes en début de parole (${p}) — presque toute la table parle après vous : jouez plus serré que d’habitude.`,
+posLate:p=>` Vous êtes en fin de parole (${p}) — parler après les autres est un avantage : vous pouvez élargir un peu.`,
+futFirst:' Après le flop vous parlerez en PREMIER — jouer chaque rue hors de position est un vrai handicap : entrez avec une range plus forte et préférez la relance au call.',
+futLast:' Après le flop vous parlerez en DERNIER — vous verrez les décisions de tous avant la vôtre, ce qui rend plus de mains jouables.',
+futMid:(o,n)=>` Après le flop vous parlerez ${o} sur ${n} — position moyenne : ne vous engagez pas trop avec des mains marginales.`,
+stFirst:' Vous parlez en premier sur cette rue (hors de position) — les adversaires réagissent après vous : privilégiez le check avec les mains marginales.',
+stLast:' Vous parlez en dernier sur cette rue (en position) — tout le monde s’est exprimé : leurs checks sont une information à exploiter.',
+pfShove:(bb,c,pr,t,p)=>`À ${bb} BB vous êtes en zone push/fold. ${c} (${pr}) est dans la range de shove Nash d’environ ${t}% depuis ${p} — partez à tapis plutôt que de min-relancer : cela maximise la fold equity et évite de fondre sur les blinds.`,
+pfShortCheck:(c,p)=>`${c} est sous la range de shove pour ${p}, mais le check est gratuit.`,
+pfShortCall:(c,e,o)=>`${c} est sous une range de shove standard, mais votre équité simulée (${e}) bat largement le prix (${o}).`,
+pfShortFold:(bb,c,pr,t,p)=>`À ${bb} BB, ${c} (${pr}) est hors de la range Nash (~${t}%) pour ${p}. Couchez-vous et attendez — même court, la patience bat le spew.`,
+pfOpen:(c,pr,t,p,pair)=>`Personne n’a relancé, et ${c} (${pr}) est dans la range d’ouverture (~${t}%) pour ${p}${pair?' une fois sa valeur de set-mining comptée — les paires servies valent plus que leur classement brut quand les tapis sont profonds : flopper un brelan (~12%) est caché et gagne de gros pots':''}. Entrez en relançant, pas en limpant — vous prenez l’initiative et pouvez gagner les blinds directement.`,
+pfBBfree:c=>`${c} n’est pas assez fort pour relancer depuis la grosse blind, mais vous voyez le flop gratuitement.`,
+pfOpenFold:(c,pr,t,p)=>`${c} (${pr}) est sous la range d’ouverture (~${t}%) pour ${p}. Se coucher ici est le jeu correct — limper des mains faibles fait fuir des jetons à long terme.`,
+pf3bet:c=>`${c} est une main premium (top 5%). Face à une relance, le jeu standard est de sur-relancer (3-bet) pour la valeur — caller laisse entrer des mains plus faibles à bas prix derrière vous.`,
+pfCallRange:(p,ct,c,pr,e,o)=>`Face à une relance, ${p} continue avec environ le top ${ct}% — ${c} (${pr}) est dedans, et votre équité contre sa range (${e}) couvre le prix (${o}).`,
+pfSetMine:(c,amt,x)=>`${c} ne se qualifie pas sur sa force brute, mais c’est un set-mine d’école : le call ne coûte que ${amt} avec ~${x}x derrière. Vous floppez un brelan ~12% du temps — caché, et il gagne des tapis. La règle du 15 contre 1 valide les cotes implicites. Flop raté : on se couche sans regret.`,
+pfFoldRange:(ct,p,c,pr,e,o)=>`Face à une relance, seul le top ~${ct}% continue depuis ${p} ; ${c} (${pr}) n’en fait pas partie. Votre équité contre la range d’un relanceur est ~${e} pour ${o} requis — laissez tomber.`,
+valRiver:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':''}, vous êtes probablement devant à l’abattage. Misez pour la valeur — un check ne rapporte rien de plus, et des mains moins bonnes peuvent encore payer.`,
+valBet:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':''}, vous êtes probablement devant. Misez pour la valeur — checker offre une carte gratuite aux mains plus faibles et aux tirages.`,
+stab:e=>`Tout le monde a checké jusqu’à vous, et les checks trahissent souvent la faiblesse — leurs ranges semblent plafonnées. Avec ~${e} plus toute cette fold equity, une mise ramasse souvent ce pot. Si quelqu’un paie ou check-relance, ralentissez : c’est de la vraie force.`,
+midRiver:e=>`Un score correct mais quelconque : ~${e}. Le board est complet — miser ne se fait payer que par mieux. Checkez et essayez d’atteindre l’abattage à bas prix.`,
+midCheck:e=>`Un score correct mais quelconque : ~${e}. Pas assez fort pour gonfler le pot ; checkez et gardez le pot petit en attendant la suite.`,
+weakRiverLast:e=>`Seulement ~${e} de chances de gain et plus aucune carte à venir — votre main est figée. Tout le monde a checké : checkez derrière et prenez l’abattage gratuit.`,
+weakRiverFirst:e=>`Seulement ~${e} de chances de gain et plus aucune carte à venir — votre main ne peut plus s’améliorer. Checkez, et couchez-vous face à toute mise sérieuse.`,
+weakFree:e=>`Seulement ~${e} de chances de gain, mais checker ne coûte rien. Prenez la carte gratuite et couchez-vous face à toute mise sérieuse.`,
+bigBet:r=>` Cette mise fait ≈${r}% du pot — des mises aussi grosses sont généralement des mains faites (deux paires ou mieux), donc le coach décote votre chance de gain brute.`,
+gutWarn:' Payer de grosses mises pour chasser un ventral à 4 outs est une fuite d’argent à long terme — même touché, vous ne serez pas assez payé pour couvrir tous les échecs (cotes implicites médiocres).',
+airWarn:' Vous n’avez ni main faite ni vrai tirage — celui qui mise a généralement au moins une paire, et les calls « corrects en cotes » avec hauteur sont l’une des plus grosses fuites du poker. Le coach décote fortement votre chance de gain ici.',
+raiseVal:e=>`~${e} de chances de gain : vous êtes grand favori. Relancez pour la valeur et pour faire payer les tirages — caller laisse de l’argent sur la table.`,
+callOk:(amt,pt,o,e,disc,ea)=>`Le call coûte ${amt} pour gagner un pot de ${pt} : il vous faut ${o} d’équité pour être à l’équilibre. Vous avez ~${e}${disc?` (compté ~${ea} après décotes)`:''} — caller est rentable à long terme, mais relancer risquerait trop avec une main non premium.`,
+foldAdv:(o,amt,pt,ea,resp)=>`Il vous faut ${o} d’équité pour payer (${amt} dans ${pt}) mais vous n’avez que ~${ea}${resp?' une fois la taille de cette mise respectée':''}. Chaque jeton investi ici perd de la valeur — couchez-vous et attendez un meilleur spot.`,
+gtoSolving:'⚖️ Calcul GTO en cours…',gtoUnavail:'Calcul GTO indisponible pour ce spot.',gtoFail:'Échec du calcul GTO pour ce spot.',
+gtoMulti:n=>'⚖️ Le calcul GTO ne s’applique qu’en tête-à-tête (comme les solveurs commerciaux). Avec '+n+' adversaires, le conseil repose sur l’équité contre les ranges.',
+gtoNote:'Équilibre de votre range contre la sienne sur ce board exact. Abstractions : rue courante seulement, mises 66% pot + tapis, 8 niveaux de force, rollouts en check-down. Directionnellement GTO — pas exact au solveur près.',
+coachErr:'Coach indisponible pour ce tour.'},
+es:{
+rangesNote:(n,c)=>` La equidad se simula contra rangos realistas: ${n} rival${n>1?'es han':' ha'} mostrado fuerza y se ${n>1?'modelan':'modela'} sobre aproximadamente el top ${c}% de manos, no cartas aleatorias.`,
+checksNote:n=>` ${n===1?'Un rival ha':n+' rivales han'} pasado — pasar suele descartar una mano muy fuerte, así que la parte alta de ${n===1?'ese rango':'esos rangos'} se recorta en la simulación (ojo con las trampas, eso sí).`,
+madeBoardPair:' — cuidado: esa pareja está entera en la mesa, todos tus rivales también la tienen.',
+madeOverpair:' — una overpair, muy fuerte.',madeUnderPair:' — una pareja de mano por debajo de la carta más alta de la mesa.',madeTopPair:' — top pair, sólida.',
+madeNotTop:r=>` — no es top pair; cualquiera con un ${r} va por delante de ti.`,
+drawFlush:o=>`proyecto de color (9 outs, ≈${o})`,drawOESD:o=>`proyecto de escalera abierta (8 outs, ≈${o})`,drawGut:o=>`proyecto de escalera interna (4 outs, ≈${o})`,
+drawBaked:' Tu proyecto ya está incluido en la probabilidad de ganar — completarlo te daría probablemente la mejor mano.',
+warnFlush:' Hay tres cartas del mismo palo en la mesa — cuidado con un color rival.',
+warnPaired:' La mesa está emparejada: son posibles fulls y tríos.',
+multiway:n=>` Con ${n} rivales todavía en la mano, las manos marginales pierden valor — alguien suele tener algo.`,
+posEarly:p=>` Estás en posición temprana (${p}) — casi toda la mesa habla después de ti: juega más cerrado de lo normal.`,
+posLate:p=>` Estás en posición tardía (${p}) — actuar después de los demás es una ventaja: puedes abrirte un poco.`,
+futFirst:' Después del flop serás el PRIMERO en hablar — jugar cada calle fuera de posición es un lastre real: entra con un rango más fuerte y prefiere subir (tomar la iniciativa) antes que igualar.',
+futLast:' Después del flop serás el ÚLTIMO en hablar — verás la decisión de todos antes de la tuya, lo que hace rentables algunas manos más.',
+futMid:(o,n)=>` Después del flop hablarás ${o} de ${n} — posición intermedia: no te comprometas demasiado con manos marginales.`,
+stFirst:' Hablas primero en esta calle (fuera de posición) — los rivales reaccionan después de ti: tiende a pasar con manos marginales.',
+stLast:' Hablas último en esta calle (en posición) — todos ya hablaron: sus pases son información extra que puedes usar.',
+pfShove:(bb,c,pr,t,p)=>`Con ${bb} BB estás en territorio push/fold. ${c} (${pr}) está dentro del rango Nash de all-in (~${t}%) desde ${p} — ve all-in en vez de subir poco: maximiza la fold equity y evita que las ciegas te coman.`,
+pfShortCheck:(c,p)=>`${c} está por debajo del rango de all-in para ${p}, pero pasar es gratis.`,
+pfShortCall:(c,e,o)=>`${c} está por debajo de un rango estándar de all-in, pero tu equidad simulada (${e}) supera con holgura el precio (${o}).`,
+pfShortFold:(bb,c,pr,t,p)=>`Con ${bb} BB, ${c} (${pr}) queda fuera del rango Nash (~${t}%) para ${p}. Retírate y espera — incluso corto de fichas, la paciencia gana al despilfarro.`,
+pfOpen:(c,pr,t,p,pair)=>`Nadie ha subido aún, y ${c} (${pr}) está dentro del rango de apertura (~${t}%) para ${p}${pair?' contando su valor de set-mining — las parejas de mano valen más que su ranking bruto con stacks profundos: ligar un trío (~12%) va disfrazado y gana botes grandes':''}. Entra subiendo, no de limp — tomas la iniciativa y puedes llevarte las ciegas directamente.`,
+pfBBfree:c=>`${c} no es lo bastante fuerte para subir desde la ciega grande, pero ves el flop gratis.`,
+pfOpenFold:(c,pr,t,p)=>`${c} (${pr}) está por debajo del rango de apertura (~${t}%) para ${p}. Retirarse aquí es el juego de libro — entrar de limp con manos débiles pierde fichas a largo plazo.`,
+pf3bet:c=>`${c} es una mano premium (top 5%). Contra una subida, lo estándar es resubir (3-bet) por valor — solo igualar deja entrar barato a manos peores detrás de ti.`,
+pfCallRange:(p,ct,c,pr,e,o)=>`Ante una subida, ${p} continúa con aproximadamente el top ${ct}% — ${c} (${pr}) califica, y tu equidad contra su rango (${e}) cubre el precio (${o}).`,
+pfSetMine:(c,amt,x)=>`${c} no califica por fuerza bruta, pero es un set-mine de manual: la llamada cuesta solo ${amt} con ~${x}x detrás. Ligas trío ~12% de las veces — disfrazado, y gana stacks enteros. La regla del 15 a 1 dice que las odds implícitas están. Si fallas el flop, te retiras sin dudar.`,
+pfFoldRange:(ct,p,c,pr,e,o)=>`Contra una subida, solo continúa el ~top ${ct}% desde ${p}; ${c} (${pr}) no llega. Tu equidad contra el rango de quien sube es ~${e} necesitando ${o} — déjala ir.`,
+valRiver:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, probablemente eres el mejor en el showdown. Apuesta por valor — pasar no te gana nada extra, y manos peores aún pueden pagarte.`,
+valBet:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, probablemente vas por delante. Apuesta por valor — pasar regala una carta gratis a manos peores y proyectos.`,
+stab:e=>`Todos han pasado hasta ti, y pasar suele significar debilidad — sus rangos parecen limitados. Con ~${e} más toda esa fold equity, una apuesta se lleva este bote a menudo. Si alguien iguala o sube tras pasar, frena: eso es fuerza de verdad.`,
+midRiver:e=>`Un ~${e} decente pero sin más. La mesa está completa — apostar solo lo pagan manos mejores. Pasa e intenta llegar barato al showdown.`,
+midCheck:e=>`Un ~${e} decente pero sin más. No da para inflar el bote; pasa y mantén el bote pequeño mientras ves qué pasa.`,
+weakRiverLast:e=>`Solo ~${e} de probabilidad y no quedan cartas — tu mano es definitiva. Todos han pasado: pasa también y llévate el showdown gratis.`,
+weakRiverFirst:e=>`Solo ~${e} de probabilidad y no quedan cartas — tu mano ya no puede mejorar. Pasa, y retírate ante cualquier apuesta seria.`,
+weakFree:e=>`Solo ~${e} de probabilidad, pero pasar no cuesta nada. Toma la carta gratis y retírate ante cualquier apuesta seria.`,
+bigBet:r=>` Esta apuesta es ≈${r}% del bote — apuestas tan grandes suelen ser manos hechas (doble pareja o mejor), así que el coach descuenta tu probabilidad bruta aquí.`,
+gutWarn:' Perseguir una escalera interna de 4 outs contra apuestas grandes es una fuga de dinero a largo plazo — incluso cuando ligas, no te pagan lo suficiente para cubrir todos los fallos (odds implícitas pobres).',
+airWarn:' No tienes mano hecha ni proyecto real — quien apuesta suele tener al menos una pareja, y las llamadas "correctas por odds" con carta alta son una de las mayores fugas del póker. El coach descuenta mucho tu probabilidad bruta aquí.',
+raiseVal:e=>`~${e} de probabilidad: eres gran favorito. Sube por valor y para cobrar a los proyectos — solo igualar deja dinero sobre la mesa.`,
+callOk:(amt,pt,o,e,disc,ea)=>`La llamada cuesta ${amt} para ganar un bote de ${pt}: necesitas ${o} de equidad para no perder. Tienes ~${e}${disc?` (contado como ~${ea} tras descuentos)`:''} — igualar es rentable a largo plazo, pero subir arriesgaría demasiado con una mano no premium.`,
+foldAdv:(o,amt,pt,ea,resp)=>`Necesitas ${o} de equidad para igualar (${amt} en ${pt}) pero solo tienes ~${ea}${resp?' una vez respetado el tamaño de esta apuesta':''}. Cada ficha que pongas aquí pierde valor — retírate y espera un mejor momento.`,
+gtoSolving:'⚖️ Calculando GTO…',gtoUnavail:'Cálculo GTO no disponible para esta situación.',gtoFail:'Falló el cálculo GTO en esta situación.',
+gtoMulti:n=>'⚖️ El cálculo GTO solo aplica mano a mano (como los solvers comerciales). Con '+n+' rivales, el consejo usa equidad contra rangos.',
+gtoNote:'Equilibrio de tu rango contra el suyo en esta mesa exacta. Abstracciones: solo la calle actual, apuestas de 66% del bote + all-in, 8 niveles de fuerza, rollouts de check-down. Direccionalmente GTO — no exacto a nivel solver.',
+coachErr:'Coach no disponible este turno.'}};
+function C(k,...a){
+  const d=CPROSE[lang]||CPROSE.en;
+  const f=d[k]!==undefined?d[k]:CPROSE.en[k];
+  return typeof f==='function'?f(...a):f;
+}
+/* localized rank & hand names */
+const RANK_I18N={
+fr:{nm:{2:'Deux',3:'Trois',4:'Quatre',5:'Cinq',6:'Six',7:'Sept',8:'Huit',9:'Neuf',10:'Dix',11:'Valet',12:'Dame',13:'Roi',14:'As'},
+    pl:{2:'Deux',3:'Trois',4:'Quatre',5:'Cinq',6:'Six',7:'Sept',8:'Huit',9:'Neuf',10:'Dix',11:'Valets',12:'Dames',13:'Rois',14:'As'}},
+es:{nm:{2:'Dos',3:'Tres',4:'Cuatro',5:'Cinco',6:'Seis',7:'Siete',8:'Ocho',9:'Nueve',10:'Diez',11:'Jota',12:'Dama',13:'Rey',14:'As'},
+    pl:{2:'Doses',3:'Treses',4:'Cuatros',5:'Cincos',6:'Seises',7:'Sietes',8:'Ochos',9:'Nueves',10:'Dieces',11:'Jotas',12:'Damas',13:'Reyes',14:'Ases'}}};
+function rankNm(r){return (RANK_I18N[lang]&&RANK_I18N[lang].nm[r])||RANK_NM[r];}
+function rankPl(r){return (RANK_I18N[lang]&&RANK_I18N[lang].pl[r])||RANK_PL[r];}
+
 const SUIT_CH = ['♠','♥','♦','♣'];
 const RANK_CH = {2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K',14:'A'};
 const RANK_NM = {2:'Two',3:'Three',4:'Four',5:'Five',6:'Six',7:'Seven',8:'Eight',9:'Nine',10:'Ten',11:'Jack',12:'Queen',13:'King',14:'Ace'};
@@ -592,16 +749,39 @@ function evalBest(cards){
   return best;
 }
 function handName(s){
+  const nm=rankNm(s[1]),pl=rankPl(s[1]),pl2=rankPl(s[2]);
+  if(lang==='fr') switch(s[0]){
+    case 8: return s[1]===14?'une Quinte Flush Royale':`une Quinte Flush, hauteur ${nm}`;
+    case 7: return `un Carré de ${pl}`;
+    case 6: return `un Full, ${pl} par les ${pl2}`;
+    case 5: return `une Couleur, hauteur ${nm}`;
+    case 4: return `une Quinte, hauteur ${nm}`;
+    case 3: return `un Brelan de ${pl}`;
+    case 2: return `une Double Paire, ${pl} et ${pl2}`;
+    case 1: return `une Paire de ${pl}`;
+    default:return `Hauteur ${nm}`;
+  }
+  if(lang==='es') switch(s[0]){
+    case 8: return s[1]===14?'Escalera Real':`Escalera de Color al ${nm}`;
+    case 7: return `Póker de ${pl}`;
+    case 6: return `Full de ${pl} y ${pl2}`;
+    case 5: return `Color al ${nm}`;
+    case 4: return `Escalera al ${nm}`;
+    case 3: return `Trío de ${pl}`;
+    case 2: return `Doble Pareja, ${pl} y ${pl2}`;
+    case 1: return `Pareja de ${pl}`;
+    default:return `Carta Alta ${nm}`;
+  }
   switch(s[0]){
-    case 8: return s[1]===14?'a Royal Flush':`a Straight Flush, ${RANK_NM[s[1]]} high`;
-    case 7: return `Four of a Kind, ${RANK_PL[s[1]]}`;
-    case 6: return `a Full House, ${RANK_PL[s[1]]} over ${RANK_PL[s[2]]}`;
-    case 5: return `a Flush, ${RANK_NM[s[1]]} high`;
-    case 4: return `a Straight, ${RANK_NM[s[1]]} high`;
-    case 3: return `Three of a Kind, ${RANK_PL[s[1]]}`;
-    case 2: return `Two Pair, ${RANK_PL[s[1]]} and ${RANK_PL[s[2]]}`;
-    case 1: return `a Pair of ${RANK_PL[s[1]]}`;
-    default:return `High Card, ${RANK_NM[s[1]]}`;
+    case 8: return s[1]===14?'a Royal Flush':`a Straight Flush, ${nm} high`;
+    case 7: return `Four of a Kind, ${pl}`;
+    case 6: return `a Full House, ${pl} over ${pl2}`;
+    case 5: return `a Flush, ${nm} high`;
+    case 4: return `a Straight, ${nm} high`;
+    case 3: return `Three of a Kind, ${pl}`;
+    case 2: return `Two Pair, ${pl} and ${pl2}`;
+    case 1: return `a Pair of ${pl}`;
+    default:return `High Card, ${nm}`;
   }
 }
 
@@ -1626,10 +1806,10 @@ function classifyMade(hole,board,score){
   const cnt=r=>boardRanks.filter(x=>x===r).length;
   if(score[0]===1||score[0]===2){
     const pr=score[1];
-    if(cnt(pr)>=2) return ' — careful: that pair sits entirely on the board, so every opponent has it too';
-    if(hole[0].r===pr&&hole[1].r===pr) return pr>boardMax?' — an overpair, very strong':' — a pocket pair below the top board card';
-    if(pr===boardMax) return ' — top pair, solid';
-    if(pr<boardMax) return ' — not top pair; anyone holding a '+RANK_NM[boardMax]+' is ahead of you';
+    if(cnt(pr)>=2) return C('madeBoardPair');
+    if(hole[0].r===pr&&hole[1].r===pr) return pr>boardMax?C('madeOverpair'):C('madeUnderPair');
+    if(pr===boardMax) return C('madeTopPair');
+    if(pr<boardMax) return C('madeNotTop',rankNm(boardMax));
   }
   return '';
 }
@@ -1662,8 +1842,8 @@ function updateCoach(p){
   let eq,handDesc,drawRow='',extra=[];
   const tightOpps=oppCaps.filter(o=>o.cap<1).length;
   const weakOpps=oppCaps.filter(o=>o.floor>0).length;
-  if(tightOpps>0) extra.push(` Equity is simulated against realistic ranges: ${tightOpps} opponent${tightOpps>1?'s have':' has'} shown strength and ${tightOpps>1?'are':'is'} modeled on roughly the top ${Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)}% of hands, not random cards.`);
-  if(weakOpps>0) extra.push(` ${weakOpps===1?'One opponent has':weakOpps+' opponents have'} checked — checks usually deny a strong hand, so the very top of ${weakOpps===1?'that range':'those ranges'} is trimmed in the simulation (watch out for traps, though).`);
+  if(tightOpps>0) extra.push(C('rangesNote',tightOpps,Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)));
+  if(weakOpps>0) extra.push(C('checksNote',weakOpps));
   if(state.stage==='preflop'){
     eq=mcEquityR(p.hole,[],oppCaps,500);
     handDesc=`${RANK_CH[p.hole[0].r]}${SUIT_CH[p.hole[0].s]} ${RANK_CH[p.hole[1].r]}${SUIT_CH[p.hole[1].s]} — ${code}, top ~${Math.round(pr*100)}%`;
@@ -1677,22 +1857,22 @@ function updateCoach(p){
       const d=detectDraws(p.hole,state.board);
       const streets=state.stage==='flop'?2:1;
       const dr=[];
-      if(d.flush) dr.push(`flush draw (9 outs, ≈${pct(Math.min(0.9,9*0.02*streets+0.02))})`);
-      if(d.oesd) dr.push(`open-ended straight draw (8 outs, ≈${pct(8*0.02*streets+0.02)})`);
-      else if(d.gutshot) dr.push(`gutshot straight draw (4 outs, ≈${pct(4*0.02*streets+0.01)})`);
+      if(d.flush) dr.push(C('drawFlush',pct(Math.min(0.9,9*0.02*streets+0.02))));
+      if(d.oesd) dr.push(C('drawOESD',pct(8*0.02*streets+0.02)));
+      else if(d.gutshot) dr.push(C('drawGut',pct(4*0.02*streets+0.01)));
       if(dr.length){
-        drawRow=`<div class="coach-row"><span>Draws</span><b>${dr.join('<br>')}</b></div>`;
-        extra.push(' Your draw is already baked into the win-chance number — hitting it would likely give you the best hand.');
+        drawRow=`<div class="coach-row"><span>${T('draws')}</span><b>${dr.join('<br>')}</b></div>`;
+        extra.push(C('drawBaked'));
       }
     }
     /* board texture warnings */
     const bs=[0,0,0,0]; for(const c of state.board) bs[c.s]++;
     const score0=score[0];
-    if(Math.max(...bs)>=3 && score0<5) extra.push(' Three of one suit are on the board — be wary of opponents holding a flush.');
+    if(Math.max(...bs)>=3 && score0<5) extra.push(C('warnFlush'));
     const br=state.board.map(c=>c.r), brCnt={};
     for(const r of br) brCnt[r]=(brCnt[r]||0)+1;
-    if(Object.values(brCnt).some(c=>c>=2) && score0<6) extra.push(' The board is paired, so full houses and trips are possible.');
-    if(opps>=3) extra.push(` With ${opps} opponents still in, marginal hands shrink in value — someone usually has something.`);
+    if(Object.values(brCnt).some(c=>c>=2) && score0<6) extra.push(C('warnPaired'));
+    if(opps>=3) extra.push(C('multiway',opps));
   }
   const odds=callAmt>0?callAmt/(pot+callAmt):0;
 
@@ -1703,18 +1883,18 @@ function updateCoach(p){
     ? (early?0.04 : late?-0.03 : 0) + (actsFirst?0.02:0)
     : (actsFirst?0.03 : actsLast?-0.02 : 0);
   if(state.stage==='preflop'){
-    if(early) extra.push(` You're in early position (${pos}) — most of the table acts after you, so play tighter than normal.`);
-    else if(late) extra.push(` You're in late position (${pos}) — acting after most players is an edge, so you can play slightly looser.`);
+    if(early) extra.push(C('posEarly',pos));
+    else if(late) extra.push(C('posLate',pos));
     /* future position: who talks first once the flop comes */
     if(opps>0){
-      if(actsFirst) extra.push(' After the flop you will be FIRST to act — playing every street out of position is a real handicap, so enter with a stronger range and prefer raising (to take the initiative) over flat calling.');
-      else if(actsLast) extra.push(' After the flop you will be LAST to act — you see everyone’s move before deciding, which lets you play a few more hands profitably.');
-      else extra.push(` After the flop you will act ${ordIdx+1}${['st','nd','rd'][ordIdx]||'th'} of ${ord.length} — middling position, so don’t over-commit with marginal holdings.`);
+      if(actsFirst) extra.push(C('futFirst'));
+      else if(actsLast) extra.push(C('futLast'));
+      else extra.push(C('futMid',T('ord')(ordIdx+1),ord.length));
     }
   }else{
     if(opps>0){
-      if(actsFirst) extra.push(' You act first on this street (out of position) — opponents get to react to you, so lean toward checking marginal hands.');
-      else if(actsLast) extra.push(' You act last on this street (in position) — everyone has already spoken, so their checks are extra information you can use.');
+      if(actsFirst) extra.push(C('stFirst'));
+      else if(actsLast) extra.push(C('stLast'));
     }
   }
 
@@ -1731,44 +1911,44 @@ function updateCoach(p){
       const thr=PUSH_THR[bucket];
       if(pr<=thr){
         rec='ALLIN';
-        why.push(`At ${Math.round(stackBB)} BB you're in push/fold territory. ${code} (${prTxt}) is inside the ~${Math.round(thr*100)}% Nash shoving range from ${pos||'your position'} — shove rather than raise small: it maximizes fold equity and avoids being blinded out.`);
+        why.push(C('pfShove',Math.round(stackBB),code,prTxt,Math.round(thr*100),pos||'—'));
       }else if(callAmt===0){
         rec='CHECK';
-        why.push(`${code} is below the shoving range for ${pos}, but checking is free.`);
+        why.push(C('pfShortCheck',code,pos));
       }else if(eq>=odds+0.07){
         rec='CALL';
-        why.push(`${code} is below a standard shoving range, but your simulated equity (${pct(eq)}) comfortably beats the price (${pct(odds)}).`);
+        why.push(C('pfShortCall',code,pct(eq),pct(odds)));
       }else{
         rec='FOLD';
-        why.push(`At ${Math.round(stackBB)} BB, ${code} (${prTxt}) is outside the ~${Math.round(thr*100)}% Nash range for ${pos}. Fold and wait — even short, patience beats spew.`);
+        why.push(C('pfShortFold',Math.round(stackBB),code,prTxt,Math.round(thr*100),pos));
       }
     }else if(unopened){
       const thr=OPEN_THR[bucket];
       if(prEff<=thr&&callAmt>0||prEff<=Math.min(thr,0.10)&&callAmt===0){
         rec='RAISE';
-        why.push(`No one has raised yet, and ${code} (${prTxt}) is inside the chart-based ~${Math.round(thr*100)}% ${callAmt===0?'raising':'opening'} range for ${pos}${pairAdj&&pr>thr?' once its set-mining value is counted — pocket pairs play above their raw ranking when stacks are deep, because flopping a set (~12%) is disguised and wins big pots':''}. Come in raising, not limping — it takes the initiative and can win the blinds outright.`);
+        why.push(C('pfOpen',code,prTxt,Math.round(thr*100),pos,pairAdj&&pr>thr));
       }else if(callAmt===0){
         rec='CHECK';
-        why.push(`${code} isn't strong enough to raise from the big blind, but you see the flop for free.`);
+        why.push(C('pfBBfree',code));
       }else{
         rec='FOLD';
-        why.push(`${code} (${prTxt}) is below the ~${Math.round(thr*100)}% opening range for ${pos}. Open-folding here is the textbook play — limping weak hands leaks chips long-term.`);
+        why.push(C('pfOpenFold',code,prTxt,Math.round(thr*100),pos));
       }
     }else{
       /* facing a raise */
       const ct=clamp(0.13+(late?0.05:0)+(early?-0.03:0),0.06,0.25);
       if(pr<=0.05){
         rec='RAISE';
-        why.push(`${code} is a premium holding (top 5%). Against a raise the standard play is to re-raise (3-bet) for value — flat calling lets weaker hands in cheaply behind you.`);
+        why.push(C('pf3bet',code));
       }else if(pr<=ct&&eq>=odds){
         rec='CALL';
-        why.push(`Facing a raise, ${pos} continues with roughly the top ${Math.round(ct*100)}% — ${code} (${prTxt}) qualifies, and your equity vs their range (${pct(eq)}) covers the price (${pct(odds)}).`);
+        why.push(C('pfCallRange',pos,Math.round(ct*100),code,prTxt,pct(eq),pct(odds)));
       }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
         rec='CALL';
-        why.push(`${code} doesn't qualify on raw strength, but this is a textbook set-mine: the call is only ${usd(callAmt)} with ~${Math.round((p.chips+p.bet)/callAmt)}x that behind. You flop a set ~12% of the time — disguised, and it wins stacks. The 15-to-1 rule says the implied odds are there. Miss the flop, and it's an easy fold.`);
+        why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
       }else{
         rec='FOLD';
-        why.push(`Against a raise, the ~top ${Math.round(ct*100)}% continues from ${pos}; ${code} (${prTxt}) doesn't make it. Your equity vs a raiser's range is ~${pct(eq)} needing ${pct(odds)} — let it go.`);
+        why.push(C('pfFoldRange',Math.round(ct*100),pos,code,prTxt,pct(eq),pct(odds)));
       }
     }
   }else if(callAmt===0){
@@ -1776,24 +1956,18 @@ function updateCoach(p){
     const checkedToMe=actsLast&&inHand().filter(q=>q!==p&&!q.allIn).some(q=>q.checkedStreet);
     if(eq>0.62){
       rec='RAISE';
-      why.push(river
-        ?`With ~${pct(eq)} to win against ${opps} opponent${opps>1?'s':''}, you're likely best at showdown. Bet for value — a check wins you nothing extra, and worse hands may still pay you off.`
-        :`With ~${pct(eq)} to win against ${opps} opponent${opps>1?'s':''}, you're likely ahead. Bet for value — checking gives weaker hands and draws a free card to outdraw you.`);
+      why.push(river?C('valRiver',pct(eq),opps):C('valBet',pct(eq),opps));
     }else if(!river&&checkedToMe&&eq>0.38){
       rec='RAISE';
-      why.push(`Everyone has checked to you, and checks usually mean weakness — their ranges look capped. With ~${pct(eq)} plus all that fold equity, a stab takes this pot down often. If anyone calls or check-raises, slow down: that's real strength.`);
+      why.push(C('stab',pct(eq)));
     }else if(eq>0.42){
       rec='CHECK';
-      why.push(river
-        ?`A decent but unspectacular ~${pct(eq)}. The board is complete — betting mostly gets called by better hands. Check and try to get to showdown cheaply.`
-        :`A decent but unspectacular ~${pct(eq)}. Not strong enough to build a big pot; check and keep the pot small while you see what develops.`);
+      why.push(river?C('midRiver',pct(eq)):C('midCheck',pct(eq)));
     }else{
       rec='CHECK';
       why.push(river
-        ?(actsLast
-          ?`Only ~${pct(eq)} to win and no cards left to come — your hand is final. Everyone has checked to you: check behind and take the free showdown.`
-          :`Only ~${pct(eq)} to win and no cards left to come — your hand can't improve anymore. Check, and fold to any serious bet.`)
-        :`Only ~${pct(eq)} to win, but checking costs nothing. Take the free card and fold to any serious bet.`);
+        ?(actsLast?C('weakRiverLast',pct(eq)):C('weakRiverFirst',pct(eq)))
+        :C('weakFree',pct(eq)));
     }
   }else{
     /* a big bet usually means a strong made hand — discount raw equity */
@@ -1810,18 +1984,18 @@ function updateCoach(p){
     const airPen=(noMade&&!goodDraw)?0.15:0;
     const eqAdj=eq-bigBetPen-airPen;
     const edge=eqAdj-odds-posAdj;
-    if(bigBetPen>=0.05) extra.push(` This bet is ≈${Math.round(betRatio*100)}% of the pot — bets that large are usually made hands (two pair or better), so the coach discounts your raw win chance here.`);
-    if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(' Chasing a 4-out gutshot into big bets is a long-term money leak — even when you hit, you may not get paid enough to cover all the misses (poor implied odds).');
-    if(airPen) extra.push(' You have no made hand and no real draw — players who bet usually have at least a pair, and "pot-odds correct" calls with high cards are one of the biggest leaks in poker. The coach heavily discounts your raw win chance here.');
+    if(bigBetPen>=0.05) extra.push(C('bigBet',Math.round(betRatio*100)));
+    if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
+    if(airPen) extra.push(C('airWarn'));
     if(eqAdj>0.68+posAdj&&!drawOnly){
       rec='RAISE';
-      why.push(`~${pct(eq)} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`);
+      why.push(C('raiseVal',pct(eq)));
     }else if(edge>=0){
       rec='CALL';
-      why.push(`The call costs ${usd(callAmt)} to win a ${usd(pot)} pot, so you need ${pct(odds)} equity to break even. You have ~${pct(eq)}${bigBetPen||airPen?` (counted as ~${pct(eqAdj)} after discounts)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`);
+      why.push(C('callOk',usd(callAmt),usd(pot),pct(odds),pct(eq),!!(bigBetPen||airPen),pct(eqAdj)));
     }else{
       rec='FOLD';
-      why.push(`You need ${pct(odds)} equity to call (${usd(callAmt)} into ${usd(pot)}) but only have ~${pct(eqAdj)}${bigBetPen?' once the size of this bet is respected':''}. Every chip you put in here loses value — fold and wait for a better spot.`);
+      why.push(C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),!!bigBetPen));
     }
   }
   let sizeRow='', coachT=0;
@@ -1871,7 +2045,7 @@ function updateCoach(p){
   if(state.stage!=='preflop'){
     if(opps===1){
       const villain=inHand().find(q=>q!==p);
-      $('coachBody').insertAdjacentHTML('beforeend','<div id="gtoBox">⚖️ Running GTO solve…</div>');
+      $('coachBody').insertAdjacentHTML('beforeend',`<div id="gtoBox">${C('gtoSolving')}</div>`);
       const turnToken=state.handNum+'-'+state.stage+'-'+state.turnIdx;
       setTimeout(()=>{
         const box=$('gtoBox'); if(!box)return;
@@ -1883,15 +2057,15 @@ function updateCoach(p){
             heroCap:p.rangeCap||1, villCap:villain.rangeCap||1, villFloor:villain.rangeFloor||0,
             heroHand:p.hole, villFirst:!villain.acted
           });
-          if(!res){box.textContent='GTO solve unavailable for this spot.';return;}
+          if(!res){box.textContent=C('gtoUnavail');return;}
           const best=res.actions.reduce((a,b)=>b.freq>a.freq?b:a);
           box.innerHTML='<h4>⚖️ GTO MIX (CFR, abstracted)</h4>'+
             res.actions.map(a=>`<div class="grow${a===best?' top':''}"><span>${a.name}</span><span>${Math.round(a.freq*100)}%</span><span>EV ${a.ev>=0?'+':'−'}${usd(Math.abs(Math.round(a.ev)))}</span></div>`).join('')+
-            '<div class="gnote">Equilibrium of your range vs theirs on this exact board. Abstractions: current street only, 66%-pot + all-in sizings, 8 strength buckets, check-down rollouts. Directionally GTO — not solver-exact.</div>';
-        }catch(err){box.textContent='GTO solve failed for this spot.';}
+            `<div class="gnote">${C('gtoNote')}</div>`;
+        }catch(err){box.textContent=C('gtoFail');}
       },40);
     }else{
-      $('coachBody').insertAdjacentHTML('beforeend','<div id="gtoBox"><div class="gnote">⚖️ GTO solving applies heads-up only (like commercial solvers). With '+opps+' opponents, advice uses range-equity math.</div></div>');
+      $('coachBody').insertAdjacentHTML('beforeend',`<div id="gtoBox"><div class="gnote">${C('gtoMulti',opps)}</div></div>`);
     }
   }
 }
@@ -2015,7 +2189,7 @@ function showActions(p){
     sl.min=minTarget; sl.max=maxTarget; sl.step=state.sb; sl.value=minTarget;
     updateRaiseLabel();
   }
-  try{ updateCoach(p); }catch(err){ $('coachBody').innerHTML='<div class="waiting">Coach unavailable this turn.</div>'; }
+  try{ updateCoach(p); }catch(err){ $('coachBody').innerHTML=`<div class="waiting">${C('coachErr')}</div>`; }
 }
 function hideActions(){
   if(!HAS_DOM)return;

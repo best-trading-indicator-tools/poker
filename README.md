@@ -22,7 +22,7 @@ Double-click `poker.html`, or serve it from any static host. Set up your table (
 - **Resume tournament**: progress is saved at every hand boundary; refreshing or closing the tab mid-game offers a "Resume tournament" button on the start screen
 - **Keyboard shortcuts**: F fold · C check/call · R raise · 1–4 bet sizes (min / ½ pot / pot / all-in) · N next hand
 - **Offline mode (PWA)**: visit the hosted game once and it works with no internet afterwards; installable to home screen / dock. The local file always works offline by nature
-- **Multi-language**: English, Français, Español — selector on the start screen and in the game header; choice persists. UI, coach panel labels, stats, reports and replayer are translated (coach's long-form reasoning stays in English for now)
+- **Multi-language**: English, Français, Español — selector on the start screen and in the game header; choice persists. everything is translated, including the coach's full reasoning, hand names ("une Paire de Dix", "Trío de Seises"), draw names and board warnings
 - **Mobile-first & touch-friendly**: responsive portrait layout, thumb-sized action buttons, slide-down coach sheet, compact table that fits all 9 seats on a phone, notch-safe insets
 - **Game feel**: chips slide into the pot at the end of each street and push out to the winner, winner-seat pop, animated result banner, cards flip face-up at showdown, plus haptic feedback on mobile (your turn, your action, winning a pot)
 - **More polish**: card/chip deal animations, generated sound effects with mute, auto/manual next hand, fast-forward when you fold, position badges (UTG, CO, BTN, SB, BB…). All motion respects `prefers-reduced-motion`.
@@ -83,6 +83,7 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ### 2026-06-10 — Languages
 - **French and Spanish**: language selector on the landing page and the game header — translates the full UI chrome, coach labels and recommendations, stats, blunder report, replayer and game-over screens
+- **Fully translated coach reasoning**: all ~40 advice templates (preflop charts, push/fold, set-mining, pot odds, big-bet discounts, stabs, river logic), localized hand names, draw names, board-texture warnings and GTO solver notes — in all three languages
 
 ### 2026-06-10 — Reading the action & offline play
 - **Checks carry information**: range floors trim opponents' top hands on checks (scaled by personality), check-raises read as traps and narrow ranges hard, stab recommendation when checked to in position — all flowing into the equity sim and the CFR solver
