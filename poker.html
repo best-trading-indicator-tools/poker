@@ -1750,6 +1750,17 @@ function buildSeats(){
   }
   layoutSeats();
 }
+/* edge slots per player count: [x,y] fractions of the felt, seat CENTERS.
+   index 0 = hero (bottom center), then counterclockwise (left first) like the ellipse order */
+const SEAT_SLOTS={
+2:[[.50,.92],[.50,.10]],
+3:[[.50,.92],[.12,.24],[.88,.24]],
+4:[[.50,.92],[.06,.52],[.50,.09],[.94,.52]],
+5:[[.50,.92],[.09,.62],[.26,.10],[.74,.10],[.91,.62]],
+6:[[.50,.92],[.09,.68],[.09,.18],[.50,.08],[.91,.18],[.91,.68]],
+7:[[.50,.92],[.18,.80],[.05,.40],[.28,.09],[.72,.09],[.95,.40],[.82,.80]],
+8:[[.50,.92],[.21,.82],[.05,.50],[.14,.13],[.50,.08],[.86,.13],[.95,.50],[.79,.82]],
+9:[[.50,.92],[.24,.84],[.05,.56],[.08,.20],[.33,.07],[.67,.07],[.92,.20],[.95,.56],[.76,.84]]};
 function layoutSeats(){
   if(!HAS_DOM||!state)return;
   const felt=$('felt');
@@ -1764,9 +1775,17 @@ function layoutSeats(){
   const rx=Math.min(W*0.41,Math.max(60,(W-sW)/2-4));
   const ry=Math.min(H*0.40,Math.max(60,(H-sH)/2-8));
   const n=state.players.length;
+  /* on mobile, an ellipse bunches seats at its ends — use hand-tuned edge slots instead
+     (hero is always slot 0 at bottom center, others run counterclockwise like the ellipse) */
+  const slots=isMobile()?SEAT_SLOTS[n]:null;
   for(const p of state.players){
-    const ang=(90+360*p.i/n)*Math.PI/180;
-    const x=cx+rx*Math.cos(ang), y=cy+ry*Math.sin(ang);
+    let x,y;
+    if(slots){
+      x=W*slots[p.i][0]; y=H*slots[p.i][1];
+    }else{
+      const ang=(90+360*p.i/n)*Math.PI/180;
+      x=cx+rx*Math.cos(ang); y=cy+ry*Math.sin(ang);
+    }
     const seat=$('seat'+p.i);
     if(seat){seat.style.left=x+'px'; seat.style.top=(y-28)+'px';}
   }
@@ -1807,12 +1826,24 @@ function positionDealerBtn(){
   if(!HAS_DOM||!state)return;
   const felt=$('felt');
   const W=felt.clientWidth,H=felt.clientHeight;
-  const cx=W/2,cy=H/2,rx=W*0.41,ry=H*0.40;
-  const n=state.players.length;
-  const ang=(90+360*state.dealerIdx/n+14)*Math.PI/180;
+  const cx=W/2,cy=H/2;
   const d=$('dbtn');
-  d.style.left=(cx+rx*0.70*Math.cos(ang))+'px';
-  d.style.top=(cy+ry*0.66*Math.sin(ang))+'px';
+  const seat=$('seat'+state.dealerIdx);
+  if(seat&&seat.offsetHeight){
+    /* next to the dealer's seat, toward the center, rotated ~35° so it misses the bet chip */
+    const scx=seat.offsetLeft+seat.offsetWidth/2, scy=seat.offsetTop+seat.offsetHeight/2;
+    let ux=cx-scx, uy=cy-scy; const L=Math.hypot(ux,uy)||1; ux/=L; uy/=L;
+    const A=0.61; // ~35°
+    const rxv=ux*Math.cos(A)-uy*Math.sin(A), ryv=ux*Math.sin(A)+uy*Math.cos(A);
+    const off=Math.max(seat.offsetWidth,seat.offsetHeight)/2+18;
+    d.style.left=(scx+rxv*off)+'px';
+    d.style.top=(scy+ryv*off)+'px';
+  }else{
+    const n=state.players.length;
+    const ang=(90+360*state.dealerIdx/n+14)*Math.PI/180;
+    d.style.left=(cx+W*0.29*Math.cos(ang))+'px';
+    d.style.top=(cy+H*0.26*Math.sin(ang))+'px';
+  }
 }
 
 function render(winners){
