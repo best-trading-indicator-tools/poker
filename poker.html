@@ -320,6 +320,14 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
       </div>
     </div>
     <div class="row">
+      <label class="main">Language</label>
+      <select id="langSel">
+        <option value="en">English</option>
+        <option value="fr">Fran&ccedil;ais</option>
+        <option value="es">Espa&ntilde;ol</option>
+      </select>
+    </div>
+    <div class="row">
       <label class="main">AI Difficulty</label>
       <div class="seg" id="diffSeg">
         <button data-d="easy">Easy</button>
@@ -349,6 +357,9 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
       <input type="checkbox" id="coachChk" checked style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;">
       🧭 Live coach
     </label>
+    <select id="langTop" title="Language" style="background:none;border:1px solid var(--line);border-radius:7px;padding:4px 6px;cursor:pointer;font-size:12px;color:var(--dim);">
+      <option value="en">EN</option><option value="fr">FR</option><option value="es">ES</option>
+    </select>
     <button id="sndBtn" title="Sound on/off" style="background:none;border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer;font-size:14px;">🔊</button>
     <button id="quitBtn">Quit</button>
   </div>
@@ -441,6 +452,69 @@ function tourneyPressure(stackBB){
 }
 const AI_AVATARS = ['🦊','🐼','🦈','🦉','🐯','🐺','🐸','🐙'];
 let AI_DELAY_MIN=550, AI_DELAY_MAX=1050, RUNOUT_DELAY=1000, SHOWDOWN_PAUSE=4200, FOLDWIN_PAUSE=2200;
+
+/* ================= I18N (UI chrome; coach prose stays English for now) ================= */
+const TR={
+en:{sub:"No-Limit Texas Hold'em tournament vs AI",players:"Players",blinds:"Blinds",buyin:"Buy-in",ante:"Ante",noAnte:"no ante",
+speed:"Blinds Change Speed",turbo:"Turbo",standard:"Standard",slow:"Slow",diff:"AI Difficulty",easy:"Easy",medium:"Medium",hard:"Hard",language:"Language",
+deal:"Deal me in",resume:"▶ Resume tournament",review:"🎞 Review past hands",
+level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",quit:"Quit",
+fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
+log:"Log",lastHand:"Last hand",exportH:"Export history",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",
+waiting:"Advice appears here when it's your turn.",
+yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",draws:"Draws",potOdds:"Pot odds",yourStack:"Your stack",sugSize:"Suggested size",
+firstToAct:"first to act (OOP)",lastToAct:"last to act (IP)",ofN:"of",need:"need ",vs:"vs",opp:"opp",opps:"opps",
+thisGame:"THIS GAME",lifetime:"LIFETIME",handsPW:"Hands played / won",net:"Net",biggestPot:"Biggest pot won",vpipPfr:"VPIP / PFR",aggF:"Aggression factor",wonSd:"Won at showdown",evLeak:"EV leaked vs coach",coachFollowed:"Coach followed",followedCoach:"followed coach",coachSaid:"coach said",youChose:"you chose",
+recFOLD:"FOLD",recCHECK:"CHECK",recCALL:"CALL",recRAISETO:"RAISE TO",recBET:"BET",recALLIN:"ALL-IN",
+youWin:"You win the tournament!",playAgain:"Play again",
+youWinSub:(n,h)=>`Outlasted ${n} opponents over ${h} hands.`,
+bustedTitle:p=>`Busted in ${p} place`,bustedSub:h=>`Survived ${h} hands. Run it back?`,
+evTotal:"📉 Total EV leaked",deviations:"deviations",cleanGame:"No EV leaked vs the coach — clean game! 🎯",smallerLeaks:"smaller leaks",
+handNavP:"‹ hand",handNavN:"hand ›",streetNavP:"‹ street",streetNavN:"street ›",close:"Close",replayTitle:"Hand replay",
+won:"won",foldedTag:"folded",showdown:"showdown",fullHand:"Full hand",preflop:"Preflop",flop:"Flop",turnSt:"Turn",riverSt:"River",noHands:"No completed hand yet this game.",
+ord:n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}},
+fr:{sub:"Tournoi de Texas Hold'em No-Limit contre l'IA",players:"Joueurs",blinds:"Blinds",buyin:"Cave (buy-in)",ante:"Ante",noAnte:"sans ante",
+speed:"Vitesse des blinds",turbo:"Turbo",standard:"Standard",slow:"Lente",diff:"Niveau de l'IA",easy:"Facile",medium:"Moyen",hard:"Difficile",language:"Langue",
+deal:"Distribuez !",resume:"▶ Reprendre le tournoi",review:"🎞 Revoir les mains",
+level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",quit:"Quitter",
+fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",
+log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",
+waiting:"Les conseils apparaissent ici quand c'est votre tour.",
+yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",draws:"Tirages",potOdds:"Cote du pot",yourStack:"Votre tapis",sugSize:"Taille suggérée",
+firstToAct:"premier à parler (OOP)",lastToAct:"dernier à parler (IP)",ofN:"sur",need:"requis ",vs:"vs",opp:"adv.",opps:"adv.",
+thisGame:"CETTE PARTIE",lifetime:"GLOBAL",handsPW:"Mains jouées / gagnées",net:"Net",biggestPot:"Plus gros pot gagné",vpipPfr:"VPIP / PFR",aggF:"Facteur d'agression",wonSd:"Gagné à l'abattage",evLeak:"EV perdue vs coach",coachFollowed:"Coach suivi",followedCoach:"coach suivi",coachSaid:"le coach a dit",youChose:"vous avez choisi",
+recFOLD:"SE COUCHER",recCHECK:"PAROLE",recCALL:"SUIVRE",recRAISETO:"RELANCER À",recBET:"MISER",recALLIN:"TAPIS",
+youWin:"Vous remportez le tournoi !",playAgain:"Rejouer",
+youWinSub:(n,h)=>`Vous avez survécu à ${n} adversaires en ${h} mains.`,
+bustedTitle:p=>`Éliminé à la ${p} place`,bustedSub:h=>`${h} mains jouées. On remet ça ?`,
+evTotal:"📉 EV totale perdue",deviations:"écarts",cleanGame:"Aucune EV perdue face au coach — partie parfaite ! 🎯",smallerLeaks:"autres fuites mineures",
+handNavP:"‹ main",handNavN:"main ›",streetNavP:"‹ rue",streetNavN:"rue ›",close:"Fermer",replayTitle:"Revoir la main",
+won:"gagné",foldedTag:"couché",showdown:"abattage",fullHand:"Main complète",preflop:"Pré-flop",flop:"Flop",turnSt:"Turn",riverSt:"River",noHands:"Aucune main terminée pour cette partie.",
+ord:n=>n===1?'1re':n+'e'},
+es:{sub:"Torneo de Texas Hold'em No-Limit contra la IA",players:"Jugadores",blinds:"Ciegas",buyin:"Entrada (buy-in)",ante:"Ante",noAnte:"sin ante",
+speed:"Velocidad de ciegas",turbo:"Turbo",standard:"Estándar",slow:"Lenta",diff:"Nivel de la IA",easy:"Fácil",medium:"Medio",hard:"Difícil",language:"Idioma",
+deal:"¡Reparte!",resume:"▶ Reanudar torneo",review:"🎞 Revisar manos",
+level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",quit:"Salir",
+fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
+log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",
+waiting:"Los consejos aparecen aquí cuando es tu turno.",
+yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",draws:"Proyectos",potOdds:"Odds del bote",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
+firstToAct:"primero en hablar (OOP)",lastToAct:"último en hablar (IP)",ofN:"de",need:"necesitas ",vs:"vs",opp:"rival",opps:"rivales",
+thisGame:"ESTA PARTIDA",lifetime:"GLOBAL",handsPW:"Manos jugadas / ganadas",net:"Neto",biggestPot:"Mayor bote ganado",vpipPfr:"VPIP / PFR",aggF:"Factor de agresión",wonSd:"Ganadas en showdown",evLeak:"EV perdido vs coach",coachFollowed:"Coach seguido",followedCoach:"coach seguido",coachSaid:"el coach dijo",youChose:"tú elegiste",
+recFOLD:"RETIRARSE",recCHECK:"PASAR",recCALL:"IGUALAR",recRAISETO:"SUBIR A",recBET:"APOSTAR",recALLIN:"ALL-IN",
+youWin:"¡Ganas el torneo!",playAgain:"Jugar de nuevo",
+youWinSub:(n,h)=>`Sobreviviste a ${n} rivales en ${h} manos.`,
+bustedTitle:p=>`Eliminado en ${p} lugar`,bustedSub:h=>`Aguantaste ${h} manos. ¿Otra vez?`,
+evTotal:"📉 EV total perdido",deviations:"desviaciones",cleanGame:"Sin EV perdido frente al coach — ¡partida perfecta! 🎯",smallerLeaks:"fugas menores",
+handNavP:"‹ mano",handNavN:"mano ›",streetNavP:"‹ calle",streetNavN:"calle ›",close:"Cerrar",replayTitle:"Repetición",
+won:"ganó",foldedTag:"retirado",showdown:"showdown",fullHand:"Mano completa",preflop:"Pre-flop",flop:"Flop",turnSt:"Turn",riverSt:"River",noHands:"Aún no hay manos terminadas en esta partida.",
+ord:n=>n+'º'}};
+let lang='en';
+try{lang=localStorage.getItem('sg_poker_lang')||'en';}catch(e){}
+if(!TR[lang])lang='en';
+function T(k){return (TR[lang]&&TR[lang][k])!==undefined?TR[lang][k]:TR.en[k];}
+function recWord(r){return r==='RAISE'?T('raiseW').toUpperCase():r==='ALLIN'?T('recALLIN'):(T('rec'+r)||r);}
+function actWord(a){return (a==='raise'?T('raiseW'):T(a)||a).toUpperCase();}
 
 const SUIT_CH = ['♠','♥','♦','♣'];
 const RANK_CH = {2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K',14:'A'};
@@ -1757,25 +1831,25 @@ function updateCoach(p){
       ? Math.max(state.bb*3, state.currentBet*2.6)
       : state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*0.66));
     coachT=clamp(Math.round(t/state.sb)*state.sb, state.currentBet+state.lastRaiseSize, p.bet+p.chips);
-    sizeRow=`<div class="coach-row"><span>Suggested size</span><b>${usd(coachT)} (${bbs(coachT)})</b></div>`;
+    sizeRow=`<div class="coach-row"><span>${T('sugSize')}</span><b>${usd(coachT)} (${bbs(coachT)})</b></div>`;
     /* pre-set the raise slider to the coach's size so R raises exactly this */
     if($('raiseCtl').style.visibility!=='hidden'){
       const sl=$('raiseSlider');
       sl.value=clamp(coachT,+sl.min,+sl.max); updateRaiseLabel();
     }
   }
-  const recLabel = rec==='ALLIN' ? `ALL-IN ${usd(p.bet+p.chips)}`
-    : rec==='RAISE' ? `${state.currentBet>0?'RAISE TO':'BET'} ${usd(coachT)} · ${bbs(coachT)}`
-    : rec;
+  const recLabel = rec==='ALLIN' ? `${T('recALLIN')} ${usd(p.bet+p.chips)}`
+    : rec==='RAISE' ? `${state.currentBet>0?T('recRAISETO'):T('recBET')} ${usd(coachT)} · ${bbs(coachT)}`
+    : T('rec'+rec);
   $('coachBody').innerHTML=
     `<div class="rec ${rec}">${recLabel}</div>`+
-    `<div class="coach-row"><span>Your hand</span><b>${handDesc}</b></div>`+
-    (pos?`<div class="coach-row"><span>Position</span><b>${pos}${early?' (early)':late?' (late)':''}</b></div>`:'')+
-    (opps>0?`<div class="coach-row"><span>${state.stage==='preflop'?'Postflop order':'Acting order'}</span><b>${actsFirst?'first to act (OOP)':actsLast?'last to act (IP)':(ordIdx+1)+' of '+ord.length}</b></div>`:'')+
-    `<div class="coach-row"><span>Win chance</span><b>~${pct(eq)} vs ${opps} opp${opps>1?'s':''}</b></div>`+
+    `<div class="coach-row"><span>${T('yourHand')}</span><b>${handDesc}</b></div>`+
+    (pos?`<div class="coach-row"><span>${T('position')}</span><b>${pos}${early?' (early)':late?' (late)':''}</b></div>`:'')+
+    (opps>0?`<div class="coach-row"><span>${state.stage==='preflop'?T('postflopOrder'):T('actingOrder')}</span><b>${actsFirst?T('firstToAct'):actsLast?T('lastToAct'):(ordIdx+1)+' '+T('ofN')+' '+ord.length}</b></div>`:'')+
+    `<div class="coach-row"><span>${T('winChance')}</span><b>~${pct(eq)} ${T('vs')} ${opps} ${opps>1?T('opps'):T('opp')}</b></div>`+
     drawRow+
-    (callAmt>0?`<div class="coach-row"><span>Pot odds</span><b>need ${pct(odds)} (${usd(callAmt)} &rarr; ${usd(pot)})</b></div>`:'')+
-    `<div class="coach-row"><span>Your stack</span><b>${bbs(p.chips+p.bet)}</b></div>`+
+    (callAmt>0?`<div class="coach-row"><span>${T('potOdds')}</span><b>${T('need')}${pct(odds)} (${usd(callAmt)} &rarr; ${usd(pot)})</b></div>`:'')+
+    `<div class="coach-row"><span>${T('yourStack')}</span><b>${bbs(p.chips+p.bet)}</b></div>`+
     sizeRow+
     `<p class="why">${why.join(' ')}${extra.join('')}</p>`;
   /* rough chip-EV per available action (for blunder tracking) */
@@ -1822,18 +1896,18 @@ function updateCoach(p){
   }
 }
 function coachWait(){
-  if(HAS_DOM) $('coachBody').innerHTML='<div class="waiting">Advice appears here when it&rsquo;s your turn.</div>';
+  if(HAS_DOM) $('coachBody').innerHTML=`<div class="waiting">${T('waiting')}</div>`;
 }
 function renderFeedback(net){
   if(!HAS_DOM)return;
   const el=$('coachFeed');
   el.classList.remove('hidden');
   const n=state.humanDecisions.length, f=state.humanDecisions.filter(d=>d.followed).length;
-  let html=`<b>Hand #${state.handNum}:</b> <span class="${net>=0?'pos':'neg'}">${net>=0?'+':'−'}${usd(Math.abs(net))}</span>`;
+  let html=`<b>${T('hand')}#${state.handNum}:</b> <span class="${net>=0?'pos':'neg'}">${net>=0?'+':'−'}${usd(Math.abs(net))}</span>`;
   if(n>0){
-    html+=` · followed coach ${f}/${n}`;
+    html+=` · ${T('followedCoach')} ${f}/${n}`;
     for(const d of state.humanDecisions.filter(x=>!x.followed))
-      html+=`<div class="dev">${d.stage}: coach said ${d.rec}, you chose ${d.action.toUpperCase()}${d.evLoss>0?` <span class="neg">(−${usd(d.evLoss)} EV)</span>`:''}</div>`;
+      html+=`<div class="dev">${d.stage}: ${T('coachSaid')} ${recWord(d.rec)}, ${T('youChose')} ${actWord(d.action)}${d.evLoss>0?` <span class="neg">(−${usd(d.evLoss)} EV)</span>`:''}</div>`;
   }
   el.innerHTML=html;
 }
@@ -1844,19 +1918,19 @@ function renderStats(){
   const pof=(a,b)=>b>0?Math.round(100*(a||0)/b)+'%':'—';
   const af=(s.aCalls||0)>0?((s.aBets||0)/s.aCalls).toFixed(1):((s.aBets||0)>0?'∞':'—');
   $('coachStats').innerHTML=
-    `<h4>THIS GAME</h4>`+
-    `<div class="srow"><span>Hands played / won</span><b>${s.hands} / ${s.won}</b></div>`+
-    `<div class="srow"><span>Net</span><b>${s.net>=0?'+':'−'}${usd(Math.abs(s.net))}</b></div>`+
-    `<div class="srow"><span>Biggest pot won</span><b>${s.biggest?usd(s.biggest):'—'}</b></div>`+
-    `<div class="srow"><span>VPIP / PFR</span><b>${pof(s.vpipH,s.hands)} / ${pof(s.pfrH,s.hands)}</b></div>`+
-    `<div class="srow"><span>Aggression factor</span><b>${af}</b></div>`+
-    `<div class="srow"><span>Won at showdown</span><b>${s.sdSeen?`${s.sdWon}/${s.sdSeen} (${pof(s.sdWon,s.sdSeen)})`:'—'}</b></div>`+
-    `<div class="srow"><span>EV leaked vs coach</span><b>${s.evLost?'−'+usd(s.evLost):'$0'}</b></div>`+
-    `<div class="srow"><span>Coach followed</span><b>${fp(s)}</b></div>`+
-    `<h4 style="margin-top:10px;">LIFETIME</h4>`+
-    `<div class="srow"><span>Hands played / won</span><b>${l.hands} / ${l.won}</b></div>`+
-    `<div class="srow"><span>Net</span><b>${l.net>=0?'+':'−'}${usd(Math.abs(l.net))}</b></div>`+
-    `<div class="srow"><span>Coach followed</span><b>${fp(l)}</b></div>`;
+    `<h4>${T('thisGame')}</h4>`+
+    `<div class="srow"><span>${T('handsPW')}</span><b>${s.hands} / ${s.won}</b></div>`+
+    `<div class="srow"><span>${T('net')}</span><b>${s.net>=0?'+':'−'}${usd(Math.abs(s.net))}</b></div>`+
+    `<div class="srow"><span>${T('biggestPot')}</span><b>${s.biggest?usd(s.biggest):'—'}</b></div>`+
+    `<div class="srow"><span>${T('vpipPfr')}</span><b>${pof(s.vpipH,s.hands)} / ${pof(s.pfrH,s.hands)}</b></div>`+
+    `<div class="srow"><span>${T('aggF')}</span><b>${af}</b></div>`+
+    `<div class="srow"><span>${T('wonSd')}</span><b>${s.sdSeen?`${s.sdWon}/${s.sdSeen} (${pof(s.sdWon,s.sdSeen)})`:'—'}</b></div>`+
+    `<div class="srow"><span>${T('evLeak')}</span><b>${s.evLost?'−'+usd(s.evLost):'$0'}</b></div>`+
+    `<div class="srow"><span>${T('coachFollowed')}</span><b>${fp(s)}</b></div>`+
+    `<h4 style="margin-top:10px;">${T('lifetime')}</h4>`+
+    `<div class="srow"><span>${T('handsPW')}</span><b>${l.hands} / ${l.won}</b></div>`+
+    `<div class="srow"><span>${T('net')}</span><b>${l.net>=0?'+':'−'}${usd(Math.abs(l.net))}</b></div>`+
+    `<div class="srow"><span>${T('coachFollowed')}</span><b>${fp(l)}</b></div>`;
 }
 /* ---------- hand replayer: browse hands (this game or saved history), step through streets ---------- */
 let rpHandIdx=0, rpStreet=99, rpAll=null;
@@ -1872,7 +1946,7 @@ function rpRender(){
   if(!arr.length){
     $('rpHandLbl').textContent='—'; $('rpStreetLbl').textContent='—';
     ['rpPrevH','rpNextH','rpPrevS','rpNextS'].forEach(id=>$(id).disabled=true);
-    body.innerHTML='<p style="color:var(--dim);font-size:13px;margin-bottom:14px;">No completed hand yet this game.</p>';
+    body.innerHTML=`<p style="color:var(--dim);font-size:13px;margin-bottom:14px;">${T('noHands')}</p>`;
     return;
   }
   rpHandIdx=clamp(rpHandIdx,0,arr.length-1);
@@ -1889,8 +1963,9 @@ function rpRender(){
   const shownLog=segs.slice(0,rpStreet+1).flat();
   const net=e.myNet!=null?e.myNet:0;
   const when=rpAll&&e.t?` · ${new Date(e.t).toLocaleDateString()} ${new Date(e.t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`:'';
-  $('rpHandLbl').textContent=`Hand #${e.hand} (${rpHandIdx+1}/${arr.length}) · ${net>=0?'+':'−'}${usd(Math.abs(net))}${when}`;
-  $('rpStreetLbl').textContent=segs.length===1&&e.board.length?'Full hand':(STREET_NM[rpStreet]||'Preflop');
+  $('rpHandLbl').textContent=`${T('hand')}#${e.hand} (${rpHandIdx+1}/${arr.length}) · ${net>=0?'+':'−'}${usd(Math.abs(net))}${when}`;
+  const stNames=[T('preflop'),T('flop'),T('turnSt'),T('riverSt')];
+  $('rpStreetLbl').textContent=segs.length===1&&e.board.length?T('fullHand'):(stNames[rpStreet]||T('preflop'));
   $('rpPrevH').disabled=rpHandIdx<=0; $('rpNextH').disabled=rpHandIdx>=arr.length-1;
   $('rpPrevS').disabled=rpStreet<=0;  $('rpNextS').disabled=rpStreet>=segs.length-1;
   const board=e.board.slice(0,Math.min(boardN,e.board.length)).map(c=>cardHTML(parseCardCode(c))).join('');
@@ -1899,7 +1974,7 @@ function rpRender(){
     e.players.map(q=>
       `<div class="rp-row"><span style="font-size:18px;">${q.avatar||''}</span><span class="nm">${q.name}</span>`+
       `<span class="hole">${q.cards.map(c=>cardHTML(parseCardCode(c),true)).join('')}</span>`+
-      `<span class="tag${q.won&&final?' win':''}">${final?(q.won?'won':q.folded?'folded':'showdown'):''}</span></div>`
+      `<span class="tag${q.won&&final?' win':''}">${final?(q.won?T('won'):q.folded?T('foldedTag'):T('showdown')):''}</span></div>`
     ).join('')+
     (final?`<div class="rp-result">${e.result}</div>`:'')+
     `<div class="rp-log">${shownLog.map(l=>`<div>${l}</div>`).join('')}</div>`;
@@ -1929,7 +2004,7 @@ function showActions(p){
   sfx('alert'); haptic([16,30,16]);
   $('waitMsg').textContent='';
   $('humanCtls').classList.remove('hidden');
-  $('callBtn').textContent= callAmt<=0 ? 'Check' : (callAmt>=p.chips?`Call ${usd(callAmt)} (${bbs(callAmt)}) all-in`:`Call ${usd(callAmt)} (${bbs(callAmt)})`);
+  $('callBtn').textContent= callAmt<=0 ? T('check') : (callAmt>=p.chips?`${T('call')} ${usd(callAmt)} (${bbs(callAmt)}) ${T('allin').toLowerCase()}`:`${T('call')} ${usd(callAmt)} (${bbs(callAmt)})`);
   $('foldBtn').disabled=false;
   const minTarget=Math.min(state.currentBet+state.lastRaiseSize, p.bet+p.chips);
   const maxTarget=p.bet+p.chips;
@@ -1951,7 +2026,7 @@ function hideActions(){
 function updateRaiseLabel(){
   const v=+$('raiseSlider').value;
   const p=state.players[0];
-  $('raiseBtn').textContent = (v>=p.bet+p.chips ? 'All-in ' : (state.currentBet>0?'Raise to ':'Bet '))
+  $('raiseBtn').textContent = (v>=p.bet+p.chips ? T('allin')+' ' : (state.currentBet>0?T('raiseTo'):T('betW')))
     + `${usd(v)} (${bbs(v)})`;
   $('chipPreview').innerHTML=chipStackHTML(v,true);
 }
@@ -2015,23 +2090,65 @@ function showGameOver(won,place){
   clearResume();
   render();
   $('ovEmoji').textContent=won?'🏆':'💀';
-  $('ovTitle').textContent=won?'You win the tournament!':`Busted in ${ordinal(place)} place`;
-  $('ovSub').textContent=won?`Outlasted ${state.cfg.numPlayers-1} opponents over ${state.handNum} hands.`:`Survived ${state.handNum} hands. Run it back?`;
+  $('ovTitle').textContent=won?T('youWin'):T('bustedTitle')(T('ord')(place));
+  $('ovSub').textContent=won?T('youWinSub')(state.cfg.numPlayers-1,state.handNum):T('bustedSub')(state.handNum);
   /* blunder report: biggest EV leaks vs the coach this game */
   const gd=(state.gameDecisions||[]).slice().sort((a,b)=>b.evLoss-a.evLoss);
   const tot=gd.reduce((s,d)=>s+d.evLoss,0);
   const nDec=state.sessStats?state.sessStats.decisions:0;
   $('ovBlunders').innerHTML = nDec===0 ? '' : gd.length===0
-    ? '<h3 class="bl-clean">No EV leaked vs the coach — clean game! 🎯</h3>'
-    : `<h3>📉 Total EV leaked: −${usd(tot)} (${gd.length} deviation${gd.length>1?'s':''})</h3>`+
+    ? `<h3 class="bl-clean">${T('cleanGame')}</h3>`
+    : `<h3>${T('evTotal')}: −${usd(tot)} (${gd.length} ${T('deviations')})</h3>`+
       gd.slice(0,5).map(d=>
-        `<div class="bl-row"><span>Hand #${d.hand} · ${d.stage}</span>`+
-        `<span class="bl-what">coach: ${d.rec} · you: ${d.action.toUpperCase()}</span>`+
+        `<div class="bl-row"><span>${T('hand')}#${d.hand} · ${d.stage}</span>`+
+        `<span class="bl-what">${T('coachSaid')} ${recWord(d.rec)} · ${T('youChose')} ${actWord(d.action)}</span>`+
         `<b>−${usd(d.evLoss)}</b></div>`).join('')+
-      (gd.length>5?`<div class="bl-more">+ ${gd.length-5} smaller leak${gd.length-5>1?'s':''}</div>`:'');
+      (gd.length>5?`<div class="bl-more">+ ${gd.length-5} ${T('smallerLeaks')}</div>`:'');
   $('overlay').classList.remove('hidden');
 }
 function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+
+/* apply the chosen language to all static UI chrome */
+function applyLang(){
+  if(!HAS_DOM)return;
+  const set=(id,k)=>{const el=$(id);if(el)el.textContent=T(k);};
+  $('setup').querySelector('.sub').textContent=T('sub');
+  const rowKeys=['players','blinds','buyin','ante','speed','language','diff'];
+  document.querySelectorAll('#setup .row label.main').forEach((el,i)=>{if(rowKeys[i])el.textContent=T(rowKeys[i]);});
+  const aSel=$('anteSel'); if(aSel) aSel.options[0].text=T('noAnte');
+  const radios=document.querySelectorAll('#setup .radios label');
+  const spKeys=['turbo','standard','slow'];
+  radios.forEach((el,i)=>{if(el.lastChild)el.lastChild.nodeValue=' '+T(spKeys[i]);});
+  const dBtns=$('diffSeg').querySelectorAll('button');
+  ['easy','medium','hard'].forEach((k,i)=>{if(dBtns[i])dBtns[i].textContent=T(k);});
+  set('startBtn','deal'); set('resumeBtn','resume'); set('reviewBtn','review');
+  /* topbar */
+  const tn=(id,k)=>{const b=$(id);if(b&&b.parentNode.firstChild)b.parentNode.firstChild.nodeValue=T(k);};
+  tn('tLevel','level'); tn('tHand','hand');
+  const up=$('tNext');
+  if(up){up.parentNode.firstChild.nodeValue=T('blindsUpA'); up.parentNode.lastChild.nodeValue=T('blindsUpB');}
+  const an=$('autoNext'); if(an&&an.parentNode.lastChild) an.parentNode.lastChild.nodeValue=' '+T('autoNext');
+  const cc=$('coachChk'); if(cc&&cc.parentNode.lastChild) cc.parentNode.lastChild.nodeValue=' '+T('coachLbl');
+  set('quitBtn','quit');
+  /* bottom bar + modals */
+  set('logToggle','log'); set('replayBtn','lastHand'); set('exportBtn','exportH'); set('nextHandBtn','nextHand');
+  set('foldBtn','fold'); set('prMin','min'); set('prHalf','halfPot'); set('prPot','pot'); set('prMax','allin');
+  set('rpClose','close'); set('rpTitle','replayTitle'); set('ovBtn','playAgain');
+  set('rpPrevH','handNavP'); set('rpNextH','handNavN'); set('rpPrevS','streetNavP'); set('rpNextS','streetNavN');
+  const ch=$('coach').querySelector('h3'); if(ch)ch.textContent=T('liveCoach');
+  const w=$('coachBody').querySelector('.waiting'); if(w)w.textContent=T('waiting');
+  $('langSel').value=lang; $('langTop').value=lang;
+}
+function setLang(v){
+  lang=TR[v]?v:'en';
+  try{localStorage.setItem('sg_poker_lang',lang);}catch(e){}
+  applyLang();
+  if(state&&state.sessStats) renderStats();
+  /* refresh live views if mid-game */
+  if(state&&!$('humanCtls').classList.contains('hidden')&&state.players[state.turnIdx]&&state.players[state.turnIdx].isHuman){
+    showActions(state.players[state.turnIdx]);
+  }
+}
 
 /* ================= INIT / WIRING ================= */
 function initUI(){
@@ -2085,6 +2202,10 @@ function initUI(){
     updateRaiseLabel();
   };
   $('nextHandBtn').onclick=doNextHand;
+  /* --- language --- */
+  $('langSel').onchange=e=>setLang(e.target.value);
+  $('langTop').onchange=e=>setLang(e.target.value);
+  applyLang();
   /* --- resume saved tournament --- */
   const refreshResume=()=>{
     let sv=null; try{sv=JSON.parse(localStorage.getItem('sg_poker_resume'));}catch(e){}
