@@ -1624,6 +1624,10 @@ function updateCoach(p){
   if(state.stage==='preflop'){
     const bucket=posBucket(pos), prTxt='top ~'+Math.round(pr*100)+'%';
     const unopened=state.currentBet<=state.bb;
+    /* pocket pairs gain implied-odds value when deep: sets are disguised and win stacks */
+    const isPair=p.hole[0].r===p.hole[1].r;
+    const pairAdj=isPair&&stackBB>=40;
+    const prEff=pairAdj?pr*0.8:pr;
     if(stackBB<=10){
       /* Nash push/fold territory */
       const thr=PUSH_THR[bucket];
@@ -1642,9 +1646,9 @@ function updateCoach(p){
       }
     }else if(unopened){
       const thr=OPEN_THR[bucket];
-      if(pr<=thr&&callAmt>0||pr<=Math.min(thr,0.10)&&callAmt===0){
+      if(prEff<=thr&&callAmt>0||prEff<=Math.min(thr,0.10)&&callAmt===0){
         rec='RAISE';
-        why.push(`No one has raised yet, and ${code} (${prTxt}) is inside the chart-based ~${Math.round(thr*100)}% ${callAmt===0?'raising':'opening'} range for ${pos}. Come in raising, not limping — it takes the initiative and can win the blinds outright.`);
+        why.push(`No one has raised yet, and ${code} (${prTxt}) is inside the chart-based ~${Math.round(thr*100)}% ${callAmt===0?'raising':'opening'} range for ${pos}${pairAdj&&pr>thr?' once its set-mining value is counted — pocket pairs play above their raw ranking when stacks are deep, because flopping a set (~12%) is disguised and wins big pots':''}. Come in raising, not limping — it takes the initiative and can win the blinds outright.`);
       }else if(callAmt===0){
         rec='CHECK';
         why.push(`${code} isn't strong enough to raise from the big blind, but you see the flop for free.`);
@@ -1661,6 +1665,9 @@ function updateCoach(p){
       }else if(pr<=ct&&eq>=odds){
         rec='CALL';
         why.push(`Facing a raise, ${pos} continues with roughly the top ${Math.round(ct*100)}% — ${code} (${prTxt}) qualifies, and your equity vs their range (${pct(eq)}) covers the price (${pct(odds)}).`);
+      }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
+        rec='CALL';
+        why.push(`${code} doesn't qualify on raw strength, but this is a textbook set-mine: the call is only ${usd(callAmt)} with ~${Math.round((p.chips+p.bet)/callAmt)}x that behind. You flop a set ~12% of the time — disguised, and it wins stacks. The 15-to-1 rule says the implied odds are there. Miss the flop, and it's an easy fold.`);
       }else{
         rec='FOLD';
         why.push(`Against a raise, the ~top ${Math.round(ct*100)}% continues from ${pos}; ${code} (${prTxt}) doesn't make it. Your equity vs a raiser's range is ~${pct(eq)} needing ${pct(odds)} — let it go.`);
