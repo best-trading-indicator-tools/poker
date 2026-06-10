@@ -211,9 +211,25 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 
 #coachClose{display:none;position:absolute;top:10px;right:12px;background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;z-index:2;}
 
-/* forced landscape on phones: the game is rotated 90° when the device is held portrait */
+/* forced landscape on phones: the game is rotated 90° when the device is held portrait.
+   The rotated frame is short and wide — the action bar must be ONE slim row, not stacked. */
 body.fl{overflow:hidden;}
 body.fl #game{position:fixed;top:0;left:0;transform-origin:left top;z-index:10;}
+body.fl #topbar{padding:4px 8px;font-size:10.5px;gap:9px;}
+body.fl #actionbar{flex-wrap:nowrap;padding:5px 8px;min-height:0;gap:6px;overflow-x:auto;}
+body.fl #actionbar>#logToggle,body.fl #actionbar>#exportBtn{display:none;}
+body.fl #actionbar>#replayBtn{flex:0 0 auto;padding:8px 9px;font-size:10.5px;}
+body.fl #humanCtls{flex-wrap:nowrap;width:auto;flex:1;gap:6px;align-items:center;}
+body.fl #humanCtls #foldBtn,body.fl #humanCtls #callBtn{flex:0 0 auto;padding:10px 13px;font-size:13px;white-space:nowrap;}
+body.fl #raiseCtl{display:flex;flex:1;flex-basis:auto;gap:5px;align-items:center;min-width:0;}
+body.fl #raiseCtl .preset{flex:0 0 auto;padding:8px 7px;font-size:10.5px;}
+body.fl #raiseSlider{flex:1 1 40px;flex-basis:auto;min-width:36px;height:24px;}
+body.fl #raiseBtn{flex:0 0 auto;padding:10px 11px;font-size:12px;white-space:nowrap;}
+body.fl #waitMsg{display:none;}
+body.fl #tableWrap{padding:4px;}
+body.fl #felt{inset:4px 6px 4px 6px;border-width:6px;}
+body.fl .seat .hole{min-height:42px;}
+body.fl #centerArea{top:46%;}
 
 /* ================= MOBILE / TOUCH =================
    applies to phones AND any portrait screen up to 980px (large phones, small tablets,
