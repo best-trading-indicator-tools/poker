@@ -317,12 +317,19 @@ const SPEED_HANDS = {turbo:6, standard:10, slow:16};
 const AI_NAMES   = ['Viktor','Mia','Doyle','Selma','Ivan','Nora','Phil','Daria'];
 /* personality styles: margin = extra equity needed to call, raiseT = raise threshold shift,
    raiseF = raise frequency shift, bluff = bluff freq shift, size = bet sizing multiplier */
+/* adapt = how strongly this profile reacts to tournament/blind pressure (0=ignores it, 1=fully adjusts) */
 const STYLES=[
-  {id:'rock',   label:'🪨 tight',      margin:+0.07, raiseT:+0.06, raiseF:-0.15, bluff:-0.04, size:0.85},
-  {id:'station',label:'📞 loose',      margin:-0.10, raiseT:+0.08, raiseF:-0.20, bluff:-0.02, size:0.90},
-  {id:'shark',  label:'🦈 aggressive', margin:+0.02, raiseT:-0.03, raiseF:+0.15, bluff:+0.05, size:1.05},
-  {id:'maniac', label:'🔥 wild',       margin:-0.06, raiseT:-0.08, raiseF:+0.30, bluff:+0.10, size:1.30},
+  {id:'rock',   label:'🪨 tight',      margin:+0.07, raiseT:+0.06, raiseF:-0.15, bluff:-0.04, size:0.85, adapt:0.20},
+  {id:'station',label:'📞 loose',      margin:-0.10, raiseT:+0.08, raiseF:-0.20, bluff:-0.02, size:0.90, adapt:0.35},
+  {id:'shark',  label:'🦈 aggressive', margin:+0.02, raiseT:-0.03, raiseF:+0.15, bluff:+0.05, size:1.05, adapt:1.00},
+  {id:'maniac', label:'🔥 wild',       margin:-0.06, raiseT:-0.08, raiseF:+0.30, bluff:+0.10, size:1.30, adapt:0.70},
 ];
+/* tournament pressure 0..1 from effective stack depth in BB (deep=0, short=1) */
+function tourneyPressure(stackBB){
+  if(stackBB>=60) return 0;
+  if(stackBB<=12) return 1;
+  return (60-stackBB)/48;
+}
 const AI_AVATARS = ['🦊','🐼','🦈','🦉','🐯','🐺','🐸','🐙'];
 let AI_DELAY_MIN=550, AI_DELAY_MAX=1050, RUNOUT_DELAY=1000, SHOWDOWN_PAUSE=4200, FOLDWIN_PAUSE=2200;
 
@@ -694,7 +701,20 @@ function aiDecide(p){
     return {type:'fold'};
   }
 
-  const st=p.style||{margin:0,raiseT:0,raiseF:0,bluff:0,size:1};
+  const base=p.style||{margin:0,raiseT:0,raiseF:0,bluff:0,size:1,adapt:0};
+  /* tournament pressure: shorter effective stacks => widen ranges, steal/fight more,
+     scaled by each profile's adapt coefficient (shark adapts most, rock least) */
+  const press=tourneyPressure(stackBB)*(base.adapt||0);
+  const n=state.players.length;
+  const late=((p.i-state.dealerIdx+n)%n)===0 || ((p.i-state.dealerIdx+n)%n)===n-1;
+  const stealBoost = (late && state.stage==='preflop' && callAmt<=state.bb) ? press*0.18 : 0;
+  const st={
+    margin: base.margin - press*0.06,
+    raiseT: base.raiseT - press*0.13 - stealBoost,
+    raiseF: base.raiseF + press*0.28 + stealBoost,
+    bluff:  base.bluff  + press*0.05,
+    size:   base.size
+  };
 
   if(callAmt===0){
     let betProb=0,bluffProb=0;
