@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Sit &amp; Go Hold'em</title>
 <style>
 :root{
@@ -140,10 +140,19 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 /* ---------- ANIMATIONS ---------- */
 @keyframes dealIn{from{opacity:0;transform:translateY(-16px) scale(.78);}}
 .card.deal{animation:dealIn .32s ease both;}
+@keyframes flipIn{0%{opacity:0;transform:rotateY(90deg) scale(.9);}60%{opacity:1;}100%{transform:rotateY(0) scale(1);}}
+.card.flip{animation:flipIn .4s ease both;}
 @keyframes popIn{from{opacity:0;transform:scale(.35);}}
 .betchip .chipstack{animation:popIn .25s ease both;}
 @keyframes glowPulse{0%,100%{box-shadow:0 0 10px rgba(232,182,76,.45);}50%{box-shadow:0 0 20px rgba(232,182,76,.85);}}
 .seat.active .plate{animation:glowPulse 1.5s ease-in-out infinite;}
+@keyframes winnerPop{0%{transform:scale(1);}35%{transform:scale(1.16);}100%{transform:scale(1);}}
+.seat.winner .plate{animation:winnerPop .55s ease both;}
+@keyframes bannerPop{0%{opacity:0;transform:translateY(6px) scale(.85);}60%{transform:translateY(0) scale(1.06);}100%{transform:scale(1);opacity:1;}}
+#banner.show{animation:bannerPop .45s ease both;}
+/* flying chips (slide-to-pot, push-to-winner) */
+.flychip{position:absolute;z-index:35;pointer-events:none;transition:left .42s cubic-bezier(.45,.05,.3,1),top .42s cubic-bezier(.45,.05,.3,1),opacity .42s ease;}
+@media(prefers-reduced-motion:reduce){.card.deal,.card.flip,.seat.winner .plate,#banner.show{animation:none;}.flychip{transition:none;}}
 
 /* ---------- PERSONALITY / STATS / FEEDBACK ---------- */
 .seat .pstyle{font-size:9.5px;color:#93a1b3;text-align:left;margin-top:1px;}
@@ -180,6 +189,72 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 .over-card h2{font-size:23px;margin-bottom:6px;}
 .over-card p{color:var(--dim);margin-bottom:24px;font-size:14px;}
 .over-card button{background:var(--gold);color:#1a1408;border:none;border-radius:10px;padding:12px 30px;font-size:15px;font-weight:700;cursor:pointer;}
+
+#coachClose{display:none;position:absolute;top:10px;right:12px;background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;z-index:2;}
+
+/* ================= MOBILE / TOUCH ================= */
+@media(max-width:680px){
+  body{overflow:hidden;}
+  .setup-card{width:auto;max-width:94vw;padding:24px 22px;margin:10px;}
+  .setup-card h1{font-size:21px;}
+  .radios label,.seg button,select{font-size:13px;}
+
+  /* top bar: compact, horizontally scrollable, hide low-value items */
+  #topbar{gap:12px;padding:8px 10px;font-size:11.5px;overflow-x:auto;flex-wrap:nowrap;white-space:nowrap;-webkit-overflow-scrolling:touch;padding-top:max(8px,env(safe-area-inset-top));}
+  #topbar::-webkit-scrollbar{display:none;}
+  #tAnteWrap,#topbar .tb-opt{display:none;}
+  #quitBtn{padding:6px 10px;}
+
+  #tableWrap{padding:6px;}
+
+  /* coach as a top sheet that slides down, leaving the action bar usable */
+  #coach{position:fixed!important;left:6px;right:6px;top:0;bottom:auto!important;width:auto!important;max-height:66vh;overflow-y:auto;border-radius:0 0 16px 16px;transform:translateY(-112%);transition:transform .28s ease;display:block!important;z-index:90;box-shadow:0 18px 50px rgba(0,0,0,.7);padding-top:max(16px,env(safe-area-inset-top));}
+  #coach.open{transform:translateY(0);}
+  #coachClose{display:block;}
+
+  /* smaller seats so 9 fit on a phone */
+  .seat{width:94px;margin-left:-47px;margin-top:-32px;}
+  .seat .plate{min-width:0;gap:5px;padding:4px 8px 4px 5px;border-radius:10px;}
+  .seat .avatar{font-size:17px;}
+  .seat .pname{font-size:10px;}
+  .seat .pchips{font-size:8.5px;}
+  .seat .pstyle{font-size:8px;}
+  .seat .ppos{font-size:8px;padding:1px 4px;}
+  .seat .lastact{font-size:9.5px;margin-top:2px;}
+  .seat .hole{min-height:46px;gap:3px;}
+
+  /* tighter cards */
+  .card{width:42px;height:60px;border-radius:6px;}
+  .card .ix{font-size:12px;top:3px;left:4px;}
+  .card .ix .si{font-size:9px;}
+  .card .ix.flip{display:none;}
+  .card .pip{font-size:22px;}
+  .card.small{width:30px;height:43px;}
+  .card.small .ix{font-size:9px;}
+  .card.small .pip{font-size:15px;}
+  #board{min-height:62px;gap:4px;}
+  #centerArea{width:94vw;top:44%;}
+  #pot{font-size:13px;}
+  #felt{inset:8px 6px 8px 6px;border-width:7px;}
+  #dbtn{width:20px;height:20px;font-size:10px;}
+
+  /* big, thumb-friendly action bar */
+  #actionbar{padding:8px 8px max(8px,env(safe-area-inset-bottom));gap:7px;min-height:0;}
+  #actionbar>#logToggle,#actionbar>#replayBtn,#actionbar>#exportBtn{padding:8px 10px;font-size:11px;flex:1;}
+  #humanCtls{width:100%;flex-wrap:wrap;gap:8px;}
+  #humanCtls #foldBtn,#humanCtls #callBtn{flex:1;padding:15px 8px;font-size:15px;}
+  #raiseCtl{flex-basis:100%;gap:7px;}
+  #raiseCtl .preset{flex:1;padding:9px 4px;font-size:11.5px;}
+  #raiseSlider{flex-basis:100%;min-width:0;height:30px;}
+  #chipPreview{display:none!important;}
+  #raiseBtn{flex:1;padding:14px 8px;}
+  #waitMsg{font-size:12px;flex-basis:100%;}
+  #log{left:6px;right:6px;width:auto;bottom:6px;max-height:40vh;}
+}
+@media(max-width:680px) and (orientation:landscape){
+  #coach{max-height:90vh;}
+  #centerArea{top:40%;}
+}
 </style>
 </head>
 <body>
@@ -233,8 +308,8 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
     <span>Level <b id="tLevel">1</b></span>
     <span>Blinds <b id="tBlinds">50/100</b></span>
     <span id="tAnteWrap">Ante <b id="tAnte">0</b></span>
-    <span>Hand <b id="tHand">1</b></span>
-    <span>Blinds up in <b id="tNext">6</b> hands</span>
+    <span class="tb-opt">Hand <b id="tHand">1</b></span>
+    <span class="tb-opt">Blinds up in <b id="tNext">6</b> hands</span>
     <span>AI: <b id="tDiff">Medium</b></span>
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--dim);">
       <input type="checkbox" id="autoNext" checked style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;">
@@ -249,6 +324,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
   </div>
   <div id="tableWrap">
     <aside id="coach" class="open">
+      <button id="coachClose" aria-label="Close coach">✕</button>
       <h3>🧭 LIVE COACH</h3>
       <div id="coachBody"><div class="waiting">Advice appears here when it&rsquo;s your turn.</div></div>
       <div id="coachFeed" class="hidden"></div>
@@ -950,6 +1026,7 @@ function refundUncalled(){
 
 function endRound(){
   refundUncalled();
+  if(state.players.some(p=>p.bet>0)) animateChipsToPot();
   for(const p of state.players){p.bet=0;p.acted=false;}
   state.currentBet=0; state.lastRaiseSize=state.bb;
   const live=inHand();
@@ -986,15 +1063,17 @@ function runout(){
 function endHandFold(){
   state.handOver=true;
   refundUncalled();
+  if(state.players.some(p=>p.bet>0)) animateChipsToPot();
   const w=inHand()[0];
   const pot=state.players.reduce((s,p)=>s+p.totalBet,0);
   w.chips+=pot;
-  for(const p of state.players) p.totalBet=0;
+  for(const p of state.players){ p.totalBet=0; p.bet=0; }
   state.resultText=`${w.name} ${w.isHuman?'win':'wins'} ${money(pot)} (everyone folded)`;
-  if(w.isHuman){state.humanWonAmt=pot;sfx('win');}
+  if(w.isHuman){state.humanWonAmt=pot;sfx('win');haptic([14,40,14]);}
   log(state.resultText);
   showBanner(`${w.name} ${w.isHuman?'win':'wins'} ${money(pot)}`);
   render([w]);
+  setTimeout(()=>animatePotToWinner([w]),300);
   finishHand(FOLDWIN_PAUSE);
 }
 
@@ -1039,9 +1118,10 @@ function showdown(){
   }
   state.resultText=parts.join(' · ');
   const hw=winnings.get(state.players[0])||0;
-  if(hw>0){state.humanWonAmt=hw;sfx('win');}
+  if(hw>0){state.humanWonAmt=hw;sfx('win');haptic([14,40,14]);}
   showBanner(parts.join(' · '));
   render([...winnings.keys()]);
+  setTimeout(()=>animatePotToWinner([...winnings.keys()]),300);
   finishHand(SHOWDOWN_PAUSE);
 }
 
@@ -1138,6 +1218,49 @@ function sfx(kind){
   }catch(e){}
 }
 
+/* ================= HAPTICS ================= */
+function haptic(pat){ if(HAS_DOM&&soundOn&&navigator.vibrate){try{navigator.vibrate(pat);}catch(e){}} }
+
+/* ================= FLYING CHIPS ================= */
+function feltCenter(){ const f=$('felt'); return {x:f.clientWidth/2,y:f.clientHeight/2}; }
+function flyChips(fromX,fromY,toX,toY,n,delay){
+  if(!HAS_DOM)return;
+  const felt=$('felt'); if(!felt)return;
+  const cols=['#3d6bd6','#e8b64c','#2e9e5b','#c94f4c','#23262d'];
+  for(let i=0;i<n;i++){
+    const el=document.createElement('div');
+    el.className='flychip';
+    el.style.cssText+=`width:16px;height:16px;border-radius:50%;background:${cols[i%cols.length]};border:2px dashed rgba(255,255,255,.75);box-shadow:0 2px 3px rgba(0,0,0,.5);left:${fromX}px;top:${fromY-i*3}px;opacity:0;`;
+    felt.appendChild(el);
+    const d=(delay||0)+i*45;
+    setTimeout(()=>{el.style.opacity='1';},d);
+    setTimeout(()=>{el.style.left=toX+'px';el.style.top=(toY-i*3)+'px';},d+30);
+    setTimeout(()=>{el.style.opacity='0';},d+430);
+    setTimeout(()=>{el.remove();},d+650);
+  }
+}
+/* slide each player's bet chips into the central pot */
+function animateChipsToPot(){
+  if(!HAS_DOM||!state)return;
+  const c=feltCenter();
+  for(const p of state.players){
+    if(p.bet<=0)continue;
+    const bet=$('bet'+p.i); if(!bet)continue;
+    const fx=parseFloat(bet.style.left)||c.x, fy=parseFloat(bet.style.top)||c.y;
+    flyChips(fx,fy,c.x,c.y+4,3,0);
+  }
+}
+/* push the pot to the winning seat(s) */
+function animatePotToWinner(winners){
+  if(!HAS_DOM||!state||!winners||!winners.length)return;
+  const c=feltCenter(), felt=$('felt');
+  for(const w of winners){
+    const seat=$('seat'+w.i); if(!seat)continue;
+    const tx=parseFloat(seat.style.left)||c.x, ty=(parseFloat(seat.style.top)||c.y)+40;
+    flyChips(c.x,c.y+4,tx,ty,5,120);
+  }
+}
+
 /* ================= STATS (persist across sessions) ================= */
 function loadStats(){
   try{const s=JSON.parse(localStorage.getItem('sg_poker_stats'));if(s&&typeof s.hands==='number')return s;}catch(e){}
@@ -1160,7 +1283,13 @@ function log(msg){
   el.innerHTML=logLines.slice(-100).map(l=>`<div>${l}</div>`).join('');
   el.scrollTop=el.scrollHeight;
 }
-function showBanner(t){ if(HAS_DOM) $('banner').textContent=t; }
+function showBanner(t){
+  if(!HAS_DOM)return;
+  const b=$('banner');
+  b.textContent=t;
+  b.classList.remove('show');
+  if(t){ void b.offsetWidth; b.classList.add('show'); }
+}
 const CHIP_DENOMS=[[5000,'#3d6bd6'],[1000,'#e8b64c'],[500,'#9b59b6'],[100,'#23262d'],[25,'#2e9e5b'],[5,'#c94f4c']];
 function chipStackHTML(amount,small){
   if(!amount||amount<=0) return '';
@@ -1178,8 +1307,9 @@ function chipStackHTML(amount,small){
 }
 function cardHTML(c,small,anim){
   const red=c.s===1||c.s===2;
+  const cls = anim===true?' deal' : anim?' '+anim : '';
   const ix=`<div class="ix"><span>${RANK_CH[c.r]}</span><span class="si">${SUIT_CH[c.s]}</span></div>`;
-  return `<div class="card${red?' red':''}${small?' small':''}${anim?' deal':''}">${ix}<div class="pip">${SUIT_CH[c.s]}</div><div class="ix flip"><span>${RANK_CH[c.r]}</span><span class="si">${SUIT_CH[c.s]}</span></div></div>`;
+  return `<div class="card${red?' red':''}${small?' small':''}${cls}">${ix}<div class="pip">${SUIT_CH[c.s]}</div><div class="ix flip"><span>${RANK_CH[c.r]}</span><span class="si">${SUIT_CH[c.s]}</span></div></div>`;
 }
 function backHTML(small,anim){ return `<div class="card back${small?' small':''}${anim?' deal':''}"></div>`; }
 /* set innerHTML only when content actually changed (so CSS animations fire once) */
@@ -1257,7 +1387,8 @@ function render(winners){
     $('act'+p.i).textContent=p.lastAct;
     const hole=$('hole'+p.i);
     if(p.out||p.folded||p.hole.length===0) setHTML(hole,'');
-    else if(p.isHuman||p.revealed) setHTML(hole,p.hole.map(c=>cardHTML(c,!p.isHuman,true)).join(''));
+    else if(p.isHuman) setHTML(hole,p.hole.map(c=>cardHTML(c,false,true)).join(''));
+    else if(p.revealed) setHTML(hole,p.hole.map(c=>cardHTML(c,true,'flip')).join(''));
     else setHTML(hole,backHTML(true,true)+backHTML(true,true));
     const bet=$('bet'+p.i);
     if(p.bet>0){
@@ -1271,6 +1402,21 @@ function render(winners){
 
 /* ---------- live coach ---------- */
 const pct=e=>Math.round(e*100)+'%';
+function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px)').matches; }
+/* media-aware coach visibility: docked panel on desktop, slide-down sheet on mobile */
+function setCoach(on){
+  if(!HAS_DOM)return;
+  const c=$('coach'); if(!c)return;
+  $('coachChk').checked=on;
+  if(isMobile()){
+    c.classList.remove('hidden');   // keep in DOM so it can slide; transform handles on/off
+    c.classList.toggle('open',on);
+  }else{
+    c.classList.toggle('hidden',!on);
+    c.classList.toggle('open',on);
+  }
+  layoutSeats();
+}
 
 /* detect draws that use at least one hole card */
 function detectDraws(hole,board){
@@ -1540,7 +1686,7 @@ function showReplay(){
 function showActions(p){
   if(!HAS_DOM)return;
   const callAmt=Math.min(state.currentBet-p.bet,p.chips);
-  sfx('alert');
+  sfx('alert'); haptic([16,30,16]);
   $('waitMsg').textContent='';
   $('humanCtls').classList.remove('hidden');
   $('callBtn').textContent= callAmt<=0 ? 'Check' : (callAmt>=p.chips?`Call ${usd(callAmt)} (${bbs(callAmt)}) all-in`:`Call ${usd(callAmt)} (${bbs(callAmt)})`);
@@ -1580,6 +1726,7 @@ function humanAct(type,amount){
     state.humanDecisions.push({stage:state.stage,rec:r,action:type,followed});
     coachRecNow=null;
   }
+  haptic(type==='raise'?[10,20,10]:8);
   hideActions();
   applyAction(p,type,amount);
   state.turnIdx=(p.i+1)%state.players.length;
@@ -1661,12 +1808,9 @@ function initUI(){
     updateRaiseLabel();
   };
   $('nextHandBtn').onclick=doNextHand;
-  $('coachChk').onchange=e=>{
-    const c=$('coach');
-    c.classList.toggle('hidden', !e.target.checked);
-    c.classList.toggle('open', e.target.checked);
-    layoutSeats();
-  };
+  $('coachChk').onchange=e=>setCoach(e.target.checked);
+  $('coachClose').onclick=()=>setCoach(false);
+  setCoach(!isMobile());   // default: docked on desktop, hidden sheet on mobile
   $('autoNext').onchange=e=>{
     if(!e.target.checked){
       clearTimeout(nextTimer);
@@ -1704,6 +1848,7 @@ function initUI(){
     $('setup').classList.remove('hidden');
   };
   window.addEventListener('resize',layoutSeats);
+  window.addEventListener('orientationchange',()=>setTimeout(layoutSeats,250));
 }
 
 if(HAS_DOM) initUI();
