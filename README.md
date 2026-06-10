@@ -12,7 +12,12 @@ Double-click `poker.html`, or serve it from any static host. Set up your table (
 - **Money display**: $ and BB shown everywhere, casino-style chip stacks
 - **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, order-of-action awareness (first/last to talk, including your *future* postflop position when advising preflop), bet-size-aware range reading, plain-English reasoning
 - **GTO mini-solver**: real CFR (counterfactual regret minimization) for heads-up postflop spots — shows the equilibrium mixed strategy with EVs
-- **Stats & training**: post-hand feedback, session + lifetime stats (persisted), last-hand replay with all hole cards revealed, full hand-history export to JSON
+- **Stats & training**: post-hand feedback, session + lifetime stats (persisted), full hand-history export to JSON
+- **Blunder report**: every decision is scored against the coach's line in chip-EV; deviations show their estimated EV cost live, the coach panel tracks total "EV leaked" this game, and the game-over screen lists your top 5 costliest mistakes ("Hand #14 · turn — coach: FOLD, you: CALL — −$1,800")
+- **Hand replayer**: browse every hand of the current game and step through it street by street — board reveals progressively, hole cards shown, action log per street
+- **Per-game poker stats**: VPIP, PFR, aggression factor and won-at-showdown tracked live in the coach panel
+- **Resume tournament**: progress is saved at every hand boundary; refreshing or closing the tab mid-game offers a "Resume tournament" button on the start screen
+- **Keyboard shortcuts**: F fold · C check/call · R raise · 1–4 bet sizes (min / ½ pot / pot / all-in) · N next hand
 - **Mobile-first & touch-friendly**: responsive portrait layout, thumb-sized action buttons, slide-down coach sheet, compact table that fits all 9 seats on a phone, notch-safe insets
 - **Game feel**: chips slide into the pot at the end of each street and push out to the winner, winner-seat pop, animated result banner, cards flip face-up at showdown, plus haptic feedback on mobile (your turn, your action, winning a pot)
 - **More polish**: card/chip deal animations, generated sound effects with mute, auto/manual next hand, fast-forward when you fold, position badges (UTG, CO, BTN, SB, BB…). All motion respects `prefers-reduced-motion`.

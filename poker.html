@@ -34,6 +34,19 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 .seg button.on{background:var(--gold);color:#1a1408;}
 #startBtn{width:100%;margin-top:8px;background:var(--gold);color:#1a1408;font-size:16px;font-weight:700;border:none;border-radius:10px;padding:13px;cursor:pointer;}
 #startBtn:hover{filter:brightness(1.08);}
+#resumeBtn{width:100%;margin-top:8px;background:none;border:1px solid var(--gold);color:var(--gold);font-size:15px;font-weight:700;border-radius:10px;padding:11px;cursor:pointer;}
+#resumeBtn:hover{background:rgba(230,180,60,.12);}
+#ovBlunders{margin:12px 0 4px;text-align:left;max-height:38vh;overflow-y:auto;}
+#ovBlunders h3{font-size:13px;color:var(--gold);margin-bottom:8px;text-align:center;}
+#ovBlunders .bl-clean{color:#62d68a;}
+#ovBlunders .bl-row{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--dim);border-top:1px solid var(--line);padding:6px 2px;align-items:center;}
+#ovBlunders .bl-row b{color:#e2574c;white-space:nowrap;}
+#ovBlunders .bl-row .bl-what{color:var(--text);}
+#ovBlunders .bl-more{font-size:11px;color:var(--dim);text-align:center;padding-top:6px;}
+.rp-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.rp-nav button{background:none;border:1px solid var(--line);border-radius:7px;color:var(--text);padding:4px 10px;cursor:pointer;font-size:12px;}
+.rp-nav button:disabled{opacity:.35;cursor:default;}
+.rp-nav span{font-size:12px;color:var(--gold);font-weight:600;}
 
 /* ---------- GAME ---------- */
 #game{height:100%;display:flex;flex-direction:column;}
@@ -314,6 +327,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
       </div>
     </div>
     <button id="startBtn">Deal me in</button>
+    <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
   </div>
 </div>
 
@@ -381,7 +395,9 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 
 <div id="replayOv" class="hidden">
   <div class="rp-card">
-    <h2>Last hand</h2>
+    <h2 id="rpTitle">Hand replay</h2>
+    <div class="rp-nav"><button id="rpPrevH">&#8249; hand</button><span id="rpHandLbl"></span><button id="rpNextH">hand &#8250;</button></div>
+    <div class="rp-nav"><button id="rpPrevS">&#8249; street</button><span id="rpStreetLbl"></span><button id="rpNextS">street &#8250;</button></div>
     <div id="rpBody"></div>
     <button id="rpClose">Close</button>
   </div>
@@ -392,6 +408,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
     <div class="big" id="ovEmoji">🏆</div>
     <h2 id="ovTitle"></h2>
     <p id="ovSub"></p>
+    <div id="ovBlunders"></div>
     <button id="ovBtn">Play again</button>
   </div>
 </div>
@@ -863,7 +880,11 @@ function newGame(cfg){
     q.style=styles[k-1];
     state.players.push(q);
   }
-  state.sessStats={hands:0,won:0,net:0,biggest:0,decisions:0,followed:0};
+  state.sessStats={hands:0,won:0,net:0,biggest:0,decisions:0,followed:0,
+    vpipH:0,pfrH:0,aBets:0,aCalls:0,sdSeen:0,sdWon:0,evLost:0};
+  state.gameId=Date.now();
+  state.gameDecisions=[];   // EV blunders this game
+  state.gameHands=[];       // replayable hands this game
   state.dealerIdx=Math.floor(Math.random()*cfg.numPlayers);
   return state;
 }
@@ -939,6 +960,7 @@ function startHand(){
   for(const p of alive()) p.hole=[state.deck.pop(),state.deck.pop()];
   /* per-hand trackers */
   state.handLog=[]; state.humanDecisions=[]; state.humanWonAmt=0; state.resultText='';
+  state.humanHandStats={vpip:false,pfr:false,aBets:0,aCalls:0,sd:false,sdWon:false};
   state.humanStart=state.players[0].chips+state.players[0].totalBet;
   state.humanPlayed=!state.players[0].out;
   prevBoardLen=0; coachRecNow=null;
@@ -1067,6 +1089,7 @@ function dealNext(){
   if(state.stage==='preflop'){ state.board.push(state.deck.pop(),state.deck.pop(),state.deck.pop()); state.stage='flop'; }
   else if(state.stage==='flop'){ state.board.push(state.deck.pop()); state.stage='turn'; }
   else if(state.stage==='turn'){ state.board.push(state.deck.pop()); state.stage='river'; }
+  log(`— ${state.stage[0].toUpperCase()+state.stage.slice(1)}: ${state.board.map(c=>RANK_CH[c.r]+SUIT_CH[c.s]).join(' ')} —`);
   sfx('deal');
 }
 
@@ -1164,6 +1187,17 @@ function finishHand(pause){
   /* stats + coach feedback */
   if(!state.cfg.allAI && state.humanPlayed){
     const net=(state.players[0].chips+state.players[0].totalBet)-state.humanStart;
+    /* showdown tracking */
+    const hs=state.humanHandStats||{};
+    const sd=state.players.filter(q=>q.hole.length>0&&!q.folded).length>=2;
+    if(sd&&!state.players[0].folded){hs.sd=true;if(state.humanWonAmt>0)hs.sdWon=true;}
+    {
+      const S=state.sessStats;
+      if(hs.vpip)S.vpipH=(S.vpipH||0)+1;
+      if(hs.pfr)S.pfrH=(S.pfrH||0)+1;
+      S.aBets=(S.aBets||0)+(hs.aBets||0); S.aCalls=(S.aCalls||0)+(hs.aCalls||0);
+      if(hs.sd){S.sdSeen=(S.sdSeen||0)+1;if(hs.sdWon)S.sdWon=(S.sdWon||0)+1;}
+    }
     for(const S of [state.sessStats,lifeStats]){
       if(!S)continue;
       S.hands++; S.net+=net;
@@ -1173,18 +1207,22 @@ function finishHand(pause){
     saveStats();
     renderFeedback(net);
     renderStats();
-    /* append to persistent hand history (for export & analysis) */
+    /* hand record: in-memory replayer + persistent history (export & analysis) */
+    const cs=c=>RANK_CH[c.r]+'shdc'[c.s];
+    const entry={
+      gameId:state.gameId, t:new Date().toISOString(), hand:state.handNum, level:state.level+1,
+      blinds:[state.sb,state.bb], ante:state.ante,
+      board:state.board.map(cs),
+      players:lastHand.players.map(q=>({name:q.name,avatar:q.avatar,cards:q.hole.map(cs),folded:q.folded,won:q.won})),
+      myNet:net, my:{vpip:!!hs.vpip,pfr:!!hs.pfr,aBets:hs.aBets||0,aCalls:hs.aCalls||0,sd:!!hs.sd,sdWon:!!hs.sdWon},
+      myDecisions:state.humanDecisions.slice(),
+      result:state.resultText, actions:lastHand.log.slice()
+    };
+    (state.gameHands=state.gameHands||[]).push(entry);
+    while(state.gameHands.length>300) state.gameHands.shift();
     try{
-      const cs=c=>RANK_CH[c.r]+'shdc'[c.s];
       const hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');
-      hist.push({
-        t:new Date().toISOString(), hand:state.handNum, level:state.level+1,
-        blindsUSD:[state.sb/5,state.bb/5], anteUSD:state.ante/5,
-        board:state.board.map(cs),
-        players:lastHand.players.map(q=>({name:q.name,cards:q.hole.map(cs),folded:q.folded,won:q.won})),
-        myNetUSD:net/5, myDecisions:state.humanDecisions.slice(),
-        result:state.resultText, actions:lastHand.log
-      });
+      hist.push(entry);
       while(hist.length>3000) hist.shift();
       localStorage.setItem('sg_poker_history',JSON.stringify(hist));
     }catch(e){}
@@ -1198,6 +1236,7 @@ function finishHand(pause){
     log(`${p.name} is eliminated (#${p.place})`);
   }
   if(typeof globalThis.__onHandEnd==='function') globalThis.__onHandEnd(state);
+  saveResume();
   const human=state.players[0];
   const rest=alive();
   if(state.cfg.allAI){
@@ -1291,6 +1330,22 @@ function loadStats(){
 }
 let lifeStats=loadStats();
 function saveStats(){try{localStorage.setItem('sg_poker_stats',JSON.stringify(lifeStats));}catch(e){}}
+/* tournament resume: snapshot at each hand boundary */
+function saveResume(){
+  if(!HAS_DOM||!state||state.cfg.allAI)return;
+  try{
+    if(state.gameOver||state.players[0].out||alive().length<=1){
+      localStorage.removeItem('sg_poker_resume'); return;
+    }
+    localStorage.setItem('sg_poker_resume',JSON.stringify({
+      v:1, t:Date.now(), cfg:state.cfg, gameId:state.gameId,
+      handNum:state.handNum, dealerIdx:state.dealerIdx,
+      sessStats:state.sessStats, gameDecisions:state.gameDecisions||[],
+      players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,style:q.style?q.style.id:null}))
+    }));
+  }catch(e){}
+}
+function clearResume(){try{localStorage.removeItem('sg_poker_resume');}catch(e){}}
 let coachRecNow=null,lastHand=null;
 
 /* ================= UI ================= */
@@ -1670,7 +1725,20 @@ function updateCoach(p){
     `<div class="coach-row"><span>Your stack</span><b>${bbs(p.chips+p.bet)}</b></div>`+
     sizeRow+
     `<p class="why">${why.join(' ')}${extra.join('')}</p>`;
-  coachRecNow={rec,stage:state.stage};
+  /* rough chip-EV per available action (for blunder tracking) */
+  {
+    const tEv=clamp(Math.round((state.stage==='preflop'
+        ? Math.max(state.bb*3,state.currentBet*2.6)
+        : state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*0.66)))/state.sb)*state.sb,
+      state.currentBet+state.lastRaiseSize, p.bet+p.chips);
+    const FE=clamp(0.42-0.09*(opps-1),0.08,0.45);            // fold equity vs # of opponents
+    const evR=A=>FE*pot+(1-FE)*(eq*(pot+2*A)-A);             // raise A more chips
+    coachRecNow={rec,stage:state.stage,evs:{
+      FOLD:0,
+      CALL:Math.round(callAmt>0 ? eq*(pot+callAmt)-callAmt : eq*pot),
+      RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
+    }};
+  }
 
   /* GTO mini-solver: heads-up postflop spots */
   if(state.stage!=='preflop'){
@@ -1712,7 +1780,7 @@ function renderFeedback(net){
   if(n>0){
     html+=` · followed coach ${f}/${n}`;
     for(const d of state.humanDecisions.filter(x=>!x.followed))
-      html+=`<div class="dev">${d.stage}: coach said ${d.rec}, you chose ${d.action.toUpperCase()}</div>`;
+      html+=`<div class="dev">${d.stage}: coach said ${d.rec}, you chose ${d.action.toUpperCase()}${d.evLoss>0?` <span class="neg">(−${usd(d.evLoss)} EV)</span>`:''}</div>`;
   }
   el.innerHTML=html;
 }
@@ -1720,32 +1788,72 @@ function renderStats(){
   if(!HAS_DOM||!state||!state.sessStats)return;
   const s=state.sessStats,l=lifeStats;
   const fp=S=>S.decisions>0?Math.round(100*S.followed/S.decisions)+'%':'—';
+  const pof=(a,b)=>b>0?Math.round(100*(a||0)/b)+'%':'—';
+  const af=(s.aCalls||0)>0?((s.aBets||0)/s.aCalls).toFixed(1):((s.aBets||0)>0?'∞':'—');
   $('coachStats').innerHTML=
     `<h4>THIS GAME</h4>`+
     `<div class="srow"><span>Hands played / won</span><b>${s.hands} / ${s.won}</b></div>`+
     `<div class="srow"><span>Net</span><b>${s.net>=0?'+':'−'}${usd(Math.abs(s.net))}</b></div>`+
     `<div class="srow"><span>Biggest pot won</span><b>${s.biggest?usd(s.biggest):'—'}</b></div>`+
+    `<div class="srow"><span>VPIP / PFR</span><b>${pof(s.vpipH,s.hands)} / ${pof(s.pfrH,s.hands)}</b></div>`+
+    `<div class="srow"><span>Aggression factor</span><b>${af}</b></div>`+
+    `<div class="srow"><span>Won at showdown</span><b>${s.sdSeen?`${s.sdWon}/${s.sdSeen} (${pof(s.sdWon,s.sdSeen)})`:'—'}</b></div>`+
+    `<div class="srow"><span>EV leaked vs coach</span><b>${s.evLost?'−'+usd(s.evLost):'$0'}</b></div>`+
     `<div class="srow"><span>Coach followed</span><b>${fp(s)}</b></div>`+
     `<h4 style="margin-top:10px;">LIFETIME</h4>`+
     `<div class="srow"><span>Hands played / won</span><b>${l.hands} / ${l.won}</b></div>`+
     `<div class="srow"><span>Net</span><b>${l.net>=0?'+':'−'}${usd(Math.abs(l.net))}</b></div>`+
     `<div class="srow"><span>Coach followed</span><b>${fp(l)}</b></div>`;
 }
+/* ---------- hand replayer: browse hands this game, step through streets ---------- */
+let rpHandIdx=0, rpStreet=99;
+const STREET_NM=['Preflop','Flop','Turn','River'];
+function parseCardCode(code){
+  return {r:+(RANK_CH_INV[code.slice(0,-1)]||2), s:Math.max(0,'shdc'.indexOf(code.slice(-1)))};
+}
+const RANK_CH_INV=Object.fromEntries(Object.entries(RANK_CH).map(([k,v])=>[v,k]));
+function rpRender(){
+  if(!HAS_DOM)return;
+  const arr=(state&&state.gameHands)||[];
+  const body=$('rpBody');
+  if(!arr.length){
+    $('rpHandLbl').textContent='—'; $('rpStreetLbl').textContent='—';
+    ['rpPrevH','rpNextH','rpPrevS','rpNextS'].forEach(id=>$(id).disabled=true);
+    body.innerHTML='<p style="color:var(--dim);font-size:13px;margin-bottom:14px;">No completed hand yet this game.</p>';
+    return;
+  }
+  rpHandIdx=clamp(rpHandIdx,0,arr.length-1);
+  const e=arr[rpHandIdx];
+  /* split action log into street segments using the dealt-card markers */
+  const segs=[[]];
+  for(const ln of e.actions){
+    if(/^— (Flop|Turn|River):/.test(ln)) segs.push([]);
+    segs[segs.length-1].push(ln);
+  }
+  rpStreet=clamp(rpStreet,0,segs.length-1);
+  const final=rpStreet===segs.length-1;
+  const boardN=[0,3,4,5][rpStreet]??e.board.length;
+  const shownLog=segs.slice(0,rpStreet+1).flat();
+  $('rpHandLbl').textContent=`Hand #${e.hand} (${rpHandIdx+1}/${arr.length}) · ${e.myNet>=0?'+':'−'}${usd(Math.abs(e.myNet))}`;
+  $('rpStreetLbl').textContent=STREET_NM[rpStreet]||'Preflop';
+  $('rpPrevH').disabled=rpHandIdx<=0; $('rpNextH').disabled=rpHandIdx>=arr.length-1;
+  $('rpPrevS').disabled=rpStreet<=0;  $('rpNextS').disabled=rpStreet>=segs.length-1;
+  const board=e.board.slice(0,Math.min(boardN,e.board.length)).map(c=>cardHTML(parseCardCode(c))).join('');
+  body.innerHTML=
+    `<div class="rp-board">${board||'<span style="color:var(--dim);font-size:13px;">(preflop)</span>'}</div>`+
+    e.players.map(q=>
+      `<div class="rp-row"><span style="font-size:18px;">${q.avatar||''}</span><span class="nm">${q.name}</span>`+
+      `<span class="hole">${q.cards.map(c=>cardHTML(parseCardCode(c),true)).join('')}</span>`+
+      `<span class="tag${q.won&&final?' win':''}">${final?(q.won?'won':q.folded?'folded':'showdown'):''}</span></div>`
+    ).join('')+
+    (final?`<div class="rp-result">${e.result}</div>`:'')+
+    `<div class="rp-log">${shownLog.map(l=>`<div>${l}</div>`).join('')}</div>`;
+}
 function showReplay(){
   if(!HAS_DOM)return;
-  const body=$('rpBody');
-  if(!lastHand){ body.innerHTML='<p style="color:var(--dim);font-size:13px;margin-bottom:14px;">No completed hand yet.</p>'; }
-  else{
-    body.innerHTML=
-      `<div class="rp-board">${lastHand.board.map(c=>cardHTML(c)).join('')||'<span style="color:var(--dim);font-size:13px;">(no board — ended preflop)</span>'}</div>`+
-      lastHand.players.map(q=>
-        `<div class="rp-row"><span style="font-size:18px;">${q.avatar}</span><span class="nm">${q.name}</span>`+
-        `<span class="hole">${q.hole.map(c=>cardHTML(c,true)).join('')}</span>`+
-        `<span class="tag${q.won?' win':''}">${q.won?'won':q.folded?'folded':'showdown'}</span></div>`
-      ).join('')+
-      `<div class="rp-result">${lastHand.result}</div>`+
-      `<div class="rp-log">${lastHand.log.map(l=>`<div>${l}</div>`).join('')}</div>`;
-  }
+  rpHandIdx=((state&&state.gameHands)||[]).length-1;
+  rpStreet=99;          // open on the final street
+  rpRender();
   $('replayOv').classList.remove('hidden');
 }
 
@@ -1785,12 +1893,35 @@ function updateRaiseLabel(){
 function humanAct(type,amount){
   const p=state.players[state.turnIdx];
   if(!p||!p.isHuman)return;
+  const callNow=Math.min(state.currentBet-p.bet,p.chips);
+  /* per-hand stat tracking (VPIP / PFR / aggression) */
+  const hs=state.humanHandStats;
+  if(hs){
+    if(state.stage==='preflop'){
+      if(type==='raise'){hs.vpip=true;hs.pfr=true;}
+      else if(type==='call'&&callNow>0)hs.vpip=true;
+    }else{
+      if(type==='raise')hs.aBets++;
+      else if(type==='call'&&callNow>0)hs.aCalls++;
+    }
+  }
   if(coachRecNow&&coachRecNow.stage===state.stage){
     const r=coachRecNow.rec;
     const followed = r==='FOLD' ? type==='fold'
       : (r==='CALL'||r==='CHECK') ? type==='call'
       : type==='raise';
-    state.humanDecisions.push({stage:state.stage,rec:r,action:type,followed});
+    /* EV lost vs the coach's line (rough chip-EV model) */
+    let evLoss=0;
+    if(coachRecNow.evs){
+      const key=t=>t==='fold'?'FOLD':t==='call'?'CALL':'RAISE';
+      const recKey=r==='ALLIN'?'RAISE':r==='CHECK'?'CALL':r;
+      evLoss=Math.max(0,Math.round((coachRecNow.evs[recKey]||0)-(coachRecNow.evs[key(type)]||0)));
+    }
+    state.humanDecisions.push({stage:state.stage,rec:r,action:type,followed,evLoss});
+    if(evLoss>0){
+      state.sessStats.evLost=(state.sessStats.evLost||0)+evLoss;
+      (state.gameDecisions=state.gameDecisions||[]).push({hand:state.handNum,stage:state.stage,rec:r,action:type,evLoss});
+    }
     coachRecNow=null;
   }
   haptic(type==='raise'?[10,20,10]:8);
@@ -1816,10 +1947,23 @@ function doNextHand(){ hideNextBtn(); startHand(); }
 
 function showGameOver(won,place){
   if(!HAS_DOM)return;
+  clearResume();
   render();
   $('ovEmoji').textContent=won?'🏆':'💀';
   $('ovTitle').textContent=won?'You win the tournament!':`Busted in ${ordinal(place)} place`;
   $('ovSub').textContent=won?`Outlasted ${state.cfg.numPlayers-1} opponents over ${state.handNum} hands.`:`Survived ${state.handNum} hands. Run it back?`;
+  /* blunder report: biggest EV leaks vs the coach this game */
+  const gd=(state.gameDecisions||[]).slice().sort((a,b)=>b.evLoss-a.evLoss);
+  const tot=gd.reduce((s,d)=>s+d.evLoss,0);
+  const nDec=state.sessStats?state.sessStats.decisions:0;
+  $('ovBlunders').innerHTML = nDec===0 ? '' : gd.length===0
+    ? '<h3 class="bl-clean">No EV leaked vs the coach — clean game! 🎯</h3>'
+    : `<h3>📉 Total EV leaked: −${usd(tot)} (${gd.length} deviation${gd.length>1?'s':''})</h3>`+
+      gd.slice(0,5).map(d=>
+        `<div class="bl-row"><span>Hand #${d.hand} · ${d.stage}</span>`+
+        `<span class="bl-what">coach: ${d.rec} · you: ${d.action.toUpperCase()}</span>`+
+        `<b>−${usd(d.evLoss)}</b></div>`).join('')+
+      (gd.length>5?`<div class="bl-more">+ ${gd.length-5} smaller leak${gd.length-5>1?'s':''}</div>`:'');
   $('overlay').classList.remove('hidden');
 }
 function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
@@ -1876,6 +2020,61 @@ function initUI(){
     updateRaiseLabel();
   };
   $('nextHandBtn').onclick=doNextHand;
+  /* --- resume saved tournament --- */
+  const refreshResume=()=>{
+    let sv=null; try{sv=JSON.parse(localStorage.getItem('sg_poker_resume'));}catch(e){}
+    $('resumeBtn').classList.toggle('hidden',!sv);
+    return sv;
+  };
+  refreshResume();
+  $('resumeBtn').onclick=()=>{
+    const sv=refreshResume(); if(!sv)return;
+    logLines=[];
+    $('setup').classList.add('hidden');
+    $('game').classList.remove('hidden');
+    $('overlay').classList.add('hidden');
+    $('tDiff').textContent=sv.cfg.difficulty[0].toUpperCase()+sv.cfg.difficulty.slice(1);
+    newGame(sv.cfg);
+    state.gameId=sv.gameId||state.gameId;
+    state.handNum=sv.handNum; state.dealerIdx=sv.dealerIdx;
+    if(sv.sessStats) state.sessStats=Object.assign(state.sessStats,sv.sessStats);
+    state.gameDecisions=sv.gameDecisions||[];
+    try{ // restore this game's hands for the replayer
+      const hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');
+      state.gameHands=hist.filter(h=>h.gameId===state.gameId);
+    }catch(e){}
+    sv.players.forEach((q,i)=>{
+      const p=state.players[i]; if(!p)return;
+      p.name=q.name; p.avatar=q.avatar; p.chips=q.chips; p.out=q.out; p.place=q.place||0;
+      if(q.style) p.style=STYLES.find(s=>s.id===q.style)||p.style;
+    });
+    buildSeats(); hideActions(); lastHand=null;
+    $('coachFeed').classList.add('hidden');
+    renderStats();
+    setTimeout(startHand,400);
+  };
+  /* --- keyboard shortcuts: F fold · C check/call · R raise · 1-4 sizes · N next hand --- */
+  $('foldBtn').title='Fold (F)'; $('callBtn').title='Check / Call (C)'; $('raiseBtn').title='Raise (R)';
+  $('prMin').title='Min raise (1)'; $('prHalf').title='½ pot (2)'; $('prPot').title='Pot (3)'; $('prMax').title='All-in (4)';
+  window.addEventListener('keydown',e=>{
+    if(e.metaKey||e.ctrlKey||e.altKey)return;
+    const tag=((e.target&&e.target.tagName)||'').toLowerCase();
+    if(tag==='input'||tag==='select'||tag==='textarea')return;
+    if(!state||$('game').classList.contains('hidden'))return;
+    if(!$('replayOv').classList.contains('hidden'))return;
+    const k=e.key.toLowerCase();
+    if(!$('humanCtls').classList.contains('hidden')){
+      if(k==='f'&&!$('foldBtn').disabled){e.preventDefault();humanAct('fold');}
+      else if(k==='c'){e.preventDefault();humanAct('call');}
+      else if(k==='r'){if($('raiseCtl').style.visibility!=='hidden'){e.preventDefault();humanAct('raise',+$('raiseSlider').value);}}
+      else if(k>='1'&&k<='4'){e.preventDefault();$(['prMin','prHalf','prPot','prMax'][+k-1]).click();}
+    }else if(k==='n'&&!$('nextHandBtn').classList.contains('hidden')){e.preventDefault();doNextHand();}
+  });
+  /* --- replayer navigation --- */
+  $('rpPrevH').onclick=()=>{rpHandIdx--;rpStreet=99;rpRender();};
+  $('rpNextH').onclick=()=>{rpHandIdx++;rpStreet=99;rpRender();};
+  $('rpPrevS').onclick=()=>{rpStreet--;rpRender();};
+  $('rpNextS').onclick=()=>{rpStreet++;rpRender();};
   $('coachChk').onchange=e=>setCoach(e.target.checked);
   $('coachClose').onclick=()=>setCoach(false);
   setCoach(!isMobile());   // default: docked on desktop, hidden sheet on mobile
@@ -1906,14 +2105,16 @@ function initUI(){
   $('sndBtn').onclick=()=>{soundOn=!soundOn;$('sndBtn').textContent=soundOn?'🔊':'🔇';};
   $('quitBtn').onclick=()=>{
     if(confirm('Quit this tournament?')){
-      state.gameOver=true; hideNextBtn(); hideActions();
+      state.gameOver=true; clearResume(); hideNextBtn(); hideActions();
       $('game').classList.add('hidden'); $('setup').classList.remove('hidden');
+      refreshResume();
     }
   };
   $('ovBtn').onclick=()=>{
     $('overlay').classList.add('hidden');
     $('game').classList.add('hidden');
     $('setup').classList.remove('hidden');
+    refreshResume();
   };
   window.addEventListener('resize',layoutSeats);
   window.addEventListener('orientationchange',()=>setTimeout(layoutSeats,250));
