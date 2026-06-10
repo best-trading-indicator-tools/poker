@@ -1194,7 +1194,8 @@ function layoutSeats(){
     const seat=$('seat'+p.i);
     if(seat){seat.style.left=x+'px'; seat.style.top=(y-28)+'px';}
     const bet=$('bet'+p.i);
-    if(bet){bet.style.left=(cx+rx*0.52*Math.cos(ang))+'px'; bet.style.top=(cy+ry*0.48*Math.sin(ang)+8)+'px';}
+    /* keep bet chips close to their seat so they never overlap the pot/board area */
+    if(bet){bet.style.left=(cx+rx*0.58*Math.cos(ang))+'px'; bet.style.top=(cy+ry*0.66*Math.sin(ang)+6)+'px';}
   }
   positionDealerBtn();
 }
