@@ -2,8 +2,6 @@
 
 A free, single-file No-Limit Texas Hold'em tournament game vs AI. No install, no ads, works offline — just open `poker.html` in any browser. Engine, AI, GTO solver and UI are all in the one file. Plays on desktop and mobile.
 
-![Gameplay — live coach, GTO mix and per-game stats](docs/screenshot.png)
-
 ## Quick start
 
 Double-click `poker.html`, or serve it from any static host. Set up your table (players, blinds, buy-in, ante, blind speed, AI difficulty) and play.
