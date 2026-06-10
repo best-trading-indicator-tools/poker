@@ -211,8 +211,10 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 
 #coachClose{display:none;position:absolute;top:10px;right:12px;background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;z-index:2;}
 
-/* ================= MOBILE / TOUCH ================= */
-@media(max-width:680px){
+/* ================= MOBILE / TOUCH =================
+   applies to phones AND any portrait screen up to 980px (large phones, small tablets,
+   narrow browser windows) — desktop-sized seats never fit a portrait table */
+@media(max-width:680px),(max-width:980px) and (orientation:portrait){
   body{overflow:hidden;}
   /* the start menu is taller than small screens: let it scroll instead of clipping */
   #setup{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;}
@@ -285,7 +287,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
   #waitMsg{font-size:12px;flex-basis:100%;}
   #log{left:6px;right:6px;width:auto;bottom:6px;max-height:40vh;}
 }
-@media(max-width:680px) and (orientation:landscape){
+@media(max-width:980px) and (orientation:landscape) and (max-height:500px){
   #coach{max-height:90vh;}
   #centerArea{top:40%;}
 }
@@ -1772,9 +1774,12 @@ function layoutSeats(){
     const L=Math.hypot(ux,uy)||1; ux/=L; uy/=L;
     const off=Math.max(r.width,r.height)/2+22;          // just outside the seat, toward the middle
     let bx=scx+ux*off, by=scy+uy*off;
-    const minR=Math.min(W,H)*0.17;                      // keep out of the board/pot zone
-    const dC=Math.hypot(bx-cx,by-cy);
-    if(dC<minR){ bx=cx+(bx-cx)/(dC||1)*minR; by=cy+(by-cy)/(dC||1)*minR; }
+    /* rectangular exclusion zone around the board + pot text */
+    const ezX=W*0.30, ezY=H*0.16;
+    if(Math.abs(bx-cx)<ezX&&Math.abs(by-cy)<ezY){
+      const s=Math.min(ezX/Math.max(Math.abs(bx-cx),1), ezY/Math.max(Math.abs(by-cy),1));
+      bx=cx+(bx-cx)*s; by=cy+(by-cy)*s;
+    }
     bet.style.left=bx+'px'; bet.style.top=by+'px';
   }
   positionDealerBtn();
@@ -1832,7 +1837,7 @@ function render(winners){
 
 /* ---------- live coach ---------- */
 const pct=e=>Math.round(e*100)+'%';
-function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px)').matches; }
+function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:980px) and (orientation:portrait)').matches; }
 /* media-aware coach visibility: docked panel on desktop, slide-down sheet on mobile */
 function setCoach(on){
   if(!HAS_DOM)return;
