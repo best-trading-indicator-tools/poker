@@ -1287,6 +1287,7 @@ function startHand(){
   /* per-hand trackers */
   state.handLog=[]; state.humanDecisions=[]; state.humanWonAmt=0; state.resultText='';
   state.humanHandStats={vpip:false,pfr:false,aBets:0,aCalls:0,sd:false,sdWon:false};
+  state.noActionHand=false;
   state.humanStart=state.players[0].chips+state.players[0].totalBet;
   state.humanPlayed=!state.players[0].out;
   prevBoardLen=0; coachRecNow=null;
@@ -1297,7 +1298,8 @@ function startHand(){
   const first=nextSeat(bbIdx,p=>!p.out&&!p.folded&&!p.allIn);
   render();
   if(first===-1 || alive().filter(p=>!p.allIn).length<=1){
-    // everyone all-in from blinds/antes
+    // everyone all-in from blinds/antes — nobody can act this hand
+    state.noActionHand=true;
     refundUncalled(); runout();
   } else beginRound(first);
 }
@@ -2399,8 +2401,9 @@ function humanAct(type,amount){
 function showNextBtn(autoMs){
   if(!HAS_DOM){ setTimeout(startHand,autoMs); return; }
   clearTimeout(nextTimer);
-  if($('autoNext').checked){
-    /* auto mode: no button, just deal after the result pause */
+  /* auto-advance if auto mode is on, OR if nobody could act this hand (all-in from blinds) —
+     waiting for a click when there was nothing to decide is pointless */
+  if($('autoNext').checked||state.noActionHand){
     nextTimer=setTimeout(()=>{ if(!state.gameOver) doNextHand(); },autoMs);
   }else{
     $('nextHandBtn').classList.remove('hidden');
