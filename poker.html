@@ -272,6 +272,10 @@ body.fl #centerArea{top:46%;}
   .seat .ppos{font-size:9px;padding:1px 4px;}
   .seat .lastact{font-size:11px;margin-top:2px;font-weight:600;}
   .seat .hole{min-height:46px;gap:3px;}
+  /* on phones the floating bet chips/labels are redundant (each seat's action line
+     already shows "SB $10" / "Call $20") and there is no guaranteed free space for
+     them on a full table — hide them; chip-flight animations still run from their coords */
+  .betchip{visibility:hidden;}
   /* short-handed tables (≤6 players) have room for bigger, clearer seats */
   body.few .seat{width:122px;margin-left:-61px;}
   body.few .seat .avatar{font-size:21px;}
@@ -1849,26 +1853,30 @@ function layoutSeats(){
       if(!b||(b.offsetWidth||0)<12)continue;   // empty = no bet this street
       labels.push({el:b,w:b.offsetWidth,h:b.offsetHeight||56});
     }
-    for(let it=0;it<4;it++){
-      let moved=false;
+    const boardBox={x:cx,y:cy,w:W*0.46,h:H*0.30};   // labels must not cover the board/pot either
+    for(let it=0;it<3;it++){
       for(const L of labels){
         /* label is anchored with translate(-50%,-60%): visual center ≈ (left, top-0.1h) */
         let lx=parseFloat(L.el.style.left)||0, ly=(parseFloat(L.el.style.top)||0)-0.1*L.h;
         const others=labels.filter(o=>o!==L).map(o=>({x:parseFloat(o.el.style.left)||0,y:(parseFloat(o.el.style.top)||0)-0.1*o.h,w:o.w,h:o.h}));
-        for(const o of seats.concat(others)){
-          const px=(L.w+o.w)/2-Math.abs(lx-o.x);
-          const py=(L.h+o.h)/2-Math.abs(ly-o.y);
-          if(px>2&&py>2){
-            if(px<py){ lx+=(lx>=o.x?1:-1)*(px+3); }
-            else     { ly+=(ly>=o.y?1:-1)*(py+3); }
-            moved=true;
-          }
+        const obst=seats.concat(others,[boardBox]);
+        let lastAxis='';
+        for(let k=0;k<10;k++){
+          const hit=obst.find(o=>(L.w+o.w)/2-Math.abs(lx-o.x)>2&&(L.h+o.h)/2-Math.abs(ly-o.y)>2);
+          if(!hit)break;
+          const px=(L.w+hit.w)/2-Math.abs(lx-hit.x);
+          const py=(L.h+hit.h)/2-Math.abs(ly-hit.y);
+          /* min-penetration axis, but alternate when ping-ponging between two boxes */
+          let axis=px<py?'x':'y';
+          if(axis===lastAxis&&k>2) axis=axis==='x'?'y':'x';
+          if(axis==='x') lx+=(lx>=hit.x?1:-1)*(px+3);
+          else           ly+=(ly>=hit.y?1:-1)*(py+3);
+          lastAxis=axis;
+          lx=clamp(lx,L.w/2+2,W-L.w/2-2);
+          ly=clamp(ly,L.h/2+2,H-L.h/2-2);
         }
-        lx=clamp(lx,L.w/2+2,W-L.w/2-2);
-        ly=clamp(ly,L.h/2+2,H-L.h/2-2);
         L.el.style.left=lx+'px'; L.el.style.top=(ly+0.1*L.h)+'px';
       }
-      if(!moved)break;
     }
   }
   positionDealerBtn();
