@@ -1814,7 +1814,10 @@ function layoutSeats(){
     const scx=seat.offsetLeft+r.width/2, scy=seat.offsetTop+r.height/2;
     let ux=cx-scx, uy=cy-scy;
     const L=Math.hypot(ux,uy)||1; ux/=L; uy/=L;
-    const off=Math.max(r.width,r.height)/2+22;          // just outside the seat, toward the middle
+    /* per-axis clearance: the seat box half-size PLUS the bet label's own half-size
+       along the travel direction — so the label body can never rest on the cards */
+    const bw=bet.offsetWidth||64, bh=bet.offsetHeight||56;
+    const off=Math.abs(ux)*(r.width/2+bw/2)+Math.abs(uy)*(r.height/2+bh/2)+12;
     let bx=scx+ux*off, by=scy+uy*off;
     /* rectangular exclusion zone around the board + pot text */
     const ezX=W*0.30, ezY=H*0.16;
