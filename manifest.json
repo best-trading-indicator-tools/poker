@@ -7,6 +7,12 @@
   "background_color": "#0b0e13",
   "theme_color": "#0b0e13",
   "icons": [
-    { "src": "docs/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
-  ]
+    {
+      "src": "docs/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "orientation": "landscape"
 }

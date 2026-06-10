@@ -211,6 +211,10 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 
 #coachClose{display:none;position:absolute;top:10px;right:12px;background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;z-index:2;}
 
+/* forced landscape on phones: the game is rotated 90° when the device is held portrait */
+body.fl{overflow:hidden;}
+body.fl #game{position:fixed;top:0;left:0;transform-origin:left top;z-index:10;}
+
 /* ================= MOBILE / TOUCH =================
    applies to phones AND any portrait screen up to 980px (large phones, small tablets,
    narrow browser windows) — desktop-sized seats never fit a portrait table */
@@ -1750,16 +1754,15 @@ function layoutSeats(){
     const seat=$('seat'+p.i);
     if(seat){seat.style.left=x+'px'; seat.style.top=(y-28)+'px';}
   }
-  /* clamp pass: no seat may leave the felt (bottom seats were spilling onto the action bar on mobile) */
-  const fr=felt.getBoundingClientRect();
+  /* clamp pass: no seat may leave the felt (offset* geometry — safe under CSS transforms) */
   for(const p of state.players){
-    const seat=$('seat'+p.i); if(!seat)continue;
-    const r=seat.getBoundingClientRect(); if(!r.height)continue;
+    const seat=$('seat'+p.i); if(!seat||!seat.offsetHeight)continue;
+    const l=seat.offsetLeft,t=seat.offsetTop,w=seat.offsetWidth,h=seat.offsetHeight;
     let dx=0,dy=0;
-    if(r.bottom>fr.bottom-2) dy=(fr.bottom-2)-r.bottom;
-    if(r.top+dy<fr.top+2)    dy=(fr.top+2)-r.top;
-    if(r.left<fr.left+1)     dx=(fr.left+1)-r.left;
-    if(r.right+dx>fr.right-1)dx=(fr.right-1)-r.right;
+    if(t+h>H-2) dy=H-2-(t+h);
+    if(t+dy<2)  dy=2-t;
+    if(l<1)     dx=1-l;
+    if(l+dx+w>W-1) dx=W-1-(l+w);
     if(dx)seat.style.left=(parseFloat(seat.style.left)+dx)+'px';
     if(dy)seat.style.top=(parseFloat(seat.style.top)+dy)+'px';
   }
@@ -1767,9 +1770,9 @@ function layoutSeats(){
      never on top of the seat box and never inside the board/pot zone */
   for(const p of state.players){
     const seat=$('seat'+p.i), bet=$('bet'+p.i);
-    if(!seat||!bet)continue;
-    const r=seat.getBoundingClientRect(); if(!r.height)continue;
-    const scx=r.left+r.width/2-fr.left, scy=r.top+r.height/2-fr.top;
+    if(!seat||!bet||!seat.offsetHeight)continue;
+    const r={width:seat.offsetWidth,height:seat.offsetHeight};
+    const scx=seat.offsetLeft+r.width/2, scy=seat.offsetTop+r.height/2;
     let ux=cx-scx, uy=cy-scy;
     const L=Math.hypot(ux,uy)||1; ux/=L; uy/=L;
     const off=Math.max(r.width,r.height)/2+22;          // just outside the seat, toward the middle
@@ -1838,6 +1841,23 @@ function render(winners){
 /* ---------- live coach ---------- */
 const pct=e=>Math.round(e*100)+'%';
 function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:980px) and (orientation:portrait)').matches; }
+/* force landscape on phones: rotate the whole game 90° when held portrait */
+function updateOrient(){
+  if(!HAS_DOM)return;
+  const g=$('game'); if(!g)return;
+  const portrait=window.innerHeight>window.innerWidth;
+  const phone=Math.min(window.innerWidth,window.innerHeight)<=620;
+  const on=portrait&&phone&&!g.classList.contains('hidden');
+  document.body.classList.toggle('fl',on);
+  if(on){
+    g.style.width=window.innerHeight+'px';
+    g.style.height=window.innerWidth+'px';
+    g.style.transform=`translateX(${window.innerWidth}px) rotate(90deg)`;
+  }else{
+    g.style.width=''; g.style.height=''; g.style.transform='';
+  }
+  layoutSeats();
+}
 /* media-aware coach visibility: docked panel on desktop, slide-down sheet on mobile */
 function setCoach(on){
   if(!HAS_DOM)return;
@@ -2437,6 +2457,7 @@ function initUI(){
     lastHand=null;
     $('coachFeed').classList.add('hidden');
     renderStats();
+    updateOrient();
     setTimeout(startHand,400);
   };
   $('foldBtn').onclick=()=>humanAct('fold');
@@ -2512,6 +2533,7 @@ function initUI(){
     buildSeats(); hideActions(); lastHand=null;
     $('coachFeed').classList.add('hidden');
     renderStats();
+    updateOrient();
     setTimeout(startHand,400);
   };
   /* --- keyboard shortcuts: F fold · C check/call · R raise · 1-4 sizes · N next hand --- */
@@ -2568,17 +2590,17 @@ function initUI(){
     if(confirm('Quit this tournament?')){
       state.gameOver=true; clearResume(); hideNextBtn(); hideActions();
       $('game').classList.add('hidden'); $('setup').classList.remove('hidden');
-      refreshResume();
+      refreshResume(); updateOrient();
     }
   };
   $('ovBtn').onclick=()=>{
     $('overlay').classList.add('hidden');
     $('game').classList.add('hidden');
     $('setup').classList.remove('hidden');
-    refreshResume();
+    refreshResume(); updateOrient();
   };
-  window.addEventListener('resize',layoutSeats);
-  window.addEventListener('orientationchange',()=>setTimeout(layoutSeats,250));
+  window.addEventListener('resize',updateOrient);
+  window.addEventListener('orientationchange',()=>setTimeout(updateOrient,250));
 }
 
 if(HAS_DOM) initUI();
