@@ -1725,18 +1725,26 @@ function updateCoach(p){
     /* a big bet usually means a strong made hand — discount raw equity */
     const betRatio=callAmt/Math.max(pot-callAmt,1);
     const bigBetPen=betRatio>=1?0.10:betRatio>=0.6?0.05:betRatio>=0.35?0.02:0;
-    const eqAdj=eq-bigBetPen;
-    const edge=eqAdj-odds-posAdj;
     const d=state.stage!=='river'?detectDraws(p.hole,state.board):null;
-    const drawOnly=d&&(d.gutshot||d.oesd||d.flush)&&evalBest(p.hole.concat(state.board))[0]<2;
+    const myScore=evalBest(p.hole.concat(state.board));
+    const drawOnly=d&&(d.gutshot||d.oesd||d.flush)&&myScore[0]<2;
+    /* "no hand, no draw" discipline: a pair that uses a hole card, or a real draw, is showdown value.
+       High cards only (or just the board's pair) vs a bet = fold unless the price is absurdly good. */
+    const usesHole=myScore[0]>=1&&myScore[0]<=2&&p.hole.some(c=>c.r===myScore[1]);
+    const noMade=myScore[0]===0||(myScore[0]<=2&&!usesHole);
+    const goodDraw=d&&(d.flush||d.oesd);
+    const airPen=(noMade&&!goodDraw)?0.15:0;
+    const eqAdj=eq-bigBetPen-airPen;
+    const edge=eqAdj-odds-posAdj;
     if(bigBetPen>=0.05) extra.push(` This bet is ≈${Math.round(betRatio*100)}% of the pot — bets that large are usually made hands (two pair or better), so the coach discounts your raw win chance here.`);
     if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(' Chasing a 4-out gutshot into big bets is a long-term money leak — even when you hit, you may not get paid enough to cover all the misses (poor implied odds).');
+    if(airPen) extra.push(' You have no made hand and no real draw — players who bet usually have at least a pair, and "pot-odds correct" calls with high cards are one of the biggest leaks in poker. The coach heavily discounts your raw win chance here.');
     if(eqAdj>0.68+posAdj&&!drawOnly){
       rec='RAISE';
       why.push(`~${pct(eq)} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`);
     }else if(edge>=0){
       rec='CALL';
-      why.push(`The call costs ${usd(callAmt)} to win a ${usd(pot)} pot, so you need ${pct(odds)} equity to break even. You have ~${pct(eq)}${bigBetPen?` (counted as ~${pct(eqAdj)} after the big-bet discount)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`);
+      why.push(`The call costs ${usd(callAmt)} to win a ${usd(pot)} pot, so you need ${pct(odds)} equity to break even. You have ~${pct(eq)}${bigBetPen||airPen?` (counted as ~${pct(eqAdj)} after discounts)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`);
     }else{
       rec='FOLD';
       why.push(`You need ${pct(odds)} equity to call (${usd(callAmt)} into ${usd(pot)}) but only have ~${pct(eqAdj)}${bigBetPen?' once the size of this bet is respected':''}. Every chip you put in here loses value — fold and wait for a better spot.`);
@@ -2181,6 +2189,15 @@ function initUI(){
 }
 
 if(HAS_DOM) initUI();
+
+/* ---------- offline mode (PWA): cache the game so it runs with no internet ---------- */
+if(HAS_DOM && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  try{
+    const m=document.createElement('link'); m.rel='manifest'; m.href='manifest.json';
+    document.head.appendChild(m);
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }catch(e){}
+}
 
 /* ---------- exports for node testing ---------- */
 if(typeof module!=='undefined'&&module.exports){
