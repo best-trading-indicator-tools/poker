@@ -81,6 +81,10 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-10 — Mobile & data control
+- **Mobile layout fixes**: the start menu scrolls instead of clipping on phones, modals stay inside the viewport, replayer controls compact, extra-small tier (≤390px) shrinks seats/cards so 9 players never overlap
+- **"Clear saved data" button** on the start menu with an ℹ️ explainer — wipes lifetime stats, hand history and any resumable tournament from the browser (language choice kept), with confirmation
+
 ### 2026-06-10 — Languages
 - **French and Spanish**: language selector on the landing page and the game header — translates the full UI chrome, coach labels and recommendations, stats, blunder report, replayer and game-over screens
 - **Fully translated coach reasoning**: all ~40 advice templates (preflop charts, push/fold, set-mining, pot odds, big-bet discounts, stabs, river logic), localized hand names, draw names, board-texture warnings and GTO solver notes — in all three languages
