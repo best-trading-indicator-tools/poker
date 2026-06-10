@@ -82,7 +82,7 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 ## Changelog
 
 ### 2026-06-10 — Mobile & data control
-- **Mobile layout fixes**: the start menu scrolls instead of clipping on phones, modals stay inside the viewport, replayer controls compact, extra-small tier (≤390px) shrinks seats/cards so 9 players never overlap
+- **Mobile layout fixes**: the start menu scrolls instead of clipping on phones, modals stay inside the viewport, replayer controls compact, extra-small tier (≤390px) shrinks seats/cards, and a seat clamp keeps every seat inside the felt so plates never spill onto the action bar
 - **"Clear saved data" button** on the start menu with an ℹ️ explainer — wipes lifetime stats, hand history and any resumable tournament from the browser (language choice kept), with confirmation
 
 ### 2026-06-10 — Languages

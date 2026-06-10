@@ -1733,6 +1733,19 @@ function layoutSeats(){
     /* keep bet chips close to their seat so they never overlap the pot/board area */
     if(bet){bet.style.left=(cx+rx*0.58*Math.cos(ang))+'px'; bet.style.top=(cy+ry*0.66*Math.sin(ang)+6)+'px';}
   }
+  /* clamp pass: no seat may leave the felt (bottom seats were spilling onto the action bar on mobile) */
+  const fr=felt.getBoundingClientRect();
+  for(const p of state.players){
+    const seat=$('seat'+p.i); if(!seat)continue;
+    const r=seat.getBoundingClientRect(); if(!r.height)continue;
+    let dx=0,dy=0;
+    if(r.bottom>fr.bottom-2) dy=(fr.bottom-2)-r.bottom;
+    if(r.top+dy<fr.top+2)    dy=(fr.top+2)-r.top;
+    if(r.left<fr.left+1)     dx=(fr.left+1)-r.left;
+    if(r.right+dx>fr.right-1)dx=(fr.right-1)-r.right;
+    if(dx)seat.style.left=(parseFloat(seat.style.left)+dx)+'px';
+    if(dy)seat.style.top=(parseFloat(seat.style.top)+dy)+'px';
+  }
   positionDealerBtn();
 }
 function positionDealerBtn(){
@@ -1783,7 +1796,7 @@ function render(winners){
     }
     else bet.classList.add('hidden');
   }
-  positionDealerBtn();
+  layoutSeats();
 }
 
 /* ---------- live coach ---------- */
