@@ -34,8 +34,9 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 .seg button.on{background:var(--gold);color:#1a1408;}
 #startBtn{width:100%;margin-top:8px;background:var(--gold);color:#1a1408;font-size:16px;font-weight:700;border:none;border-radius:10px;padding:13px;cursor:pointer;}
 #startBtn:hover{filter:brightness(1.08);}
-#resumeBtn{width:100%;margin-top:8px;background:none;border:1px solid var(--gold);color:var(--gold);font-size:15px;font-weight:700;border-radius:10px;padding:11px;cursor:pointer;}
-#resumeBtn:hover{background:rgba(230,180,60,.12);}
+#resumeBtn,#reviewBtn{width:100%;margin-top:8px;background:none;border:1px solid var(--gold);color:var(--gold);font-size:15px;font-weight:700;border-radius:10px;padding:11px;cursor:pointer;}
+#resumeBtn:hover,#reviewBtn:hover{background:rgba(230,180,60,.12);}
+#reviewBtn{border-color:var(--line);color:var(--text);font-weight:600;}
 #ovBlunders{margin:12px 0 4px;text-align:left;max-height:38vh;overflow-y:auto;}
 #ovBlunders h3{font-size:13px;color:var(--gold);margin-bottom:8px;text-align:center;}
 #ovBlunders .bl-clean{color:#62d68a;}
@@ -328,6 +329,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
     </div>
     <button id="startBtn">Deal me in</button>
     <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
+    <button id="reviewBtn" class="hidden">&#127902; Review past hands</button>
   </div>
 </div>
 
@@ -1705,17 +1707,25 @@ function updateCoach(p){
       why.push(`You need ${pct(odds)} equity to call (${usd(callAmt)} into ${usd(pot)}) but only have ~${pct(eqAdj)}${bigBetPen?' once the size of this bet is respected':''}. Every chip you put in here loses value — fold and wait for a better spot.`);
     }
   }
-  let sizeRow='';
+  let sizeRow='', coachT=0;
   if(rec==='RAISE'||rec==='ALLIN'){
     let t = rec==='ALLIN' ? p.bet+p.chips
       : state.stage==='preflop'
       ? Math.max(state.bb*3, state.currentBet*2.6)
       : state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*0.66));
-    t=clamp(Math.round(t/state.sb)*state.sb, state.currentBet+state.lastRaiseSize, p.bet+p.chips);
-    sizeRow=`<div class="coach-row"><span>Suggested size</span><b>${usd(t)} (${bbs(t)})</b></div>`;
+    coachT=clamp(Math.round(t/state.sb)*state.sb, state.currentBet+state.lastRaiseSize, p.bet+p.chips);
+    sizeRow=`<div class="coach-row"><span>Suggested size</span><b>${usd(coachT)} (${bbs(coachT)})</b></div>`;
+    /* pre-set the raise slider to the coach's size so R raises exactly this */
+    if($('raiseCtl').style.visibility!=='hidden'){
+      const sl=$('raiseSlider');
+      sl.value=clamp(coachT,+sl.min,+sl.max); updateRaiseLabel();
+    }
   }
+  const recLabel = rec==='ALLIN' ? `ALL-IN ${usd(p.bet+p.chips)}`
+    : rec==='RAISE' ? `${state.currentBet>0?'RAISE TO':'BET'} ${usd(coachT)} · ${bbs(coachT)}`
+    : rec;
   $('coachBody').innerHTML=
-    `<div class="rec ${rec}">${rec==='ALLIN'?'ALL-IN':rec}</div>`+
+    `<div class="rec ${rec}">${recLabel}</div>`+
     `<div class="coach-row"><span>Your hand</span><b>${handDesc}</b></div>`+
     (pos?`<div class="coach-row"><span>Position</span><b>${pos}${early?' (early)':late?' (late)':''}</b></div>`:'')+
     (opps>0?`<div class="coach-row"><span>${state.stage==='preflop'?'Postflop order':'Acting order'}</span><b>${actsFirst?'first to act (OOP)':actsLast?'last to act (IP)':(ordIdx+1)+' of '+ord.length}</b></div>`:'')+
@@ -1805,8 +1815,8 @@ function renderStats(){
     `<div class="srow"><span>Net</span><b>${l.net>=0?'+':'−'}${usd(Math.abs(l.net))}</b></div>`+
     `<div class="srow"><span>Coach followed</span><b>${fp(l)}</b></div>`;
 }
-/* ---------- hand replayer: browse hands this game, step through streets ---------- */
-let rpHandIdx=0, rpStreet=99;
+/* ---------- hand replayer: browse hands (this game or saved history), step through streets ---------- */
+let rpHandIdx=0, rpStreet=99, rpAll=null;
 const STREET_NM=['Preflop','Flop','Turn','River'];
 function parseCardCode(code){
   return {r:+(RANK_CH_INV[code.slice(0,-1)]||2), s:Math.max(0,'shdc'.indexOf(code.slice(-1)))};
@@ -1814,7 +1824,7 @@ function parseCardCode(code){
 const RANK_CH_INV=Object.fromEntries(Object.entries(RANK_CH).map(([k,v])=>[v,k]));
 function rpRender(){
   if(!HAS_DOM)return;
-  const arr=(state&&state.gameHands)||[];
+  const arr=rpAll||(state&&state.gameHands)||[];
   const body=$('rpBody');
   if(!arr.length){
     $('rpHandLbl').textContent='—'; $('rpStreetLbl').textContent='—';
@@ -1832,10 +1842,12 @@ function rpRender(){
   }
   rpStreet=clamp(rpStreet,0,segs.length-1);
   const final=rpStreet===segs.length-1;
-  const boardN=[0,3,4,5][rpStreet]??e.board.length;
+  const boardN=segs.length===1?e.board.length:([0,3,4,5][rpStreet]??e.board.length);
   const shownLog=segs.slice(0,rpStreet+1).flat();
-  $('rpHandLbl').textContent=`Hand #${e.hand} (${rpHandIdx+1}/${arr.length}) · ${e.myNet>=0?'+':'−'}${usd(Math.abs(e.myNet))}`;
-  $('rpStreetLbl').textContent=STREET_NM[rpStreet]||'Preflop';
+  const net=e.myNet!=null?e.myNet:0;
+  const when=rpAll&&e.t?` · ${new Date(e.t).toLocaleDateString()} ${new Date(e.t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`:'';
+  $('rpHandLbl').textContent=`Hand #${e.hand} (${rpHandIdx+1}/${arr.length}) · ${net>=0?'+':'−'}${usd(Math.abs(net))}${when}`;
+  $('rpStreetLbl').textContent=segs.length===1&&e.board.length?'Full hand':(STREET_NM[rpStreet]||'Preflop');
   $('rpPrevH').disabled=rpHandIdx<=0; $('rpNextH').disabled=rpHandIdx>=arr.length-1;
   $('rpPrevS').disabled=rpStreet<=0;  $('rpNextS').disabled=rpStreet>=segs.length-1;
   const board=e.board.slice(0,Math.min(boardN,e.board.length)).map(c=>cardHTML(parseCardCode(c))).join('');
@@ -1851,8 +1863,18 @@ function rpRender(){
 }
 function showReplay(){
   if(!HAS_DOM)return;
+  rpAll=null;           // in-game: this game's hands
   rpHandIdx=((state&&state.gameHands)||[]).length-1;
   rpStreet=99;          // open on the final street
+  rpRender();
+  $('replayOv').classList.remove('hidden');
+}
+function showHistoryReplay(){
+  if(!HAS_DOM)return;
+  let hist=[];
+  try{hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');}catch(e){}
+  rpAll=hist;
+  rpHandIdx=hist.length-1; rpStreet=99;
   rpRender();
   $('replayOv').classList.remove('hidden');
 }
@@ -2024,9 +2046,12 @@ function initUI(){
   const refreshResume=()=>{
     let sv=null; try{sv=JSON.parse(localStorage.getItem('sg_poker_resume'));}catch(e){}
     $('resumeBtn').classList.toggle('hidden',!sv);
+    let nHist=0; try{nHist=(JSON.parse(localStorage.getItem('sg_poker_history')||'[]')).length;}catch(e){}
+    $('reviewBtn').classList.toggle('hidden',!nHist);
     return sv;
   };
   refreshResume();
+  $('reviewBtn').onclick=showHistoryReplay;
   $('resumeBtn').onclick=()=>{
     const sv=refreshResume(); if(!sv)return;
     logLines=[];

@@ -16,7 +16,8 @@ Double-click `poker.html`, or serve it from any static host. Set up your table (
 - **GTO mini-solver**: real CFR (counterfactual regret minimization) for heads-up postflop spots — shows the equilibrium mixed strategy with EVs
 - **Stats & training**: post-hand feedback, session + lifetime stats (persisted), full hand-history export to JSON
 - **Blunder report**: every decision is scored against the coach's line in chip-EV; deviations show their estimated EV cost live, the coach panel tracks total "EV leaked" this game, and the game-over screen lists your top 5 costliest mistakes ("Hand #14 · turn — coach: FOLD, you: CALL — −$1,800")
-- **Hand replayer**: browse every hand of the current game and step through it street by street — board reveals progressively, hole cards shown, action log per street
+- **Hand replayer**: browse every hand of the current game and step through it street by street — board reveals progressively, hole cards shown, action log per street. After quitting (or any time), "Review past hands" on the start screen replays your full saved history, timestamped per hand
+- **Prominent raise sizing**: the coach's recommendation button reads "RAISE TO $60 · 3 BB" and the bet slider pre-sets to the suggested size — pressing R takes exactly the coach's line
 - **Per-game poker stats**: VPIP, PFR, aggression factor and won-at-showdown tracked live in the coach panel
 - **Resume tournament**: progress is saved at every hand boundary; refreshing or closing the tab mid-game offers a "Resume tournament" button on the start screen
 - **Keyboard shortcuts**: F fold · C check/call · R raise · 1–4 bet sizes (min / ½ pot / pot / all-in) · N next hand
