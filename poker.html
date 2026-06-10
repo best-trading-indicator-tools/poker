@@ -140,7 +140,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #dbtn{position:absolute;width:24px;height:24px;border-radius:50%;background:#f3f0e6;color:#222;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);box-shadow:0 2px 5px rgba(0,0,0,.5);}
 
 /* ---------- ACTION BAR ---------- */
-#actionbar{background:var(--panel);border-top:1px solid var(--line);padding:12px 18px;min-height:88px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+#actionbar{background:var(--panel);border-top:1px solid var(--line);padding:12px 18px;min-height:88px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative;z-index:40;}
 #actionbar .btn{border:none;border-radius:10px;padding:13px 26px;font-size:15px;font-weight:700;cursor:pointer;color:#fff;flex-shrink:0;white-space:nowrap;}
 #foldBtn{background:var(--red);}
 #callBtn{background:var(--blue);}
@@ -1732,7 +1732,15 @@ function layoutSeats(){
   if(!HAS_DOM||!state)return;
   const felt=$('felt');
   const W=felt.clientWidth,H=felt.clientHeight;
-  const cx=W/2,cy=H/2,rx=W*0.41,ry=H*0.40;
+  /* size the ellipse to the REAL seat dimensions so full tables fit on narrow screens */
+  let sW=100,sH=96;
+  for(const p of state.players){
+    const s=$('seat'+p.i);
+    if(s&&s.offsetHeight){sW=Math.max(sW,s.offsetWidth);sH=Math.max(sH,s.offsetHeight);}
+  }
+  const cx=W/2,cy=H/2;
+  const rx=Math.min(W*0.41,Math.max(60,(W-sW)/2-4));
+  const ry=Math.min(H*0.40,Math.max(60,(H-sH)/2-8));
   const n=state.players.length;
   for(const p of state.players){
     const ang=(90+360*p.i/n)*Math.PI/180;
