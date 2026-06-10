@@ -1835,6 +1835,42 @@ function layoutSeats(){
     }
     bet.style.left=bx+'px'; bet.style.top=by+'px';
   }
+  /* FINAL GUARANTEE: no bet label may intersect ANY seat or another label.
+     Iterative minimal-push resolution against every box on the table. */
+  {
+    const seats=[];
+    for(const p of state.players){
+      const s=$('seat'+p.i);
+      if(s&&s.offsetHeight)seats.push({x:s.offsetLeft+s.offsetWidth/2,y:s.offsetTop+s.offsetHeight/2,w:s.offsetWidth,h:s.offsetHeight});
+    }
+    const labels=[];
+    for(const p of state.players){
+      const b=$('bet'+p.i);
+      if(!b||(b.offsetWidth||0)<12)continue;   // empty = no bet this street
+      labels.push({el:b,w:b.offsetWidth,h:b.offsetHeight||56});
+    }
+    for(let it=0;it<4;it++){
+      let moved=false;
+      for(const L of labels){
+        /* label is anchored with translate(-50%,-60%): visual center ≈ (left, top-0.1h) */
+        let lx=parseFloat(L.el.style.left)||0, ly=(parseFloat(L.el.style.top)||0)-0.1*L.h;
+        const others=labels.filter(o=>o!==L).map(o=>({x:parseFloat(o.el.style.left)||0,y:(parseFloat(o.el.style.top)||0)-0.1*o.h,w:o.w,h:o.h}));
+        for(const o of seats.concat(others)){
+          const px=(L.w+o.w)/2-Math.abs(lx-o.x);
+          const py=(L.h+o.h)/2-Math.abs(ly-o.y);
+          if(px>2&&py>2){
+            if(px<py){ lx+=(lx>=o.x?1:-1)*(px+3); }
+            else     { ly+=(ly>=o.y?1:-1)*(py+3); }
+            moved=true;
+          }
+        }
+        lx=clamp(lx,L.w/2+2,W-L.w/2-2);
+        ly=clamp(ly,L.h/2+2,H-L.h/2-2);
+        L.el.style.left=lx+'px'; L.el.style.top=(ly+0.1*L.h)+'px';
+      }
+      if(!moved)break;
+    }
+  }
   positionDealerBtn();
 }
 function positionDealerBtn(){
