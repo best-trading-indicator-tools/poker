@@ -652,6 +652,9 @@ mpTest:"🔧 Test my connection",mpTestSig:"reaching the signaling cloud…",mpT
 mpStarted:"This room's game has already started.",
 mpFull:"This room is full (9 players max).",
 mpWaitNext:"Game in progress — you'll be dealt in at the next hand. Hang tight!",
+mpMigrating:"Connection to the host lost — recovering the game…",
+mpMigrated:n=>`${n} is the new host — the tournament continues!`,
+mpRejoined:n=>`${n} is back at the table`,
 mpKnock:n=>`${n} joins at the next hand`,
 mpVerMismatch:"The host is running a different version of the game. BOTH of you: refresh the page (hold Shift while reloading), then create the room again.",
 mpNeed2:"You need at least one friend in the room to start — or tick \"Fill empty seats with AI bots\".",
@@ -697,6 +700,9 @@ mpTest:"🔧 Tester ma connexion",mpTestSig:"contact du cloud de signalisation�
 mpStarted:"La partie de ce salon a déjà commencé.",
 mpFull:"Ce salon est complet (9 joueurs max).",
 mpWaitNext:"Partie en cours — vous serez servi à la prochaine main. Patience !",
+mpMigrating:"Connexion à l'hôte perdue — récupération de la partie…",
+mpMigrated:n=>`${n} est le nouvel hôte — le tournoi continue !`,
+mpRejoined:n=>`${n} est de retour à la table`,
 mpKnock:n=>`${n} rejoint à la prochaine main`,
 mpVerMismatch:"L'hôte utilise une autre version du jeu. TOUS LES DEUX : rechargez la page (Maj + rechargement), puis recréez le salon.",
 mpNeed2:"Il faut au moins un ami dans le salon pour lancer — ou cochez « Compléter avec des bots IA ».",
@@ -742,6 +748,9 @@ mpTest:"🔧 Probar mi conexión",mpTestSig:"contactando la nube de señalizaci�
 mpStarted:"La partida de esta sala ya empezó.",
 mpFull:"Esta sala está llena (9 jugadores máx.).",
 mpWaitNext:"Partida en curso — entrarás en la próxima mano. ¡Un momento!",
+mpMigrating:"Conexión con el anfitrión perdida — recuperando la partida…",
+mpMigrated:n=>`${n} es el nuevo anfitrión — ¡el torneo continúa!`,
+mpRejoined:n=>`${n} ha vuelto a la mesa`,
 mpKnock:n=>`${n} entra en la próxima mano`,
 mpVerMismatch:"El anfitrión usa otra versión del juego. AMBOS: recargad la página (Shift + recargar) y cread la sala de nuevo.",
 mpNeed2:"Necesitas al menos un amigo en la sala para empezar — o marca \"Rellenar asientos vacíos con bots\".",
@@ -1530,7 +1539,8 @@ function assignPositions(sbIdx){
 /* ================= HAND FLOW ================= */
 function startHand(){
   if(state.gameOver) return;
-  mpSeatPending();   // late multiplayer joiners get dealt in now
+  mpSeatPending();    // late multiplayer joiners get dealt in now
+  mpBroadcastCK();    // public checkpoint: lets any player take over if the host dies
   state.handNum++;
   state.handOver=false;
   const per=SPEED_HANDS[state.cfg.speed];
@@ -1600,7 +1610,17 @@ function promptNext(){
   if(p.isHuman){
     showActions(p);
   }else if(p.remote){
-    /* remote human: the snapshot broadcast tells their client it's their turn; we wait */
+    /* remote human: the snapshot broadcast tells their client it's their turn; we wait.
+       If their connection is gone, auto-fold after a short grace so the table never stalls. */
+    if(!mpConnAlive(p.i)){
+      later(()=>{
+        if(state.gameOver||state.handOver||state.turnIdx!==p.i)return;
+        if(mpConnAlive(p.i)){promptNext();return;}   // they came back just in time
+        applyAction(p,'fold');
+        state.turnIdx=(p.i+1)%state.players.length;
+        promptNext();
+      },2500);
+    }
   }else{
     let delay=AI_DELAY_MIN+Math.random()*(AI_DELAY_MAX-AI_DELAY_MIN);
     if(fastFwd()) delay=Math.min(delay,120+Math.random()*120);
@@ -3132,7 +3152,7 @@ function mpCreate(){
   mpLoadLib(()=>{
     const code=mpCode();
     const peer=new Peer('sgp-'+code,MP_ICE);
-    MP={role:'host',peer,code,myName:name,conns:[],started:false};
+    MP={role:'host',peer,code,hostId:'sgp-'+code,myName:name,conns:[],started:false,mig:0};
     peer.on('open',()=>{
       mpStatus(''); mpLobbyShow();
       try{location.hash='room='+code;}catch(e){}   // host URL becomes the invite link itself
@@ -3161,20 +3181,31 @@ function mpJoin(){
     };
     peer.on('disconnected',()=>{try{peer.reconnect();}catch(e){}});  // keep signaling alive
     peer.on('error',e=>{
-      if(e.type==='peer-unavailable')fail(T('mpRoomGone'));
+      if(e.type==='peer-unavailable'){if(MP&&MP._adv&&!MP.connected)MP._adv();}
       else if(!MP||!MP.connected)fail(T('mpNetFail')+' ('+e.type+')');
     });
     peer.on('open',()=>{
-      /* JSON serialization: PeerJS's default binary mode breaks on iOS Safari
-         (channel opens, first message kills it → looked like "host left") */
-      const conn=peer.connect('sgp-'+code,{reliable:true,serialization:'json'});
-      MP.conn=conn;
-      /* if nothing opens within 12s, the direct connection is blocked */
-      const watchdog=setTimeout(()=>{if(MP&&!MP.connected)fail(T('mpConnFail'));},12000);
-      conn.on('open',()=>{clearTimeout(watchdog);MP.connected=true;mpStatus('');conn.send({t:'hello',n:name,v:MP_V});mpLobbyShow();});
-      conn.on('data',d=>mpClientData(d));
-      conn.on('close',()=>{if(MP&&MP.connected)mpHostGone();else fail(T('mpConnFail'));});
-      conn.on('error',()=>{if(MP&&MP.connected)mpHostGone();else fail(T('mpConnFail'));});
+      /* JSON serialization (iOS Safari kills binary channels). Probe the original
+         room id, then migrated ids (-m1, -m2…) so invite links survive host changes. */
+      let attempt=0,opened=false;
+      const tryNext=()=>{
+        if(!MP||opened)return;
+        if(attempt>6){fail(T('mpRoomGone'));return;}
+        const id='sgp-'+code+(attempt===0?'':'-m'+attempt);
+        attempt++;
+        const conn=peer.connect(id,{reliable:true,serialization:'json'});
+        MP.conn=conn;
+        const wd=setTimeout(()=>{if(MP&&!opened){try{conn.close();}catch(e){}tryNext();}},5000);
+        conn.on('open',()=>{
+          clearTimeout(wd);opened=true;MP.connected=true;MP.hostId=id;
+          mpStatus('');conn.send({t:'hello',n:name,v:MP_V});mpLobbyShow();
+        });
+        conn.on('data',d=>mpClientData(d));
+        conn.on('close',()=>{if(opened&&MP&&MP.connected)mpHostGone();else{clearTimeout(wd);tryNext();}});
+        conn.on('error',()=>{});
+      };
+      MP._adv=tryNext;
+      tryNext();
     });
   });
 }
@@ -3183,6 +3214,17 @@ function mpHostData(conn,d){
   if(d.t==='hello'){
     if(d.v!==MP_V){try{conn.send({t:'badver'});}catch(e){}setTimeout(()=>{try{conn.close();}catch(e){}},400);return;}
     if(MP.started){
+      /* reconnect: same name as a disconnected seat → give the seat (and chips) back */
+      const nm=(''+d.n).slice(0,14);
+      const back=state&&state.players.find(q=>q.remote&&q.name===nm&&!q.out&&!MP.conns.some(c=>c.seat===q.i));
+      if(back){
+        MP.conns.push({conn,name:nm,seat:back.i});
+        try{conn.send({t:'start',seat:back.i});}catch(e){}
+        if(MP.lastCK){try{conn.send({t:'ck',d:MP.lastCK});}catch(e){}}
+        mpChatAll('🛜',C2('mpRejoined',nm));
+        render();
+        return;
+      }
       /* game running: queue the player — they get dealt in at the next hand */
       if(state&&!state.gameOver&&state.players.length+(MP.pending?MP.pending.length:0)<9){
         (MP.pending=MP.pending||[]).push({conn,name:(''+d.n).slice(0,14)});
@@ -3222,6 +3264,7 @@ function mpClientData(d){
     hideActions(); updateOrient();
   }
   else if(d.t==='st'){mpApplySnapshot(d.s);}
+  else if(d.t==='ck'){MP.lastCK=d.d;}
   else if(d.t==='chat'){mpChatRender(d.n,d.x);}
   else if(d.t==='wait'){
     /* game in progress — stay in the lobby, we get seated next hand */
@@ -3239,30 +3282,121 @@ function mpClientData(d){
 }
 function mpHostDrop(conn){
   if(!MP||MP.role!=='host')return;
+  if(MP.pending)MP.pending=MP.pending.filter(q=>q.conn!==conn);
   const rec=MP.conns.find(c=>c.conn===conn);
   if(!rec)return;
   MP.conns=MP.conns.filter(c=>c!==rec);
   if(MP.started&&rec.seat!=null&&state&&!state.gameOver){
+    /* keep the seat — they auto-fold until they reconnect (same name = same seat & chips) */
     const p=state.players[rec.seat];
-    if(p&&!p.out){
-      p.remote=false; p.gone=true;
-      if(!p.folded&&!state.handOver){
-        p.folded=true; p.lastAct='Fold';
-        log(`${p.name}: Fold (disconnected)`);
-        if(state.turnIdx===p.i){state.turnIdx=(p.i+1)%state.players.length;promptNext();}
-        else render();
-      }
+    if(p&&!p.out&&state.turnIdx===p.i&&!state.handOver&&!p.folded){
+      applyAction(p,'fold');
+      state.turnIdx=(p.i+1)%state.players.length;
+      promptNext();
     }
     mpChatAll('🛜',C2('mpGone',rec.name));
   }else mpRoster();
 }
 function mpHostGone(){
   if(!MP)return;
+  /* mid-game with a checkpoint: don't die — recover (rejoin the host, or take over) */
+  if(MP.lastCK){ mpRecover(); return; }
   try{MP.peer&&MP.peer.destroy();}catch(e){}
   MP=null;
   alert(T('mpHostLeft'));
   location.hash='';
   location.reload();
+}
+/* connection to host lost mid-game: 1) try the host again (maybe OUR link blipped),
+   2) if the host's room is truly gone, ranked takeover — first name in the checkpoint
+   claims the deterministic next room id; everyone else joins them. */
+function mpRecover(){
+  const ck=MP.lastCK, code=MP.code, myName=MP.myName, oldHostId=MP.hostId||('sgp-'+code+(ck.mig?'-m'+ck.mig:''));
+  try{MP.peer&&MP.peer.destroy();}catch(e){}
+  MP={role:'recovering',code,myName,lastCK:ck};
+  showBanner(T('mpMigrating'));
+  const probe=new Peer(MP_ICE);
+  let settled=false;
+  const escalate=()=>{
+    if(settled||!MP)return; settled=true;
+    try{probe.destroy();}catch(e){}
+    mpMigrate();
+  };
+  const wd=setTimeout(escalate,8000);
+  probe.on('error',e=>{if(e.type==='peer-unavailable'){clearTimeout(wd);escalate();}});
+  probe.on('open',()=>{
+    const c=probe.connect(oldHostId,{reliable:true,serialization:'json'});
+    c.on('open',()=>{           // host is alive — it was our link; rejoin our seat
+      if(settled)return; settled=true; clearTimeout(wd);
+      MP={role:'client',peer:probe,code,myName,hostId:oldHostId,conn:c,seat:null,sentTok:'',lastBanner:0,ended:false,connected:true,lastCK:ck};
+      c.on('data',d=>mpClientData(d));
+      c.on('close',()=>mpHostGone());
+      c.send({t:'hello',n:myName,v:MP_V});
+    });
+    c.on('error',()=>{});
+    c.on('close',()=>{if(!settled){clearTimeout(wd);escalate();}});
+  });
+}
+function mpMigrate(){
+  const ck=MP&&MP.lastCK; if(!ck){alert(T('mpHostLeft'));location.reload();return;}
+  const code=MP.code,myName=MP.myName;
+  const order=ck.players.filter(p2=>!p2.ai&&!p2.out&&p2.name!==ck.hostName).map(p2=>p2.name);
+  const rank=Math.max(0,order.indexOf(myName));
+  const newId='sgp-'+code+'-m'+(ck.mig+1);
+  MP={role:'migrating',code,myName,lastCK:ck};
+  setTimeout(()=>{
+    if(!MP)return;
+    const peer=new Peer(newId,MP_ICE);
+    peer.on('open',()=>mpBecomeHost(peer,newId));
+    peer.on('disconnected',()=>{try{peer.reconnect();}catch(e){}});
+    peer.on('error',e=>{
+      if(e.type==='unavailable-id'){
+        /* someone outranked us — join their new room */
+        const p2=new Peer(MP_ICE);
+        MP={role:'client',peer:p2,code,myName,hostId:newId,seat:null,sentTok:'',lastBanner:0,ended:false,connected:false,lastCK:ck};
+        p2.on('disconnected',()=>{try{p2.reconnect();}catch(e2){}});
+        p2.on('open',()=>{
+          const c=p2.connect(newId,{reliable:true,serialization:'json'});
+          MP.conn=c;
+          c.on('open',()=>{MP.connected=true;c.send({t:'hello',n:myName,v:MP_V});});
+          c.on('data',d=>mpClientData(d));
+          c.on('close',()=>mpHostGone());
+        });
+      }else if(!MP||MP.role==='migrating'){alert(T('mpHostLeft'));location.reload();}
+    });
+  },rank*3000+600);
+}
+/* a guest becomes the new host: rebuild the tournament from the public checkpoint */
+function mpBecomeHost(peer,newId){
+  const ck=MP.lastCK,myName=MP.myName,code=MP.code;
+  MP={role:'host',peer,code,hostId:newId,myName,conns:[],started:true,mig:ck.mig+1,pending:[],lastCK:ck};
+  peer.on('connection',conn=>{
+    conn.on('data',d=>mpHostData(conn,d));
+    conn.on('close',()=>mpHostDrop(conn));
+  });
+  newGame({numPlayers:ck.players.length,startBB:ck.cfg.startBB,startBlind:ck.cfg.startBlind,
+           ante:ck.cfg.ante,speed:ck.cfg.speed,difficulty:ck.cfg.difficulty});
+  ck.players.forEach((cp,i)=>{
+    const q=state.players[i]; if(!q)return;
+    q.name=cp.name; q.avatar=cp.avatar||q.avatar; q.chips=cp.chips; q.out=cp.out; q.place=cp.place||0;
+    if(cp.ai){q.isHuman=false;q.remote=false;q.style=STYLES.find(s2=>s2.id===cp.style)||q.style;}
+    else if(cp.name===myName){q.isHuman=true;q.remote=false;q.avatar='😎';}
+    else{q.isHuman=false;q.remote=true;q.style=null;}
+  });
+  state.handNum=ck.handNumNext-1;
+  state.dealerIdx=ck.dealerIdx;
+  state.cfg.numPlayers=ck.players.length;
+  state.cfg.mpRemotes=[];   // marks this as a multiplayer game (no resume saving etc.)
+  if(HAS_DOM){
+    $('mpLobby').classList.add('hidden');
+    $('setup').classList.add('hidden');
+    $('game').classList.remove('hidden');
+    $('chatBtn').classList.remove('hidden');
+    buildSeats(); hideActions(); renderStats(); updateOrient();
+    mpChatRender('🛜',C2('mpMigrated',myName));
+    showBanner(C2('mpMigrated',myName));
+  }
+  setTimeout(startHand,7000);   // grace: give the others time to find the new room
 }
 function mpRoster(){
   if(!MP||MP.role!=='host')return;
@@ -3323,6 +3457,25 @@ function mpStartGame(){
   renderStats(); updateOrient();
   setTimeout(startHand,600);
 }
+/* checkpoint: PUBLIC tournament state at each hand boundary — chips, seats, level.
+   Every client stores the latest one; if the host vanishes, the first remaining
+   player rebuilds the game from it and becomes the new host. No hole cards inside. */
+function mpBroadcastCK(){
+  if(!MP||MP.role!=='host'||!MP.started||!state)return;
+  const d={mig:MP.mig||0,hostName:MP.myName,handNumNext:state.handNum+1,dealerIdx:state.dealerIdx,
+    cfg:{numPlayers:state.players.length,startBB:state.cfg.startBB,startBlind:state.cfg.startBlind,
+         ante:state.cfg.ante,speed:state.cfg.speed,difficulty:state.cfg.difficulty},
+    players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,
+      ai:!q.isHuman&&!q.remote,style:q.style?q.style.id:null}))};
+  MP.lastCK=d;
+  for(const c of MP.conns){try{c.conn.send({t:'ck',d});}catch(e){}}
+}
+
+/* a remote seat with no live connection auto-folds its turns until the player returns */
+function mpConnAlive(seat){
+  return !!(MP&&MP.role==='host'&&MP.conns.some(c=>c.seat===seat&&c.conn&&c.conn.open));
+}
+
 /* seat queued late-joiners at the start of a hand (host only) */
 function mpSeatPending(){
   if(!MP||MP.role!=='host'||!MP.pending||!MP.pending.length||!state||state.gameOver)return;
@@ -3399,6 +3552,7 @@ function mpApplySnapshot(s){
 }
 /* chat */
 function mpChatRender(n,x){
+  if(!HAS_DOM)return;
   const m=$('chatMsgs');
   const div=document.createElement('div');
   div.innerHTML=`<b></b> `;
