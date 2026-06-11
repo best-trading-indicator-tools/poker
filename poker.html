@@ -500,6 +500,7 @@ body.fl #centerArea{top:46%;}
   </div>
 </div>
 
+<script src="charts.js"></script>
 <script>
 "use strict";
 const HAS_DOM = (typeof document !== 'undefined');
@@ -653,6 +654,10 @@ airWarn:' You have no made hand and no real draw — players who bet usually hav
 raiseVal:e=>`~${e} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`,
 callOk:(amt,pt,o,e,disc,ea)=>`The call costs ${amt} to win a ${pt} pot, so you need ${o} equity to break even. You have ~${e}${disc?` (counted as ~${ea} after discounts)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`,
 foldAdv:(o,amt,pt,ea,resp)=>`You need ${o} equity to call (${amt} into ${pt}) but only have ~${ea}${resp?' once the size of this bet is respected':''}. Every chip you put in here loses value — fold and wait for a better spot.`,
+chartOpen:(c,p)=>`${c} is in the ${p} opening chart — a hand list taken from solver-computed ranges: raising it first-in from this seat is profitable in the long run. Come in raising, not limping.`,
+chartNotIn:(c,p)=>`${c} is not in the ${p} opening chart — solver-computed ranges say this hand loses money when raised from this seat over the long run. Folding now saves chips for a better spot.`,
+chartShove:(c,bb,p)=>`At ${bb} BB, ${c} is in the ${p} all-in chart (solver-computed shove ranges for short stacks). Going all-in maximizes your chance of winning the blinds and antes uncontested.`,
+chartNotInShove:(c,p)=>`${c} is not in the ${p} all-in chart for this stack depth — shoving it loses money long-term. Fold and wait: even one round of patience usually offers a better hand.`,
 benchProg:(i,n)=>`Running… tournament ${i} of ${n}`,
 benchResult:(g,np,w,rw,im,ri,av,rav)=>`Over ${g} simulated ${np}-player tournaments, a bot following the coach's advice on EVERY decision: 🏆 won ${w}% of tournaments (a random player would win ${rw}%) · 💰 finished in the money ${im}% (random: ${ri}%) · average finish ${av} of ${np} (random: ${rav}). The coach can't beat luck in one game — but this is its long-term edge.`,
 mentalMath:(c,s,o)=>` 🧮 Live mental math: price = call ÷ (pot + call) = ${c} ÷ ${s} ≈ ${o}. Your win%: count outs (cards that improve you to the best hand) × 4 on the flop, × 2 on the turn; with a made hand, estimate how often you beat what they'd bet like this. Then knock off ~5–15% versus big bets or with no pair — the same discounts the coach applied here.`,
@@ -717,6 +722,10 @@ airWarn:' Vous n’avez ni main faite ni vrai tirage — celui qui mise a géné
 raiseVal:e=>`~${e} de chances de gain : vous êtes grand favori. Relancez pour la valeur et pour faire payer les tirages — caller laisse de l’argent sur la table.`,
 callOk:(amt,pt,o,e,disc,ea)=>`Le call coûte ${amt} pour gagner un pot de ${pt} : il vous faut ${o} d’équité pour être à l’équilibre. Vous avez ~${e}${disc?` (compté ~${ea} après décotes)`:''} — caller est rentable à long terme, mais relancer risquerait trop avec une main non premium.`,
 foldAdv:(o,amt,pt,ea,resp)=>`Il vous faut ${o} d’équité pour payer (${amt} dans ${pt}) mais vous n’avez que ~${ea}${resp?' une fois la taille de cette mise respectée':''}. Chaque jeton investi ici perd de la valeur — couchez-vous et attendez un meilleur spot.`,
+chartOpen:(c,p)=>`${c} figure dans la charte d'ouverture ${p} — une liste de mains issue de ranges calculées par solveur : la relancer en premier depuis ce siège est rentable à long terme. Entrez en relançant, pas en limpant.`,
+chartNotIn:(c,p)=>`${c} ne figure pas dans la charte d'ouverture ${p} — les ranges calculées par solveur indiquent que cette main perd de l'argent relancée depuis ce siège. Se coucher maintenant garde des jetons pour un meilleur spot.`,
+chartShove:(c,bb,p)=>`À ${bb} BB, ${c} figure dans la charte de tapis ${p} (ranges de shove calculées par solveur pour tapis courts). Partir à tapis maximise vos chances de gagner blinds et antes sans bagarre.`,
+chartNotInShove:(c,p)=>`${c} ne figure pas dans la charte de tapis ${p} à cette profondeur — la jouer à tapis perd de l'argent à long terme. Couchez-vous : un tour de patience offre souvent une meilleure main.`,
 benchProg:(i,n)=>`Simulation… tournoi ${i} sur ${n}`,
 benchResult:(g,np,w,rw,im,ri,av,rav)=>`Sur ${g} tournois simulés à ${np} joueurs, un bot suivant les conseils du coach à CHAQUE décision : 🏆 a gagné ${w}% des tournois (un joueur aléatoire en gagnerait ${rw}%) · 💰 fini dans les places payées ${im}% (aléatoire : ${ri}%) · place moyenne ${av} sur ${np} (aléatoire : ${rav}). Le coach ne bat pas la chance sur une partie — mais voilà son avantage à long terme.`,
 mentalMath:(c,s,o)=>` 🧮 Calcul mental en live : prix = mise à payer ÷ (pot + mise) = ${c} ÷ ${s} ≈ ${o}. Votre % de gain : comptez vos outs (cartes qui vous donnent la meilleure main) × 4 au flop, × 2 au turn ; avec une main faite, estimez la fréquence à laquelle vous battez ce qu'il miserait ainsi. Retirez ensuite ~5–15 % face aux grosses mises ou sans paire — les mêmes décotes que le coach a appliquées ici.`,
@@ -781,6 +790,10 @@ airWarn:' No tienes mano hecha ni proyecto real — quien apuesta suele tener al
 raiseVal:e=>`~${e} de probabilidad: eres gran favorito. Sube por valor y para cobrar a los proyectos — solo igualar deja dinero sobre la mesa.`,
 callOk:(amt,pt,o,e,disc,ea)=>`La llamada cuesta ${amt} para ganar un bote de ${pt}: necesitas ${o} de equidad para no perder. Tienes ~${e}${disc?` (contado como ~${ea} tras descuentos)`:''} — igualar es rentable a largo plazo, pero subir arriesgaría demasiado con una mano no premium.`,
 foldAdv:(o,amt,pt,ea,resp)=>`Necesitas ${o} de equidad para igualar (${amt} en ${pt}) pero solo tienes ~${ea}${resp?' una vez respetado el tamaño de esta apuesta':''}. Cada ficha que pongas aquí pierde valor — retírate y espera un mejor momento.`,
+chartOpen:(c,p)=>`${c} está en la tabla de apertura de ${p} — una lista de manos sacada de rangos calculados por solver: subirla primero desde este asiento es rentable a largo plazo. Entra subiendo, no de limp.`,
+chartNotIn:(c,p)=>`${c} no está en la tabla de apertura de ${p} — los rangos calculados por solver dicen que esta mano pierde dinero subida desde este asiento. Retirarse ahora guarda fichas para un momento mejor.`,
+chartShove:(c,bb,p)=>`Con ${bb} BB, ${c} está en la tabla de all-in de ${p} (rangos de shove calculados por solver para stacks cortos). Ir all-in maximiza tus opciones de llevarte ciegas y antes sin pelea.`,
+chartNotInShove:(c,p)=>`${c} no está en la tabla de all-in de ${p} a esta profundidad — jugarla all-in pierde dinero a largo plazo. Retírate: una ronda de paciencia suele traer una mano mejor.`,
 benchProg:(i,n)=>`Simulando… torneo ${i} de ${n}`,
 benchResult:(g,np,w,rw,im,ri,av,rav)=>`En ${g} torneos simulados de ${np} jugadores, un bot que sigue el consejo del coach en CADA decisión: 🏆 ganó el ${w}% de los torneos (un jugador aleatorio ganaría el ${rw}%) · 💰 terminó en premios el ${im}% (aleatorio: ${ri}%) · puesto medio ${av} de ${np} (aleatorio: ${rav}). El coach no vence a la suerte en una partida — pero esta es su ventaja a largo plazo.`,
 mentalMath:(c,s,o)=>` 🧮 Cálculo mental en vivo: precio = llamada ÷ (bote + llamada) = ${c} ÷ ${s} ≈ ${o}. Tu % de ganar: cuenta tus outs (cartas que te dan la mejor mano) × 4 en el flop, × 2 en el turn; con mano hecha, estima cuántas veces ganas a lo que apostaría así. Luego resta ~5–15% contra apuestas grandes o sin pareja — los mismos descuentos que el coach aplicó aquí.`,
@@ -2119,6 +2132,14 @@ function classifyMade(hole,board,score){
   }
   return '';
 }
+/* external GTO chart lookup (charts.js) — returns null when unavailable, callers fall back */
+function chartFor(kind,key){
+  try{
+    if(typeof GTO_CHARTS==='undefined'||!GTO_CHARTS[kind])return null;
+    return key!==undefined?(GTO_CHARTS[kind][key]||null):GTO_CHARTS[kind];
+  }catch(e){return null;}
+}
+
 /* ===== ICM: tournament prize-money math (Malmuth-Harville) ===== */
 const PAYOUTS=n=>n<=4?[1]:n<=6?[0.65,0.35]:[0.5,0.3,0.2];
 function icmEq(stacks,pay){
@@ -2283,9 +2304,18 @@ function coachDecide(p){
     /* always teach what M means — jargon is useless unexplained */
     extra.push(C('mExplain',Math.round(M)));
     if(stackBB<=10){
-      /* Nash push/fold territory */
+      /* push/fold territory: prefer the external solver chart, fall back to Nash threshold */
       const thr=PUSH_THR[bucket];
-      if(pr<=thr){
+      const shoveCharts=chartFor('shove',stackBB<=5?'5':'10');
+      const sChart=shoveCharts?shoveCharts[bucket]:null;
+      const shoveYes=sChart?sChart.includes(code):pr<=thr;
+      if(shoveYes&&state.currentBet<=state.bb){
+        rec='ALLIN';
+        why.push(sChart?C('chartShove',code,Math.round(stackBB),pos||bucket):C('pfShove',Math.round(stackBB),code,prTxt,Math.round(thr*100),pos||'—'));
+      }else if(!shoveYes&&sChart&&callAmt>0&&!(eq>=odds+0.07+icmPrem)){
+        rec='FOLD';
+        why.push(C('chartNotInShove',code,pos||bucket));
+      }else if(pr<=thr&&state.currentBet>state.bb&&eq>=odds+icmPrem){
         rec='ALLIN';
         why.push(C('pfShove',Math.round(stackBB),code,prTxt,Math.round(thr*100),pos||'—'));
       }else if(callAmt===0){
@@ -2318,15 +2348,19 @@ function coachDecide(p){
       const thrEff=Math.min(0.6,thr*fStack*fAnte*fProf);
       /* always explain when profiles behind shift the steal math, even slightly */
       if(Math.abs(thrEff-thr)/thr>0.12||profDir!==0) extra.push(C('widenNote',Math.round(thr*100),Math.round(thrEff*100),profDir));
-      if(prEff<=thrEff&&callAmt>0||prEff<=Math.min(thrEff,0.10)&&callAmt===0){
+      /* solver chart first: is this exact hand in this position's opening matrix? */
+      const rfi=chartFor('rfi',pos);
+      const chartHit=rfi?rfi.includes(code):false;
+      const pressureOpen=prEff<=thrEff&&callAmt>0||prEff<=Math.min(thrEff,0.10)&&callAmt===0;
+      if(chartHit&&callAmt>0||pressureOpen){
         rec='RAISE';
-        why.push(C('pfOpen',code,prTxt,Math.round(thrEff*100),pos,pairAdj&&pr>thrEff));
+        why.push(chartHit?C('chartOpen',code,pos):C('pfOpen',code,prTxt,Math.round(thrEff*100),pos,pairAdj&&pr>thrEff));
       }else if(callAmt===0){
         rec='CHECK';
         why.push(C('pfBBfree',code));
       }else{
         rec='FOLD';
-        why.push(C('pfOpenFold',code,prTxt,Math.round(thrEff*100),pos));
+        why.push(rfi?C('chartNotIn',code,pos):C('pfOpenFold',code,prTxt,Math.round(thrEff*100),pos));
       }
     }else{
       /* facing a raise */

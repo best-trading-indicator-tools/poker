@@ -85,6 +85,12 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-11 — Solver range charts (external data file)
+- **`charts.js`**: real per-position GTO range matrices now live in an external, human-editable data file — raise-first-in charts for all 8 positions (UTG 11% → BTN 41%) and short-stack all-in charts at 10 BB and 5 BB depths, approximating published solver/Nash ranges
+- The coach consults the chart FIRST ("77 is in the MP opening chart — solver-computed ranges say raising it is profitable") and falls back to the percentile engine when no chart covers the spot (facing raises, missing file) — so the single-file copy still works standalone
+- Unlike a single hand ranking with cutoffs, true matrices capture solver non-linearities (suited connectors and small pairs enter ranges "early", weak offsuit broadways late)
+- Tournament-pressure scaling, antes, profiles, ICM and all postflop logic apply unchanged on top
+
 ### 2026-06-11 — Coach benchmark
 - **🧪 Coach benchmark** button on the start screen: simulates 25 full 9-player tournaments where a bot follows the coach's advice on every single decision, then reports win rate, in-the-money rate and average finish vs a random player baseline. First measurements: the coach bot wins ~3–4× the random baseline. This is the live measuring stick for every future coach improvement
 - The coach brain was refactored into a pure, headless decision engine (`coachDecide`) — the on-screen panel and the benchmark bot now share the exact same logic by construction

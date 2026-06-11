@@ -1,6 +1,6 @@
 /* offline support: network-first with full cache fallback */
-const CACHE='sg-poker-v1';
-const ASSETS=['/','/poker.html','/manifest.json','/docs/icon.svg'];
+const CACHE='sg-poker-v2';
+const ASSETS=['/','/poker.html','/charts.js','/manifest.json','/docs/icon.svg'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));
   self.skipWaiting();
