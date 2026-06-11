@@ -655,6 +655,7 @@ mpWaitNext:"Game in progress — you'll be dealt in at the next hand. Hang tight
 mpMigrating:"Connection to the host lost — recovering the game…",
 mpMigrated:n=>`${n} is the new host — the tournament continues!`,
 mpRejoined:n=>`${n} is back at the table`,
+mpReplaced:(n,b2)=>`${n} takes over from 🤖 ${b2} — humans beat robots`,
 mpKnock:n=>`${n} joins at the next hand`,
 mpVerMismatch:"The host is running a different version of the game. BOTH of you: refresh the page (hold Shift while reloading), then create the room again.",
 mpNeed2:"You need at least one friend in the room to start — or tick \"Fill empty seats with AI bots\".",
@@ -703,6 +704,7 @@ mpWaitNext:"Partie en cours — vous serez servi à la prochaine main. Patience 
 mpMigrating:"Connexion à l'hôte perdue — récupération de la partie…",
 mpMigrated:n=>`${n} est le nouvel hôte — le tournoi continue !`,
 mpRejoined:n=>`${n} est de retour à la table`,
+mpReplaced:(n,b2)=>`${n} remplace 🤖 ${b2} — les humains avant les robots`,
 mpKnock:n=>`${n} rejoint à la prochaine main`,
 mpVerMismatch:"L'hôte utilise une autre version du jeu. TOUS LES DEUX : rechargez la page (Maj + rechargement), puis recréez le salon.",
 mpNeed2:"Il faut au moins un ami dans le salon pour lancer — ou cochez « Compléter avec des bots IA ».",
@@ -751,6 +753,7 @@ mpWaitNext:"Partida en curso — entrarás en la próxima mano. ¡Un momento!",
 mpMigrating:"Conexión con el anfitrión perdida — recuperando la partida…",
 mpMigrated:n=>`${n} es el nuevo anfitrión — ¡el torneo continúa!`,
 mpRejoined:n=>`${n} ha vuelto a la mesa`,
+mpReplaced:(n,b2)=>`${n} sustituye a 🤖 ${b2} — los humanos antes que los robots`,
 mpKnock:n=>`${n} entra en la próxima mano`,
 mpVerMismatch:"El anfitrión usa otra versión del juego. AMBOS: recargad la página (Shift + recargar) y cread la sala de nuevo.",
 mpNeed2:"Necesitas al menos un amigo en la sala para empezar — o marca \"Rellenar asientos vacíos con bots\".",
@@ -3485,16 +3488,31 @@ function mpConnAlive(seat){
 function mpSeatPending(){
   if(!MP||MP.role!=='host'||!MP.pending||!MP.pending.length||!state||state.gameOver)return;
   let added=false;
-  while(MP.pending.length&&state.players.length<9){
+  while(MP.pending.length){
     const q=MP.pending.shift();
-    const i=state.players.length;
-    state.players.push({i,name:q.name,avatar:'🙂',isHuman:false,remote:true,
-      chips:state.cfg.startBB*(state.cfg.startBlind||100),hole:[],folded:false,out:false,allIn:false,
-      bet:0,totalBet:0,acted:false,lastAct:'',revealed:false,place:0,style:null,
-      rangeCap:1,rangeFloor:0,checkedStreet:false,aggStreets:[],lineRead:''});
+    /* friends beat robots: a joining human takes over the shortest-stacked AI seat */
+    const ai=state.players.filter(p2=>!p2.isHuman&&!p2.remote&&!p2.out).sort((x,y)=>x.chips-y.chips)[0];
+    let i;
+    if(ai){
+      i=ai.i;
+      mpChatAll('🛜',C2('mpReplaced',q.name,ai.name));
+      ai.name=q.name; ai.avatar='🙂'; ai.remote=true; ai.isHuman=false; ai.style=null;
+      ai.chips=state.cfg.startBB*(state.cfg.startBlind||100);
+      ai.rangeCap=1; ai.rangeFloor=0; ai.aggStreets=[]; ai.lineRead='';
+    }else if(state.players.length<9){
+      i=state.players.length;
+      state.players.push({i,name:q.name,avatar:'🙂',isHuman:false,remote:true,
+        chips:state.cfg.startBB*(state.cfg.startBlind||100),hole:[],folded:false,out:false,allIn:false,
+        bet:0,totalBet:0,acted:false,lastAct:'',revealed:false,place:0,style:null,
+        rangeCap:1,rangeFloor:0,checkedStreet:false,aggStreets:[],lineRead:''});
+      mpChatAll('🛜',C2('mpJoined',q.name));
+    }else{
+      try{q.conn.send({t:'full'});}catch(e){}
+      setTimeout(()=>{try{q.conn.close();}catch(e){}},400);
+      continue;
+    }
     MP.conns.push({conn:q.conn,name:q.name,seat:i});
     try{q.conn.send({t:'start',seat:i});}catch(e){}
-    mpChatAll('🛜',C2('mpJoined',q.name));
     added=true;
   }
   if(added){
