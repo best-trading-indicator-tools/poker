@@ -554,6 +554,7 @@ body.fl #centerArea{top:46%;}
   <div class="over-card">
     <h2 id="mpLobbyTitle">Room</h2>
     <div id="mpLobbyCode"></div>
+    <div id="mpVerTag" style="font-size:10px;color:var(--dim);margin:-8px 0 8px;"></div>
     <button id="mpCopy">Copy invite link</button>
     <div id="mpList"></div>
     <label id="mpFillWrap" style="font-size:13px;color:var(--dim);display:flex;gap:8px;align-items:center;justify-content:center;cursor:pointer;">
@@ -648,6 +649,7 @@ mpNetFail:"Could not reach the network. Check your internet and try again.",
 mpHostLeft:"The host left — the game is over.",mpNeedName:"Pick a name first 🙂",
 mpAutoA:"Auto-start at",mpAutoB:"players",
 mpTest:"🔧 Test my connection",mpTestSig:"reaching the signaling cloud…",mpTestRtc:"cloud OK — testing the direct connection…",mpTestSigFail:"cannot reach the signaling cloud. A firewall, VPN or ad-blocker may be blocking 0.peerjs.com.",mpTestRtcFail:"signaling works but the direct connection failed — this network blocks WebRTC. Try another Wi-Fi or disable VPN.",mpTestOK:"Connection test passed — this device can create and join rooms.",
+mpVerMismatch:"The host is running a different version of the game. BOTH of you: refresh the page (hold Shift while reloading), then create the room again.",
 mpNeed2:"You need at least one friend in the room to start — or tick \"Fill empty seats with AI bots\".",
 mpHostHint:"Share the invite link and wait — friends appear in the list below as they join. Then press Start.",
 mpRoomGone:"Room not found — check the code, and make sure the host still has the room open.",
@@ -688,6 +690,7 @@ mpNetFail:"Réseau injoignable. Vérifiez votre connexion et réessayez.",
 mpHostLeft:"L'hôte est parti — la partie est terminée.",mpNeedName:"Choisissez d'abord un prénom 🙂",
 mpAutoA:"Lancement auto à",mpAutoB:"joueurs",
 mpTest:"🔧 Tester ma connexion",mpTestSig:"contact du cloud de signalisation…",mpTestRtc:"cloud OK — test de la connexion directe…",mpTestSigFail:"impossible de joindre le cloud de signalisation. Un pare-feu, VPN ou bloqueur de pub bloque peut-être 0.peerjs.com.",mpTestRtcFail:"la signalisation fonctionne mais la connexion directe a échoué — ce réseau bloque WebRTC. Essayez un autre Wi-Fi ou coupez le VPN.",mpTestOK:"Test réussi — cet appareil peut créer et rejoindre des salons.",
+mpVerMismatch:"L'hôte utilise une autre version du jeu. TOUS LES DEUX : rechargez la page (Maj + rechargement), puis recréez le salon.",
 mpNeed2:"Il faut au moins un ami dans le salon pour lancer — ou cochez « Compléter avec des bots IA ».",
 mpHostHint:"Partagez le lien et patientez — vos amis apparaissent dans la liste ci-dessous. Puis appuyez sur Lancer.",
 mpRoomGone:"Salon introuvable — vérifiez le code et que l'hôte a toujours le salon ouvert.",
@@ -728,6 +731,7 @@ mpNetFail:"No se pudo conectar a la red. Revisa tu internet e inténtalo de nuev
 mpHostLeft:"El anfitrión se fue — la partida ha terminado.",mpNeedName:"Elige un nombre primero 🙂",
 mpAutoA:"Inicio automático con",mpAutoB:"jugadores",
 mpTest:"🔧 Probar mi conexión",mpTestSig:"contactando la nube de señalización…",mpTestRtc:"nube OK — probando la conexión directa…",mpTestSigFail:"no se puede alcanzar la nube de señalización. Un cortafuegos, VPN o bloqueador puede estar bloqueando 0.peerjs.com.",mpTestRtcFail:"la señalización funciona pero la conexión directa falló — esta red bloquea WebRTC. Prueba otra Wi-Fi o desactiva la VPN.",mpTestOK:"Prueba superada — este dispositivo puede crear y unirse a salas.",
+mpVerMismatch:"El anfitrión usa otra versión del juego. AMBOS: recargad la página (Shift + recargar) y cread la sala de nuevo.",
 mpNeed2:"Necesitas al menos un amigo en la sala para empezar — o marca \"Rellenar asientos vacíos con bots\".",
 mpHostHint:"Comparte el enlace y espera — tus amigos aparecen en la lista de abajo. Luego pulsa Empezar.",
 mpRoomGone:"Sala no encontrada — revisa el código y que el anfitrión siga con la sala abierta.",
@@ -3090,6 +3094,7 @@ function setLang(v){
    redacted state snapshots (each player only ever receives their own hole cards).
    Free signaling via the public PeerJS cloud; game data flows directly P2P. */
 let MP=null;
+const MP_V='mp3';   // protocol version — both sides must match
 /* STUN + free TURN relays: lets phones on cellular/strict NATs reach the host */
 const MP_ICE={config:{iceServers:[
   {urls:['stun:stun.l.google.com:19302','stun:global.stun.twilio.com:3478']},
@@ -3150,7 +3155,7 @@ function mpJoin(){
       MP.conn=conn;
       /* if nothing opens within 12s, the direct connection is blocked */
       const watchdog=setTimeout(()=>{if(MP&&!MP.connected)fail(T('mpConnFail'));},12000);
-      conn.on('open',()=>{clearTimeout(watchdog);MP.connected=true;mpStatus('');conn.send({t:'hello',n:name});mpLobbyShow();});
+      conn.on('open',()=>{clearTimeout(watchdog);MP.connected=true;mpStatus('');conn.send({t:'hello',n:name,v:MP_V});mpLobbyShow();});
       conn.on('data',d=>mpClientData(d));
       conn.on('close',()=>{if(MP&&MP.connected)mpHostGone();else fail(T('mpConnFail'));});
       conn.on('error',()=>{if(MP&&MP.connected)mpHostGone();else fail(T('mpConnFail'));});
@@ -3160,6 +3165,7 @@ function mpJoin(){
 function mpHostData(conn,d){
   if(!MP)return;
   if(d.t==='hello'){
+    if(d.v!==MP_V){try{conn.send({t:'badver'});}catch(e){}setTimeout(()=>{try{conn.close();}catch(e){}},400);return;}
     if(MP.started){try{conn.close();}catch(e){}return;}
     if(MP.conns.length>=8){try{conn.close();}catch(e){}return;}
     MP.conns.push({conn,name:(''+d.n).slice(0,14),seat:null});
@@ -3190,6 +3196,13 @@ function mpClientData(d){
   }
   else if(d.t==='st'){mpApplySnapshot(d.s);}
   else if(d.t==='chat'){mpChatRender(d.n,d.x);}
+  else if(d.t==='badver'){
+    MP.connected=false;          // suppress the "host left" path
+    $('mpLobby').classList.add('hidden');
+    mpStatus(T('mpVerMismatch'));
+    try{MP.peer.destroy();}catch(e){}
+    MP=null;
+  }
   else if(d.t==='end'){mpHostGone();}
 }
 function mpHostDrop(conn){
@@ -3239,6 +3252,7 @@ function mpRosterRender(names){
 function mpLobbyShow(){
   $('mpLobby').classList.remove('hidden');
   $('mpLobbyCode').textContent=MP.code;
+  $('mpVerTag').textContent='v '+MP_V;
   const host=MP.role==='host';
   $('mpStartBtn').classList.toggle('hidden',!host);
   $('mpFillWrap').style.display=host?'flex':'none';
@@ -3271,6 +3285,7 @@ function mpStartGame(){
   $('game').classList.remove('hidden');
   $('chatBtn').classList.remove('hidden');
   newGame(cfg);
+  state.players[0].name=MP.myName;   // host plays under their chosen name
   buildSeats(); hideActions(); lastHand=null;
   $('coachFeed').classList.add('hidden');
   renderStats(); updateOrient();
