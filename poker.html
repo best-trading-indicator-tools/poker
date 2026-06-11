@@ -462,6 +462,7 @@ body.fl #centerArea{top:46%;}
         <input id="mpCode" maxlength="8" placeholder="CODE">
         <button id="mpJoinBtn">Join</button>
       </div>
+      <button id="mpTestBtn" style="margin-top:8px;width:100%;background:none;border:1px solid var(--line);color:var(--dim);border-radius:8px;padding:7px;font-size:12px;cursor:pointer;">🔧 Test my connection</button>
       <p id="mpStatus" class="hidden"></p>
     </div>
     <div id="resetRow">
@@ -646,6 +647,7 @@ mpWaitHost:"Waiting for the host to start the game…",mpConnecting:"Connecting�
 mpNetFail:"Could not reach the network. Check your internet and try again.",
 mpHostLeft:"The host left — the game is over.",mpNeedName:"Pick a name first 🙂",
 mpAutoA:"Auto-start at",mpAutoB:"players",
+mpTest:"🔧 Test my connection",mpTestSig:"reaching the signaling cloud…",mpTestRtc:"cloud OK — testing the direct connection…",mpTestSigFail:"cannot reach the signaling cloud. A firewall, VPN or ad-blocker may be blocking 0.peerjs.com.",mpTestRtcFail:"signaling works but the direct connection failed — this network blocks WebRTC. Try another Wi-Fi or disable VPN.",mpTestOK:"Connection test passed — this device can create and join rooms.",
 mpNeed2:"You need at least one friend in the room to start — or tick \"Fill empty seats with AI bots\".",
 mpHostHint:"Share the invite link and wait — friends appear in the list below as they join. Then press Start.",
 mpRoomGone:"Room not found — check the code, and make sure the host still has the room open.",
@@ -685,6 +687,7 @@ mpWaitHost:"En attente du lancement par l'hôte…",mpConnecting:"Connexion…",
 mpNetFail:"Réseau injoignable. Vérifiez votre connexion et réessayez.",
 mpHostLeft:"L'hôte est parti — la partie est terminée.",mpNeedName:"Choisissez d'abord un prénom 🙂",
 mpAutoA:"Lancement auto à",mpAutoB:"joueurs",
+mpTest:"🔧 Tester ma connexion",mpTestSig:"contact du cloud de signalisation…",mpTestRtc:"cloud OK — test de la connexion directe…",mpTestSigFail:"impossible de joindre le cloud de signalisation. Un pare-feu, VPN ou bloqueur de pub bloque peut-être 0.peerjs.com.",mpTestRtcFail:"la signalisation fonctionne mais la connexion directe a échoué — ce réseau bloque WebRTC. Essayez un autre Wi-Fi ou coupez le VPN.",mpTestOK:"Test réussi — cet appareil peut créer et rejoindre des salons.",
 mpNeed2:"Il faut au moins un ami dans le salon pour lancer — ou cochez « Compléter avec des bots IA ».",
 mpHostHint:"Partagez le lien et patientez — vos amis apparaissent dans la liste ci-dessous. Puis appuyez sur Lancer.",
 mpRoomGone:"Salon introuvable — vérifiez le code et que l'hôte a toujours le salon ouvert.",
@@ -724,6 +727,7 @@ mpWaitHost:"Esperando a que el anfitrión empiece…",mpConnecting:"Conectando�
 mpNetFail:"No se pudo conectar a la red. Revisa tu internet e inténtalo de nuevo.",
 mpHostLeft:"El anfitrión se fue — la partida ha terminado.",mpNeedName:"Elige un nombre primero 🙂",
 mpAutoA:"Inicio automático con",mpAutoB:"jugadores",
+mpTest:"🔧 Probar mi conexión",mpTestSig:"contactando la nube de señalización…",mpTestRtc:"nube OK — probando la conexión directa…",mpTestSigFail:"no se puede alcanzar la nube de señalización. Un cortafuegos, VPN o bloqueador puede estar bloqueando 0.peerjs.com.",mpTestRtcFail:"la señalización funciona pero la conexión directa falló — esta red bloquea WebRTC. Prueba otra Wi-Fi o desactiva la VPN.",mpTestOK:"Prueba superada — este dispositivo puede crear y unirse a salas.",
 mpNeed2:"Necesitas al menos un amigo en la sala para empezar — o marca \"Rellenar asientos vacíos con bots\".",
 mpHostHint:"Comparte el enlace y espera — tus amigos aparecen en la lista de abajo. Luego pulsa Empezar.",
 mpRoomGone:"Sala no encontrada — revisa el código y que el anfitrión siga con la sala abierta.",
@@ -3049,7 +3053,7 @@ function applyLang(){
   set('mpTitle','mpTitle'); set('mpCreate','mpCreate'); set('mpJoinBtn','mpJoinB');
   set('mpLobbyTitle','mpLobbyTitle'); set('mpCopy','mpCopy'); set('mpFillLbl','mpFillLbl');
   set('mpStartBtn','mpStart'); set('mpLeave','mpLeave');
-  set('mpAutoLbl1','mpAutoA'); set('mpAutoLbl2','mpAutoB');
+  set('mpAutoLbl1','mpAutoA'); set('mpAutoLbl2','mpAutoB'); set('mpTestBtn','mpTest');
   const mpn=$('mpName'); if(mpn)mpn.placeholder=T('mpNamePh');
   const mpc=$('mpCode'); if(mpc)mpc.placeholder=T('mpCodePh');
   const ci=$('chatIn'); if(ci)ci.placeholder=T('chatPh');
@@ -3357,6 +3361,31 @@ function mpLeave(){
   location.hash='';
   location.reload();
 }
+/* connection self-test: two peers on THIS device talk through the real cloud + TURN —
+   tests the exact stack a room uses, and reports which stage failed */
+function mpSelfTest(){
+  const out=$('mpStatus'); out.classList.remove('hidden');
+  out.textContent='1/3 — '+T('mpTestSig');
+  mpLoadLib(()=>{
+    let a=null,b=null,done=false;
+    const finish=msg=>{if(done)return;done=true;out.textContent=msg;try{a&&a.destroy();}catch(e){}try{b&&b.destroy();}catch(e){}};
+    const t=setTimeout(()=>finish('❌ 3/3 — '+T('mpTestRtcFail')),20000);
+    a=new Peer(MP_ICE);
+    a.on('error',e=>{clearTimeout(t);finish('❌ 1/3 — '+T('mpTestSigFail')+' ('+e.type+')');});
+    a.on('open',()=>{
+      out.textContent='2/3 — '+T('mpTestRtc');
+      a.on('connection',cc=>{cc.on('data',()=>{clearTimeout(t);finish('✅ '+T('mpTestOK'));});});
+      b=new Peer(MP_ICE);
+      b.on('error',e=>{clearTimeout(t);finish('❌ 2/3 — '+T('mpTestSigFail')+' ('+e.type+')');});
+      b.on('open',()=>{
+        const c=b.connect(a.id,{reliable:true,serialization:'json'});
+        c.on('open',()=>c.send({ping:1}));
+        c.on('error',()=>{});
+      });
+    });
+  });
+}
+
 /* helper: template strings that live in TR (mpJoined/mpGone are functions there) */
 function C2(k,...a){
   const f=(TR[lang]&&TR[lang][k])!==undefined?TR[lang][k]:TR.en[k];
@@ -3561,6 +3590,7 @@ function initUI(){
   if(hm)$('mpCode').value=hm[1].toUpperCase();
   $('mpCreate').onclick=mpCreate;
   $('mpJoinBtn').onclick=mpJoin;
+  $('mpTestBtn').onclick=mpSelfTest;
   $('mpStartBtn').onclick=mpStartGame;
   $('mpLeave').onclick=mpLeave;
   $('mpCopy').onclick=()=>{
