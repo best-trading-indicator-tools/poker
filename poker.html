@@ -462,7 +462,6 @@ body.fl #centerArea{top:46%;}
         <input id="mpCode" maxlength="8" placeholder="CODE">
         <button id="mpJoinBtn">Join</button>
       </div>
-      <button id="mpTestBtn" style="margin-top:8px;width:100%;background:none;border:1px solid var(--line);color:var(--dim);border-radius:8px;padding:7px;font-size:12px;cursor:pointer;">🔧 Test my connection</button>
       <p id="mpStatus" class="hidden"></p>
     </div>
     <div id="resetRow">
@@ -3103,7 +3102,7 @@ function applyLang(){
   set('mpTitle','mpTitle'); set('mpCreate','mpCreate'); set('mpJoinBtn','mpJoinB');
   set('mpLobbyTitle','mpLobbyTitle'); set('mpCopy','mpCopy'); set('mpFillLbl','mpFillLbl');
   set('mpStartBtn','mpStart'); set('mpLeave','mpLeave');
-  set('mpAutoLbl1','mpAutoA'); set('mpAutoLbl2','mpAutoB'); set('mpTestBtn','mpTest');
+  set('mpAutoLbl1','mpAutoA'); set('mpAutoLbl2','mpAutoB');
   const mpn=$('mpName'); if(mpn)mpn.placeholder=T('mpNamePh');
   const mpc=$('mpCode'); if(mpc)mpc.placeholder=T('mpCodePh');
   const ci=$('chatIn'); if(ci)ci.placeholder=T('chatPh');
@@ -3851,7 +3850,6 @@ function initUI(){
   if(hm)$('mpCode').value=hm[1].toUpperCase();
   $('mpCreate').onclick=mpCreate;
   $('mpJoinBtn').onclick=mpJoin;
-  $('mpTestBtn').onclick=mpSelfTest;
   $('mpStartBtn').onclick=mpStartGame;
   $('mpLeave').onclick=mpLeave;
   $('mpCopy').onclick=()=>{
