@@ -642,6 +642,8 @@ mpFillLbl:"Fill empty seats with AI bots",mpStart:"▶ Start game",mpLeave:"Leav
 mpWaitHost:"Waiting for the host to start the game…",mpConnecting:"Connecting…",
 mpNetFail:"Could not reach the network. Check your internet and try again.",
 mpHostLeft:"The host left — the game is over.",mpNeedName:"Pick a name first 🙂",
+mpRoomGone:"Room not found — check the code, and make sure the host still has the room open.",
+mpConnFail:"Could not connect to the room. Phone networks sometimes block direct connections — try joining from the same Wi-Fi as the host, then retry.",
 mpJoined:n=>`${n} joined the room`,mpGone:n=>`${n} disconnected — their hand is folded`,
 mpYou:"(you · host)",mpYouG:"(you)",chatPh:"Message…",
 viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleShove:"all-in chart",chartTitleFacing:"chart vs this raise",
@@ -675,6 +677,8 @@ mpFillLbl:"Compléter avec des bots IA",mpStart:"▶ Lancer la partie",mpLeave:"
 mpWaitHost:"En attente du lancement par l'hôte…",mpConnecting:"Connexion…",
 mpNetFail:"Réseau injoignable. Vérifiez votre connexion et réessayez.",
 mpHostLeft:"L'hôte est parti — la partie est terminée.",mpNeedName:"Choisissez d'abord un prénom 🙂",
+mpRoomGone:"Salon introuvable — vérifiez le code et que l'hôte a toujours le salon ouvert.",
+mpConnFail:"Connexion au salon impossible. Les réseaux mobiles bloquent parfois les connexions directes — essayez le même Wi-Fi que l'hôte, puis réessayez.",
 mpJoined:n=>`${n} a rejoint le salon`,mpGone:n=>`${n} s'est déconnecté — sa main est couchée`,
 mpYou:"(vous · hôte)",mpYouG:"(vous)",chatPh:"Message…",
 viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleShove:"charte de tapis",chartTitleFacing:"charte face à cette relance",
@@ -708,6 +712,8 @@ mpFillLbl:"Rellenar asientos vacíos con bots",mpStart:"▶ Empezar partida",mpL
 mpWaitHost:"Esperando a que el anfitrión empiece…",mpConnecting:"Conectando…",
 mpNetFail:"No se pudo conectar a la red. Revisa tu internet e inténtalo de nuevo.",
 mpHostLeft:"El anfitrión se fue — la partida ha terminado.",mpNeedName:"Elige un nombre primero 🙂",
+mpRoomGone:"Sala no encontrada — revisa el código y que el anfitrión siga con la sala abierta.",
+mpConnFail:"No se pudo conectar a la sala. Las redes móviles a veces bloquean conexiones directas — prueba el mismo Wi-Fi que el anfitrión y reintenta.",
 mpJoined:n=>`${n} entró en la sala`,mpGone:n=>`${n} se desconectó — su mano se retira`,
 mpYou:"(tú · anfitrión)",mpYouG:"(tú)",chatPh:"Mensaje…",
 viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleShove:"tabla de all-in",chartTitleFacing:"tabla contra esta subida",
@@ -1667,18 +1673,24 @@ function refundUncalled(){
 
 function endRound(){
   refundUncalled();
-  if(state.players.some(p=>p.bet>0)) animateChipsToPot();
-  for(const p of state.players){p.bet=0;p.acted=false;p.checkedStreet=false;}
-  state.currentBet=0; state.lastRaiseSize=state.bb;
-  const live=inHand();
-  if(live.length===1) return endHandFold();
-  if(state.stage==='river') return showdown();
-  const canAct=live.filter(p=>!p.allIn);
-  if(canAct.length<=1) return runout();
-  dealNext();
-  render();
-  const first=nextSeat(state.dealerIdx,p=>!p.out&&!p.folded&&!p.allIn);
-  beginRound(first);
+  const hadBets=state.players.some(p=>p.bet>0);
+  if(hadBets) animateChipsToPot();
+  render();   // show the LAST action of the street (e.g. the final check) BEFORE the next card
+  const pause=fastFwd()?160:hadBets?700:600;
+  later(()=>{
+    if(!state||state.gameOver||state.handOver)return;
+    for(const p of state.players){p.bet=0;p.acted=false;p.checkedStreet=false;}
+    state.currentBet=0; state.lastRaiseSize=state.bb;
+    const live=inHand();
+    if(live.length===1) return endHandFold();
+    if(state.stage==='river') return showdown();
+    const canAct=live.filter(p=>!p.allIn);
+    if(canAct.length<=1) return runout();
+    dealNext();
+    render();
+    const first=nextSeat(state.dealerIdx,p=>!p.out&&!p.folded&&!p.allIn);
+    beginRound(first);
+  },pause);
 }
 
 function dealNext(){
@@ -3051,6 +3063,12 @@ function setLang(v){
    redacted state snapshots (each player only ever receives their own hole cards).
    Free signaling via the public PeerJS cloud; game data flows directly P2P. */
 let MP=null;
+/* STUN + free TURN relays: lets phones on cellular/strict NATs reach the host */
+const MP_ICE={config:{iceServers:[
+  {urls:['stun:stun.l.google.com:19302','stun:global.stun.twilio.com:3478']},
+  {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+  {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'}
+]}};
 function mpLoadLib(cb){
   if(window.Peer)return cb();
   const s=document.createElement('script');
@@ -3068,7 +3086,7 @@ function mpCreate(){
   mpStatus(T('mpConnecting'));
   mpLoadLib(()=>{
     const code=mpCode();
-    const peer=new Peer('sgp-'+code);
+    const peer=new Peer('sgp-'+code,MP_ICE);
     MP={role:'host',peer,code,myName:name,conns:[],started:false};
     peer.on('open',()=>{mpStatus('');mpLobbyShow();});
     peer.on('error',e=>{if(!MP||!MP.started)mpStatus(T('mpNetFail')+' ('+e.type+')');});
@@ -3085,16 +3103,27 @@ function mpJoin(){
   if(code.length<4){mpStatus(T('mpCodePh'));return;}
   mpStatus(T('mpConnecting'));
   mpLoadLib(()=>{
-    const peer=new Peer();
-    MP={role:'client',peer,code,myName:name,seat:null,sentTok:'',lastBanner:0,ended:false};
-    peer.on('error',e=>{mpStatus(T('mpNetFail')+' ('+e.type+')');});
+    const peer=new Peer(MP_ICE);
+    MP={role:'client',peer,code,myName:name,seat:null,sentTok:'',lastBanner:0,ended:false,connected:false};
+    const fail=msg=>{
+      $('mpLobby').classList.add('hidden');
+      mpStatus(msg);
+      try{peer.destroy();}catch(e){}
+      MP=null;
+    };
+    peer.on('error',e=>{
+      if(e.type==='peer-unavailable')fail(T('mpRoomGone'));
+      else if(!MP||!MP.connected)fail(T('mpNetFail')+' ('+e.type+')');
+    });
     peer.on('open',()=>{
       const conn=peer.connect('sgp-'+code,{reliable:true});
       MP.conn=conn;
-      conn.on('open',()=>{mpStatus('');conn.send({t:'hello',n:name});mpLobbyShow();});
+      /* if nothing opens within 12s, the direct connection is blocked */
+      const watchdog=setTimeout(()=>{if(MP&&!MP.connected)fail(T('mpConnFail'));},12000);
+      conn.on('open',()=>{clearTimeout(watchdog);MP.connected=true;mpStatus('');conn.send({t:'hello',n:name});mpLobbyShow();});
       conn.on('data',d=>mpClientData(d));
-      conn.on('close',()=>mpHostGone());
-      conn.on('error',()=>mpHostGone());
+      conn.on('close',()=>{if(MP&&MP.connected)mpHostGone();else fail(T('mpConnFail'));});
+      conn.on('error',()=>{if(MP&&MP.connected)mpHostGone();else fail(T('mpConnFail'));});
     });
   });
 }
