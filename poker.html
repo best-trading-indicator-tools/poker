@@ -3256,7 +3256,7 @@ function mpClientData(d){
   if(!MP)return;
   if(d.t==='lobby'){MP.names=d.names;mpRosterRender(d.names);}
   else if(d.t==='start'){
-    MP.seat=d.seat;
+    MP.seat=d.seat; MP.spectator=false;
     $('mpLobby').classList.add('hidden');
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
@@ -3267,9 +3267,14 @@ function mpClientData(d){
   else if(d.t==='ck'){MP.lastCK=d.d;}
   else if(d.t==='chat'){mpChatRender(d.n,d.x);}
   else if(d.t==='wait'){
-    /* game in progress — stay in the lobby, we get seated next hand */
-    mpLobbyShow();
-    $('mpWait').textContent=T('mpWaitNext');
+    /* game in progress — watch the table as a spectator until we're dealt in */
+    MP.spectator=true;
+    $('mpLobby').classList.add('hidden');
+    $('setup').classList.add('hidden');
+    $('game').classList.remove('hidden');
+    $('chatBtn').classList.remove('hidden');
+    hideActions(); updateOrient();
+    showBanner(T('mpWaitNext'));
   }
   else if(d.t==='badver'||d.t==='started'||d.t==='full'){
     MP.connected=false;          // suppress the "host left" path
@@ -3501,16 +3506,17 @@ function mpSeatPending(){
 /* per-recipient snapshot: seats rotated so the recipient sits at index 0; hole cards redacted */
 function mpSnapshotFor(seat){
   const N=state.players.length;
-  const rot=i=>((i-seat)%N+N)%N;
+  const rs=seat>=0?seat:0;            // spectators (seat -1) see the host-side view
+  const rot=i=>((i-rs)%N+N)%N;
   const players=new Array(N);
   for(const q of state.players){
     players[rot(q.i)]={i:rot(q.i),name:q.name,avatar:q.avatar,
-      isHuman:q.i===seat,remote:false,chips:q.chips,bet:q.bet,totalBet:q.totalBet,
+      isHuman:seat>=0&&q.i===seat,remote:false,chips:q.chips,bet:q.bet,totalBet:q.totalBet,
       folded:q.folded,out:q.out,allIn:q.allIn,acted:q.acted,lastAct:q.lastAct,
       revealed:q.revealed,place:q.place||0,pos:q.pos,style:q.style||null,
       rangeCap:q.rangeCap,rangeFloor:q.rangeFloor,checkedStreet:q.checkedStreet,
       aggStreets:q.aggStreets||[],lineRead:q.lineRead||'',
-      hole:(q.i===seat||q.revealed)?q.hole:(q.hole||[]).map(()=>({r:2,s:0,hid:1}))};
+      hole:((seat>=0&&q.i===seat)||q.revealed)?q.hole:(q.hole||[]).map(()=>({r:2,s:0,hid:1}))};
   }
   return {players,board:state.board,stage:state.stage,
     currentBet:state.currentBet,lastRaiseSize:state.lastRaiseSize,
@@ -3533,6 +3539,11 @@ function mpBroadcast(){
       if(c.seat==null)continue;
       try{c.conn.send({t:'st',s:mpSnapshotFor(c.seat)});}catch(e){}
     }
+    /* queued players spectate (fully redacted view) until they're dealt in */
+    if(MP.pending&&MP.pending.length){
+      const spec=mpSnapshotFor(-1);
+      for(const q of MP.pending){try{q.conn.send({t:'st',s:spec});}catch(e){}}
+    }
   });
 }
 function mpApplySnapshot(s){
@@ -3542,7 +3553,7 @@ function mpApplySnapshot(s){
   if(!$('seat0')) buildSeats();
   render();
   const me=s.players[0];
-  const myTurn=!s.gameOver&&!s.handOver&&s.turnIdx===0&&!me.folded&&!me.out&&!me.allIn
+  const myTurn=!s.gameOver&&!s.handOver&&me.isHuman&&s.turnIdx===0&&!me.folded&&!me.out&&!me.allIn
     &&(!me.acted||me.bet<s.currentBet);
   const tok=s.handNum+'-'+s.stage+'-'+s.currentBet+'-'+me.bet;
   if(myTurn&&MP.sentTok!==tok){showActions(me);}
