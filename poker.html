@@ -649,6 +649,7 @@ mpConnFail:"Could not connect to the room. Phone networks sometimes block direct
 mpJoined:n=>`${n} joined the room`,mpGone:n=>`${n} disconnected — their hand is folded`,
 mpYou:"(you · host)",mpYouG:"(you)",chatPh:"Message…",
 viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleShove:"all-in chart",chartTitleFacing:"chart vs this raise",
+viewRange:"📊 View the bettor's estimated range",chartTitleRange:"estimated range right now",legendRange:"hands he could still have",
 legendOpen:"raise first-in",legendShove:"go all-in",legendFold:"fold",legendYou:"your hand",legend3bet:"re-raise (3-bet)",legendCall:"call",
 benchConfirm:"Simulate 25 full 9-player tournaments where a bot plays PURE coach advice, to measure how good the coach really is. Takes a minute or two. Run it?",
 youWin:"You win the tournament!",playAgain:"Play again",
@@ -686,6 +687,7 @@ mpConnFail:"Connexion au salon impossible. Les réseaux mobiles bloquent parfois
 mpJoined:n=>`${n} a rejoint le salon`,mpGone:n=>`${n} s'est déconnecté — sa main est couchée`,
 mpYou:"(vous · hôte)",mpYouG:"(vous)",chatPh:"Message…",
 viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleShove:"charte de tapis",chartTitleFacing:"charte face à cette relance",
+viewRange:"📊 Voir la range estimée du miseur",chartTitleRange:"range estimée en ce moment",legendRange:"mains qu'il peut encore avoir",
 legendOpen:"relancer en premier",legendShove:"partir à tapis",legendFold:"se coucher",legendYou:"votre main",legend3bet:"sur-relancer (3-bet)",legendCall:"suivre",
 benchConfirm:"Simuler 25 tournois complets à 9 joueurs où un bot suit UNIQUEMENT les conseils du coach, pour mesurer sa vraie valeur. Compte une à deux minutes. Lancer ?",
 youWin:"Vous remportez le tournoi !",playAgain:"Rejouer",
@@ -723,6 +725,7 @@ mpConnFail:"No se pudo conectar a la sala. Las redes móviles a veces bloquean c
 mpJoined:n=>`${n} entró en la sala`,mpGone:n=>`${n} se desconectó — su mano se retira`,
 mpYou:"(tú · anfitrión)",mpYouG:"(tú)",chatPh:"Mensaje…",
 viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleShove:"tabla de all-in",chartTitleFacing:"tabla contra esta subida",
+viewRange:"📊 Ver el rango estimado del apostador",chartTitleRange:"rango estimado ahora mismo",legendRange:"manos que aún puede tener",
 legendOpen:"subir de primeras",legendShove:"ir all-in",legendFold:"retirarse",legendYou:"tu mano",legend3bet:"resubir (3-bet)",legendCall:"igualar",
 benchConfirm:"Simular 25 torneos completos de 9 jugadores donde un bot sigue SOLO los consejos del coach, para medir lo bueno que es de verdad. Tarda uno o dos minutos. ¿Lanzar?",
 youWin:"¡Ganas el torneo!",playAgain:"Jugar de nuevo",
@@ -2590,6 +2593,13 @@ function coachDecide(p){
     const drawOnly=d&&(d.gutshot||d.oesd||d.flush)&&myScore[0]<2;
     /* WHO is betting, and WHAT LINE did they take? exploit the player, read the story */
     const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+    /* postflop "matrix": show the hands the bettor is currently modeled on */
+    if(agg){
+      const capA=clamp(agg.rangeCap||1,0.03,1), floorA=Math.min(clamp(agg.rangeFloor||0,0,0.25),capA*0.5);
+      const lst=[];
+      for(const h of HAND_ORDER){const ph=handPct[h];if(ph<=capA&&ph>floorA)lst.push(h);}
+      chartInfo={kind:'range',pos:`${agg.name}${agg.pos?' ('+agg.pos+')':''}`,list:lst};
+    }
     let exploitAdj=0;
     if(agg&&agg.style&&!agg.folded){
       if(agg.style.id==='rock'){exploitAdj=-0.04;extra.push(C('profRock'));}
@@ -2669,10 +2679,10 @@ function showChartMatrix(info,heroCode){
     html+=`<div class="cc${inSet.has(h)?' in':inSet2.has(h)?' in2':''}${h===heroCode?' me':''}">${h}</div>`;
   }
   $('chartGrid').innerHTML=html;
-  const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='facing'?'chartTitleFacing':'chartTitleShove';
+  const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='facing'?'chartTitleFacing':info.kind==='range'?'chartTitleRange':'chartTitleShove';
   $('chartTitle').textContent=`${info.pos} — ${T(titleKey)}`;
   $('chartLegend').innerHTML=
-    `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'?'legendOpen':info.kind==='facing'?'legend3bet':'legendShove')}</span>`+
+    `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'?'legendOpen':info.kind==='facing'?'legend3bet':info.kind==='range'?'legendRange':'legendShove')}</span>`+
     (info.list2?`<span><span class="sw" style="background:#2e7d8f;"></span>${T('legendCall')}</span>`:'')+
     `<span><span class="sw" style="background:#1d232e;"></span>${T('legendFold')}</span>`+
     `<span><span class="sw" style="background:none;outline:2px solid #4da3ff;outline-offset:-1px;"></span>${T('legendYou')}</span>`;
@@ -2757,7 +2767,7 @@ function updateCoach(p){
     `<div class="coach-row"><span>M-ratio</span><b>M = ${M>99?'99+':Math.round(M)} · ${T('zone'+mZone)}</b></div>`+
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
     sizeRow+
-    (R.chartInfo?`<button class="chart-link" id="chartViewBtn">${T('viewChart')}</button>`:'')+
+    (R.chartInfo?`<button class="chart-link" id="chartViewBtn">${T(R.chartInfo.kind==='range'?'viewRange':'viewChart')}</button>`:'')+
     `<p class="why">${why.join(' ')}${extra.join('')}</p>`;
   if(R.chartInfo){
     const cb=$('chartViewBtn');
