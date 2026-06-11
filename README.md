@@ -87,6 +87,7 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ### 2026-06-11 — Solver range charts (external data file)
 - **`charts.js`**: real per-position GTO range matrices now live in an external, human-editable data file — raise-first-in charts for all 8 positions (UTG 11% → BTN 41%) and short-stack all-in charts at 10 BB and 5 BB depths, approximating published solver/Nash ranges
+- **📊 Tap to see the matrix**: every chart-based recommendation includes a "View this position's chart" button that opens the full 13×13 hand grid — gold cells are the raise/shove range for your seat, your current hand is outlined
 - The coach consults the chart FIRST ("77 is in the MP opening chart — solver-computed ranges say raising it is profitable") and falls back to the percentile engine when no chart covers the spot (facing raises, missing file) — so the single-file copy still works standalone
 - Unlike a single hand ranking with cutoffs, true matrices capture solver non-linearities (suited connectors and small pairs enter ranges "early", weak offsuit broadways late)
 - Tournament-pressure scaling, antes, profiles, ICM and all postflop logic apply unchanged on top

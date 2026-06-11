@@ -52,6 +52,19 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #ovBlunders .bl-row b{color:#e2574c;white-space:nowrap;}
 #ovBlunders .bl-row .bl-what{color:var(--text);}
 #ovBlunders .bl-more{font-size:11px;color:var(--dim);text-align:center;padding-top:6px;}
+/* 13×13 range matrix viewer */
+#chartOv{position:fixed;inset:0;background:rgba(8,10,14,.85);display:flex;align-items:center;justify-content:center;z-index:70;}
+#chartOv.hidden{display:none;}
+#chartGrid{display:grid;grid-template-columns:repeat(13,1fr);gap:2px;margin:10px 0;}
+#chartGrid .cc{width:30px;height:26px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;border-radius:4px;background:#1d232e;color:#5b6675;font-variant-numeric:tabular-nums;}
+#chartGrid .cc.in{background:var(--gold);color:#1a1408;}
+#chartGrid .cc.me{outline:2.5px solid #4da3ff;outline-offset:-1px;z-index:1;}
+#chartLegend{font-size:11.5px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+#chartLegend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;}
+.chart-link{display:block;width:100%;margin:8px 0 2px;background:none;border:1px dashed var(--gold);color:var(--gold);border-radius:8px;padding:7px;font-size:12px;cursor:pointer;}
+@media(max-width:680px),(max-width:980px) and (orientation:portrait){
+  #chartGrid .cc{width:22px;height:20px;font-size:7.5px;}
+}
 .rp-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
 .rp-nav button{background:none;border:1px solid var(--line);border-radius:7px;color:var(--text);padding:4px 10px;cursor:pointer;font-size:12px;}
 .rp-nav button:disabled{opacity:.35;cursor:default;}
@@ -490,6 +503,15 @@ body.fl #centerArea{top:46%;}
   </div>
 </div>
 
+<div id="chartOv" class="hidden">
+  <div class="rp-card" style="width:auto;">
+    <h2 id="chartTitle"></h2>
+    <div id="chartGrid"></div>
+    <div id="chartLegend"></div>
+    <button id="chartClose">Close</button>
+  </div>
+</div>
+
 <div id="overlay" class="hidden">
   <div class="over-card">
     <div class="big" id="ovEmoji">🏆</div>
@@ -548,6 +570,8 @@ recFOLD:"FOLD",recCHECK:"CHECK",recCALL:"CALL",recRAISETO:"RAISE TO",recBET:"BET
 zoneG:"🟢 comfortable",zoneY:"🟡 fight for pots",zoneO:"🟠 shove-or-fold soon",zoneR:"🔴 all-in or fold",
 prizeP:"Prize pressure",extraNeeded:"extra needed",
 benchRun:"🧪 Coach benchmark",
+viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleShove:"all-in chart",
+legendOpen:"raise first-in",legendShove:"go all-in",legendFold:"fold",legendYou:"your hand",
 benchConfirm:"Simulate 25 full 9-player tournaments where a bot plays PURE coach advice, to measure how good the coach really is. Takes a minute or two. Run it?",
 youWin:"You win the tournament!",playAgain:"Play again",
 youWinSub:(n,h)=>`Outlasted ${n} opponents over ${h} hands.`,
@@ -571,6 +595,8 @@ recFOLD:"SE COUCHER",recCHECK:"PAROLE",recCALL:"SUIVRE",recRAISETO:"RELANCER À"
 zoneG:"🟢 confortable",zoneY:"🟡 battez-vous pour les pots",zoneO:"🟠 bientôt tapis-ou-couché",zoneR:"🔴 tapis ou couché",
 prizeP:"Pression des prix",extraNeeded:"requis en plus",
 benchRun:"🧪 Benchmark du coach",
+viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleShove:"charte de tapis",
+legendOpen:"relancer en premier",legendShove:"partir à tapis",legendFold:"se coucher",legendYou:"votre main",
 benchConfirm:"Simuler 25 tournois complets à 9 joueurs où un bot suit UNIQUEMENT les conseils du coach, pour mesurer sa vraie valeur. Compte une à deux minutes. Lancer ?",
 youWin:"Vous remportez le tournoi !",playAgain:"Rejouer",
 youWinSub:(n,h)=>`Vous avez survécu à ${n} adversaires en ${h} mains.`,
@@ -594,6 +620,8 @@ recFOLD:"RETIRARSE",recCHECK:"PASAR",recCALL:"IGUALAR",recRAISETO:"SUBIR A",recB
 zoneG:"🟢 cómodo",zoneY:"🟡 pelea por los botes",zoneO:"🟠 pronto all-in o fold",zoneR:"🔴 all-in o retirarse",
 prizeP:"Presión de premios",extraNeeded:"extra necesario",
 benchRun:"🧪 Benchmark del coach",
+viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleShove:"tabla de all-in",
+legendOpen:"subir de primeras",legendShove:"ir all-in",legendFold:"retirarse",legendYou:"tu mano",
 benchConfirm:"Simular 25 torneos completos de 9 jugadores donde un bot sigue SOLO los consejos del coach, para medir lo bueno que es de verdad. Tarda uno o dos minutos. ¿Lanzar?",
 youWin:"¡Ganas el torneo!",playAgain:"Jugar de nuevo",
 youWinSub:(n,h)=>`Sobreviviste a ${n} rivales en ${h} manos.`,
@@ -2279,7 +2307,7 @@ function coachDecide(p){
   const icmPrem=callAmt>0?icmPremium(p,callAmt,pot):0;
   if(icmPrem>=0.01) extra.push(C('icmNote',Math.round(icmPrem*100),aliveN,Math.min(PAYOUTS(state.cfg.numPlayers).length,aliveN)));
 
-  let rec,why=[];
+  let rec,why=[],chartInfo=null;
   if(state.stage==='preflop'){
     const bucket=posBucket(pos), prTxt='top ~'+Math.round(pr*100)+'%';
     const unopened=state.currentBet<=state.bb;
@@ -2308,6 +2336,7 @@ function coachDecide(p){
       const thr=PUSH_THR[bucket];
       const shoveCharts=chartFor('shove',stackBB<=5?'5':'10');
       const sChart=shoveCharts?shoveCharts[bucket]:null;
+      if(sChart) chartInfo={kind:'shove',pos:pos||bucket,list:sChart};
       const shoveYes=sChart?sChart.includes(code):pr<=thr;
       if(shoveYes&&state.currentBet<=state.bb){
         rec='ALLIN';
@@ -2350,6 +2379,7 @@ function coachDecide(p){
       if(Math.abs(thrEff-thr)/thr>0.12||profDir!==0) extra.push(C('widenNote',Math.round(thr*100),Math.round(thrEff*100),profDir));
       /* solver chart first: is this exact hand in this position's opening matrix? */
       const rfi=chartFor('rfi',pos);
+      if(rfi) chartInfo={kind:'rfi',pos,list:rfi};
       const chartHit=rfi?rfi.includes(code):false;
       const pressureOpen=prEff<=thrEff&&callAmt>0||prEff<=Math.min(thrEff,0.10)&&callAmt===0;
       if(chartHit&&callAmt>0||pressureOpen){
@@ -2471,7 +2501,26 @@ function coachDecide(p){
     RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
   };
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,odds,callAmt,pot,opps,pos,early,late,
-          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem};
+          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,code};
+}
+
+/* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */
+function showChartMatrix(info,heroCode){
+  if(!HAS_DOM||!info)return;
+  const R=['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+  const inSet=new Set(info.list);
+  let html='';
+  for(let i=0;i<13;i++)for(let j=0;j<13;j++){
+    const h=i===j?R[i]+R[j]:i<j?R[i]+R[j]+'s':R[j]+R[i]+'o';
+    html+=`<div class="cc${inSet.has(h)?' in':''}${h===heroCode?' me':''}">${h}</div>`;
+  }
+  $('chartGrid').innerHTML=html;
+  $('chartTitle').textContent=`${info.pos} — ${T(info.kind==='rfi'?'chartTitleOpen':'chartTitleShove')}`;
+  $('chartLegend').innerHTML=
+    `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'?'legendOpen':'legendShove')}</span>`+
+    `<span><span class="sw" style="background:#1d232e;"></span>${T('legendFold')}</span>`+
+    `<span><span class="sw" style="background:none;outline:2px solid #4da3ff;outline-offset:-1px;"></span>${T('legendYou')}</span>`;
+  $('chartOv').classList.remove('hidden');
 }
 
 /* run N headless tournaments with the coach bot in seat 0, report win/ITM/avg finish */
@@ -2552,7 +2601,12 @@ function updateCoach(p){
     `<div class="coach-row"><span>M-ratio</span><b>M = ${M>99?'99+':Math.round(M)} · ${T('zone'+mZone)}</b></div>`+
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
     sizeRow+
+    (R.chartInfo?`<button class="chart-link" id="chartViewBtn">${T('viewChart')}</button>`:'')+
     `<p class="why">${why.join(' ')}${extra.join('')}</p>`;
+  if(R.chartInfo){
+    const cb=$('chartViewBtn');
+    if(cb) cb.onclick=()=>showChartMatrix(R.chartInfo,R.code);
+  }
   coachRecNow={rec,stage:state.stage,evs};
 
   /* GTO mini-solver: heads-up postflop spots */
@@ -2823,7 +2877,7 @@ function applyLang(){
   /* bottom bar + modals */
   set('logToggle','log'); set('replayBtn','lastHand'); set('exportBtn','exportH'); set('nextHandBtn','nextHand');
   set('foldBtn','fold'); set('prMin','min'); set('prHalf','halfPot'); set('prPot','pot'); set('prMax','allin');
-  set('rpClose','close'); set('rpTitle','replayTitle'); set('ovBtn','playAgain');
+  set('rpClose','close'); set('rpTitle','replayTitle'); set('ovBtn','playAgain'); set('chartClose','close');
   set('rpPrevH','handNavP'); set('rpNextH','handNavN'); set('rpPrevS','streetNavP'); set('rpNextS','streetNavN');
   const ch=$('coach').querySelector('h3'); if(ch)ch.textContent=T('liveCoach');
   const w=$('coachBody').querySelector('.waiting'); if(w)w.textContent=T('waiting');
@@ -2999,6 +3053,8 @@ function initUI(){
     a.click();
     URL.revokeObjectURL(a.href);
   };
+  $('chartClose').onclick=()=>$('chartOv').classList.add('hidden');
+  $('chartOv').onclick=e=>{if(e.target.id==='chartOv')$('chartOv').classList.add('hidden');};
   $('rpClose').onclick=()=>$('replayOv').classList.add('hidden');
   $('replayOv').onclick=e=>{if(e.target.id==='replayOv')$('replayOv').classList.add('hidden');};
   $('sndBtn').onclick=()=>{soundOn=!soundOn;$('sndBtn').textContent=soundOn?'🔊':'🔇';};
