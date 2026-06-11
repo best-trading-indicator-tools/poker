@@ -86,6 +86,11 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-11 — Timer, emotes & game history
+- **⏱ Turn timer (multiplayer)**: 25 seconds to act with a live countdown on the acting seat (red under 5s) — time out and you're auto check/folded, so an AFK friend can never stall the table
+- **😂 Emotes**: tap 😊 in the action bar for quick reactions (👍 😂 😱 🔥 🐔 🤝) that pop over your seat for everyone, rate-limited
+- **📈 Game history**: every finished game is logged (placement, hands, net, EV leaked, full stack-per-hand series, up to 200 games) and the game-over screen now shows your stack graph for the tournament — groundwork for the full session-review dashboard
+
 ### 2026-06-11 — Multiplayer polish
 - **Open table**: start alone with bots off — you wait at your own table and dealing begins automatically when the first friend arrives
 - **Humans beat robots**: friends joining a bots game replace the shortest-stacked AI instead of growing the table (start solo, end up heads-up vs your friend)

@@ -67,7 +67,15 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #mpList .mpdot{color:#62d68a;margin-right:7px;}
 #mpLobby button{margin:4px 4px 0;}
 #mpLobby #mpLeave{background:none;border:1px solid var(--line);color:var(--dim);}
-#chatBtn{background:none;border:1px solid var(--line);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:14px;}
+#chatBtn,#emoBtn{background:none;border:1px solid var(--line);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:14px;}
+#emoBar{position:fixed;bottom:96px;left:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:7px;display:flex;gap:4px;z-index:60;box-shadow:0 12px 36px rgba(0,0,0,.5);}
+#emoBar.hidden{display:none;}
+#emoBar button{background:none;border:none;font-size:24px;cursor:pointer;padding:3px 6px;border-radius:8px;}
+#emoBar button:hover{background:rgba(255,255,255,.08);}
+.emoPop{position:absolute;font-size:32px;z-index:46;pointer-events:none;transform:translate(-50%,-100%);animation:emoUp 1.5s ease-out forwards;}
+@keyframes emoUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.5);}15%{opacity:1;}100%{opacity:0;transform:translate(-50%,-190%) scale(1.2);}}
+.tmr{font-size:11.5px;color:var(--gold);min-height:14px;font-weight:700;text-align:center;}
+.tmr.low{color:#e2574c;}
 #chat{position:fixed;right:12px;bottom:96px;width:270px;height:330px;background:var(--panel);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;z-index:60;box-shadow:0 18px 50px rgba(0,0,0,.6);}
 #chat.hidden{display:none;}
 #chatMsgs{flex:1;overflow-y:auto;padding:10px;font-size:12.5px;line-height:1.5;overscroll-behavior:contain;}
@@ -519,6 +527,7 @@ body.fl #centerArea{top:46%;}
   </div>
   <div id="actionbar">
     <button id="chatBtn" class="hidden">💬</button>
+    <button id="emoBtn" class="hidden">😊</button>
     <button id="logToggle">Log</button>
     <button id="replayBtn" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;">Last hand</button>
     <button id="exportBtn" title="Download full hand history as JSON" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;">Export history</button>
@@ -568,6 +577,10 @@ body.fl #centerArea{top:46%;}
   </div>
 </div>
 
+<div id="emoBar" class="hidden">
+  <button>👍</button><button>😂</button><button>😱</button><button>🔥</button><button>🐔</button><button>🤝</button>
+</div>
+
 <div id="chat" class="hidden">
   <div id="chatMsgs"></div>
   <div id="chatRow"><input id="chatIn" maxlength="200" placeholder="Message…"><button id="chatSend">➤</button></div>
@@ -587,6 +600,7 @@ body.fl #centerArea{top:46%;}
     <div class="big" id="ovEmoji">🏆</div>
     <h2 id="ovTitle"></h2>
     <p id="ovSub"></p>
+    <div id="ovSpark"></div>
     <div id="ovBlunders"></div>
     <button id="ovBtn">Play again</button>
   </div>
@@ -1494,6 +1508,7 @@ function newGame(cfg){
   state.gameId=Date.now();
   state.gameDecisions=[];   // EV blunders this game
   state.gameHands=[];       // replayable hands this game
+  gameSeries=[];            // hero stack per hand (history graph)
   state.dealerIdx=Math.floor(Math.random()*cfg.numPlayers);
   return state;
 }
@@ -1554,6 +1569,7 @@ function startHand(){
   }
   mpBroadcastCK();    // public checkpoint: lets any player take over if the host dies
   state.handNum++;
+  if(!state.cfg.allAI)gameSeries.push({h:state.handNum,c:state.players[0].chips});
   state.handOver=false;
   const per=SPEED_HANDS[state.cfg.speed];
   state.level=Math.min(Math.floor((state.handNum-1)/per), state.levels.length-1);
@@ -1617,11 +1633,14 @@ function promptNext(){
   const j=findNextActor();
   if(j===-1) return endRound();
   state.turnIdx=j;
+  state.turnDeadline=0;
   const p=state.players[j];
   render();
   if(p.isHuman){
+    armTurnTimer(p);
     showActions(p);
   }else if(p.remote){
+    armTurnTimer(p);
     /* remote human: the snapshot broadcast tells their client it's their turn; we wait.
        If their connection is gone, auto-fold after a short grace so the table never stalls. */
     if(!mpConnAlive(p.i)){
@@ -2023,7 +2042,7 @@ function saveResume(){
   }catch(e){}
 }
 function clearResume(){try{localStorage.removeItem('sg_poker_resume');}catch(e){}}
-let coachRecNow=null,lastHand=null;
+let coachRecNow=null,lastHand=null,gameSeries=[];
 
 /* ================= UI ================= */
 const $=id=>HAS_DOM?document.getElementById(id):null;
@@ -2081,7 +2100,8 @@ function buildSeats(){
     seat.className='seat'; seat.id='seat'+p.i;
     seat.innerHTML=`<div class="hole" id="hole${p.i}"></div>
       <div class="plate"><span class="avatar">${p.avatar}</span><div><div class="pname">${p.name}<span class="ppos" id="pos${p.i}"></span></div><div class="pchips" id="chips${p.i}"></div>${p.style?`<div class="pstyle">${p.style.label}</div>`:''}</div></div>
-      <div class="lastact" id="act${p.i}"></div>`;
+      <div class="lastact" id="act${p.i}"></div>
+      <div class="tmr" id="tmr${p.i}"></div>`;
     felt.appendChild(seat);
     const bet=document.createElement('div');
     bet.className='betchip hidden'; bet.id='bet'+p.i;
@@ -3061,13 +3081,34 @@ function showNextBtn(autoMs){
 function hideNextBtn(){ if(HAS_DOM){$('nextHandBtn').classList.add('hidden');} clearTimeout(nextTimer); }
 function doNextHand(){ hideNextBtn(); startHand(); }
 
+function saveGameRecord(won,place){
+  if(BENCH||!state)return;
+  try{
+    const a2=JSON.parse(localStorage.getItem('sg_poker_games')||'[]');
+    a2.push({t:Date.now(),mp:!!(state.cfg&&(state.cfg.mpRemotes||state.cfg.mpClient)),n:state.cfg?state.cfg.numPlayers:0,
+      place:won?1:(place||0),hands:state.handNum,
+      net:state.sessStats?state.sessStats.net:0,evLost:state.sessStats?(state.sessStats.evLost||0):0,
+      series:(gameSeries||[]).slice(-300)});
+    while(a2.length>200)a2.shift();
+    localStorage.setItem('sg_poker_games',JSON.stringify(a2));
+  }catch(e){}
+}
+function sparklineSVG(series){
+  if(!series||series.length<2)return '';
+  const w=260,h=56,cs=series.map(p2=>p2.c);
+  const mx=Math.max(...cs),mn=Math.min(...cs),rg=Math.max(mx-mn,1);
+  const pts=series.map((p2,i)=>(i/(series.length-1)*w).toFixed(1)+','+(h-4-(p2.c-mn)/rg*(h-8)).toFixed(1)).join(' ');
+  return `<svg width="${w}" height="${h}" style="margin:6px 0;"><polyline points="${pts}" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round"/></svg>`;
+}
 function showGameOver(won,place){
   if(!HAS_DOM)return;
   clearResume();
+  saveGameRecord(won,place);
   render();
   $('ovEmoji').textContent=won?'🏆':'💀';
   $('ovTitle').textContent=won?T('youWin'):T('bustedTitle')(T('ord')(place));
   $('ovSub').textContent=won?T('youWinSub')(state.cfg.numPlayers-1,state.handNum):T('bustedSub')(state.handNum);
+  $('ovSpark').innerHTML=sparklineSVG(gameSeries);
   /* blunder report: biggest EV leaks vs the coach this game */
   const gd=(state.gameDecisions||[]).slice().sort((a,b)=>b.evLoss-a.evLoss);
   const tot=gd.reduce((s,d)=>s+d.evLoss,0);
@@ -3262,21 +3303,34 @@ function mpHostData(conn,d){
   }else if(d.t==='chat'){
     const rec=MP.conns.find(c=>c.conn===conn);
     mpChatAll((rec?rec.name:'?'),(''+d.x).slice(0,200));
+  }else if(d.t==='emo'){
+    const rec=MP.conns.find(c=>c.conn===conn);
+    if(!rec||rec.seat==null)return;
+    const now=Date.now();
+    if(rec.lastEmo&&now-rec.lastEmo<900)return;   // rate limit
+    rec.lastEmo=now;
+    showEmote(rec.seat,+d.e||0);
+    MP.conns.forEach(c=>{try{c.conn.send({t:'emo',seat:rec.seat,e:+d.e||0});}catch(e){}});
   }
 }
 function mpClientData(d){
   if(!MP)return;
   if(d.t==='lobby'){MP.names=d.names;mpRosterRender(d.names);}
   else if(d.t==='start'){
-    MP.seat=d.seat; MP.spectator=false;
+    MP.seat=d.seat; MP.spectator=false; gameSeries=[]; MP.lastHand=null;
     $('mpLobby').classList.add('hidden');
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
-    $('chatBtn').classList.remove('hidden');
+    $('chatBtn').classList.remove('hidden');$('emoBtn').classList.remove('hidden');
     hideActions(); updateOrient();
   }
   else if(d.t==='st'){mpApplySnapshot(d.s);}
   else if(d.t==='ck'){MP.lastCK=d.d;}
+  else if(d.t==='emo'){
+    const N=state&&state.players?state.players.length:9;
+    const my=MP.seat||0;
+    showEmote(((+d.seat-my)%N+N)%N,+d.e||0);
+  }
   else if(d.t==='chat'){mpChatRender(d.n,d.x);}
   else if(d.t==='wait'){
     /* game in progress — watch the table as a spectator until we're dealt in */
@@ -3284,7 +3338,7 @@ function mpClientData(d){
     $('mpLobby').classList.add('hidden');
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
-    $('chatBtn').classList.remove('hidden');
+    $('chatBtn').classList.remove('hidden');$('emoBtn').classList.remove('hidden');
     hideActions(); updateOrient();
     showBanner(T('mpWaitNext'));
   }
@@ -3408,7 +3462,7 @@ function mpBecomeHost(peer,newId){
     $('mpLobby').classList.add('hidden');
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
-    $('chatBtn').classList.remove('hidden');
+    $('chatBtn').classList.remove('hidden');$('emoBtn').classList.remove('hidden');
     buildSeats(); hideActions(); renderStats(); updateOrient();
     mpChatRender('🛜',C2('mpMigrated',myName));
     showBanner(C2('mpMigrated',myName));
@@ -3465,7 +3519,7 @@ function mpStartGame(){
   logLines=[];
   $('setup').classList.add('hidden');
   $('game').classList.remove('hidden');
-  $('chatBtn').classList.remove('hidden');
+  $('chatBtn').classList.remove('hidden');$('emoBtn').classList.remove('hidden');
   newGame(cfg);
   state.players[0].name=MP.myName;   // host plays under their chosen name
   buildSeats(); hideActions(); lastHand=null;
@@ -3473,6 +3527,25 @@ function mpStartGame(){
   renderStats(); updateOrient();
   setTimeout(startHand,600);
 }
+/* multiplayer turn timer: 25s to act, then auto check/fold so the table never stalls */
+function armTurnTimer(p){
+  if(!state||!state.cfg||!state.cfg.mpRemotes)return;   // human-vs-human games only
+  state.turnDeadline=Date.now()+25000;
+  const tok=state.handNum+'-'+state.stage+'-'+state.turnIdx+'-'+state.currentBet;
+  state._tt=tok;
+  setTimeout(()=>{
+    if(!state||state.gameOver||state.handOver||state._tt!==tok)return;
+    const q=state.players[state.turnIdx];
+    if(!q||(!q.isHuman&&!q.remote))return;
+    const ca=Math.min(state.currentBet-q.bet,q.chips);
+    log(`${q.name}: ⏱`);
+    if(q.isHuman&&HAS_DOM)hideActions();
+    applyAction(q,ca>0?'fold':'call');
+    state.turnIdx=(q.i+1)%state.players.length;
+    promptNext();
+  },25600);
+}
+
 /* checkpoint: PUBLIC tournament state at each hand boundary — chips, seats, level.
    Every client stores the latest one; if the host vanishes, the first remaining
    player rebuilds the game from it and becomes the new host. No hole cards inside. */
@@ -3550,6 +3623,7 @@ function mpSnapshotFor(seat){
     pfAggIdx:state.pfAggIdx>=0?rot(state.pfAggIdx):-1,
     lastAggIdx:state.lastAggIdx>=0?rot(state.lastAggIdx):-1,
     handNum:state.handNum,level:state.level,levels:state.levels,bb:state.bb,sb:state.sb,ante:state.ante,
+    turnLeft:state.turnDeadline?Math.max(0,state.turnDeadline-Date.now()):0,
     handOver:state.handOver,gameOver:state.gameOver,resultText:state.resultText||'',
     cfg:{numPlayers:state.cfg.numPlayers,speed:state.cfg.speed,ante:state.cfg.ante,
          startBlind:state.cfg.startBlind,startBB:state.cfg.startBB,difficulty:state.cfg.difficulty,mpClient:true},
@@ -3574,6 +3648,9 @@ function mpBroadcast(){
 }
 function mpApplySnapshot(s){
   state=s;
+  state.turnDeadline=s.turnLeft?Date.now()+s.turnLeft:0;
+  if(MP&&typeof MP.lastHand==='number'&&s.handNum!==MP.lastHand){gameSeries.push({h:s.handNum,c:s.players[0].chips});}
+  if(MP)MP.lastHand=s.handNum;
   logLines=s.log||logLines;
   if(HAS_DOM){const el=$('log');if(el)el.innerHTML=logLines.slice(-100).map(l=>`<div>${l}</div>`).join('');}
   if(!$('seat0')) buildSeats();
@@ -3653,6 +3730,37 @@ function C2(k,...a){
   if(f!==undefined)return f;
   try{return C(k,...a);}catch(e){return k;}
 }
+
+/* ===== emotes: quick reactions popping over seats ===== */
+const EMOJIS=['👍','😂','😱','🔥','🐔','🤝'];
+function showEmote(localSeat,e){
+  if(!HAS_DOM)return;
+  const seat=$('seat'+localSeat); if(!seat)return;
+  const d=document.createElement('div');
+  d.className='emoPop'; d.textContent=EMOJIS[e]||'👍';
+  d.style.left=(seat.offsetLeft)+'px';
+  d.style.top=(seat.offsetTop+14)+'px';
+  $('felt').appendChild(d);
+  setTimeout(()=>{try{d.remove();}catch(err){}},1600);
+}
+function mpEmote(i){
+  if(!MP)return;
+  if(MP.role==='host'){
+    showEmote(0,i);
+    MP.conns.forEach(c=>{try{c.conn.send({t:'emo',seat:0,e:i});}catch(e){}});
+  }else{
+    try{MP.conn.send({t:'emo',e:i});}catch(e){}
+  }
+}
+/* visible countdown on the acting seat (multiplayer) */
+if(HAS_DOM)setInterval(()=>{
+  document.querySelectorAll('.tmr').forEach(el=>{if(el.textContent)el.textContent='';});
+  if(!state||!state.turnDeadline||state.handOver||state.gameOver)return;
+  const left=Math.ceil((state.turnDeadline-Date.now())/1000);
+  if(left<=0||left>30)return;
+  const el=$('tmr'+state.turnIdx);
+  if(el){el.textContent='⏱ '+left;el.classList.toggle('low',left<=5);}
+},400);
 
 /* ================= INIT / WIRING ================= */
 function initUI(){
@@ -3861,6 +3969,8 @@ function initUI(){
     else{prompt('',url);done();}
   };
   $('chatBtn').onclick=()=>{$('chat').classList.toggle('hidden');$('chatBtn').textContent='💬';};
+  $('emoBtn').onclick=()=>$('emoBar').classList.toggle('hidden');
+  $('emoBar').querySelectorAll('button').forEach((bt,i)=>{bt.onclick=()=>{mpEmote(i);$('emoBar').classList.add('hidden');};});
   $('chatSend').onclick=mpChatSend;
   $('chatIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();mpChatSend();}});
   $('quitBtn').onclick=()=>{
