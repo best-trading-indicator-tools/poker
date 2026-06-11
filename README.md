@@ -82,10 +82,10 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 ## Changelog
 
 ### 2026-06-10 — Tournament pressure & live training
-- **M-ratio & Harrington zones in the coach**: every recommendation shows "M = 14 · yellow zone", with a warning when the next blind level will drop you a zone ("look for spots now rather than being forced later")
+- **M-ratio & Harrington zones in the coach**: every recommendation shows "M = 14 · yellow zone", with a plain-language explainer of what M means whenever it starts to matter, and a warning when the next blind level will drop you a zone ("look for spots now rather than being forced later")
 - **Stack-depth steal scaling**: late-position opening ranges widen progressively from 25 BB down to 10 BB (BTN ~42% → ~60%), early position stays disciplined — matching Harrington zone theory and solver stack-depth ranges
 - **Ante-aware opens**: dead money from antes widens recommended opening ranges proportionally
-- **Profile-aware stealing**: the coach reads the profiles still to act — steal wider when rocks/tights wait behind, tighter into stations and maniacs who defend or 3-bet
+- **Profile-aware stealing**: the coach reads the profiles still to act — steal wider when rocks/tights wait behind, tighter into stations and maniacs who defend or 3-bet — and explains the adjustment in its reasoning whenever profiles shift the math
 - **🧮 Live mental math teaching**: facing any bet, the coach shows how to compute the price (call ÷ (pot + call)), estimate win% with the ×4/×2 outs rule, and apply the same discounts it uses — so you can do it at a real table
 
 

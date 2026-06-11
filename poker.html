@@ -123,9 +123,9 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 .seat.folded{opacity:.45;}
 .seat.busted{opacity:.25;}
 .seat .avatar{font-size:23px;}
-.seat .pname{font-size:12.5px;font-weight:700;text-align:left;}
-.seat .pchips{font-size:10.5px;color:var(--gold);text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap;}
-.seat .lastact{font-size:11px;color:#cfd6e0;margin-top:3px;min-height:14px;text-shadow:0 1px 3px rgba(0,0,0,.7);}
+.seat .pname{font-size:14px;font-weight:700;text-align:left;}
+.seat .pchips{font-size:12.5px;color:var(--gold);text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600;}
+.seat .lastact{font-size:12.5px;color:#cfd6e0;margin-top:3px;min-height:14px;text-shadow:0 1px 3px rgba(0,0,0,.7);font-weight:600;}
 
 .betchip{position:absolute;transform:translate(-50%,-60%);display:flex;flex-direction:column;align-items:center;gap:3px;}
 .betchip .amt{background:rgba(10,12,16,.82);border:1px solid #4a5567;color:#ffe9b0;font-size:11px;font-weight:700;border-radius:20px;padding:2px 8px;font-variant-numeric:tabular-nums;}
@@ -635,6 +635,7 @@ callOk:(amt,pt,o,e,disc,ea)=>`The call costs ${amt} to win a ${pt} pot, so you n
 foldAdv:(o,amt,pt,ea,resp)=>`You need ${o} equity to call (${amt} into ${pt}) but only have ~${ea}${resp?' once the size of this bet is respected':''}. Every chip you put in here loses value — fold and wait for a better spot.`,
 mentalMath:(c,s,o)=>` 🧮 Live mental math: price = call ÷ (pot + call) = ${c} ÷ ${s} ≈ ${o}. Your win%: count outs (cards that improve you to the best hand) × 4 on the flop, × 2 on the turn; with a made hand, estimate how often you beat what they'd bet like this. Then knock off ~5–15% versus big bets or with no pair — the same discounts the coach applied here.`,
 mWarn:(n,m,z)=>` Blinds go up in ${n} hand${n>1?'s':''} — your M drops to ~${m} (${z}). Look for spots now rather than being forced to gamble later.`,
+mExplain:m=>` What "M = ${m}" means: your stack divided by the cost of one full round of blinds and antes — i.e. how many rounds you'd survive folding everything. Above 20 (green) play your normal game; 10–20 (yellow) start fighting for pots; 5–10 (orange) favor shoving over small raises; under 5 (red) it's all-in or fold.`,
 widenNote:(b,e,d)=>` Rising blinds and dead money change the math: your normal ~${b}% opening range here is adjusted to ~${e}%${d===1?' — and the players left to act fold too much, so attack them':d===-1?' — tempered, because the players left to act defend wide, so steal less into them':''}.`,
 gtoSolving:'⚖️ Running GTO solve…',gtoUnavail:'GTO solve unavailable for this spot.',gtoFail:'GTO solve failed for this spot.',
 gtoMulti:n=>'⚖️ GTO solving applies heads-up only (like commercial solvers). With '+n+' opponents, advice uses range-equity math.',
@@ -685,6 +686,7 @@ callOk:(amt,pt,o,e,disc,ea)=>`Le call coûte ${amt} pour gagner un pot de ${pt} 
 foldAdv:(o,amt,pt,ea,resp)=>`Il vous faut ${o} d’équité pour payer (${amt} dans ${pt}) mais vous n’avez que ~${ea}${resp?' une fois la taille de cette mise respectée':''}. Chaque jeton investi ici perd de la valeur — couchez-vous et attendez un meilleur spot.`,
 mentalMath:(c,s,o)=>` 🧮 Calcul mental en live : prix = mise à payer ÷ (pot + mise) = ${c} ÷ ${s} ≈ ${o}. Votre % de gain : comptez vos outs (cartes qui vous donnent la meilleure main) × 4 au flop, × 2 au turn ; avec une main faite, estimez la fréquence à laquelle vous battez ce qu'il miserait ainsi. Retirez ensuite ~5–15 % face aux grosses mises ou sans paire — les mêmes décotes que le coach a appliquées ici.`,
 mWarn:(n,m,z)=>` Les blinds montent dans ${n} main${n>1?'s':''} — votre M tombera à ~${m} (${z}). Cherchez des spots maintenant plutôt que d'être forcé de jouer à pile ou face plus tard.`,
+mExplain:m=>` Ce que signifie « M = ${m} » : votre tapis divisé par le coût d'un tour complet de blinds et d'antes — soit le nombre de tours que vous survivriez en jetant tout. Au-dessus de 20 (vert), jouez votre jeu normal ; 10–20 (jaune), commencez à vous battre pour les pots ; 5–10 (orange), préférez le tapis aux petites relances ; sous 5 (rouge), c'est tapis ou couché.`,
 widenNote:(b,e,d)=>` Les blinds qui montent et l'argent mort changent le calcul : votre range d'ouverture normale (~${b}%) est ajustée à ~${e}%${d===1?' — et les joueurs restants se couchent trop : attaquez-les':d===-1?' — tempérée, car les joueurs restants défendent large : volez moins contre eux':''}.`,
 gtoSolving:'⚖️ Calcul GTO en cours…',gtoUnavail:'Calcul GTO indisponible pour ce spot.',gtoFail:'Échec du calcul GTO pour ce spot.',
 gtoMulti:n=>'⚖️ Le calcul GTO ne s’applique qu’en tête-à-tête (comme les solveurs commerciaux). Avec '+n+' adversaires, le conseil repose sur l’équité contre les ranges.',
@@ -735,6 +737,7 @@ callOk:(amt,pt,o,e,disc,ea)=>`La llamada cuesta ${amt} para ganar un bote de ${p
 foldAdv:(o,amt,pt,ea,resp)=>`Necesitas ${o} de equidad para igualar (${amt} en ${pt}) pero solo tienes ~${ea}${resp?' una vez respetado el tamaño de esta apuesta':''}. Cada ficha que pongas aquí pierde valor — retírate y espera un mejor momento.`,
 mentalMath:(c,s,o)=>` 🧮 Cálculo mental en vivo: precio = llamada ÷ (bote + llamada) = ${c} ÷ ${s} ≈ ${o}. Tu % de ganar: cuenta tus outs (cartas que te dan la mejor mano) × 4 en el flop, × 2 en el turn; con mano hecha, estima cuántas veces ganas a lo que apostaría así. Luego resta ~5–15% contra apuestas grandes o sin pareja — los mismos descuentos que el coach aplicó aquí.`,
 mWarn:(n,m,z)=>` Las ciegas suben en ${n} mano${n>1?'s':''} — tu M caerá a ~${m} (${z}). Busca jugadas ahora antes de verte forzado a jugártela.`,
+mExplain:m=>` Qué significa «M = ${m}»: tu stack dividido por el coste de una ronda completa de ciegas y antes — cuántas rondas sobrevivirías tirándolo todo. Por encima de 20 (verde), juega tu juego normal; 10–20 (amarillo), empieza a pelear por los botes; 5–10 (naranja), prefiere el all-in a subidas pequeñas; bajo 5 (rojo), all-in o retirarse.`,
 widenNote:(b,e,d)=>` Las ciegas crecientes y el dinero muerto cambian el cálculo: tu rango de apertura normal (~${b}%) se ajusta a ~${e}%${d===1?' — y los jugadores por hablar se retiran demasiado: atácalos':d===-1?' — moderado, porque los que quedan defienden mucho: roba menos contra ellos':''}.`,
 gtoSolving:'⚖️ Calculando GTO…',gtoUnavail:'Cálculo GTO no disponible para esta situación.',gtoFail:'Falló el cálculo GTO en esta situación.',
 gtoMulti:n=>'⚖️ El cálculo GTO solo aplica mano a mano (como los solvers comerciales). Con '+n+' rivales, el consejo usa equidad contra rangos.',
@@ -2141,6 +2144,8 @@ function updateCoach(p){
       const mNext=(p.chips+p.bet)/Math.max(nbb*1.5+nante*aliveN,1);
       if(zoneOf(mNext)!==mZone&&mNext<M) extra.push(C('mWarn',handsLeft,Math.round(mNext),T('zone'+zoneOf(mNext))));
     }
+    /* teach what M means whenever it starts to matter */
+    if(mZone!=='G') extra.push(C('mExplain',Math.round(M)));
     if(stackBB<=10){
       /* Nash push/fold territory */
       const thr=PUSH_THR[bucket];
@@ -2175,7 +2180,8 @@ function updateCoach(p){
         }
       }
       const thrEff=Math.min(0.6,thr*fStack*fAnte*fProf);
-      if(Math.abs(thrEff-thr)/thr>0.12) extra.push(C('widenNote',Math.round(thr*100),Math.round(thrEff*100),profDir));
+      /* always explain when profiles behind shift the steal math, even slightly */
+      if(Math.abs(thrEff-thr)/thr>0.12||profDir!==0) extra.push(C('widenNote',Math.round(thr*100),Math.round(thrEff*100),profDir));
       if(prEff<=thrEff&&callAmt>0||prEff<=Math.min(thrEff,0.10)&&callAmt===0){
         rec='RAISE';
         why.push(C('pfOpen',code,prTxt,Math.round(thrEff*100),pos,pairAdj&&pr>thrEff));
