@@ -71,7 +71,7 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Coach & GTO solver
 
-- **Preflop**: hands are ranked against all 169 starting hands; advice uses position-based GTO opening ranges, 3-bet/fold logic against raises, and Nash push/fold under ~10 BB. The coach also tells you whether you'll act first or last *after* the flop and tightens/loosens accordingly.
+- **Preflop**: hands are ranked against all 169 starting hands; advice uses position-based GTO opening ranges scaled by tournament pressure (stack depth in M/BB, antes, and the profiles left to act), 3-bet/fold logic against raises, and Nash push/fold under ~10 BB. The coach shows your M-ratio and Harrington zone, warns before a blind level drops you a zone, and tells you whether you'll act first or last *after* the flop.
 - **Postflop**: equity is simulated against opponents' *realistic ranges* — each call/raise narrows their assumed range, scaled by their profile **and by bet size** (a pot-sized raise or overbet is read far tighter than a small stab), not random cards.
 - **Big-bet discipline**: facing large bets the coach discounts raw equity (big bets are usually made hands), warns against chasing 4-out gutshots into them, and never tells you to "take a free card" on the river — street-aware advice throughout.
 - **Order of action**: every recommendation shows whether you're first or last to talk on the current street (or the upcoming flop when preflop).
@@ -80,6 +80,14 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
+
+### 2026-06-10 — Tournament pressure & live training
+- **M-ratio & Harrington zones in the coach**: every recommendation shows "M = 14 · yellow zone", with a warning when the next blind level will drop you a zone ("look for spots now rather than being forced later")
+- **Stack-depth steal scaling**: late-position opening ranges widen progressively from 25 BB down to 10 BB (BTN ~42% → ~60%), early position stays disciplined — matching Harrington zone theory and solver stack-depth ranges
+- **Ante-aware opens**: dead money from antes widens recommended opening ranges proportionally
+- **Profile-aware stealing**: the coach reads the profiles still to act — steal wider when rocks/tights wait behind, tighter into stations and maniacs who defend or 3-bet
+- **🧮 Live mental math teaching**: facing any bet, the coach shows how to compute the price (call ÷ (pot + call)), estimate win% with the ×4/×2 outs rule, and apply the same discounts it uses — so you can do it at a real table
+
 
 ### 2026-06-10 — Mobile & data control
 - **Forced landscape on phones**: hold your phone any way you like — the game always renders in landscape (rotated automatically when held portrait); installed PWAs request landscape natively
