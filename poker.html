@@ -478,8 +478,6 @@ body.fl #centerArea{top:46%;}
     <button id="startBtn">Deal me in</button>
     <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
     <button id="reviewBtn" class="hidden">&#127902; Review past hands</button>
-    <button id="benchBtn">&#129514; Coach benchmark</button>
-    <p id="benchOut" class="hidden"></p>
     <div id="mpSec">
       <h3 id="mpTitle">👥 Play with friends</h3>
       <div id="mpSub">Invite friends with a link — free, no accounts</div>
@@ -2797,7 +2795,8 @@ function showChartMatrix(info,heroCode){
 /* run N headless tournaments with the coach bot in seat 0, report win/ITM/avg finish */
 function runCoachBenchmark(nGames){
   if(!HAS_DOM)return;
-  const btn=$('benchBtn'), out=$('benchOut');
+  const btn=$('benchBtn')||{disabled:false,classList:{remove(){},add(){}}};
+  const out=$('benchOut')||{classList:{remove(){},add(){}},set textContent(v){console.log('[bench]',v);},get textContent(){return '';}};
   out.classList.remove('hidden');
   btn.disabled=true;
   const cfgB={numPlayers:9,startBB:100,startBlind:100,ante:0.10,speed:'turbo',difficulty:'medium',allAI:true,coachBot:true};
@@ -3165,7 +3164,7 @@ function applyLang(){
   const dBtns=$('diffSeg').querySelectorAll('button');
   ['easy','medium','hard'].forEach((k,i)=>{if(dBtns[i])dBtns[i].textContent=T(k);});
   set('startBtn','deal'); set('resumeBtn','resume'); set('reviewBtn','review');
-  set('resetLbl','resetData'); set('resetInfo','resetInfo'); set('benchBtn','benchRun');
+  set('resetLbl','resetData'); set('resetInfo','resetInfo');
   set('mpTitle','mpTitle'); set('mpSub','mpSub'); set('mpCreate','mpCreate'); set('mpJoinBtn','mpJoinB');
   set('mpLobbyTitle','mpLobbyTitle'); set('mpCopy','mpCopy'); set('mpFillLbl','mpFillLbl');
   set('mpStartBtn','mpStart'); set('mpLeave','mpLeave');
@@ -3888,8 +3887,6 @@ function initUI(){
   };
   refreshResume();
   $('reviewBtn').onclick=showHistoryReplay;
-  /* --- coach benchmark --- */
-  $('benchBtn').onclick=()=>{ if(confirm(T('benchConfirm'))) runCoachBenchmark(25); };
   /* --- clear saved data (human name for localStorage wipe) --- */
   $('resetInfoBtn').onclick=()=>$('resetInfo').classList.toggle('hidden');
   $('timerInfoBtn').onclick=()=>$('timerInfo').classList.toggle('hidden');
