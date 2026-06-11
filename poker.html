@@ -68,10 +68,14 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #mpLobby button{margin:4px 4px 0;}
 #mpLobby #mpLeave{background:none;border:1px solid var(--line);color:var(--dim);}
 #chatBtn,#emoBtn{background:none;border:1px solid var(--line);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:14px;}
-#emoBar{position:fixed;bottom:96px;left:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:7px;display:flex;gap:4px;z-index:60;box-shadow:0 12px 36px rgba(0,0,0,.5);}
+#emoBar{position:fixed;bottom:96px;left:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;z-index:60;box-shadow:0 12px 36px rgba(0,0,0,.5);}
 #emoBar.hidden{display:none;}
+#emoHint{font-size:10.5px;color:var(--dim);margin:0 2px 6px;}
+#emoRow{display:flex;gap:4px;}
 #emoBar button{background:none;border:none;font-size:24px;cursor:pointer;padding:3px 6px;border-radius:8px;}
 #emoBar button:hover{background:rgba(255,255,255,.08);}
+#emoBtn.pulse{animation:emoPulse 1s ease-in-out 3;}
+@keyframes emoPulse{0%,100%{box-shadow:none;}50%{box-shadow:0 0 0 4px rgba(230,180,60,.45);}}
 .emoPop{position:absolute;font-size:32px;z-index:46;pointer-events:none;transform:translate(-50%,-100%);animation:emoUp 1.5s ease-out forwards;}
 @keyframes emoUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.5);}15%{opacity:1;}100%{opacity:0;transform:translate(-50%,-190%) scale(1.2);}}
 .tmr{font-size:11.5px;color:var(--gold);min-height:14px;font-weight:700;text-align:center;}
@@ -527,7 +531,7 @@ body.fl #centerArea{top:46%;}
   </div>
   <div id="actionbar">
     <button id="chatBtn" class="hidden">💬</button>
-    <button id="emoBtn" class="hidden">😊</button>
+    <button id="emoBtn" class="hidden" title="Send a reaction">😂 <span id="emoLbl">React</span></button>
     <button id="logToggle">Log</button>
     <button id="replayBtn" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;">Last hand</button>
     <button id="exportBtn" title="Download full hand history as JSON" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;">Export history</button>
@@ -578,7 +582,10 @@ body.fl #centerArea{top:46%;}
 </div>
 
 <div id="emoBar" class="hidden">
-  <button>👍</button><button>😂</button><button>😱</button><button>🔥</button><button>🐔</button><button>🤝</button>
+  <div id="emoHint">Tap to react — appears over your seat for everyone</div>
+  <div id="emoRow">
+    <button>👍</button><button>😂</button><button>😱</button><button>🔥</button><button>🐔</button><button>🤝</button>
+  </div>
 </div>
 
 <div id="chat" class="hidden">
@@ -670,6 +677,7 @@ mpMigrated:n=>`${n} is the new host — the tournament continues!`,
 mpRejoined:n=>`${n} is back at the table`,
 mpReplaced:(n,b2)=>`${n} takes over from 🤖 ${b2} — humans beat robots`,
 mpWaitingPlayers:"Table open — waiting for players to join. Share the invite link!",
+react:"React",reactHint:"Tap to react — appears over your seat for everyone",
 mpKnock:n=>`${n} joins at the next hand`,
 mpVerMismatch:"The host is running a different version of the game. BOTH of you: refresh the page (hold Shift while reloading), then create the room again.",
 mpNeed2:"You need at least one friend in the room to start — or tick \"Fill empty seats with AI bots\".",
@@ -720,6 +728,7 @@ mpMigrated:n=>`${n} est le nouvel hôte — le tournoi continue !`,
 mpRejoined:n=>`${n} est de retour à la table`,
 mpReplaced:(n,b2)=>`${n} remplace 🤖 ${b2} — les humains avant les robots`,
 mpWaitingPlayers:"Table ouverte — en attente de joueurs. Partagez le lien d'invitation !",
+react:"Réagir",reactHint:"Touchez pour réagir — visible au-dessus de votre siège par tous",
 mpKnock:n=>`${n} rejoint à la prochaine main`,
 mpVerMismatch:"L'hôte utilise une autre version du jeu. TOUS LES DEUX : rechargez la page (Maj + rechargement), puis recréez le salon.",
 mpNeed2:"Il faut au moins un ami dans le salon pour lancer — ou cochez « Compléter avec des bots IA ».",
@@ -770,6 +779,7 @@ mpMigrated:n=>`${n} es el nuevo anfitrión — ¡el torneo continúa!`,
 mpRejoined:n=>`${n} ha vuelto a la mesa`,
 mpReplaced:(n,b2)=>`${n} sustituye a 🤖 ${b2} — los humanos antes que los robots`,
 mpWaitingPlayers:"Mesa abierta — esperando jugadores. ¡Comparte el enlace!",
+react:"Reaccionar",reactHint:"Toca para reaccionar — aparece sobre tu asiento para todos",
 mpKnock:n=>`${n} entra en la próxima mano`,
 mpVerMismatch:"El anfitrión usa otra versión del juego. AMBOS: recargad la página (Shift + recargar) y cread la sala de nuevo.",
 mpNeed2:"Necesitas al menos un amigo en la sala para empezar — o marca \"Rellenar asientos vacíos con bots\".",
@@ -3144,7 +3154,7 @@ function applyLang(){
   set('mpTitle','mpTitle'); set('mpCreate','mpCreate'); set('mpJoinBtn','mpJoinB');
   set('mpLobbyTitle','mpLobbyTitle'); set('mpCopy','mpCopy'); set('mpFillLbl','mpFillLbl');
   set('mpStartBtn','mpStart'); set('mpLeave','mpLeave');
-  set('mpAutoLbl1','mpAutoA'); set('mpAutoLbl2','mpAutoB');
+  set('mpAutoLbl1','mpAutoA'); set('mpAutoLbl2','mpAutoB'); set('emoLbl','react'); set('emoHint','reactHint');
   const mpn=$('mpName'); if(mpn)mpn.placeholder=T('mpNamePh');
   const mpc=$('mpCode'); if(mpc)mpc.placeholder=T('mpCodePh');
   const ci=$('chatIn'); if(ci)ci.placeholder=T('chatPh');
@@ -3322,7 +3332,7 @@ function mpClientData(d){
     $('mpLobby').classList.add('hidden');
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
-    $('chatBtn').classList.remove('hidden');$('emoBtn').classList.remove('hidden');
+    $('chatBtn').classList.remove('hidden');showEmoteBtn();
     hideActions(); updateOrient();
   }
   else if(d.t==='st'){mpApplySnapshot(d.s);}
@@ -3339,7 +3349,7 @@ function mpClientData(d){
     $('mpLobby').classList.add('hidden');
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
-    $('chatBtn').classList.remove('hidden');$('emoBtn').classList.remove('hidden');
+    $('chatBtn').classList.remove('hidden');showEmoteBtn();
     hideActions(); updateOrient();
     showBanner(T('mpWaitNext'));
   }
@@ -3463,7 +3473,7 @@ function mpBecomeHost(peer,newId){
     $('mpLobby').classList.add('hidden');
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
-    $('chatBtn').classList.remove('hidden');$('emoBtn').classList.remove('hidden');
+    $('chatBtn').classList.remove('hidden');showEmoteBtn();
     buildSeats(); hideActions(); renderStats(); updateOrient();
     mpChatRender('🛜',C2('mpMigrated',myName));
     showBanner(C2('mpMigrated',myName));
@@ -3520,7 +3530,7 @@ function mpStartGame(){
   logLines=[];
   $('setup').classList.add('hidden');
   $('game').classList.remove('hidden');
-  $('chatBtn').classList.remove('hidden');$('emoBtn').classList.remove('hidden');
+  $('chatBtn').classList.remove('hidden');showEmoteBtn();
   newGame(cfg);
   state.players[0].name=MP.myName;   // host plays under their chosen name
   buildSeats(); hideActions(); lastHand=null;
@@ -3752,6 +3762,18 @@ function C2(k,...a){
 }
 
 /* ===== emotes: quick reactions popping over seats ===== */
+function showEmoteBtn(){
+  if(!HAS_DOM)return;
+  const el=$('emoBtn'); if(!el)return;
+  el.classList.remove('hidden');
+  try{
+    if(!localStorage.getItem('sg_poker_emoSeen')){
+      localStorage.setItem('sg_poker_emoSeen','1');
+      el.classList.add('pulse');
+      setTimeout(()=>el.classList.remove('pulse'),3500);
+    }
+  }catch(e){}
+}
 const EMOJIS=['👍','😂','😱','🔥','🐔','🤝'];
 function showEmote(localSeat,e){
   if(!HAS_DOM)return;
@@ -3814,7 +3836,7 @@ function initUI(){
     $('coachFeed').classList.add('hidden');
     renderStats();
     updateOrient();
-    $('emoBtn').classList.remove('hidden');
+    showEmoteBtn();
     setTimeout(startHand,400);
   };
   $('foldBtn').onclick=()=>humanAct('fold');
@@ -3893,7 +3915,7 @@ function initUI(){
     $('coachFeed').classList.add('hidden');
     renderStats();
     updateOrient();
-    $('emoBtn').classList.remove('hidden');
+    showEmoteBtn();
     setTimeout(startHand,400);
   };
   /* --- keyboard shortcuts: F fold · C check/call · R raise · 1-4 sizes · N next hand --- */
