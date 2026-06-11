@@ -10,7 +10,7 @@ Double-click `poker.html`, or serve it from any static host. Set up your table (
 
 ## Features
 
-- **👥 Multiplayer with friends (P2P, no server)**: create a room on the start screen, send the invite link, friends join from any browser — the room creator's browser hosts the game and players connect directly via WebRTC (free PeerJS signaling). Each player receives only their own hole cards; empty seats can be filled with AI bots; built-in chat; disconnected players are folded gracefully. 100% free, nothing to install or maintain
+- **👥 Multiplayer with friends (P2P, no server)**: create a room, share the invite link (your address bar IS the link), friends join from any browser — host-authoritative WebRTC with free signaling, each player receives only their own hole cards. Open a table alone and play starts when friends arrive; start vs AI bots and friends replace them as they join; late joiners spectate live until dealt in next hand. Built-in chat, auto-start at N players, **host migration** (host dies → another player takes over from a public checkpoint), seat+chips reconnect, version handshake, connection self-test. 100% free, nothing to install or maintain
 - **Configurable Sit & Go**: 2–9 players, starting blinds ($10/$20 up to $100/$200 — the whole blind ladder scales), buy-in in BB (50–200), ante as a fraction of the BB (none / 5% / 10% / 20%), turbo/standard/slow blind schedule (turbo raises blinds every 3 hands)
 - **Money display**: $ and BB shown everywhere, casino-style chip stacks
 - **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, order-of-action awareness (first/last to talk, including your *future* postflop position when advising preflop), bet-size-aware range reading, plain-English reasoning
@@ -85,6 +85,13 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
+
+### 2026-06-11 — Multiplayer polish
+- **Open table**: start alone with bots off — you wait at your own table and dealing begins automatically when the first friend arrives
+- **Humans beat robots**: friends joining a bots game replace the shortest-stacked AI instead of growing the table (start solo, end up heads-up vs your friend)
+- **Late joiners spectate**: joining a running game shows the live table (fully redacted — no cards visible) until you're dealt in at the next hand
+- **Auto-start at N players** (lobby option), **🔧 connection self-test** (staged diagnosis: signaling cloud → WebRTC), **protocol version handshake** ("both refresh" message instead of ghost failures, version tag in lobby), accurate join errors (room not found / connection blocked / room full)
+- **Postflop range viewer**: facing any bet, "📊 View the bettor's estimated range" opens the 13×13 grid of hands the coach currently puts them on — built live from their actions
 
 ### 2026-06-11 — Host migration: the game survives the host
 - **The host can vanish — the tournament continues.** Every hand, the host broadcasts a public checkpoint (chips, seats, blind level — never hole cards). If the host disconnects, players first try to rejoin (maybe it was their own link); if the room is truly gone, the first remaining player automatically becomes the new host at a deterministic room id, rebuilds the game from the checkpoint, and everyone reconnects. Verified live: killed the host tab mid-game, the guest promoted itself and kept playing
