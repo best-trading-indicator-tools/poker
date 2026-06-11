@@ -3764,7 +3764,7 @@ function showEmote(localSeat,e){
   setTimeout(()=>{try{d.remove();}catch(err){}},1600);
 }
 function mpEmote(i){
-  if(!MP)return;
+  if(!MP){ showEmote(0,i); return; }   // solo: react at the bots, why not
   if(MP.role==='host'){
     showEmote(0,i);
     MP.conns.forEach(c=>{try{c.conn.send({t:'emo',seat:0,e:i});}catch(e){}});
@@ -3814,6 +3814,7 @@ function initUI(){
     $('coachFeed').classList.add('hidden');
     renderStats();
     updateOrient();
+    $('emoBtn').classList.remove('hidden');
     setTimeout(startHand,400);
   };
   $('foldBtn').onclick=()=>humanAct('fold');
@@ -3892,6 +3893,7 @@ function initUI(){
     $('coachFeed').classList.add('hidden');
     renderStats();
     updateOrient();
+    $('emoBtn').classList.remove('hidden');
     setTimeout(startHand,400);
   };
   /* --- keyboard shortcuts: F fold · C check/call · R raise · 1-4 sizes · N next hand --- */
