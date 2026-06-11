@@ -38,6 +38,8 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #resetBtn{flex:1;background:none;border:1px solid var(--line);color:var(--dim);font-size:12.5px;border-radius:9px;padding:8px;cursor:pointer;}
 #resetBtn:hover{color:#e2574c;border-color:#e2574c;}
 #resetInfoBtn{background:none;border:1px solid var(--line);color:var(--dim);border-radius:9px;padding:0 11px;cursor:pointer;font-size:13px;}
+#timerInfo{margin:0 0 10px;font-size:11.5px;line-height:1.5;color:var(--dim);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:9px 11px;}
+#timerInfo.hidden{display:none;}
 #resetInfo{margin-top:8px;font-size:11.5px;line-height:1.5;color:var(--dim);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:9px 11px;}
 #resumeBtn,#reviewBtn,#benchBtn{width:100%;margin-top:8px;background:none;border:1px solid var(--gold);color:var(--gold);font-size:15px;font-weight:700;border-radius:10px;padding:11px;cursor:pointer;}
 #benchBtn{border-color:var(--line);color:var(--text);font-weight:600;font-size:13px;}
@@ -447,8 +449,12 @@ body.fl #centerArea{top:46%;}
     </div>
     <div class="row">
       <label class="main" id="timerLbl">⏱ Turn timer</label>
-      <input type="checkbox" id="timerChk" style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;">
+      <span style="display:flex;gap:8px;align-items:center;">
+        <button id="timerInfoBtn" aria-label="What does this do?" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:1px 8px;cursor:pointer;font-size:12px;">&#8505;&#65039;</button>
+        <input type="checkbox" id="timerChk" style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;">
+      </span>
     </div>
+    <p id="timerInfo" class="hidden"></p>
     <div class="row">
       <label class="main">Language</label>
       <select id="langSel">
@@ -681,7 +687,7 @@ mpMigrated:n=>`${n} is the new host — the tournament continues!`,
 mpRejoined:n=>`${n} is back at the table`,
 mpReplaced:(n,b2)=>`${n} takes over from 🤖 ${b2} — humans beat robots`,
 mpWaitingPlayers:"Table open — waiting for players to join. Share the invite link!",
-react:"React",reactHint:"Tap to react — appears over your seat for everyone",timerOpt:"⏱ Turn timer (25s + bank)",
+react:"React",reactHint:"Tap to react — appears over your seat for everyone",timerOpt:"⏱ Turn timer (25s + bank)",timerInfo:"Like a real casino clock: you get 25 seconds for each decision — a countdown appears under your seat. If it runs out on a tough spot, your personal TIME BANK takes over automatically (60 extra seconds for the whole tournament, it only burns what you actually use — shown as 🏦). When both are empty, the game checks or folds for you. Great training for live games. Always on when playing with friends.",
 mpKnock:n=>`${n} joins at the next hand`,
 mpVerMismatch:"The host is running a different version of the game. BOTH of you: refresh the page (hold Shift while reloading), then create the room again.",
 mpNeed2:"You need at least one friend in the room to start — or tick \"Fill empty seats with AI bots\".",
@@ -732,7 +738,7 @@ mpMigrated:n=>`${n} est le nouvel hôte — le tournoi continue !`,
 mpRejoined:n=>`${n} est de retour à la table`,
 mpReplaced:(n,b2)=>`${n} remplace 🤖 ${b2} — les humains avant les robots`,
 mpWaitingPlayers:"Table ouverte — en attente de joueurs. Partagez le lien d'invitation !",
-react:"Réagir",reactHint:"Touchez pour réagir — visible au-dessus de votre siège par tous",timerOpt:"⏱ Minuteur de tour (25s + réserve)",
+react:"Réagir",reactHint:"Touchez pour réagir — visible au-dessus de votre siège par tous",timerOpt:"⏱ Minuteur de tour (25s + réserve)",timerInfo:"Comme au casino : 25 secondes par décision — un compte à rebours s'affiche sous votre siège. S'il expire sur un choix difficile, votre RÉSERVE DE TEMPS prend le relais automatiquement (60 secondes pour tout le tournoi, elle ne consomme que ce que vous utilisez — affichée 🏦). Quand tout est épuisé, le jeu checke ou se couche pour vous. Excellent entraînement pour le live. Toujours actif entre amis.",
 mpKnock:n=>`${n} rejoint à la prochaine main`,
 mpVerMismatch:"L'hôte utilise une autre version du jeu. TOUS LES DEUX : rechargez la page (Maj + rechargement), puis recréez le salon.",
 mpNeed2:"Il faut au moins un ami dans le salon pour lancer — ou cochez « Compléter avec des bots IA ».",
@@ -783,7 +789,7 @@ mpMigrated:n=>`${n} es el nuevo anfitrión — ¡el torneo continúa!`,
 mpRejoined:n=>`${n} ha vuelto a la mesa`,
 mpReplaced:(n,b2)=>`${n} sustituye a 🤖 ${b2} — los humanos antes que los robots`,
 mpWaitingPlayers:"Mesa abierta — esperando jugadores. ¡Comparte el enlace!",
-react:"Reaccionar",reactHint:"Toca para reaccionar — aparece sobre tu asiento para todos",timerOpt:"⏱ Temporizador (25s + banco)",
+react:"Reaccionar",reactHint:"Toca para reaccionar — aparece sobre tu asiento para todos",timerOpt:"⏱ Temporizador (25s + banco)",timerInfo:"Como en un casino real: 25 segundos por decisión — aparece una cuenta atrás bajo tu asiento. Si se agota en una decisión difícil, tu BANCO DE TIEMPO entra automáticamente (60 segundos extra para todo el torneo, solo gasta lo que uses — se muestra 🏦). Cuando ambos se acaban, el juego pasa o se retira por ti. Gran entrenamiento para el directo. Siempre activo con amigos.",
 mpKnock:n=>`${n} entra en la próxima mano`,
 mpVerMismatch:"El anfitrión usa otra versión del juego. AMBOS: recargad la página (Shift + recargar) y cread la sala de nuevo.",
 mpNeed2:"Necesitas al menos un amigo en la sala para empezar — o marca \"Rellenar asientos vacíos con bots\".",
@@ -3158,7 +3164,7 @@ function applyLang(){
   set('mpTitle','mpTitle'); set('mpCreate','mpCreate'); set('mpJoinBtn','mpJoinB');
   set('mpLobbyTitle','mpLobbyTitle'); set('mpCopy','mpCopy'); set('mpFillLbl','mpFillLbl');
   set('mpStartBtn','mpStart'); set('mpLeave','mpLeave');
-  set('mpAutoLbl1','mpAutoA'); set('mpAutoLbl2','mpAutoB'); set('emoLbl','react'); set('emoHint','reactHint');
+  set('mpAutoLbl1','mpAutoA'); set('mpAutoLbl2','mpAutoB'); set('emoLbl','react'); set('emoHint','reactHint'); set('timerInfo','timerInfo');
   const mpn=$('mpName'); if(mpn)mpn.placeholder=T('mpNamePh');
   const mpc=$('mpCode'); if(mpc)mpc.placeholder=T('mpCodePh');
   const ci=$('chatIn'); if(ci)ci.placeholder=T('chatPh');
@@ -3881,6 +3887,7 @@ function initUI(){
   $('benchBtn').onclick=()=>{ if(confirm(T('benchConfirm'))) runCoachBenchmark(25); };
   /* --- clear saved data (human name for localStorage wipe) --- */
   $('resetInfoBtn').onclick=()=>$('resetInfo').classList.toggle('hidden');
+  $('timerInfoBtn').onclick=()=>$('timerInfo').classList.toggle('hidden');
   $('resetBtn').onclick=()=>{
     if(!confirm(T('resetConfirm')))return;
     try{
