@@ -649,6 +649,9 @@ mpNetFail:"Could not reach the network. Check your internet and try again.",
 mpHostLeft:"The host left — the game is over.",mpNeedName:"Pick a name first 🙂",
 mpAutoA:"Auto-start at",mpAutoB:"players",
 mpTest:"🔧 Test my connection",mpTestSig:"reaching the signaling cloud…",mpTestRtc:"cloud OK — testing the direct connection…",mpTestSigFail:"cannot reach the signaling cloud. A firewall, VPN or ad-blocker may be blocking 0.peerjs.com.",mpTestRtcFail:"signaling works but the direct connection failed — this network blocks WebRTC. Try another Wi-Fi or disable VPN.",mpTestOK:"Connection test passed — this device can create and join rooms.",
+mpStarted:"This room's game has already started — you can't join mid-game. Ask the host to Quit back to the menu and create a fresh room (or wait for the next one).",
+mpFull:"This room is full (9 players max).",
+mpKnock:n=>`${n} tried to join, but the game is already running. To play together: Quit to the menu and create a new room BEFORE starting.`,
 mpVerMismatch:"The host is running a different version of the game. BOTH of you: refresh the page (hold Shift while reloading), then create the room again.",
 mpNeed2:"You need at least one friend in the room to start — or tick \"Fill empty seats with AI bots\".",
 mpHostHint:"Share the invite link and wait — friends appear in the list below as they join. Then press Start.",
@@ -690,6 +693,9 @@ mpNetFail:"Réseau injoignable. Vérifiez votre connexion et réessayez.",
 mpHostLeft:"L'hôte est parti — la partie est terminée.",mpNeedName:"Choisissez d'abord un prénom 🙂",
 mpAutoA:"Lancement auto à",mpAutoB:"joueurs",
 mpTest:"🔧 Tester ma connexion",mpTestSig:"contact du cloud de signalisation…",mpTestRtc:"cloud OK — test de la connexion directe…",mpTestSigFail:"impossible de joindre le cloud de signalisation. Un pare-feu, VPN ou bloqueur de pub bloque peut-être 0.peerjs.com.",mpTestRtcFail:"la signalisation fonctionne mais la connexion directe a échoué — ce réseau bloque WebRTC. Essayez un autre Wi-Fi ou coupez le VPN.",mpTestOK:"Test réussi — cet appareil peut créer et rejoindre des salons.",
+mpStarted:"La partie de ce salon a déjà commencé — impossible de rejoindre en cours. Demandez à l'hôte de quitter vers le menu et de recréer un salon (ou attendez la prochaine).",
+mpFull:"Ce salon est complet (9 joueurs max).",
+mpKnock:n=>`${n} a essayé de rejoindre, mais la partie est déjà lancée. Pour jouer ensemble : quittez vers le menu et créez un nouveau salon AVANT de lancer.`,
 mpVerMismatch:"L'hôte utilise une autre version du jeu. TOUS LES DEUX : rechargez la page (Maj + rechargement), puis recréez le salon.",
 mpNeed2:"Il faut au moins un ami dans le salon pour lancer — ou cochez « Compléter avec des bots IA ».",
 mpHostHint:"Partagez le lien et patientez — vos amis apparaissent dans la liste ci-dessous. Puis appuyez sur Lancer.",
@@ -731,6 +737,9 @@ mpNetFail:"No se pudo conectar a la red. Revisa tu internet e inténtalo de nuev
 mpHostLeft:"El anfitrión se fue — la partida ha terminado.",mpNeedName:"Elige un nombre primero 🙂",
 mpAutoA:"Inicio automático con",mpAutoB:"jugadores",
 mpTest:"🔧 Probar mi conexión",mpTestSig:"contactando la nube de señalización…",mpTestRtc:"nube OK — probando la conexión directa…",mpTestSigFail:"no se puede alcanzar la nube de señalización. Un cortafuegos, VPN o bloqueador puede estar bloqueando 0.peerjs.com.",mpTestRtcFail:"la señalización funciona pero la conexión directa falló — esta red bloquea WebRTC. Prueba otra Wi-Fi o desactiva la VPN.",mpTestOK:"Prueba superada — este dispositivo puede crear y unirse a salas.",
+mpStarted:"La partida de esta sala ya empezó — no se puede entrar a mitad. Pide al anfitrión que salga al menú y cree una sala nueva (o espera la siguiente).",
+mpFull:"Esta sala está llena (9 jugadores máx.).",
+mpKnock:n=>`${n} intentó entrar, pero la partida ya está en marcha. Para jugar juntos: salid al menú y cread una sala nueva ANTES de empezar.`,
 mpVerMismatch:"El anfitrión usa otra versión del juego. AMBOS: recargad la página (Shift + recargar) y cread la sala de nuevo.",
 mpNeed2:"Necesitas al menos un amigo en la sala para empezar — o marca \"Rellenar asientos vacíos con bots\".",
 mpHostHint:"Comparte el enlace y espera — tus amigos aparecen en la lista de abajo. Luego pulsa Empezar.",
@@ -3120,7 +3129,10 @@ function mpCreate(){
     const code=mpCode();
     const peer=new Peer('sgp-'+code,MP_ICE);
     MP={role:'host',peer,code,myName:name,conns:[],started:false};
-    peer.on('open',()=>{mpStatus('');mpLobbyShow();});
+    peer.on('open',()=>{
+      mpStatus(''); mpLobbyShow();
+      try{location.hash='room='+code;}catch(e){}   // host URL becomes the invite link itself
+    });
     peer.on('disconnected',()=>{try{peer.reconnect();}catch(e){}});  // keep signaling alive
     peer.on('error',e=>{if(!MP||!MP.started)mpStatus(T('mpNetFail')+' ('+e.type+')');});
     peer.on('connection',conn=>{
@@ -3166,8 +3178,13 @@ function mpHostData(conn,d){
   if(!MP)return;
   if(d.t==='hello'){
     if(d.v!==MP_V){try{conn.send({t:'badver'});}catch(e){}setTimeout(()=>{try{conn.close();}catch(e){}},400);return;}
-    if(MP.started){try{conn.close();}catch(e){}return;}
-    if(MP.conns.length>=8){try{conn.close();}catch(e){}return;}
+    if(MP.started){
+      mpChatRender('🛜',C2('mpKnock',d.n));   // tell the host someone tried to join
+      try{conn.send({t:'started'});}catch(e){}
+      setTimeout(()=>{try{conn.close();}catch(e){}},400);
+      return;
+    }
+    if(MP.conns.length>=8){try{conn.send({t:'full'});}catch(e){}setTimeout(()=>{try{conn.close();}catch(e){}},400);return;}
     MP.conns.push({conn,name:(''+d.n).slice(0,14),seat:null});
     mpRoster(); mpChatLocal('· '+C2('mpJoined',d.n));
   }else if(d.t==='act'){
@@ -3196,10 +3213,10 @@ function mpClientData(d){
   }
   else if(d.t==='st'){mpApplySnapshot(d.s);}
   else if(d.t==='chat'){mpChatRender(d.n,d.x);}
-  else if(d.t==='badver'){
+  else if(d.t==='badver'||d.t==='started'||d.t==='full'){
     MP.connected=false;          // suppress the "host left" path
     $('mpLobby').classList.add('hidden');
-    mpStatus(T('mpVerMismatch'));
+    mpStatus(T(d.t==='badver'?'mpVerMismatch':d.t==='full'?'mpFull':'mpStarted'));
     try{MP.peer.destroy();}catch(e){}
     MP=null;
   }
