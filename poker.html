@@ -39,7 +39,10 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #resetBtn:hover{color:#e2574c;border-color:#e2574c;}
 #resetInfoBtn{background:none;border:1px solid var(--line);color:var(--dim);border-radius:9px;padding:0 11px;cursor:pointer;font-size:13px;}
 #resetInfo{margin-top:8px;font-size:11.5px;line-height:1.5;color:var(--dim);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:9px 11px;}
-#resumeBtn,#reviewBtn{width:100%;margin-top:8px;background:none;border:1px solid var(--gold);color:var(--gold);font-size:15px;font-weight:700;border-radius:10px;padding:11px;cursor:pointer;}
+#resumeBtn,#reviewBtn,#benchBtn{width:100%;margin-top:8px;background:none;border:1px solid var(--gold);color:var(--gold);font-size:15px;font-weight:700;border-radius:10px;padding:11px;cursor:pointer;}
+#benchBtn{border-color:var(--line);color:var(--text);font-weight:600;font-size:13px;}
+#benchBtn:disabled{opacity:.5;cursor:default;}
+#benchOut{margin-top:8px;font-size:12px;line-height:1.55;color:var(--text);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:9px 11px;}
 #resumeBtn:hover,#reviewBtn:hover{background:rgba(230,180,60,.12);}
 #reviewBtn{border-color:var(--line);color:var(--text);font-weight:600;}
 #ovBlunders{margin:12px 0 4px;text-align:left;max-height:38vh;overflow-y:auto;}
@@ -243,6 +246,9 @@ body.fl #centerArea{top:46%;}
   .setup-card{width:auto;max-width:94vw;padding:24px 22px;margin:max(10px,env(safe-area-inset-top)) auto max(24px,env(safe-area-inset-bottom));}
   .setup-card h1{font-size:21px;}
   .radios label,.seg button,select{font-size:13px;}
+  /* breathing room between row labels and their controls on small screens */
+  #setup .row{gap:14px;}
+  #setup .row label.main{margin-right:10px;flex-shrink:0;}
   /* modals: keep inside the viewport and scrollable */
   .over-card{padding:22px 16px;max-width:92vw;max-height:88vh;overflow-y:auto;}
   .rp-card{padding:16px 12px;}
@@ -399,6 +405,8 @@ body.fl #centerArea{top:46%;}
     <button id="startBtn">Deal me in</button>
     <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
     <button id="reviewBtn" class="hidden">&#127902; Review past hands</button>
+    <button id="benchBtn">&#129514; Coach benchmark</button>
+    <p id="benchOut" class="hidden"></p>
     <div id="resetRow">
       <button id="resetBtn">&#129529; <span id="resetLbl">Clear saved data</span></button>
       <button id="resetInfoBtn" aria-label="What does this do?">&#8505;&#65039;</button>
@@ -518,6 +526,9 @@ function tourneyPressure(stackBB){
 }
 const AI_AVATARS = ['🦊','🐼','🦈','🦉','🐯','🐺','🐸','🐙'];
 let AI_DELAY_MIN=550, AI_DELAY_MAX=1050, RUNOUT_DELAY=1000, SHOWDOWN_PAUSE=4200, FOLDWIN_PAUSE=2200;
+/* benchmark mode: run games at maximum speed with no rendering */
+let BENCH=false;
+function later(fn,ms){ if(BENCH){queueMicrotask(fn);} else setTimeout(fn,ms); }
 
 /* ================= I18N (UI chrome; coach prose stays English for now) ================= */
 const TR={
@@ -535,6 +546,8 @@ thisGame:"THIS GAME",lifetime:"LIFETIME",handsPW:"Hands played / won",net:"Net",
 recFOLD:"FOLD",recCHECK:"CHECK",recCALL:"CALL",recRAISETO:"RAISE TO",recBET:"BET",recALLIN:"ALL-IN",
 zoneG:"🟢 comfortable",zoneY:"🟡 fight for pots",zoneO:"🟠 shove-or-fold soon",zoneR:"🔴 all-in or fold",
 prizeP:"Prize pressure",extraNeeded:"extra needed",
+benchRun:"🧪 Coach benchmark",
+benchConfirm:"Simulate 25 full 9-player tournaments where a bot plays PURE coach advice, to measure how good the coach really is. Takes a minute or two. Run it?",
 youWin:"You win the tournament!",playAgain:"Play again",
 youWinSub:(n,h)=>`Outlasted ${n} opponents over ${h} hands.`,
 bustedTitle:p=>`Busted in ${p} place`,bustedSub:h=>`Survived ${h} hands. Run it back?`,
@@ -556,6 +569,8 @@ thisGame:"CETTE PARTIE",lifetime:"GLOBAL",handsPW:"Mains jouées / gagnées",net
 recFOLD:"SE COUCHER",recCHECK:"PAROLE",recCALL:"SUIVRE",recRAISETO:"RELANCER À",recBET:"MISER",recALLIN:"TAPIS",
 zoneG:"🟢 confortable",zoneY:"🟡 battez-vous pour les pots",zoneO:"🟠 bientôt tapis-ou-couché",zoneR:"🔴 tapis ou couché",
 prizeP:"Pression des prix",extraNeeded:"requis en plus",
+benchRun:"🧪 Benchmark du coach",
+benchConfirm:"Simuler 25 tournois complets à 9 joueurs où un bot suit UNIQUEMENT les conseils du coach, pour mesurer sa vraie valeur. Compte une à deux minutes. Lancer ?",
 youWin:"Vous remportez le tournoi !",playAgain:"Rejouer",
 youWinSub:(n,h)=>`Vous avez survécu à ${n} adversaires en ${h} mains.`,
 bustedTitle:p=>`Éliminé à la ${p} place`,bustedSub:h=>`${h} mains jouées. On remet ça ?`,
@@ -577,6 +592,8 @@ thisGame:"ESTA PARTIDA",lifetime:"GLOBAL",handsPW:"Manos jugadas / ganadas",net:
 recFOLD:"RETIRARSE",recCHECK:"PASAR",recCALL:"IGUALAR",recRAISETO:"SUBIR A",recBET:"APOSTAR",recALLIN:"ALL-IN",
 zoneG:"🟢 cómodo",zoneY:"🟡 pelea por los botes",zoneO:"🟠 pronto all-in o fold",zoneR:"🔴 all-in o retirarse",
 prizeP:"Presión de premios",extraNeeded:"extra necesario",
+benchRun:"🧪 Benchmark del coach",
+benchConfirm:"Simular 25 torneos completos de 9 jugadores donde un bot sigue SOLO los consejos del coach, para medir lo bueno que es de verdad. Tarda uno o dos minutos. ¿Lanzar?",
 youWin:"¡Ganas el torneo!",playAgain:"Jugar de nuevo",
 youWinSub:(n,h)=>`Sobreviviste a ${n} rivales en ${h} manos.`,
 bustedTitle:p=>`Eliminado en ${p} lugar`,bustedSub:h=>`Aguantaste ${h} manos. ¿Otra vez?`,
@@ -636,6 +653,8 @@ airWarn:' You have no made hand and no real draw — players who bet usually hav
 raiseVal:e=>`~${e} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`,
 callOk:(amt,pt,o,e,disc,ea)=>`The call costs ${amt} to win a ${pt} pot, so you need ${o} equity to break even. You have ~${e}${disc?` (counted as ~${ea} after discounts)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`,
 foldAdv:(o,amt,pt,ea,resp)=>`You need ${o} equity to call (${amt} into ${pt}) but only have ~${ea}${resp?' once the size of this bet is respected':''}. Every chip you put in here loses value — fold and wait for a better spot.`,
+benchProg:(i,n)=>`Running… tournament ${i} of ${n}`,
+benchResult:(g,np,w,rw,im,ri,av,rav)=>`Over ${g} simulated ${np}-player tournaments, a bot following the coach's advice on EVERY decision: 🏆 won ${w}% of tournaments (a random player would win ${rw}%) · 💰 finished in the money ${im}% (random: ${ri}%) · average finish ${av} of ${np} (random: ${rav}). The coach can't beat luck in one game — but this is its long-term edge.`,
 mentalMath:(c,s,o)=>` 🧮 Live mental math: price = call ÷ (pot + call) = ${c} ÷ ${s} ≈ ${o}. Your win%: count outs (cards that improve you to the best hand) × 4 on the flop, × 2 on the turn; with a made hand, estimate how often you beat what they'd bet like this. Then knock off ~5–15% versus big bets or with no pair — the same discounts the coach applied here.`,
 mWarn:(n,m,z)=>` Blinds go up in ${n} hand${n>1?'s':''} — your M drops to ~${m} (${z}). Look for spots now rather than being forced to gamble later.`,
 mExplain:m=>` What "M = ${m}" means: your stack divided by the cost of one full round of blinds and antes — i.e. you could survive ${m} more rounds folding everything. Above 20 🟢 play your normal game; 10–20 🟡 start fighting for pots; 5–10 🟠 favor shoving over small raises; under 5 🔴 it's all-in or fold.`,
@@ -698,6 +717,8 @@ airWarn:' Vous n’avez ni main faite ni vrai tirage — celui qui mise a géné
 raiseVal:e=>`~${e} de chances de gain : vous êtes grand favori. Relancez pour la valeur et pour faire payer les tirages — caller laisse de l’argent sur la table.`,
 callOk:(amt,pt,o,e,disc,ea)=>`Le call coûte ${amt} pour gagner un pot de ${pt} : il vous faut ${o} d’équité pour être à l’équilibre. Vous avez ~${e}${disc?` (compté ~${ea} après décotes)`:''} — caller est rentable à long terme, mais relancer risquerait trop avec une main non premium.`,
 foldAdv:(o,amt,pt,ea,resp)=>`Il vous faut ${o} d’équité pour payer (${amt} dans ${pt}) mais vous n’avez que ~${ea}${resp?' une fois la taille de cette mise respectée':''}. Chaque jeton investi ici perd de la valeur — couchez-vous et attendez un meilleur spot.`,
+benchProg:(i,n)=>`Simulation… tournoi ${i} sur ${n}`,
+benchResult:(g,np,w,rw,im,ri,av,rav)=>`Sur ${g} tournois simulés à ${np} joueurs, un bot suivant les conseils du coach à CHAQUE décision : 🏆 a gagné ${w}% des tournois (un joueur aléatoire en gagnerait ${rw}%) · 💰 fini dans les places payées ${im}% (aléatoire : ${ri}%) · place moyenne ${av} sur ${np} (aléatoire : ${rav}). Le coach ne bat pas la chance sur une partie — mais voilà son avantage à long terme.`,
 mentalMath:(c,s,o)=>` 🧮 Calcul mental en live : prix = mise à payer ÷ (pot + mise) = ${c} ÷ ${s} ≈ ${o}. Votre % de gain : comptez vos outs (cartes qui vous donnent la meilleure main) × 4 au flop, × 2 au turn ; avec une main faite, estimez la fréquence à laquelle vous battez ce qu'il miserait ainsi. Retirez ensuite ~5–15 % face aux grosses mises ou sans paire — les mêmes décotes que le coach a appliquées ici.`,
 mWarn:(n,m,z)=>` Les blinds montent dans ${n} main${n>1?'s':''} — votre M tombera à ~${m} (${z}). Cherchez des spots maintenant plutôt que d'être forcé de jouer à pile ou face plus tard.`,
 mExplain:m=>` Ce que signifie « M = ${m} » : votre tapis divisé par le coût d'un tour complet de blinds et d'antes — vous pourriez survivre ${m} tours en jetant tout. Au-dessus de 20 🟢, jouez votre jeu normal ; 10–20 🟡, commencez à vous battre pour les pots ; 5–10 🟠, préférez le tapis aux petites relances ; sous 5 🔴, c'est tapis ou couché.`,
@@ -760,6 +781,8 @@ airWarn:' No tienes mano hecha ni proyecto real — quien apuesta suele tener al
 raiseVal:e=>`~${e} de probabilidad: eres gran favorito. Sube por valor y para cobrar a los proyectos — solo igualar deja dinero sobre la mesa.`,
 callOk:(amt,pt,o,e,disc,ea)=>`La llamada cuesta ${amt} para ganar un bote de ${pt}: necesitas ${o} de equidad para no perder. Tienes ~${e}${disc?` (contado como ~${ea} tras descuentos)`:''} — igualar es rentable a largo plazo, pero subir arriesgaría demasiado con una mano no premium.`,
 foldAdv:(o,amt,pt,ea,resp)=>`Necesitas ${o} de equidad para igualar (${amt} en ${pt}) pero solo tienes ~${ea}${resp?' una vez respetado el tamaño de esta apuesta':''}. Cada ficha que pongas aquí pierde valor — retírate y espera un mejor momento.`,
+benchProg:(i,n)=>`Simulando… torneo ${i} de ${n}`,
+benchResult:(g,np,w,rw,im,ri,av,rav)=>`En ${g} torneos simulados de ${np} jugadores, un bot que sigue el consejo del coach en CADA decisión: 🏆 ganó el ${w}% de los torneos (un jugador aleatorio ganaría el ${rw}%) · 💰 terminó en premios el ${im}% (aleatorio: ${ri}%) · puesto medio ${av} de ${np} (aleatorio: ${rav}). El coach no vence a la suerte en una partida — pero esta es su ventaja a largo plazo.`,
 mentalMath:(c,s,o)=>` 🧮 Cálculo mental en vivo: precio = llamada ÷ (bote + llamada) = ${c} ÷ ${s} ≈ ${o}. Tu % de ganar: cuenta tus outs (cartas que te dan la mejor mano) × 4 en el flop, × 2 en el turn; con mano hecha, estima cuántas veces ganas a lo que apostaría así. Luego resta ~5–15% contra apuestas grandes o sin pareja — los mismos descuentos que el coach aplicó aquí.`,
 mWarn:(n,m,z)=>` Las ciegas suben en ${n} mano${n>1?'s':''} — tu M caerá a ~${m} (${z}). Busca jugadas ahora antes de verte forzado a jugártela.`,
 mExplain:m=>` Qué significa «M = ${m}»: tu stack dividido por el coste de una ronda completa de ciegas y antes — sobrevivirías ${m} rondas tirándolo todo. Por encima de 20 🟢, juega tu juego normal; 10–20 🟡, empieza a pelear por los botes; 5–10 🟠, prefiere el all-in a subidas pequeñas; bajo 5 🔴, all-in o retirarse.`,
@@ -1387,9 +1410,9 @@ function promptNext(){
   }else{
     let delay=AI_DELAY_MIN+Math.random()*(AI_DELAY_MAX-AI_DELAY_MIN);
     if(fastFwd()) delay=Math.min(delay,120+Math.random()*120);
-    setTimeout(()=>{
+    later(()=>{
       if(state.gameOver||state.handOver) return;
-      const dec=aiDecide(p);
+      const dec=(state.cfg.coachBot&&p.i===0)?coachBotDecide(p):aiDecide(p);
       applyAction(p,dec.type,dec.amount);
       state.turnIdx=(j+1)%state.players.length;
       promptNext();
@@ -1520,11 +1543,11 @@ function runout(){
   const d=fastFwd()?Math.min(RUNOUT_DELAY,320):RUNOUT_DELAY;
   const step=()=>{
     if(state.gameOver) return;
-    if(state.stage==='river'){ setTimeout(showdown,d*0.8); return; }
+    if(state.stage==='river'){ later(showdown,d*0.8); return; }
     dealNext(); render();
-    setTimeout(step,d);
+    later(step,d);
   };
-  setTimeout(step,d*0.8);
+  later(step,d*0.8);
 }
 
 function endHandFold(){
@@ -1662,7 +1685,7 @@ function finishHand(pause){
   const rest=alive();
   if(state.cfg.allAI){
     if(rest.length<=1){ state.gameOver=true; if(typeof globalThis.__onGameOver==='function') globalThis.__onGameOver(state); return; }
-    setTimeout(startHand,pause); return;
+    later(startHand,pause); return;
   }
   if(human.out){
     state.gameOver=true;
@@ -1680,7 +1703,7 @@ function finishHand(pause){
 /* ================= SOUND ================= */
 let audioCtx=null,soundOn=true;
 function sfx(kind){
-  if(!HAS_DOM||!soundOn)return;
+  if(!HAS_DOM||!soundOn||BENCH)return;
   try{
     audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
     const t0=audioCtx.currentTime;
@@ -1707,6 +1730,7 @@ function haptic(pat){ if(HAS_DOM&&soundOn&&navigator.vibrate){try{navigator.vibr
 /* ================= FLYING CHIPS ================= */
 function feltCenter(){ const f=$('felt'); return {x:f.clientWidth/2,y:f.clientHeight/2}; }
 function flyChips(fromX,fromY,toX,toY,n,delay){
+  if(BENCH)return;
   if(!HAS_DOM)return;
   const felt=$('felt'); if(!felt)return;
   const cols=['#3d6bd6','#e8b64c','#2e9e5b','#c94f4c','#23262d'];
@@ -1724,7 +1748,7 @@ function flyChips(fromX,fromY,toX,toY,n,delay){
 }
 /* slide each player's bet chips into the central pot */
 function animateChipsToPot(){
-  if(!HAS_DOM||!state)return;
+  if(!HAS_DOM||!state||BENCH)return;
   const c=feltCenter();
   for(const p of state.players){
     if(p.bet<=0)continue;
@@ -1735,7 +1759,7 @@ function animateChipsToPot(){
 }
 /* push the pot to the winning seat(s) */
 function animatePotToWinner(winners){
-  if(!HAS_DOM||!state||!winners||!winners.length)return;
+  if(!HAS_DOM||!state||!winners||!winners.length||BENCH)return;
   const c=feltCenter(), felt=$('felt');
   for(const w of winners){
     const seat=$('seat'+w.i); if(!seat)continue;
@@ -1777,12 +1801,13 @@ function log(msg){
   logLines.push(msg);
   if(state&&state.handLog) state.handLog.push(msg);
   if(logLines.length>200)logLines.shift();
-  if(!HAS_DOM)return;
+  if(!HAS_DOM||BENCH)return;
   const el=$('log');
   el.innerHTML=logLines.slice(-100).map(l=>`<div>${l}</div>`).join('');
   el.scrollTop=el.scrollHeight;
 }
 function showBanner(t){
+  if(BENCH)return;
   if(!HAS_DOM)return;
   const b=$('banner');
   b.textContent=t;
@@ -1844,7 +1869,7 @@ const SEAT_SLOTS={
 8:[[.50,.92],[.21,.82],[.05,.50],[.14,.13],[.50,.08],[.86,.13],[.95,.50],[.79,.82]],
 9:[[.50,.92],[.24,.84],[.05,.56],[.08,.20],[.33,.07],[.67,.07],[.92,.20],[.95,.56],[.76,.84]]};
 function layoutSeats(){
-  if(!HAS_DOM||!state)return;
+  if(!HAS_DOM||!state||BENCH)return;
   const felt=$('felt');
   const W=felt.clientWidth,H=felt.clientHeight;
   /* size the ellipse to the REAL seat dimensions so full tables fit on narrow screens */
@@ -1980,7 +2005,7 @@ function positionDealerBtn(){
 }
 
 function render(winners){
-  if(!HAS_DOM)return;
+  if(!HAS_DOM||BENCH)return;
   if(!state)return;
   $('tLevel').textContent=state.level+1;
   $('tBlinds').textContent=usd(state.sb)+'/'+usd(state.bb);
@@ -2145,8 +2170,9 @@ function postflopOrder(){
   }
   return ord;
 }
-function updateCoach(p){
-  if(!HAS_DOM)return;
+/* the coach BRAIN: pure decision logic, runs headless (also powers the benchmark bot) */
+function coachDecide(p){
+  const sims=BENCH?180:500;
   const callAmt=Math.min(state.currentBet-p.bet,p.chips);
   const pot=state.players.reduce((s,q)=>s+q.totalBet,0);
   const opps=inHand().length-1;
@@ -2168,10 +2194,10 @@ function updateCoach(p){
   if(tightOpps>0) extra.push(C('rangesNote',tightOpps,Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)));
   if(weakOpps>0) extra.push(C('checksNote',weakOpps));
   if(state.stage==='preflop'){
-    eq=mcEquityR(p.hole,[],oppCaps,500);
+    eq=mcEquityR(p.hole,[],oppCaps,sims);
     handDesc=`${RANK_CH[p.hole[0].r]}${SUIT_CH[p.hole[0].s]} ${RANK_CH[p.hole[1].r]}${SUIT_CH[p.hole[1].s]} — ${code}, top ~${Math.round(pr*100)}%`;
   }else{
-    eq=mcEquityR(p.hole,state.board,oppCaps,500);
+    eq=mcEquityR(p.hole,state.board,oppCaps,sims);
     const score=evalBest(p.hole.concat(state.board));
     handDesc=handName(score);
     extra.push(classifyMade(p.hole,state.board,score));
@@ -2390,13 +2416,86 @@ function updateCoach(p){
       why.push(C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),!!bigBetPen));
     }
   }
-  let sizeRow='', coachT=0;
+  let coachT=0;
   if(rec==='RAISE'||rec==='ALLIN'){
     let t = rec==='ALLIN' ? p.bet+p.chips
       : state.stage==='preflop'
       ? Math.max(state.bb*3, state.currentBet*2.6)
       : state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*0.66));
     coachT=clamp(Math.round(t/state.sb)*state.sb, state.currentBet+state.lastRaiseSize, p.bet+p.chips);
+  }
+  /* rough chip-EV per available action (for blunder tracking) */
+  const tEv=clamp(Math.round((state.stage==='preflop'
+      ? Math.max(state.bb*3,state.currentBet*2.6)
+      : state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*0.66)))/state.sb)*state.sb,
+    state.currentBet+state.lastRaiseSize, p.bet+p.chips);
+  const FE=clamp(0.42-0.09*(opps-1),0.08,0.45);            // fold equity vs # of opponents
+  const evR=A=>FE*pot+(1-FE)*(eq*(pot+2*A)-A);             // raise A more chips
+  const evs={
+    FOLD:0,
+    CALL:Math.round(callAmt>0 ? eq*(pot+callAmt)-callAmt : eq*pot),
+    RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
+  };
+  return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,odds,callAmt,pot,opps,pos,early,late,
+          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem};
+}
+
+/* run N headless tournaments with the coach bot in seat 0, report win/ITM/avg finish */
+function runCoachBenchmark(nGames){
+  if(!HAS_DOM)return;
+  const btn=$('benchBtn'), out=$('benchOut');
+  out.classList.remove('hidden');
+  btn.disabled=true;
+  const cfgB={numPlayers:9,startBB:100,startBlind:100,ante:0.10,speed:'turbo',difficulty:'medium',allAI:true,coachBot:true};
+  const sv={a:AI_DELAY_MIN,b:AI_DELAY_MAX,r:RUNOUT_DELAY,s:SHOWDOWN_PAUSE,f:FOLDWIN_PAUSE};
+  AI_DELAY_MIN=0;AI_DELAY_MAX=0;RUNOUT_DELAY=0;SHOWDOWN_PAUSE=0;FOLDWIN_PAUSE=0;
+  const prevGO=globalThis.__onGameOver;
+  const places=[];
+  const finish=()=>{
+    BENCH=false;
+    AI_DELAY_MIN=sv.a;AI_DELAY_MAX=sv.b;RUNOUT_DELAY=sv.r;SHOWDOWN_PAUSE=sv.s;FOLDWIN_PAUSE=sv.f;
+    globalThis.__onGameOver=prevGO;
+    state=null;
+    btn.disabled=false;
+    const n=places.length, np=cfgB.numPlayers, paid=PAYOUTS(np).length;
+    const w=places.filter(x=>x===1).length, im=places.filter(x=>x<=paid).length;
+    const avg=(places.reduce((a,b)=>a+b,0)/n).toFixed(1);
+    out.textContent=C('benchResult',n,np,Math.round(100*w/n),Math.round(100/np),
+      Math.round(100*im/n),Math.round(100*paid/np),avg,((np+1)/2).toFixed(1));
+  };
+  const runOne=()=>{
+    globalThis.__onGameOver=s=>{
+      const hero=s.players[0];
+      places.push(hero.out?(hero.place||cfgB.numPlayers):1);
+      out.textContent=C('benchProg',places.length,nGames)+' · 🏆×'+places.filter(x=>x===1).length;
+      if(places.length>=nGames) finish();
+      else setTimeout(runOne,25);
+    };
+    BENCH=true;
+    newGame(cfgB);
+    startHand();
+  };
+  out.textContent=C('benchProg',0,nGames);
+  setTimeout(runOne,25);
+}
+
+/* the benchmark bot: plays seat 0 by pure coach recommendations */
+function coachBotDecide(p){
+  const R=coachDecide(p);
+  if(R.rec==='FOLD') return R.callAmt>0?{type:'fold'}:{type:'call'};
+  if(R.rec==='CHECK'||R.rec==='CALL') return {type:'call'};
+  if(R.rec==='ALLIN') return {type:'raise',amount:p.bet+p.chips};
+  return {type:'raise',amount:R.coachT||state.currentBet+state.lastRaiseSize};
+}
+
+/* the coach DISPLAY: renders what the brain decided */
+function updateCoach(p){
+  if(!HAS_DOM)return;
+  const R=coachDecide(p);
+  const {rec,coachT,evs,why,extra,handDesc,drawRow,eq,odds,callAmt,pot,opps,pos,early,late,
+         actsFirst,actsLast,ordIdx,ordLen,M,mZone,icmPrem}=R;
+  let sizeRow='';
+  if(rec==='RAISE'||rec==='ALLIN'){
     sizeRow=`<div class="coach-row"><span>${T('sugSize')}</span><b>${usd(coachT)} (${bbs(coachT)})</b></div>`;
     /* pre-set the raise slider to the coach's size so R raises exactly this */
     if($('raiseCtl').style.visibility!=='hidden'){
@@ -2411,7 +2510,7 @@ function updateCoach(p){
     `<div class="rec ${rec}">${recLabel}</div>`+
     `<div class="coach-row"><span>${T('yourHand')}</span><b>${handDesc}</b></div>`+
     (pos?`<div class="coach-row"><span>${T('position')}</span><b>${pos}${early?' (early)':late?' (late)':''}</b></div>`:'')+
-    (opps>0?`<div class="coach-row"><span>${state.stage==='preflop'?T('postflopOrder'):T('actingOrder')}</span><b>${actsFirst?T('firstToAct'):actsLast?T('lastToAct'):(ordIdx+1)+' '+T('ofN')+' '+ord.length}</b></div>`:'')+
+    (opps>0?`<div class="coach-row"><span>${state.stage==='preflop'?T('postflopOrder'):T('actingOrder')}</span><b>${actsFirst?T('firstToAct'):actsLast?T('lastToAct'):(ordIdx+1)+' '+T('ofN')+' '+ordLen}</b></div>`:'')+
     `<div class="coach-row"><span>${T('winChance')}</span><b>~${pct(eq)} ${T('vs')} ${opps} ${opps>1?T('opps'):T('opp')}</b></div>`+
     drawRow+
     (callAmt>0?`<div class="coach-row"><span>${T('potOdds')}</span><b>${T('need')}${pct(odds)} (${usd(callAmt)} &rarr; ${usd(pot)})</b></div>`:'')+
@@ -2420,20 +2519,7 @@ function updateCoach(p){
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
     sizeRow+
     `<p class="why">${why.join(' ')}${extra.join('')}</p>`;
-  /* rough chip-EV per available action (for blunder tracking) */
-  {
-    const tEv=clamp(Math.round((state.stage==='preflop'
-        ? Math.max(state.bb*3,state.currentBet*2.6)
-        : state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*0.66)))/state.sb)*state.sb,
-      state.currentBet+state.lastRaiseSize, p.bet+p.chips);
-    const FE=clamp(0.42-0.09*(opps-1),0.08,0.45);            // fold equity vs # of opponents
-    const evR=A=>FE*pot+(1-FE)*(eq*(pot+2*A)-A);             // raise A more chips
-    coachRecNow={rec,stage:state.stage,evs:{
-      FOLD:0,
-      CALL:Math.round(callAmt>0 ? eq*(pot+callAmt)-callAmt : eq*pot),
-      RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
-    }};
-  }
+  coachRecNow={rec,stage:state.stage,evs};
 
   /* GTO mini-solver: heads-up postflop spots */
   if(state.stage!=='preflop'){
@@ -2480,7 +2566,7 @@ function renderFeedback(net){
   el.innerHTML=html;
 }
 function renderStats(){
-  if(!HAS_DOM||!state||!state.sessStats)return;
+  if(!HAS_DOM||!state||!state.sessStats||BENCH)return;
   const s=state.sessStats,l=lifeStats;
   const fp=S=>S.decisions>0?Math.round(100*S.followed/S.decisions)+'%':'—';
   const pof=(a,b)=>b>0?Math.round(100*(a||0)/b)+'%':'—';
@@ -2691,7 +2777,7 @@ function applyLang(){
   const dBtns=$('diffSeg').querySelectorAll('button');
   ['easy','medium','hard'].forEach((k,i)=>{if(dBtns[i])dBtns[i].textContent=T(k);});
   set('startBtn','deal'); set('resumeBtn','resume'); set('reviewBtn','review');
-  set('resetLbl','resetData'); set('resetInfo','resetInfo');
+  set('resetLbl','resetData'); set('resetInfo','resetInfo'); set('benchBtn','benchRun');
   /* topbar */
   const tn=(id,k)=>{const b=$(id);if(b&&b.parentNode.firstChild)b.parentNode.firstChild.nodeValue=T(k);};
   tn('tLevel','level'); tn('tHand','hand');
@@ -2787,6 +2873,8 @@ function initUI(){
   };
   refreshResume();
   $('reviewBtn').onclick=showHistoryReplay;
+  /* --- coach benchmark --- */
+  $('benchBtn').onclick=()=>{ if(confirm(T('benchConfirm'))) runCoachBenchmark(25); };
   /* --- clear saved data (human name for localStorage wipe) --- */
   $('resetInfoBtn').onclick=()=>$('resetInfo').classList.toggle('hidden');
   $('resetBtn').onclick=()=>{

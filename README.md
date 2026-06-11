@@ -85,6 +85,10 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-11 — Coach benchmark
+- **🧪 Coach benchmark** button on the start screen: simulates 25 full 9-player tournaments where a bot follows the coach's advice on every single decision, then reports win rate, in-the-money rate and average finish vs a random player baseline. First measurements: the coach bot wins ~3–4× the random baseline. This is the live measuring stick for every future coach improvement
+- The coach brain was refactored into a pure, headless decision engine (`coachDecide`) — the on-screen panel and the benchmark bot now share the exact same logic by construction
+
 ### 2026-06-11 — The road to "follow the coach, win the tournament"
 - **💰 ICM prize pressure**: the game now has a real payout structure (50/30/20 for 7–9 players, 65/35 for 5–6, winner-takes-all under 5) and the coach computes Malmuth-Harville ICM. When a call risks your tournament life near the bubble, the panel shows "Prize pressure: +6% extra needed" and explains in plain words why chips you might lose are worth more than chips you might win
 - **Reading the story of the hand**: the coach now understands betting lines — a routine continuation bet barely narrows a range, a second/third barrel narrows it hard, a donk bet into the raiser reads as strength, a check-raise reads as a trap — and explains each read in plain language
