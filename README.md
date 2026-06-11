@@ -10,6 +10,7 @@ Double-click `poker.html`, or serve it from any static host. Set up your table (
 
 ## Features
 
+- **👥 Multiplayer with friends (P2P, no server)**: create a room on the start screen, send the invite link, friends join from any browser — the room creator's browser hosts the game and players connect directly via WebRTC (free PeerJS signaling). Each player receives only their own hole cards; empty seats can be filled with AI bots; built-in chat; disconnected players are folded gracefully. 100% free, nothing to install or maintain
 - **Configurable Sit & Go**: 2–9 players, starting blinds ($10/$20 up to $100/$200 — the whole blind ladder scales), buy-in in BB (50–200), ante as a fraction of the BB (none / 5% / 10% / 20%), turbo/standard/slow blind schedule (turbo raises blinds every 3 hands)
 - **Money display**: $ and BB shown everywhere, casino-style chip stacks
 - **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, order-of-action awareness (first/last to talk, including your *future* postflop position when advising preflop), bet-size-aware range reading, plain-English reasoning
@@ -84,6 +85,12 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
+
+### 2026-06-11 — Multiplayer rooms & chat (P2P, serverless)
+- **Play with friends**: create a room, copy the invite link (`#room=CODE`), friends join with their name — host's browser runs the game, guests connect peer-to-peer via WebRTC (PeerJS free cloud signaling). No server, no accounts, $0
+- **Fair by construction**: the host sends each player a personalized, redacted view — your opponents' hole cards never reach your device until showdown
+- **Chat** (💬 in the action bar), AI-fill for empty seats, live coach works for every player on their own cards, graceful disconnect handling (folded + announced)
+- BB added to the short-stack shove charts (the chart button now appears in the big blind too)
 
 ### 2026-06-11 — Vs-raise charts, matrix viewer & resizable panel
 - **3-bet / call / fold charts**: when someone raises before you, the coach now consults vs-raise solver matrices (different ranges vs an early-position raiser and a late-position one) — big pairs re-raise for value, hands like A5s re-raise as "blocker bluffs", a teal middle tier flat-calls, the rest folds, each explained in plain words. ICM can still override a chart call near the bubble, and the coach says so

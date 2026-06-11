@@ -52,6 +52,34 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #ovBlunders .bl-row b{color:#e2574c;white-space:nowrap;}
 #ovBlunders .bl-row .bl-what{color:var(--text);}
 #ovBlunders .bl-more{font-size:11px;color:var(--dim);text-align:center;padding-top:6px;}
+/* multiplayer: lobby + chat */
+#mpSec{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;}
+#mpSec h3{font-size:13px;color:var(--gold);margin-bottom:8px;}
+#mpName{width:100%;margin-bottom:8px;background:#10141b;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:9px 10px;font-size:13px;}
+#mpRow{display:flex;gap:8px;}
+#mpRow button{background:none;border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:9px 10px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
+#mpCode{width:90px;background:#10141b;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:9px 8px;font-size:13px;text-transform:uppercase;letter-spacing:2px;}
+#mpStatus{margin-top:8px;font-size:12px;color:var(--dim);}
+#mpLobby{position:fixed;inset:0;background:rgba(8,10,14,.85);display:flex;align-items:center;justify-content:center;z-index:80;}
+#mpLobby.hidden{display:none;}
+#mpLobbyCode{font-size:26px;letter-spacing:5px;font-weight:800;color:var(--gold);margin:6px 0 12px;}
+#mpList{text-align:left;margin:8px 0 14px;font-size:14px;line-height:1.9;}
+#mpList .mpdot{color:#62d68a;margin-right:7px;}
+#mpLobby button{margin:4px 4px 0;}
+#mpLobby #mpLeave{background:none;border:1px solid var(--line);color:var(--dim);}
+#chatBtn{background:none;border:1px solid var(--line);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:14px;}
+#chat{position:fixed;right:12px;bottom:96px;width:270px;height:330px;background:var(--panel);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;z-index:60;box-shadow:0 18px 50px rgba(0,0,0,.6);}
+#chat.hidden{display:none;}
+#chatMsgs{flex:1;overflow-y:auto;padding:10px;font-size:12.5px;line-height:1.5;overscroll-behavior:contain;}
+#chatMsgs b{color:var(--gold);}
+#chatRow{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line);}
+#chatIn{flex:1;background:#10141b;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px;font-size:13px;min-width:0;}
+#chatSend{background:var(--gold);border:none;border-radius:8px;color:#1a1408;font-weight:700;padding:0 13px;cursor:pointer;}
+@media(max-width:680px),(max-width:980px) and (orientation:portrait){
+  #chat{left:8px;right:8px;width:auto;bottom:80px;height:42vh;}
+}
+body.fl #chat{right:8px;bottom:64px;height:60%;}
+
 /* 13×13 range matrix viewer */
 #chartOv{position:fixed;inset:0;background:rgba(8,10,14,.85);display:flex;align-items:center;justify-content:center;z-index:70;}
 #chartOv.hidden{display:none;}
@@ -426,6 +454,16 @@ body.fl #centerArea{top:46%;}
     <button id="reviewBtn" class="hidden">&#127902; Review past hands</button>
     <button id="benchBtn">&#129514; Coach benchmark</button>
     <p id="benchOut" class="hidden"></p>
+    <div id="mpSec">
+      <h3 id="mpTitle">👥 Play with friends</h3>
+      <input id="mpName" maxlength="14" placeholder="Your name">
+      <div id="mpRow">
+        <button id="mpCreate">Create room</button>
+        <input id="mpCode" maxlength="8" placeholder="CODE">
+        <button id="mpJoinBtn">Join</button>
+      </div>
+      <p id="mpStatus" class="hidden"></p>
+    </div>
     <div id="resetRow">
       <button id="resetBtn">&#129529; <span id="resetLbl">Clear saved data</span></button>
       <button id="resetInfoBtn" aria-label="What does this do?">&#8505;&#65039;</button>
@@ -480,6 +518,7 @@ body.fl #centerArea{top:46%;}
     </div>
   </div>
   <div id="actionbar">
+    <button id="chatBtn" class="hidden">💬</button>
     <button id="logToggle">Log</button>
     <button id="replayBtn" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;">Last hand</button>
     <button id="exportBtn" title="Download full hand history as JSON" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;">Export history</button>
@@ -508,6 +547,26 @@ body.fl #centerArea{top:46%;}
     <div id="rpBody"></div>
     <button id="rpClose">Close</button>
   </div>
+</div>
+
+<div id="mpLobby" class="hidden">
+  <div class="over-card">
+    <h2 id="mpLobbyTitle">Room</h2>
+    <div id="mpLobbyCode"></div>
+    <button id="mpCopy">Copy invite link</button>
+    <div id="mpList"></div>
+    <label id="mpFillWrap" style="font-size:13px;color:var(--dim);display:flex;gap:8px;align-items:center;justify-content:center;cursor:pointer;">
+      <input type="checkbox" id="mpFill" checked style="accent-color:var(--gold);"> <span id="mpFillLbl">Fill empty seats with AI bots</span>
+    </label>
+    <p id="mpWait" class="hidden" style="color:var(--dim);font-size:13px;margin:10px 0 0;"></p>
+    <button id="mpStartBtn" class="hidden">Start game</button>
+    <button id="mpLeave">Leave</button>
+  </div>
+</div>
+
+<div id="chat" class="hidden">
+  <div id="chatMsgs"></div>
+  <div id="chatRow"><input id="chatIn" maxlength="200" placeholder="Message…"><button id="chatSend">➤</button></div>
 </div>
 
 <div id="chartOv" class="hidden">
@@ -577,6 +636,14 @@ recFOLD:"FOLD",recCHECK:"CHECK",recCALL:"CALL",recRAISETO:"RAISE TO",recBET:"BET
 zoneG:"🟢 comfortable",zoneY:"🟡 fight for pots",zoneO:"🟠 shove-or-fold soon",zoneR:"🔴 all-in or fold",
 prizeP:"Prize pressure",extraNeeded:"extra needed",
 benchRun:"🧪 Coach benchmark",
+mpTitle:"👥 Play with friends",mpNamePh:"Your name",mpCreate:"Create room",mpJoinB:"Join",mpCodePh:"CODE",
+mpLobbyTitle:"Room",mpCopy:"📋 Copy invite link",mpCopied:"✓ Copied — send it to your friends",
+mpFillLbl:"Fill empty seats with AI bots",mpStart:"▶ Start game",mpLeave:"Leave",
+mpWaitHost:"Waiting for the host to start the game…",mpConnecting:"Connecting…",
+mpNetFail:"Could not reach the network. Check your internet and try again.",
+mpHostLeft:"The host left — the game is over.",mpNeedName:"Pick a name first 🙂",
+mpJoined:n=>`${n} joined the room`,mpGone:n=>`${n} disconnected — their hand is folded`,
+mpYou:"(you · host)",mpYouG:"(you)",chatPh:"Message…",
 viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleShove:"all-in chart",chartTitleFacing:"chart vs this raise",
 legendOpen:"raise first-in",legendShove:"go all-in",legendFold:"fold",legendYou:"your hand",legend3bet:"re-raise (3-bet)",legendCall:"call",
 benchConfirm:"Simulate 25 full 9-player tournaments where a bot plays PURE coach advice, to measure how good the coach really is. Takes a minute or two. Run it?",
@@ -602,6 +669,14 @@ recFOLD:"SE COUCHER",recCHECK:"PAROLE",recCALL:"SUIVRE",recRAISETO:"RELANCER À"
 zoneG:"🟢 confortable",zoneY:"🟡 battez-vous pour les pots",zoneO:"🟠 bientôt tapis-ou-couché",zoneR:"🔴 tapis ou couché",
 prizeP:"Pression des prix",extraNeeded:"requis en plus",
 benchRun:"🧪 Benchmark du coach",
+mpTitle:"👥 Jouer entre amis",mpNamePh:"Votre prénom",mpCreate:"Créer un salon",mpJoinB:"Rejoindre",mpCodePh:"CODE",
+mpLobbyTitle:"Salon",mpCopy:"📋 Copier le lien d'invitation",mpCopied:"✓ Copié — envoyez-le à vos amis",
+mpFillLbl:"Compléter avec des bots IA",mpStart:"▶ Lancer la partie",mpLeave:"Quitter",
+mpWaitHost:"En attente du lancement par l'hôte…",mpConnecting:"Connexion…",
+mpNetFail:"Réseau injoignable. Vérifiez votre connexion et réessayez.",
+mpHostLeft:"L'hôte est parti — la partie est terminée.",mpNeedName:"Choisissez d'abord un prénom 🙂",
+mpJoined:n=>`${n} a rejoint le salon`,mpGone:n=>`${n} s'est déconnecté — sa main est couchée`,
+mpYou:"(vous · hôte)",mpYouG:"(vous)",chatPh:"Message…",
 viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleShove:"charte de tapis",chartTitleFacing:"charte face à cette relance",
 legendOpen:"relancer en premier",legendShove:"partir à tapis",legendFold:"se coucher",legendYou:"votre main",legend3bet:"sur-relancer (3-bet)",legendCall:"suivre",
 benchConfirm:"Simuler 25 tournois complets à 9 joueurs où un bot suit UNIQUEMENT les conseils du coach, pour mesurer sa vraie valeur. Compte une à deux minutes. Lancer ?",
@@ -627,6 +702,14 @@ recFOLD:"RETIRARSE",recCHECK:"PASAR",recCALL:"IGUALAR",recRAISETO:"SUBIR A",recB
 zoneG:"🟢 cómodo",zoneY:"🟡 pelea por los botes",zoneO:"🟠 pronto all-in o fold",zoneR:"🔴 all-in o retirarse",
 prizeP:"Presión de premios",extraNeeded:"extra necesario",
 benchRun:"🧪 Benchmark del coach",
+mpTitle:"👥 Jugar con amigos",mpNamePh:"Tu nombre",mpCreate:"Crear sala",mpJoinB:"Entrar",mpCodePh:"CÓDIGO",
+mpLobbyTitle:"Sala",mpCopy:"📋 Copiar enlace de invitación",mpCopied:"✓ Copiado — envíalo a tus amigos",
+mpFillLbl:"Rellenar asientos vacíos con bots",mpStart:"▶ Empezar partida",mpLeave:"Salir",
+mpWaitHost:"Esperando a que el anfitrión empiece…",mpConnecting:"Conectando…",
+mpNetFail:"No se pudo conectar a la red. Revisa tu internet e inténtalo de nuevo.",
+mpHostLeft:"El anfitrión se fue — la partida ha terminado.",mpNeedName:"Elige un nombre primero 🙂",
+mpJoined:n=>`${n} entró en la sala`,mpGone:n=>`${n} se desconectó — su mano se retira`,
+mpYou:"(tú · anfitrión)",mpYouG:"(tú)",chatPh:"Mensaje…",
 viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleShove:"tabla de all-in",chartTitleFacing:"tabla contra esta subida",
 legendOpen:"subir de primeras",legendShove:"ir all-in",legendFold:"retirarse",legendYou:"tu mano",legend3bet:"resubir (3-bet)",legendCall:"igualar",
 benchConfirm:"Simular 25 torneos completos de 9 jugadores donde un bot sigue SOLO los consejos del coach, para medir lo bueno que es de verdad. Tarda uno o dos minutos. ¿Lanzar?",
@@ -1344,6 +1427,13 @@ function newGame(cfg){
     q.style=styles[k-1];
     state.players.push(q);
   }
+  /* multiplayer: claim seats for remote human players (host-authoritative) */
+  if(cfg.mpRemotes){
+    for(const r of cfg.mpRemotes){
+      const q=state.players[r.seat]; if(!q)continue;
+      q.name=r.name; q.avatar='🙂'; q.remote=true; q.isHuman=false; q.style=null;
+    }
+  }
   state.sessStats={hands:0,won:0,net:0,biggest:0,decisions:0,followed:0,
     vpipH:0,pfrH:0,aBets:0,aCalls:0,sdSeen:0,sdWon:0,evLost:0};
   state.gameId=Date.now();
@@ -1356,7 +1446,7 @@ function newGame(cfg){
 const alive =()=>state.players.filter(p=>!p.out);
 const inHand=()=>state.players.filter(p=>!p.out&&!p.folded);
 /* fast-forward when the human is no longer involved in decisions this hand */
-const fastFwd=()=>!state.cfg.allAI&&(state.players[0].folded||state.players[0].out);
+const fastFwd=()=>!state.cfg.allAI&&!state.cfg.mpRemotes&&(state.players[0].folded||state.players[0].out);
 function nextSeat(from,pred){
   const n=state.players.length;
   for(let k=1;k<=n;k++){const j=(from+k)%n; if(pred(state.players[j])) return j;}
@@ -1467,6 +1557,8 @@ function promptNext(){
   render();
   if(p.isHuman){
     showActions(p);
+  }else if(p.remote){
+    /* remote human: the snapshot broadcast tells their client it's their turn; we wait */
   }else{
     let delay=AI_DELAY_MIN+Math.random()*(AI_DELAY_MAX-AI_DELAY_MIN);
     if(fastFwd()) delay=Math.min(delay,120+Math.random()*120);
@@ -1837,7 +1929,7 @@ let lifeStats=loadStats();
 function saveStats(){try{localStorage.setItem('sg_poker_stats',JSON.stringify(lifeStats));}catch(e){}}
 /* tournament resume: snapshot at each hand boundary */
 function saveResume(){
-  if(!HAS_DOM||!state||state.cfg.allAI)return;
+  if(!HAS_DOM||!state||state.cfg.allAI||state.cfg.mpRemotes||state.cfg.mpClient)return;
   try{
     if(state.gameOver||state.players[0].out||alive().length<=1){
       localStorage.removeItem('sg_poker_resume'); return;
@@ -2101,6 +2193,7 @@ function render(winners){
     else bet.classList.add('hidden');
   }
   layoutSeats();
+  mpBroadcast();
 }
 
 /* ---------- live coach ---------- */
@@ -2818,6 +2911,14 @@ function updateRaiseLabel(){
   $('chipPreview').innerHTML=chipStackHTML(v,true);
 }
 function humanAct(type,amount){
+  /* multiplayer client: send the action to the host instead of applying it locally */
+  if(MP&&MP.role==='client'){
+    if(!state||state.turnIdx!==0)return;
+    MP.sentTok=state.handNum+'-'+state.stage+'-'+state.currentBet+'-'+state.players[0].bet;
+    try{MP.conn.send({t:'act',type,amount});}catch(e){}
+    hideActions();
+    return;
+  }
   const p=state.players[state.turnIdx];
   if(!p||!p.isHuman)return;
   const callNow=Math.min(state.currentBet-p.bet,p.chips);
@@ -2845,7 +2946,7 @@ function humanAct(type,amount){
       evLoss=Math.max(0,Math.round((coachRecNow.evs[recKey]||0)-(coachRecNow.evs[key(type)]||0)));
     }
     state.humanDecisions.push({stage:state.stage,rec:r,action:type,followed,evLoss});
-    if(evLoss>0){
+    if(evLoss>0&&state.sessStats){
       state.sessStats.evLost=(state.sessStats.evLost||0)+evLoss;
       (state.gameDecisions=state.gameDecisions||[]).push({hand:state.handNum,stage:state.stage,rec:r,action:type,evLoss});
     }
@@ -2911,6 +3012,12 @@ function applyLang(){
   ['easy','medium','hard'].forEach((k,i)=>{if(dBtns[i])dBtns[i].textContent=T(k);});
   set('startBtn','deal'); set('resumeBtn','resume'); set('reviewBtn','review');
   set('resetLbl','resetData'); set('resetInfo','resetInfo'); set('benchBtn','benchRun');
+  set('mpTitle','mpTitle'); set('mpCreate','mpCreate'); set('mpJoinBtn','mpJoinB');
+  set('mpLobbyTitle','mpLobbyTitle'); set('mpCopy','mpCopy'); set('mpFillLbl','mpFillLbl');
+  set('mpStartBtn','mpStart'); set('mpLeave','mpLeave');
+  const mpn=$('mpName'); if(mpn)mpn.placeholder=T('mpNamePh');
+  const mpc=$('mpCode'); if(mpc)mpc.placeholder=T('mpCodePh');
+  const ci=$('chatIn'); if(ci)ci.placeholder=T('chatPh');
   /* topbar */
   const tn=(id,k)=>{const b=$(id);if(b&&b.parentNode.firstChild)b.parentNode.firstChild.nodeValue=T(k);};
   tn('tLevel','level'); tn('tHand','hand');
@@ -2937,6 +3044,262 @@ function setLang(v){
   if(state&&!$('humanCtls').classList.contains('hidden')&&state.players[state.turnIdx]&&state.players[state.turnIdx].isHuman){
     showActions(state.players[state.turnIdx]);
   }
+}
+
+/* ================= MULTIPLAYER (P2P via WebRTC / PeerJS) =================
+   Host-authoritative: the room creator's browser runs the engine and broadcasts
+   redacted state snapshots (each player only ever receives their own hole cards).
+   Free signaling via the public PeerJS cloud; game data flows directly P2P. */
+let MP=null;
+function mpLoadLib(cb){
+  if(window.Peer)return cb();
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js';
+  s.onload=cb;
+  s.onerror=()=>{mpStatus(T('mpNetFail'));};
+  document.head.appendChild(s);
+}
+function mpStatus(t){const el=$('mpStatus');el.classList.remove('hidden');el.textContent=t;}
+function mpCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<6;i++)c+=A[Math.floor(Math.random()*A.length)];return c;}
+function mpName(){const v=($('mpName').value||'').trim();if(!v){mpStatus(T('mpNeedName'));return null;}try{localStorage.setItem('sg_poker_mpname',v);}catch(e){}return v;}
+
+function mpCreate(){
+  const name=mpName(); if(!name)return;
+  mpStatus(T('mpConnecting'));
+  mpLoadLib(()=>{
+    const code=mpCode();
+    const peer=new Peer('sgp-'+code);
+    MP={role:'host',peer,code,myName:name,conns:[],started:false};
+    peer.on('open',()=>{mpStatus('');mpLobbyShow();});
+    peer.on('error',e=>{if(!MP||!MP.started)mpStatus(T('mpNetFail')+' ('+e.type+')');});
+    peer.on('connection',conn=>{
+      conn.on('data',d=>mpHostData(conn,d));
+      conn.on('close',()=>mpHostDrop(conn));
+      conn.on('error',()=>mpHostDrop(conn));
+    });
+  });
+}
+function mpJoin(){
+  const name=mpName(); if(!name)return;
+  const code=($('mpCode').value||'').trim().toUpperCase();
+  if(code.length<4){mpStatus(T('mpCodePh'));return;}
+  mpStatus(T('mpConnecting'));
+  mpLoadLib(()=>{
+    const peer=new Peer();
+    MP={role:'client',peer,code,myName:name,seat:null,sentTok:'',lastBanner:0,ended:false};
+    peer.on('error',e=>{mpStatus(T('mpNetFail')+' ('+e.type+')');});
+    peer.on('open',()=>{
+      const conn=peer.connect('sgp-'+code,{reliable:true});
+      MP.conn=conn;
+      conn.on('open',()=>{mpStatus('');conn.send({t:'hello',n:name});mpLobbyShow();});
+      conn.on('data',d=>mpClientData(d));
+      conn.on('close',()=>mpHostGone());
+      conn.on('error',()=>mpHostGone());
+    });
+  });
+}
+function mpHostData(conn,d){
+  if(!MP)return;
+  if(d.t==='hello'){
+    if(MP.started){try{conn.close();}catch(e){}return;}
+    if(MP.conns.length>=8){try{conn.close();}catch(e){}return;}
+    MP.conns.push({conn,name:(''+d.n).slice(0,14),seat:null});
+    mpRoster(); mpChatLocal('· '+C2('mpJoined',d.n));
+  }else if(d.t==='act'){
+    const rec=MP.conns.find(c=>c.conn===conn);
+    if(!rec||rec.seat==null||!state||state.gameOver||state.handOver)return;
+    const p=state.players[state.turnIdx];
+    if(!p||!p.remote||p.i!==rec.seat)return;
+    applyAction(p,d.type==='raise'?'raise':d.type==='fold'?'fold':'call',+d.amount||0);
+    state.turnIdx=(p.i+1)%state.players.length;
+    promptNext();
+  }else if(d.t==='chat'){
+    const rec=MP.conns.find(c=>c.conn===conn);
+    mpChatAll((rec?rec.name:'?'),(''+d.x).slice(0,200));
+  }
+}
+function mpClientData(d){
+  if(!MP)return;
+  if(d.t==='lobby'){MP.names=d.names;mpRosterRender(d.names);}
+  else if(d.t==='start'){
+    MP.seat=d.seat;
+    $('mpLobby').classList.add('hidden');
+    $('setup').classList.add('hidden');
+    $('game').classList.remove('hidden');
+    $('chatBtn').classList.remove('hidden');
+    hideActions(); updateOrient();
+  }
+  else if(d.t==='st'){mpApplySnapshot(d.s);}
+  else if(d.t==='chat'){mpChatRender(d.n,d.x);}
+  else if(d.t==='end'){mpHostGone();}
+}
+function mpHostDrop(conn){
+  if(!MP||MP.role!=='host')return;
+  const rec=MP.conns.find(c=>c.conn===conn);
+  if(!rec)return;
+  MP.conns=MP.conns.filter(c=>c!==rec);
+  if(MP.started&&rec.seat!=null&&state&&!state.gameOver){
+    const p=state.players[rec.seat];
+    if(p&&!p.out){
+      p.remote=false; p.gone=true;
+      if(!p.folded&&!state.handOver){
+        p.folded=true; p.lastAct='Fold';
+        log(`${p.name}: Fold (disconnected)`);
+        if(state.turnIdx===p.i){state.turnIdx=(p.i+1)%state.players.length;promptNext();}
+        else render();
+      }
+    }
+    mpChatAll('🛜',C2('mpGone',rec.name));
+  }else mpRoster();
+}
+function mpHostGone(){
+  if(!MP)return;
+  try{MP.peer&&MP.peer.destroy();}catch(e){}
+  MP=null;
+  alert(T('mpHostLeft'));
+  location.hash='';
+  location.reload();
+}
+function mpRoster(){
+  if(!MP||MP.role!=='host')return;
+  const names=[MP.myName].concat(MP.conns.map(c=>c.name));
+  mpRosterRender(names);
+  MP.conns.forEach(c=>{try{c.conn.send({t:'lobby',names});}catch(e){}});
+}
+function mpRosterRender(names){
+  $('mpList').innerHTML=names.map((n,i)=>{
+    const you=(MP.role==='host'&&i===0)||(MP.role==='client'&&n===MP.myName&&names.indexOf(n)===i&&i>0);
+    return `<div><span class="mpdot">●</span>${n} ${i===0?(MP.role==='host'?T('mpYou'):''):''}${you&&i>0?T('mpYouG'):''}</div>`;
+  }).join('');
+}
+function mpLobbyShow(){
+  $('mpLobby').classList.remove('hidden');
+  $('mpLobbyCode').textContent=MP.code;
+  const host=MP.role==='host';
+  $('mpStartBtn').classList.toggle('hidden',!host);
+  $('mpFillWrap').style.display=host?'flex':'none';
+  $('mpWait').classList.toggle('hidden',host);
+  $('mpWait').textContent=T('mpWaitHost');
+  if(host)mpRoster(); else $('mpList').innerHTML='<div><span class="mpdot">●</span>…</div>';
+}
+function mpStartGame(){
+  if(!MP||MP.role!=='host')return;
+  MP.started=true;
+  MP.conns.forEach((c,k)=>{c.seat=k+1;});
+  const humans=1+MP.conns.length;
+  const fill=$('mpFill').checked;
+  const want=+($('pCount').textContent)||9;
+  const total=fill?Math.max(humans,Math.min(9,Math.max(want,humans))):humans;
+  const cfg={
+    numPlayers:Math.max(2,total),
+    startBB:+$('startBB').value, startBlind:+$('startBlind').value,
+    ante:+$('anteSel').value, speed:document.querySelector('input[name=speed]:checked').value,
+    difficulty:'medium',
+    mpRemotes:MP.conns.map(c=>({name:c.name,seat:c.seat}))
+  };
+  MP.conns.forEach(c=>{try{c.conn.send({t:'start',seat:c.seat});}catch(e){}});
+  $('mpLobby').classList.add('hidden');
+  logLines=[];
+  $('setup').classList.add('hidden');
+  $('game').classList.remove('hidden');
+  $('chatBtn').classList.remove('hidden');
+  newGame(cfg);
+  buildSeats(); hideActions(); lastHand=null;
+  $('coachFeed').classList.add('hidden');
+  renderStats(); updateOrient();
+  setTimeout(startHand,600);
+}
+/* per-recipient snapshot: seats rotated so the recipient sits at index 0; hole cards redacted */
+function mpSnapshotFor(seat){
+  const N=state.players.length;
+  const rot=i=>((i-seat)%N+N)%N;
+  const players=new Array(N);
+  for(const q of state.players){
+    players[rot(q.i)]={i:rot(q.i),name:q.name,avatar:q.avatar,
+      isHuman:q.i===seat,remote:false,chips:q.chips,bet:q.bet,totalBet:q.totalBet,
+      folded:q.folded,out:q.out,allIn:q.allIn,acted:q.acted,lastAct:q.lastAct,
+      revealed:q.revealed,place:q.place||0,pos:q.pos,style:q.style||null,
+      rangeCap:q.rangeCap,rangeFloor:q.rangeFloor,checkedStreet:q.checkedStreet,
+      aggStreets:q.aggStreets||[],lineRead:q.lineRead||'',
+      hole:(q.i===seat||q.revealed)?q.hole:(q.hole||[]).map(()=>({r:2,s:0,hid:1}))};
+  }
+  return {players,board:state.board,stage:state.stage,
+    currentBet:state.currentBet,lastRaiseSize:state.lastRaiseSize,
+    turnIdx:rot(state.turnIdx),dealerIdx:rot(state.dealerIdx),
+    pfAggIdx:state.pfAggIdx>=0?rot(state.pfAggIdx):-1,
+    lastAggIdx:state.lastAggIdx>=0?rot(state.lastAggIdx):-1,
+    handNum:state.handNum,level:state.level,levels:state.levels,bb:state.bb,sb:state.sb,ante:state.ante,
+    handOver:state.handOver,gameOver:state.gameOver,resultText:state.resultText||'',
+    cfg:{numPlayers:state.cfg.numPlayers,speed:state.cfg.speed,ante:state.cfg.ante,
+         startBlind:state.cfg.startBlind,startBB:state.cfg.startBB,difficulty:state.cfg.difficulty,mpClient:true},
+    log:logLines.slice(-50)};
+}
+function mpBroadcast(){
+  if(!MP||MP.role!=='host'||!MP.started||!state)return;
+  if(MP.bq)return; MP.bq=true;
+  queueMicrotask(()=>{
+    MP.bq=false;
+    if(!MP||!state)return;
+    for(const c of MP.conns){
+      if(c.seat==null)continue;
+      try{c.conn.send({t:'st',s:mpSnapshotFor(c.seat)});}catch(e){}
+    }
+  });
+}
+function mpApplySnapshot(s){
+  state=s;
+  logLines=s.log||logLines;
+  if(HAS_DOM){const el=$('log');if(el)el.innerHTML=logLines.slice(-100).map(l=>`<div>${l}</div>`).join('');}
+  if(!$('seat0')) buildSeats();
+  render();
+  const me=s.players[0];
+  const myTurn=!s.gameOver&&!s.handOver&&s.turnIdx===0&&!me.folded&&!me.out&&!me.allIn
+    &&(!me.acted||me.bet<s.currentBet);
+  const tok=s.handNum+'-'+s.stage+'-'+s.currentBet+'-'+me.bet;
+  if(myTurn&&MP.sentTok!==tok){showActions(me);}
+  else if(!myTurn)hideActions();
+  if(s.handOver&&s.resultText&&MP.lastBanner!==s.handNum){MP.lastBanner=s.handNum;showBanner(s.resultText);}
+  if(s.gameOver&&!MP.ended){MP.ended=true;showGameOver(!me.out,me.out?(me.place||s.cfg.numPlayers):1);}
+}
+/* chat */
+function mpChatRender(n,x){
+  const m=$('chatMsgs');
+  const div=document.createElement('div');
+  div.innerHTML=`<b></b> `;
+  div.querySelector('b').textContent=n+':';
+  div.appendChild(document.createTextNode(' '+x));
+  m.appendChild(div);
+  while(m.children.length>120)m.removeChild(m.firstChild);
+  m.scrollTop=m.scrollHeight;
+  if($('chat').classList.contains('hidden'))$('chatBtn').textContent='💬•';
+}
+function mpChatLocal(x){mpChatRender('ℹ️',x);}
+function mpChatAll(n,x){
+  mpChatRender(n,x);
+  if(MP&&MP.role==='host')MP.conns.forEach(c=>{try{c.conn.send({t:'chat',n,x});}catch(e){}});
+}
+function mpChatSend(){
+  const inp=$('chatIn'); const x=(inp.value||'').trim();
+  if(!x||!MP)return;
+  inp.value='';
+  if(MP.role==='host')mpChatAll(MP.myName,x);
+  else{try{MP.conn.send({t:'chat',x});}catch(e){}}
+}
+function mpLeave(){
+  if(MP){
+    if(MP.role==='host')MP.conns.forEach(c=>{try{c.conn.send({t:'end'});}catch(e){}});
+    try{MP.peer&&MP.peer.destroy();}catch(e){}
+  }
+  MP=null;
+  location.hash='';
+  location.reload();
+}
+/* helper: template strings that live in TR (mpJoined/mpGone are functions there) */
+function C2(k,...a){
+  const f=(TR[lang]&&TR[lang][k])!==undefined?TR[lang][k]:TR.en[k];
+  if(typeof f==='function')return f(...a);
+  if(f!==undefined)return f;
+  try{return C(k,...a);}catch(e){return k;}
 }
 
 /* ================= INIT / WIRING ================= */
@@ -3129,7 +3492,27 @@ function initUI(){
   $('rpClose').onclick=()=>$('replayOv').classList.add('hidden');
   $('replayOv').onclick=e=>{if(e.target.id==='replayOv')$('replayOv').classList.add('hidden');};
   $('sndBtn').onclick=()=>{soundOn=!soundOn;$('sndBtn').textContent=soundOn?'🔊':'🔇';};
+  /* --- multiplayer wiring --- */
+  try{$('mpName').value=localStorage.getItem('sg_poker_mpname')||'';}catch(e){}
+  const hm=location.hash.match(/room=([A-Za-z0-9]{4,8})/);
+  if(hm)$('mpCode').value=hm[1].toUpperCase();
+  $('mpCreate').onclick=mpCreate;
+  $('mpJoinBtn').onclick=mpJoin;
+  $('mpStartBtn').onclick=mpStartGame;
+  $('mpLeave').onclick=mpLeave;
+  $('mpCopy').onclick=()=>{
+    if(!MP)return;
+    const base=location.protocol==='file:'?location.href.split('#')[0]:location.origin+location.pathname;
+    const url=base+'#room='+MP.code;
+    const done=()=>{$('mpCopy').textContent=T('mpCopied');setTimeout(()=>{$('mpCopy').textContent=T('mpCopy');},2200);};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done,done);
+    else{prompt('',url);done();}
+  };
+  $('chatBtn').onclick=()=>{$('chat').classList.toggle('hidden');$('chatBtn').textContent='💬';};
+  $('chatSend').onclick=mpChatSend;
+  $('chatIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();mpChatSend();}});
   $('quitBtn').onclick=()=>{
+    if(MP){ if(confirm(T('quit')+'?')) mpLeave(); return; }
     if(confirm('Quit this tournament?')){
       state.gameOver=true; clearResume(); hideNextBtn(); hideActions();
       $('game').classList.add('hidden'); $('setup').classList.remove('hidden');
