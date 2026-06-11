@@ -86,6 +86,12 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-11 — Host migration: the game survives the host
+- **The host can vanish — the tournament continues.** Every hand, the host broadcasts a public checkpoint (chips, seats, blind level — never hole cards). If the host disconnects, players first try to rejoin (maybe it was their own link); if the room is truly gone, the first remaining player automatically becomes the new host at a deterministic room id, rebuilds the game from the checkpoint, and everyone reconnects. Verified live: killed the host tab mid-game, the guest promoted itself and kept playing
+- **Player reconnect**: a disconnected player's seat and chips are kept — they auto-fold while away and reclaim everything by rejoining with the same name (even via the original invite link, which now probes migrated rooms)
+- **Late join**: joining a running game queues you politely — dealt in at the next hand with a fresh stack
+- The host's address bar now carries `#room=CODE`, so the URL itself is the invite link
+
 ### 2026-06-11 — Multiplayer rooms & chat (P2P, serverless)
 - **Play with friends**: create a room, copy the invite link (`#room=CODE`), friends join with their name — host's browser runs the game, guests connect peer-to-peer via WebRTC (PeerJS free cloud signaling). No server, no accounts, $0
 - **Fair by construction**: the host sends each player a personalized, redacted view — your opponents' hole cards never reach your device until showdown
