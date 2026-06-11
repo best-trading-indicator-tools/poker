@@ -58,6 +58,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #chartGrid{display:grid;grid-template-columns:repeat(13,1fr);gap:2px;margin:10px 0;}
 #chartGrid .cc{width:30px;height:26px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;border-radius:4px;background:#1d232e;color:#5b6675;font-variant-numeric:tabular-nums;}
 #chartGrid .cc.in{background:var(--gold);color:#1a1408;}
+#chartGrid .cc.in2{background:#2e7d8f;color:#eaf6f8;}
 #chartGrid .cc.me{outline:2.5px solid #4da3ff;outline-offset:-1px;z-index:1;}
 #chartLegend{font-size:11.5px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
 #chartLegend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;}
@@ -576,8 +577,8 @@ recFOLD:"FOLD",recCHECK:"CHECK",recCALL:"CALL",recRAISETO:"RAISE TO",recBET:"BET
 zoneG:"🟢 comfortable",zoneY:"🟡 fight for pots",zoneO:"🟠 shove-or-fold soon",zoneR:"🔴 all-in or fold",
 prizeP:"Prize pressure",extraNeeded:"extra needed",
 benchRun:"🧪 Coach benchmark",
-viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleShove:"all-in chart",
-legendOpen:"raise first-in",legendShove:"go all-in",legendFold:"fold",legendYou:"your hand",
+viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleShove:"all-in chart",chartTitleFacing:"chart vs this raise",
+legendOpen:"raise first-in",legendShove:"go all-in",legendFold:"fold",legendYou:"your hand",legend3bet:"re-raise (3-bet)",legendCall:"call",
 benchConfirm:"Simulate 25 full 9-player tournaments where a bot plays PURE coach advice, to measure how good the coach really is. Takes a minute or two. Run it?",
 youWin:"You win the tournament!",playAgain:"Play again",
 youWinSub:(n,h)=>`Outlasted ${n} opponents over ${h} hands.`,
@@ -601,8 +602,8 @@ recFOLD:"SE COUCHER",recCHECK:"PAROLE",recCALL:"SUIVRE",recRAISETO:"RELANCER À"
 zoneG:"🟢 confortable",zoneY:"🟡 battez-vous pour les pots",zoneO:"🟠 bientôt tapis-ou-couché",zoneR:"🔴 tapis ou couché",
 prizeP:"Pression des prix",extraNeeded:"requis en plus",
 benchRun:"🧪 Benchmark du coach",
-viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleShove:"charte de tapis",
-legendOpen:"relancer en premier",legendShove:"partir à tapis",legendFold:"se coucher",legendYou:"votre main",
+viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleShove:"charte de tapis",chartTitleFacing:"charte face à cette relance",
+legendOpen:"relancer en premier",legendShove:"partir à tapis",legendFold:"se coucher",legendYou:"votre main",legend3bet:"sur-relancer (3-bet)",legendCall:"suivre",
 benchConfirm:"Simuler 25 tournois complets à 9 joueurs où un bot suit UNIQUEMENT les conseils du coach, pour mesurer sa vraie valeur. Compte une à deux minutes. Lancer ?",
 youWin:"Vous remportez le tournoi !",playAgain:"Rejouer",
 youWinSub:(n,h)=>`Vous avez survécu à ${n} adversaires en ${h} mains.`,
@@ -626,8 +627,8 @@ recFOLD:"RETIRARSE",recCHECK:"PASAR",recCALL:"IGUALAR",recRAISETO:"SUBIR A",recB
 zoneG:"🟢 cómodo",zoneY:"🟡 pelea por los botes",zoneO:"🟠 pronto all-in o fold",zoneR:"🔴 all-in o retirarse",
 prizeP:"Presión de premios",extraNeeded:"extra necesario",
 benchRun:"🧪 Benchmark del coach",
-viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleShove:"tabla de all-in",
-legendOpen:"subir de primeras",legendShove:"ir all-in",legendFold:"retirarse",legendYou:"tu mano",
+viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleShove:"tabla de all-in",chartTitleFacing:"tabla contra esta subida",
+legendOpen:"subir de primeras",legendShove:"ir all-in",legendFold:"retirarse",legendYou:"tu mano",legend3bet:"resubir (3-bet)",legendCall:"igualar",
 benchConfirm:"Simular 25 torneos completos de 9 jugadores donde un bot sigue SOLO los consejos del coach, para medir lo bueno que es de verdad. Tarda uno o dos minutos. ¿Lanzar?",
 youWin:"¡Ganas el torneo!",playAgain:"Jugar de nuevo",
 youWinSub:(n,h)=>`Sobreviviste a ${n} rivales en ${h} manos.`,
@@ -688,6 +689,10 @@ airWarn:' You have no made hand and no real draw — players who bet usually hav
 raiseVal:e=>`~${e} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`,
 callOk:(amt,pt,o,e,disc,ea)=>`The call costs ${amt} to win a ${pt} pot, so you need ${o} equity to break even. You have ~${e}${disc?` (counted as ~${ea} after discounts)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`,
 foldAdv:(o,amt,pt,ea,resp)=>`You need ${o} equity to call (${amt} into ${pt}) but only have ~${ea}${resp?' once the size of this bet is respected':''}. Every chip you put in here loses value — fold and wait for a better spot.`,
+chart3bet:(c,e)=>`${c} is in the re-raise (3-bet) chart against ${e?'an early-position raiser':'a late-position raiser'} — solver ranges re-raise these hands instead of just calling: the big pairs for value, and hands like A5s as "blocker bluffs" (your ace makes his monster hands less likely). Flat-calling would let players behind you in cheaply.`,
+chartCallRaise:(c,e,o)=>`${c} is in the calling chart against this raise — strong enough to see a flop, not strong enough to re-raise. Your win chance (${e}) covers the price (${o}). Call, and play carefully if you miss the flop.`,
+chartIcmFold:(c,e,o)=>`${c} is normally a call here, but right now your simulated win chance (${e}) doesn't cover the price (${o}) once prize pressure and this raiser's range are counted. The chart is a guide — the math of THIS table says fold.`,
+chartFoldVs:c=>`${c} is in neither the re-raise nor the calling chart against this raise — solver ranges simply fold it. Calling raises with hands like this is one of the most expensive habits in poker.`,
 chartOpen:(c,p)=>`${c} is in the ${p} opening chart — a hand list taken from solver-computed ranges: raising it first-in from this seat is profitable in the long run. Come in raising, not limping.`,
 chartNotIn:(c,p)=>`${c} is not in the ${p} opening chart — solver-computed ranges say this hand loses money when raised from this seat over the long run. Folding now saves chips for a better spot.`,
 chartShove:(c,bb,p)=>`At ${bb} BB, ${c} is in the ${p} all-in chart (solver-computed shove ranges for short stacks). Going all-in maximizes your chance of winning the blinds and antes uncontested.`,
@@ -756,6 +761,10 @@ airWarn:' Vous n’avez ni main faite ni vrai tirage — celui qui mise a géné
 raiseVal:e=>`~${e} de chances de gain : vous êtes grand favori. Relancez pour la valeur et pour faire payer les tirages — caller laisse de l’argent sur la table.`,
 callOk:(amt,pt,o,e,disc,ea)=>`Le call coûte ${amt} pour gagner un pot de ${pt} : il vous faut ${o} d’équité pour être à l’équilibre. Vous avez ~${e}${disc?` (compté ~${ea} après décotes)`:''} — caller est rentable à long terme, mais relancer risquerait trop avec une main non premium.`,
 foldAdv:(o,amt,pt,ea,resp)=>`Il vous faut ${o} d’équité pour payer (${amt} dans ${pt}) mais vous n’avez que ~${ea}${resp?' une fois la taille de cette mise respectée':''}. Chaque jeton investi ici perd de la valeur — couchez-vous et attendez un meilleur spot.`,
+chart3bet:(c,e)=>`${c} figure dans la charte de sur-relance (3-bet) contre ${e?'un relanceur en début de parole':'un relanceur en fin de parole'} — les ranges solveur sur-relancent ces mains au lieu de suivre : les grosses paires pour la valeur, et des mains comme A5s en « bluff à blocker » (votre as rend ses monstres moins probables). Suivre laisserait entrer les joueurs derrière à bas prix.`,
+chartCallRaise:(c,e,o)=>`${c} figure dans la charte de call contre cette relance — assez fort pour voir un flop, pas assez pour sur-relancer. Votre chance de gain (${e}) couvre le prix (${o}). Suivez, et jouez prudemment si vous ratez le flop.`,
+chartIcmFold:(c,e,o)=>`${c} serait normalement un call ici, mais votre chance de gain simulée (${e}) ne couvre pas le prix (${o}) une fois la pression des prix et la range de ce relanceur comptées. La charte est un guide — le calcul de CETTE table dit de se coucher.`,
+chartFoldVs:c=>`${c} ne figure ni dans la charte de 3-bet ni dans celle de call contre cette relance — les ranges solveur la couchent, tout simplement. Suivre des relances avec ce genre de main est l'une des habitudes les plus coûteuses du poker.`,
 chartOpen:(c,p)=>`${c} figure dans la charte d'ouverture ${p} — une liste de mains issue de ranges calculées par solveur : la relancer en premier depuis ce siège est rentable à long terme. Entrez en relançant, pas en limpant.`,
 chartNotIn:(c,p)=>`${c} ne figure pas dans la charte d'ouverture ${p} — les ranges calculées par solveur indiquent que cette main perd de l'argent relancée depuis ce siège. Se coucher maintenant garde des jetons pour un meilleur spot.`,
 chartShove:(c,bb,p)=>`À ${bb} BB, ${c} figure dans la charte de tapis ${p} (ranges de shove calculées par solveur pour tapis courts). Partir à tapis maximise vos chances de gagner blinds et antes sans bagarre.`,
@@ -824,6 +833,10 @@ airWarn:' No tienes mano hecha ni proyecto real — quien apuesta suele tener al
 raiseVal:e=>`~${e} de probabilidad: eres gran favorito. Sube por valor y para cobrar a los proyectos — solo igualar deja dinero sobre la mesa.`,
 callOk:(amt,pt,o,e,disc,ea)=>`La llamada cuesta ${amt} para ganar un bote de ${pt}: necesitas ${o} de equidad para no perder. Tienes ~${e}${disc?` (contado como ~${ea} tras descuentos)`:''} — igualar es rentable a largo plazo, pero subir arriesgaría demasiado con una mano no premium.`,
 foldAdv:(o,amt,pt,ea,resp)=>`Necesitas ${o} de equidad para igualar (${amt} en ${pt}) pero solo tienes ~${ea}${resp?' una vez respetado el tamaño de esta apuesta':''}. Cada ficha que pongas aquí pierde valor — retírate y espera un mejor momento.`,
+chart3bet:(c,e)=>`${c} está en la tabla de resubida (3-bet) contra ${e?'quien sube desde posición temprana':'quien sube desde posición tardía'} — los rangos de solver resuben estas manos en vez de solo igualar: las parejas grandes por valor, y manos como A5s como "farol con blocker" (tu as hace menos probables sus monstruos). Solo igualar dejaría entrar barato a los de detrás.`,
+chartCallRaise:(c,e,o)=>`${c} está en la tabla de llamada contra esta subida — bastante fuerte para ver un flop, no tanto como para resubir. Tu probabilidad (${e}) cubre el precio (${o}). Iguala, y juega con cuidado si fallas el flop.`,
+chartIcmFold:(c,e,o)=>`${c} normalmente sería una llamada aquí, pero tu probabilidad simulada (${e}) no cubre el precio (${o}) contando la presión de premios y el rango de quien sube. La tabla es una guía — las cuentas de ESTA mesa dicen retirarse.`,
+chartFoldVs:c=>`${c} no está ni en la tabla de 3-bet ni en la de llamada contra esta subida — los rangos de solver simplemente la tiran. Igualar subidas con manos así es uno de los hábitos más caros del póker.`,
 chartOpen:(c,p)=>`${c} está en la tabla de apertura de ${p} — una lista de manos sacada de rangos calculados por solver: subirla primero desde este asiento es rentable a largo plazo. Entra subiendo, no de limp.`,
 chartNotIn:(c,p)=>`${c} no está en la tabla de apertura de ${p} — los rangos calculados por solver dicen que esta mano pierde dinero subida desde este asiento. Retirarse ahora guarda fichas para un momento mejor.`,
 chartShove:(c,bb,p)=>`Con ${bb} BB, ${c} está en la tabla de all-in de ${p} (rangos de shove calculados por solver para stacks cortos). Ir all-in maximiza tus opciones de llevarte ciegas y antes sin pelea.`,
@@ -2400,20 +2413,43 @@ function coachDecide(p){
         why.push(rfi?C('chartNotIn',code,pos):C('pfOpenFold',code,prTxt,Math.round(thrEff*100),pos));
       }
     }else{
-      /* facing a raise */
-      const ct=clamp(0.13+(late?0.05:0)+(early?-0.03:0),0.06,0.25);
-      if(pr<=0.05){
-        rec='RAISE';
-        why.push(C('pf3bet',code));
-      }else if(pr<=ct&&eq>=odds+icmPrem){
-        rec='CALL';
-        why.push(C('pfCallRange',pos,Math.round(ct*100),code,prTxt,pct(eq),pct(odds)));
-      }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
-        rec='CALL';
-        why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
+      /* facing a raise: vs-raise solver chart first (3-bet / call / fold), percentile fallback */
+      const raiser=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+      const vsEarlyR=raiser?/^(UTG|MP)/.test(raiser.pos||''):false;
+      const fc=chartFor('facing',vsEarlyR?'vsEarly':'vsLate');
+      if(fc&&fc.raise&&fc.call){
+        chartInfo={kind:'facing',pos:(raiser&&raiser.pos)||pos,list:fc.raise,list2:fc.call};
+        if(fc.raise.includes(code)){
+          rec='RAISE';
+          why.push(C('chart3bet',code,vsEarlyR));
+        }else if(fc.call.includes(code)&&eq>=odds+icmPrem){
+          rec='CALL';
+          why.push(C('chartCallRaise',code,pct(eq),pct(odds)));
+        }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
+          rec='CALL';
+          why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
+        }else if(fc.call.includes(code)){
+          rec='FOLD';
+          why.push(C('chartIcmFold',code,pct(eq),pct(odds)));
+        }else{
+          rec='FOLD';
+          why.push(C('chartFoldVs',code));
+        }
       }else{
-        rec='FOLD';
-        why.push(C('pfFoldRange',Math.round(ct*100),pos,code,prTxt,pct(eq),pct(odds)));
+        const ct=clamp(0.13+(late?0.05:0)+(early?-0.03:0),0.06,0.25);
+        if(pr<=0.05){
+          rec='RAISE';
+          why.push(C('pf3bet',code));
+        }else if(pr<=ct&&eq>=odds+icmPrem){
+          rec='CALL';
+          why.push(C('pfCallRange',pos,Math.round(ct*100),code,prTxt,pct(eq),pct(odds)));
+        }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
+          rec='CALL';
+          why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
+        }else{
+          rec='FOLD';
+          why.push(C('pfFoldRange',Math.round(ct*100),pos,code,prTxt,pct(eq),pct(odds)));
+        }
       }
     }
   }else if(callAmt===0){
@@ -2515,16 +2551,18 @@ function coachDecide(p){
 function showChartMatrix(info,heroCode){
   if(!HAS_DOM||!info)return;
   const R=['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
-  const inSet=new Set(info.list);
+  const inSet=new Set(info.list), inSet2=new Set(info.list2||[]);
   let html='';
   for(let i=0;i<13;i++)for(let j=0;j<13;j++){
     const h=i===j?R[i]+R[j]:i<j?R[i]+R[j]+'s':R[j]+R[i]+'o';
-    html+=`<div class="cc${inSet.has(h)?' in':''}${h===heroCode?' me':''}">${h}</div>`;
+    html+=`<div class="cc${inSet.has(h)?' in':inSet2.has(h)?' in2':''}${h===heroCode?' me':''}">${h}</div>`;
   }
   $('chartGrid').innerHTML=html;
-  $('chartTitle').textContent=`${info.pos} — ${T(info.kind==='rfi'?'chartTitleOpen':'chartTitleShove')}`;
+  const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='facing'?'chartTitleFacing':'chartTitleShove';
+  $('chartTitle').textContent=`${info.pos} — ${T(titleKey)}`;
   $('chartLegend').innerHTML=
-    `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'?'legendOpen':'legendShove')}</span>`+
+    `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'?'legendOpen':info.kind==='facing'?'legend3bet':'legendShove')}</span>`+
+    (info.list2?`<span><span class="sw" style="background:#2e7d8f;"></span>${T('legendCall')}</span>`:'')+
     `<span><span class="sw" style="background:#1d232e;"></span>${T('legendFold')}</span>`+
     `<span><span class="sw" style="background:none;outline:2px solid #4da3ff;outline-offset:-1px;"></span>${T('legendYou')}</span>`;
   $('chartOv').classList.remove('hidden');

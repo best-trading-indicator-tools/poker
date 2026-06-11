@@ -85,9 +85,13 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-11 — Vs-raise charts, matrix viewer & resizable panel
+- **3-bet / call / fold charts**: when someone raises before you, the coach now consults vs-raise solver matrices (different ranges vs an early-position raiser and a late-position one) — big pairs re-raise for value, hands like A5s re-raise as "blocker bluffs", a teal middle tier flat-calls, the rest folds, each explained in plain words. ICM can still override a chart call near the bubble, and the coach says so
+- **Two-tier matrix viewer**: the 13×13 grid now shows gold = re-raise, teal = call, dark = fold for vs-raise spots
+- **Drag-resizable coach panel (desktop)**: grab the panel's right edge and drag — 240 to 620px, the table reflows live, width remembered across sessions
+
 ### 2026-06-11 — Solver range charts (external data file)
 - **`charts.js`**: real per-position GTO range matrices now live in an external, human-editable data file — raise-first-in charts for all 8 positions (UTG 11% → BTN 41%) and short-stack all-in charts at 10 BB and 5 BB depths, approximating published solver/Nash ranges
-- **📊 Tap to see the matrix**: every chart-based recommendation includes a "View this position's chart" button that opens the full 13×13 hand grid — gold cells are the raise/shove range for your seat, your current hand is outlined
 - The coach consults the chart FIRST ("77 is in the MP opening chart — solver-computed ranges say raising it is profitable") and falls back to the percentile engine when no chart covers the spot (facing raises, missing file) — so the single-file copy still works standalone
 - Unlike a single hand ranking with cutoffs, true matrices capture solver non-linearities (suited connectors and small pairs enter ranges "early", weak offsuit broadways late)
 - Tournament-pressure scaling, antes, profiles, ICM and all postflop logic apply unchanged on top
