@@ -558,6 +558,9 @@ body.fl #centerArea{top:46%;}
     <label id="mpFillWrap" style="font-size:13px;color:var(--dim);display:flex;gap:8px;align-items:center;justify-content:center;cursor:pointer;">
       <input type="checkbox" id="mpFill" checked style="accent-color:var(--gold);"> <span id="mpFillLbl">Fill empty seats with AI bots</span>
     </label>
+    <label id="mpAutoWrap" style="font-size:13px;color:var(--dim);display:flex;gap:8px;align-items:center;justify-content:center;cursor:pointer;margin-top:6px;">
+      <input type="checkbox" id="mpAuto" style="accent-color:var(--gold);"> <span id="mpAutoLbl1">Auto-start at</span> <b id="mpAutoN" style="color:var(--gold);">4</b> <span id="mpAutoLbl2">players</span>
+    </label>
     <p id="mpWait" class="hidden" style="color:var(--dim);font-size:13px;margin:10px 0 0;"></p>
     <button id="mpStartBtn" class="hidden">Start game</button>
     <button id="mpLeave">Leave</button>
@@ -3046,6 +3049,7 @@ function applyLang(){
   set('mpTitle','mpTitle'); set('mpCreate','mpCreate'); set('mpJoinBtn','mpJoinB');
   set('mpLobbyTitle','mpLobbyTitle'); set('mpCopy','mpCopy'); set('mpFillLbl','mpFillLbl');
   set('mpStartBtn','mpStart'); set('mpLeave','mpLeave');
+  set('mpAutoLbl1','mpAutoA'); set('mpAutoLbl2','mpAutoB');
   const mpn=$('mpName'); if(mpn)mpn.placeholder=T('mpNamePh');
   const mpc=$('mpCode'); if(mpc)mpc.placeholder=T('mpCodePh');
   const ci=$('chatIn'); if(ci)ci.placeholder=T('chatPh');
@@ -3216,6 +3220,11 @@ function mpRoster(){
   const names=[MP.myName].concat(MP.conns.map(c=>c.name));
   mpRosterRender(names);
   MP.conns.forEach(c=>{try{c.conn.send({t:'lobby',names});}catch(e){}});
+  /* opt-in auto-start once the table size chosen in the setup menu is reached */
+  const target=Math.max(2,+($('mpAutoN').textContent)||2);
+  if($('mpAuto').checked&&!MP.started&&names.length>=target){
+    setTimeout(()=>{if(MP&&!MP.started)mpStartGame();},1500);
+  }
 }
 function mpRosterRender(names){
   $('mpList').innerHTML=names.map((n,i)=>{
@@ -3229,6 +3238,8 @@ function mpLobbyShow(){
   const host=MP.role==='host';
   $('mpStartBtn').classList.toggle('hidden',!host);
   $('mpFillWrap').style.display=host?'flex':'none';
+  $('mpAutoWrap').style.display=host?'flex':'none';
+  $('mpAutoN').textContent=Math.max(2,+($('pCount').textContent)||2);
   $('mpWait').classList.remove('hidden');
   $('mpWait').textContent=host?T('mpHostHint'):T('mpWaitHost');
   if(host)mpRoster(); else $('mpList').innerHTML='<div><span class="mpdot">●</span>…</div>';
