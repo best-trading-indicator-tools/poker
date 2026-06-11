@@ -3095,11 +3095,11 @@ function mpCreate(){
     const peer=new Peer('sgp-'+code,MP_ICE);
     MP={role:'host',peer,code,myName:name,conns:[],started:false};
     peer.on('open',()=>{mpStatus('');mpLobbyShow();});
+    peer.on('disconnected',()=>{try{peer.reconnect();}catch(e){}});  // keep signaling alive
     peer.on('error',e=>{if(!MP||!MP.started)mpStatus(T('mpNetFail')+' ('+e.type+')');});
     peer.on('connection',conn=>{
       conn.on('data',d=>mpHostData(conn,d));
-      conn.on('close',()=>mpHostDrop(conn));
-      conn.on('error',()=>mpHostDrop(conn));
+      conn.on('close',()=>mpHostDrop(conn));   // only a real close drops a player (errors can be transient)
     });
   });
 }
@@ -3117,12 +3117,15 @@ function mpJoin(){
       try{peer.destroy();}catch(e){}
       MP=null;
     };
+    peer.on('disconnected',()=>{try{peer.reconnect();}catch(e){}});  // keep signaling alive
     peer.on('error',e=>{
       if(e.type==='peer-unavailable')fail(T('mpRoomGone'));
       else if(!MP||!MP.connected)fail(T('mpNetFail')+' ('+e.type+')');
     });
     peer.on('open',()=>{
-      const conn=peer.connect('sgp-'+code,{reliable:true});
+      /* JSON serialization: PeerJS's default binary mode breaks on iOS Safari
+         (channel opens, first message kills it → looked like "host left") */
+      const conn=peer.connect('sgp-'+code,{reliable:true,serialization:'json'});
       MP.conn=conn;
       /* if nothing opens within 12s, the direct connection is blocked */
       const watchdog=setTimeout(()=>{if(MP&&!MP.connected)fail(T('mpConnFail'));},12000);
