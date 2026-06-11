@@ -656,6 +656,7 @@ mpMigrating:"Connection to the host lost — recovering the game…",
 mpMigrated:n=>`${n} is the new host — the tournament continues!`,
 mpRejoined:n=>`${n} is back at the table`,
 mpReplaced:(n,b2)=>`${n} takes over from 🤖 ${b2} — humans beat robots`,
+mpWaitingPlayers:"Table open — waiting for players to join. Share the invite link!",
 mpKnock:n=>`${n} joins at the next hand`,
 mpVerMismatch:"The host is running a different version of the game. BOTH of you: refresh the page (hold Shift while reloading), then create the room again.",
 mpNeed2:"You need at least one friend in the room to start — or tick \"Fill empty seats with AI bots\".",
@@ -705,6 +706,7 @@ mpMigrating:"Connexion à l'hôte perdue — récupération de la partie…",
 mpMigrated:n=>`${n} est le nouvel hôte — le tournoi continue !`,
 mpRejoined:n=>`${n} est de retour à la table`,
 mpReplaced:(n,b2)=>`${n} remplace 🤖 ${b2} — les humains avant les robots`,
+mpWaitingPlayers:"Table ouverte — en attente de joueurs. Partagez le lien d'invitation !",
 mpKnock:n=>`${n} rejoint à la prochaine main`,
 mpVerMismatch:"L'hôte utilise une autre version du jeu. TOUS LES DEUX : rechargez la page (Maj + rechargement), puis recréez le salon.",
 mpNeed2:"Il faut au moins un ami dans le salon pour lancer — ou cochez « Compléter avec des bots IA ».",
@@ -754,6 +756,7 @@ mpMigrating:"Conexión con el anfitrión perdida — recuperando la partida…",
 mpMigrated:n=>`${n} es el nuevo anfitrión — ¡el torneo continúa!`,
 mpRejoined:n=>`${n} ha vuelto a la mesa`,
 mpReplaced:(n,b2)=>`${n} sustituye a 🤖 ${b2} — los humanos antes que los robots`,
+mpWaitingPlayers:"Mesa abierta — esperando jugadores. ¡Comparte el enlace!",
 mpKnock:n=>`${n} entra en la próxima mano`,
 mpVerMismatch:"El anfitrión usa otra versión del juego. AMBOS: recargad la página (Shift + recargar) y cread la sala de nuevo.",
 mpNeed2:"Necesitas al menos un amigo en la sala para empezar — o marca \"Rellenar asientos vacíos con bots\".",
@@ -1543,6 +1546,13 @@ function assignPositions(sbIdx){
 function startHand(){
   if(state.gameOver) return;
   mpSeatPending();    // late multiplayer joiners get dealt in now
+  /* open table: alone at a bot-free multiplayer table — wait for players, then deal */
+  if(MP&&MP.role==='host'&&alive().length<2){
+    showBanner(T('mpWaitingPlayers'));
+    render();
+    later(startHand,2500);
+    return;
+  }
   mpBroadcastCK();    // public checkpoint: lets any player take over if the host dies
   state.handNum++;
   state.handOver=false;
@@ -3440,8 +3450,7 @@ function mpStartGame(){
   if(!MP||MP.role!=='host')return;
   const humans=1+MP.conns.length;
   const fill=$('mpFill').checked;
-  if(!fill&&humans<2){ alert(T('mpNeed2')); return; }   // poker alone, without bots, isn't a game
-  MP.started=true;
+  MP.started=true;   // solo + no bots = open table: sit and wait, dealing starts when a friend arrives
   MP.conns.forEach((c,k)=>{c.seat=k+1;});
   const want=+($('pCount').textContent)||9;
   const total=fill?Math.max(humans,Math.min(9,Math.max(want,humans))):humans;
