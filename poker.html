@@ -446,6 +446,10 @@ body.fl #centerArea{top:46%;}
       </div>
     </div>
     <div class="row">
+      <label class="main" id="timerLbl">⏱ Turn timer</label>
+      <input type="checkbox" id="timerChk" style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;">
+    </div>
+    <div class="row">
       <label class="main">Language</label>
       <select id="langSel">
         <option value="en">English</option>
@@ -677,7 +681,7 @@ mpMigrated:n=>`${n} is the new host — the tournament continues!`,
 mpRejoined:n=>`${n} is back at the table`,
 mpReplaced:(n,b2)=>`${n} takes over from 🤖 ${b2} — humans beat robots`,
 mpWaitingPlayers:"Table open — waiting for players to join. Share the invite link!",
-react:"React",reactHint:"Tap to react — appears over your seat for everyone",
+react:"React",reactHint:"Tap to react — appears over your seat for everyone",timerOpt:"⏱ Turn timer (25s + bank)",
 mpKnock:n=>`${n} joins at the next hand`,
 mpVerMismatch:"The host is running a different version of the game. BOTH of you: refresh the page (hold Shift while reloading), then create the room again.",
 mpNeed2:"You need at least one friend in the room to start — or tick \"Fill empty seats with AI bots\".",
@@ -728,7 +732,7 @@ mpMigrated:n=>`${n} est le nouvel hôte — le tournoi continue !`,
 mpRejoined:n=>`${n} est de retour à la table`,
 mpReplaced:(n,b2)=>`${n} remplace 🤖 ${b2} — les humains avant les robots`,
 mpWaitingPlayers:"Table ouverte — en attente de joueurs. Partagez le lien d'invitation !",
-react:"Réagir",reactHint:"Touchez pour réagir — visible au-dessus de votre siège par tous",
+react:"Réagir",reactHint:"Touchez pour réagir — visible au-dessus de votre siège par tous",timerOpt:"⏱ Minuteur de tour (25s + réserve)",
 mpKnock:n=>`${n} rejoint à la prochaine main`,
 mpVerMismatch:"L'hôte utilise une autre version du jeu. TOUS LES DEUX : rechargez la page (Maj + rechargement), puis recréez le salon.",
 mpNeed2:"Il faut au moins un ami dans le salon pour lancer — ou cochez « Compléter avec des bots IA ».",
@@ -779,7 +783,7 @@ mpMigrated:n=>`${n} es el nuevo anfitrión — ¡el torneo continúa!`,
 mpRejoined:n=>`${n} ha vuelto a la mesa`,
 mpReplaced:(n,b2)=>`${n} sustituye a 🤖 ${b2} — los humanos antes que los robots`,
 mpWaitingPlayers:"Mesa abierta — esperando jugadores. ¡Comparte el enlace!",
-react:"Reaccionar",reactHint:"Toca para reaccionar — aparece sobre tu asiento para todos",
+react:"Reaccionar",reactHint:"Toca para reaccionar — aparece sobre tu asiento para todos",timerOpt:"⏱ Temporizador (25s + banco)",
 mpKnock:n=>`${n} entra en la próxima mano`,
 mpVerMismatch:"El anfitrión usa otra versión del juego. AMBOS: recargad la página (Shift + recargar) y cread la sala de nuevo.",
 mpNeed2:"Necesitas al menos un amigo en la sala para empezar — o marca \"Rellenar asientos vacíos con bots\".",
@@ -3141,7 +3145,7 @@ function applyLang(){
   if(!HAS_DOM)return;
   const set=(id,k)=>{const el=$(id);if(el)el.textContent=T(k);};
   $('setup').querySelector('.sub').textContent=T('sub');
-  const rowKeys=['players','blinds','buyin','ante','speed','language','diff'];
+  const rowKeys=['players','blinds','buyin','ante','speed','timerOpt','language','diff'];
   document.querySelectorAll('#setup .row label.main').forEach((el,i)=>{if(rowKeys[i])el.textContent=T(rowKeys[i]);});
   const aSel=$('anteSel'); if(aSel) aSel.options[0].text=T('noAnte');
   const radios=document.querySelectorAll('#setup .radios label');
@@ -3542,7 +3546,7 @@ function mpStartGame(){
    kicks in automatically for the big decisions; only then auto check/fold */
 let TT_BASE=25000,TT_BANK=60000;
 function armTurnTimer(p){
-  if(!state||!state.cfg||!state.cfg.mpRemotes)return;   // human-vs-human games only
+  if(!state||!state.cfg||(!state.cfg.mpRemotes&&!state.cfg.timer))return;   // multiplayer, or solo opt-in
   state.turnDeadline=Date.now()+TT_BASE;
   state.turnBank=false;
   const tok=state.handNum+'-'+state.stage+'-'+state.turnIdx+'-'+state.currentBet;
@@ -3820,6 +3824,7 @@ function initUI(){
       numPlayers,
       startBB:+$('startBB').value,
       startBlind:+$('startBlind').value,
+      timer:$('timerChk').checked,
       ante:+$('anteSel').value,
       speed:document.querySelector('input[name=speed]:checked').value,
       difficulty
