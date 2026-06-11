@@ -534,6 +534,7 @@ firstToAct:"first to act (OOP)",lastToAct:"last to act (IP)",ofN:"of",need:"need
 thisGame:"THIS GAME",lifetime:"LIFETIME",handsPW:"Hands played / won",net:"Net",biggestPot:"Biggest pot won",vpipPfr:"VPIP / PFR",aggF:"Aggression factor",wonSd:"Won at showdown",evLeak:"EV leaked vs coach",coachFollowed:"Coach followed",followedCoach:"followed coach",coachSaid:"coach said",youChose:"you chose",
 recFOLD:"FOLD",recCHECK:"CHECK",recCALL:"CALL",recRAISETO:"RAISE TO",recBET:"BET",recALLIN:"ALL-IN",
 zoneG:"🟢 comfortable",zoneY:"🟡 fight for pots",zoneO:"🟠 shove-or-fold soon",zoneR:"🔴 all-in or fold",
+prizeP:"Prize pressure",extraNeeded:"extra needed",
 youWin:"You win the tournament!",playAgain:"Play again",
 youWinSub:(n,h)=>`Outlasted ${n} opponents over ${h} hands.`,
 bustedTitle:p=>`Busted in ${p} place`,bustedSub:h=>`Survived ${h} hands. Run it back?`,
@@ -554,6 +555,7 @@ firstToAct:"premier à parler (OOP)",lastToAct:"dernier à parler (IP)",ofN:"sur
 thisGame:"CETTE PARTIE",lifetime:"GLOBAL",handsPW:"Mains jouées / gagnées",net:"Net",biggestPot:"Plus gros pot gagné",vpipPfr:"VPIP / PFR",aggF:"Facteur d'agression",wonSd:"Gagné à l'abattage",evLeak:"EV perdue vs coach",coachFollowed:"Coach suivi",followedCoach:"coach suivi",coachSaid:"le coach a dit",youChose:"vous avez choisi",
 recFOLD:"SE COUCHER",recCHECK:"PAROLE",recCALL:"SUIVRE",recRAISETO:"RELANCER À",recBET:"MISER",recALLIN:"TAPIS",
 zoneG:"🟢 confortable",zoneY:"🟡 battez-vous pour les pots",zoneO:"🟠 bientôt tapis-ou-couché",zoneR:"🔴 tapis ou couché",
+prizeP:"Pression des prix",extraNeeded:"requis en plus",
 youWin:"Vous remportez le tournoi !",playAgain:"Rejouer",
 youWinSub:(n,h)=>`Vous avez survécu à ${n} adversaires en ${h} mains.`,
 bustedTitle:p=>`Éliminé à la ${p} place`,bustedSub:h=>`${h} mains jouées. On remet ça ?`,
@@ -574,6 +576,7 @@ firstToAct:"primero en hablar (OOP)",lastToAct:"último en hablar (IP)",ofN:"de"
 thisGame:"ESTA PARTIDA",lifetime:"GLOBAL",handsPW:"Manos jugadas / ganadas",net:"Neto",biggestPot:"Mayor bote ganado",vpipPfr:"VPIP / PFR",aggF:"Factor de agresión",wonSd:"Ganadas en showdown",evLeak:"EV perdido vs coach",coachFollowed:"Coach seguido",followedCoach:"coach seguido",coachSaid:"el coach dijo",youChose:"tú elegiste",
 recFOLD:"RETIRARSE",recCHECK:"PASAR",recCALL:"IGUALAR",recRAISETO:"SUBIR A",recBET:"APOSTAR",recALLIN:"ALL-IN",
 zoneG:"🟢 cómodo",zoneY:"🟡 pelea por los botes",zoneO:"🟠 pronto all-in o fold",zoneR:"🔴 all-in o retirarse",
+prizeP:"Presión de premios",extraNeeded:"extra necesario",
 youWin:"¡Ganas el torneo!",playAgain:"Jugar de nuevo",
 youWinSub:(n,h)=>`Sobreviviste a ${n} rivales en ${h} manos.`,
 bustedTitle:p=>`Eliminado en ${p} lugar`,bustedSub:h=>`Aguantaste ${h} manos. ¿Otra vez?`,
@@ -637,6 +640,17 @@ mentalMath:(c,s,o)=>` 🧮 Live mental math: price = call ÷ (pot + call) = ${c}
 mWarn:(n,m,z)=>` Blinds go up in ${n} hand${n>1?'s':''} — your M drops to ~${m} (${z}). Look for spots now rather than being forced to gamble later.`,
 mExplain:m=>` What "M = ${m}" means: your stack divided by the cost of one full round of blinds and antes — i.e. you could survive ${m} more rounds folding everything. Above 20 🟢 play your normal game; 10–20 🟡 start fighting for pots; 5–10 🟠 favor shoving over small raises; under 5 🔴 it's all-in or fold.`,
 widenNote:(b,e,d)=>` Rising blinds and dead money change the math: your normal ~${b}% opening range here is adjusted to ~${e}%${d===1?' — and the players left to act fold too much, so attack them':d===-1?' — tempered, because the players left to act defend wide, so steal less into them':''}.`,
+icmNote:(x,left,paid)=>` 💰 Prize pressure: ${paid} place${paid>1?'s':''} get paid and ${left} player${left>1?'s are':' is'} left. In a tournament, chips you might LOSE are worth more than chips you might WIN — going broke costs you your shot at the prizes. So this call needs an extra ~${x}% win chance on top of the normal pot math. Near the bubble, when in doubt: fold and let the others bust each other.`,
+lineCbet:` His flop bet is a routine "continuation bet" — players who raised before the flop bet again on almost any flop, good or bad. It tells us very little, so his range is barely narrowed for it.`,
+lineBarrel:n=>` He has now bet ${n===3?'THREE streets in a row (flop, turn and river)':'two streets in a row'} — most players don't keep firing like that without a real hand. His range is read much tighter.`,
+lineDonk:` He bet INTO the player who raised before the flop (a "donk bet") — an unusual move that's usually either a sneaky monster or a wild bluff. To be safe, it's read as strength.`,
+lineCR:` He checked first, then raised (a "check-raise") — the classic trap move. That's read as a very strong range.`,
+profRock:` The bettor is the 🪨 tight type — players like this almost never bluff big. Give this bet extra respect: without a strong hand yourself, folding is usually right.`,
+profManiac:` The bettor is the 🔥 wild type — he bluffs so often that medium-strength hands go UP in value against him. You can call him down lighter than against anyone else.`,
+profStation:` The bettor is the 📞 loose-passive type — he calls everything but almost never bets big without a real hand. His sudden aggression deserves respect.`,
+blockerAce:` You hold an Ace — a "blocker": since one of the four aces is in YOUR hand, it's less likely he holds the big ace-hands (like a pair of aces or top pair with an ace). That makes calling slightly better.`,
+blockerFlush:` You hold the ace of the flush suit — even without a flush yourself, that card means HE cannot have the best possible flush. A bluff-raise from you is also extra believable, because you could have the nut flush.`,
+suitedConn:` Hands like this (suited and connected) play better than their raw ranking suggests — they make hidden straights and flushes that win big pots when stacks are deep. The coach loosens up slightly for them.`,
 gtoSolving:'⚖️ Running GTO solve…',gtoUnavail:'GTO solve unavailable for this spot.',gtoFail:'GTO solve failed for this spot.',
 gtoMulti:n=>'⚖️ GTO solving applies heads-up only (like commercial solvers). With '+n+' opponents, advice uses range-equity math.',
 gtoNote:'Equilibrium of your range vs theirs on this exact board. Abstractions: current street only, 66%-pot + all-in sizings, 8 strength buckets, check-down rollouts. Directionally GTO — not solver-exact.',
@@ -688,6 +702,17 @@ mentalMath:(c,s,o)=>` 🧮 Calcul mental en live : prix = mise à payer ÷ (pot 
 mWarn:(n,m,z)=>` Les blinds montent dans ${n} main${n>1?'s':''} — votre M tombera à ~${m} (${z}). Cherchez des spots maintenant plutôt que d'être forcé de jouer à pile ou face plus tard.`,
 mExplain:m=>` Ce que signifie « M = ${m} » : votre tapis divisé par le coût d'un tour complet de blinds et d'antes — vous pourriez survivre ${m} tours en jetant tout. Au-dessus de 20 🟢, jouez votre jeu normal ; 10–20 🟡, commencez à vous battre pour les pots ; 5–10 🟠, préférez le tapis aux petites relances ; sous 5 🔴, c'est tapis ou couché.`,
 widenNote:(b,e,d)=>` Les blinds qui montent et l'argent mort changent le calcul : votre range d'ouverture normale (~${b}%) est ajustée à ~${e}%${d===1?' — et les joueurs restants se couchent trop : attaquez-les':d===-1?' — tempérée, car les joueurs restants défendent large : volez moins contre eux':''}.`,
+icmNote:(x,left,paid)=>` 💰 Pression des prix : ${paid} place${paid>1?'s sont payées':' est payée'} et il reste ${left} joueur${left>1?'s':''}. En tournoi, les jetons que vous risquez de PERDRE valent plus que ceux que vous pouvez GAGNER — sauter vous coûte votre chance de prix. Ce call demande donc ~${x}% de chances de gain EN PLUS du calcul normal du pot. Près de la bulle, dans le doute : couchez-vous et laissez les autres s'éliminer.`,
+lineCbet:` Sa mise au flop est un « continuation bet » de routine — celui qui a relancé avant le flop remise sur presque n'importe quel flop, bon ou mauvais. Cela ne nous apprend presque rien : sa range n'est guère resserrée.`,
+lineBarrel:n=>` Il vient de miser ${n===3?'TROIS rues d\'affilée (flop, turn et river)':'deux rues d\'affilée'} — la plupart des joueurs ne continuent pas à tirer ainsi sans une vraie main. Sa range est lue beaucoup plus serrée.`,
+lineDonk:` Il a misé CONTRE le relanceur pré-flop (un « donk bet ») — un coup inhabituel : en général soit un monstre déguisé, soit un gros bluff. Par prudence, on le lit comme de la force.`,
+lineCR:` Il a d'abord checké, puis relancé (un « check-raise ») — le piège classique. C'est lu comme une range très forte.`,
+profRock:` Le miseur est du type 🪨 serré — ces joueurs ne bluffent presque jamais gros. Respectez cette mise : sans main forte, se coucher est généralement correct.`,
+profManiac:` Le miseur est du type 🔥 fou — il bluffe si souvent que vos mains moyennes PRENNENT de la valeur contre lui. Vous pouvez le payer plus léger que n'importe qui d'autre.`,
+profStation:` Le miseur est du type 📞 passif — il paie tout mais ne mise presque jamais gros sans une vraie main. Son agression soudaine mérite le respect.`,
+blockerAce:` Vous tenez un As — un « blocker » : comme l'un des quatre as est dans VOTRE main, il est moins probable qu'il ait les grosses mains à as (paire d'as, top paire avec as). Cela rend le call un peu meilleur.`,
+blockerFlush:` Vous tenez l'as de la couleur du board — même sans couleur vous-même, cette carte signifie qu'IL ne peut pas avoir la meilleure couleur possible. Et un bluff-raise de votre part devient très crédible.`,
+suitedConn:` Ce genre de main (assortie et connectée) joue mieux que son classement brut — elle fait des quintes et couleurs cachées qui gagnent de gros pots quand les tapis sont profonds. Le coach s'élargit légèrement pour elles.`,
 gtoSolving:'⚖️ Calcul GTO en cours…',gtoUnavail:'Calcul GTO indisponible pour ce spot.',gtoFail:'Échec du calcul GTO pour ce spot.',
 gtoMulti:n=>'⚖️ Le calcul GTO ne s’applique qu’en tête-à-tête (comme les solveurs commerciaux). Avec '+n+' adversaires, le conseil repose sur l’équité contre les ranges.',
 gtoNote:'Équilibre de votre range contre la sienne sur ce board exact. Abstractions : rue courante seulement, mises 66% pot + tapis, 8 niveaux de force, rollouts en check-down. Directionnellement GTO — pas exact au solveur près.',
@@ -739,6 +764,17 @@ mentalMath:(c,s,o)=>` 🧮 Cálculo mental en vivo: precio = llamada ÷ (bote + 
 mWarn:(n,m,z)=>` Las ciegas suben en ${n} mano${n>1?'s':''} — tu M caerá a ~${m} (${z}). Busca jugadas ahora antes de verte forzado a jugártela.`,
 mExplain:m=>` Qué significa «M = ${m}»: tu stack dividido por el coste de una ronda completa de ciegas y antes — sobrevivirías ${m} rondas tirándolo todo. Por encima de 20 🟢, juega tu juego normal; 10–20 🟡, empieza a pelear por los botes; 5–10 🟠, prefiere el all-in a subidas pequeñas; bajo 5 🔴, all-in o retirarse.`,
 widenNote:(b,e,d)=>` Las ciegas crecientes y el dinero muerto cambian el cálculo: tu rango de apertura normal (~${b}%) se ajusta a ~${e}%${d===1?' — y los jugadores por hablar se retiran demasiado: atácalos':d===-1?' — moderado, porque los que quedan defienden mucho: roba menos contra ellos':''}.`,
+icmNote:(x,left,paid)=>` 💰 Presión de premios: se paga${paid>1?'n':''} ${paid} puesto${paid>1?'s':''} y quedan ${left} jugador${left>1?'es':''}. En un torneo, las fichas que puedes PERDER valen más que las que puedes GANAR — quedarte sin fichas te cuesta tu opción a premio. Esta llamada necesita ~${x}% extra de probabilidad además del cálculo normal del bote. Cerca de la burbuja, ante la duda: retírate y deja que los demás se eliminen.`,
+lineCbet:` Su apuesta en el flop es una "apuesta de continuación" rutinaria — quien subió antes del flop vuelve a apostar en casi cualquier flop, bueno o malo. Dice muy poco, así que su rango apenas se estrecha.`,
+lineBarrel:n=>` Ya ha apostado ${n===3?'TRES calles seguidas (flop, turn y river)':'dos calles seguidas'} — la mayoría no sigue disparando así sin una mano real. Su rango se lee mucho más estrecho.`,
+lineDonk:` Apostó CONTRA quien subió antes del flop (un "donk bet") — una jugada rara: suele ser un monstruo disimulado o un farol salvaje. Por seguridad, se lee como fuerza.`,
+lineCR:` Primero pasó y luego subió (un "check-raise") — la trampa clásica. Se lee como un rango muy fuerte.`,
+profRock:` El apostador es del tipo 🪨 cerrado — estos jugadores casi nunca farolean fuerte. Respeta esta apuesta: sin una mano fuerte, retirarse suele ser lo correcto.`,
+profManiac:` El apostador es del tipo 🔥 salvaje — farolea tanto que tus manos medias SUBEN de valor contra él. Puedes pagarle más ligero que a nadie.`,
+profStation:` El apostador es del tipo 📞 pasivo — lo paga todo pero casi nunca apuesta fuerte sin mano real. Su agresión repentina merece respeto.`,
+blockerAce:` Tienes un As — un "blocker": como uno de los cuatro ases está en TU mano, es menos probable que él tenga las grandes manos con as (pareja de ases, top pair con as). Eso mejora un poco la llamada.`,
+blockerFlush:` Tienes el as del palo del color — aunque tú no tengas color, esa carta significa que ÉL no puede tener el mejor color posible. Y un farol-subida tuyo resulta muy creíble.`,
+suitedConn:` Manos así (del mismo palo y conectadas) juegan mejor que su ranking bruto — hacen escaleras y colores escondidos que ganan botes grandes con stacks profundos. El coach se abre un poco con ellas.`,
 gtoSolving:'⚖️ Calculando GTO…',gtoUnavail:'Cálculo GTO no disponible para esta situación.',gtoFail:'Falló el cálculo GTO en esta situación.',
 gtoMulti:n=>'⚖️ El cálculo GTO solo aplica mano a mano (como los solvers comerciales). Con '+n+' rivales, el consejo usa equidad contra rangos.',
 gtoNote:'Equilibrio de tu rango contra el suyo en esta mesa exacta. Abstracciones: solo la calle actual, apuestas de 66% del bote + all-in, 8 niveles de fuerza, rollouts de check-down. Direccionalmente GTO — no exacto a nivel solver.',
@@ -1291,6 +1327,7 @@ function startHand(){
   for(const p of state.players){
     p.hole=[]; p.folded=p.out; p.allIn=false; p.bet=0; p.totalBet=0;
     p.acted=false; p.lastAct=''; p.revealed=false; p.rangeCap=1; p.rangeFloor=0; p.checkedStreet=false;
+    p.aggStreets=[]; p.lineRead='';
   }
   state.dealerIdx=nextSeat(state.dealerIdx,p=>!p.out);
   const n=alive().length;
@@ -1307,6 +1344,7 @@ function startHand(){
   state.handLog=[]; state.humanDecisions=[]; state.humanWonAmt=0; state.resultText='';
   state.humanHandStats={vpip:false,pfr:false,aBets:0,aCalls:0,sd:false,sdWon:false};
   state.noActionHand=false;
+  state.pfAggIdx=-1; state.lastAggIdx=-1;
   state.humanStart=state.players[0].chips+state.players[0].totalBet;
   state.humanPlayed=!state.players[0].out;
   prevBoardLen=0; coachRecNow=null;
@@ -1361,6 +1399,7 @@ function promptNext(){
 
 function applyAction(p,type,amt){
   const callAmt=state.currentBet-p.bet;
+  const cbBefore=state.currentBet;   // bet level BEFORE this action (for line reading)
   if(type==='fold'){
     p.folded=true; p.lastAct='Fold'; sfx('fold');
   }else if(type==='call'){
@@ -1390,16 +1429,36 @@ function applyAction(p,type,amt){
     state.currentBet=target;
     p.lastAct=(p.allIn?'All-in ':'Raise to ')+usd(target);
     sfx('chip');
+    /* read the LINE: what does this bet mean in the context of the whole hand? */
+    p.lineRead='';
+    let base=state.stage==='preflop'?0.15:0.25;
+    if(state.stage!=='preflop'){
+      const opened=cbBefore===0;                       // a fresh bet, not a raise of a bet
+      const pfAgg=state.pfAggIdx;
+      if(opened&&pfAgg===p.i&&state.stage==='flop'){
+        base=0.45; p.lineRead='cbet';                  // routine continuation bet: weak info
+      }else if(opened&&pfAgg>=0&&pfAgg!==p.i&&!state.players[pfAgg].folded){
+        base=0.16; p.lineRead='donk';                  // betting INTO the raiser: unusual, strong
+      }
+      if(p.aggStreets.includes('flop')&&p.aggStreets.includes('turn')&&state.stage==='river'){
+        base*=0.55; p.lineRead='barrel3';              // third barrel: very strong
+      }else if((state.stage==='turn'&&p.aggStreets.includes('flop'))||(state.stage==='river'&&p.aggStreets.includes('turn'))){
+        base*=0.7; p.lineRead='barrel2';               // second barrel: strong
+      }
+    }
     /* the bigger the raise relative to the pot, the narrower the credible range */
     const potNow=state.players.reduce((s,q)=>s+q.totalBet,0);
     const ratio=raiseSize/Math.max(potNow-raiseSize,state.bb);
-    let cap=state.stage==='preflop'?0.15:0.25;
+    let cap=base;
     if(ratio>=1.2) cap*=0.35;        // overbet / jam → very strong
     else if(ratio>=0.8) cap*=0.55;   // pot-sized
     else if(ratio>=0.5) cap*=0.8;    // 2/3-pot-ish
-    if(p.checkedStreet){ cap*=0.5; } // check-raise: the check was a trap — extra strong
+    if(p.checkedStreet){ cap*=0.5; p.lineRead='checkraise'; } // the check was a trap
     p.rangeFloor=0;                  // betting cancels any weakness read
     narrowRange(p, cap);
+    p.aggStreets.push(state.stage);
+    if(state.stage==='preflop') state.pfAggIdx=p.i;
+    state.lastAggIdx=p.i;
   }
   p.acted=true;
   log(`${p.name}: ${p.lastAct}`);
@@ -2035,6 +2094,48 @@ function classifyMade(hole,board,score){
   }
   return '';
 }
+/* ===== ICM: tournament prize-money math (Malmuth-Harville) ===== */
+const PAYOUTS=n=>n<=4?[1]:n<=6?[0.65,0.35]:[0.5,0.3,0.2];
+function icmEq(stacks,pay){
+  const n=stacks.length, T=stacks.reduce((a,b)=>a+(b>0?b:0),0)||1;
+  const eq=new Array(n).fill(0);
+  for(let i=0;i<n;i++){
+    if(stacks[i]<=0)continue;
+    eq[i]+=pay[0]*stacks[i]/T;
+    if(!pay[1])continue;
+    for(let j=0;j<n;j++){
+      if(j===i||stacks[j]<=0)continue;
+      const pj=stacks[j]/T;
+      eq[i]+=pay[1]*pj*stacks[i]/(T-stacks[j]);
+      if(!pay[2])continue;
+      for(let k=0;k<n;k++){
+        if(k===i||k===j||stacks[k]<=0)continue;
+        eq[i]+=pay[2]*pj*(stacks[k]/(T-stacks[j]))*(stacks[i]/(T-stacks[j]-stacks[k]));
+      }
+    }
+  }
+  return eq;
+}
+/* how much EXTRA win-chance a call needs once prize money is at stake (0 when chips ≈ $) */
+function icmPremium(p,callAmt,pot){
+  try{
+    if(callAmt<=0||!state)return 0;
+    const pay=PAYOUTS(state.cfg.numPlayers);
+    if(alive().length<=1)return 0;
+    const base=state.players.map(q=>q.out?0:Math.max(q.chips,0));
+    const i=p.i;
+    const W=base.slice(); W[i]+=pot;
+    const L=base.slice(); L[i]=Math.max(0,L[i]-callAmt);
+    const v=state.lastAggIdx>=0&&state.lastAggIdx!==i?state.lastAggIdx:-1;
+    if(v>=0) L[v]+=pot;
+    const eF=icmEq(base,pay)[i], eW=icmEq(W,pay)[i], eL=icmEq(L,pay)[i];
+    if(eW-eL<1e-9)return 0;
+    const need=(eF-eL)/(eW-eL);
+    const chipNeed=callAmt/(pot+callAmt);
+    return clamp(need-chipNeed,0,0.25);
+  }catch(e){return 0;}
+}
+
 /* postflop acting order (SB first): who talks before/after the hero */
 function postflopOrder(){
   const n=state.players.length, ord=[];
@@ -2127,6 +2228,10 @@ function updateCoach(p){
   const zoneOf=m=>m>20?'G':m>10?'Y':m>5?'O':'R';
   const mZone=zoneOf(M);
 
+  /* ICM prize pressure: extra win-chance this call needs because busting costs prize equity */
+  const icmPrem=callAmt>0?icmPremium(p,callAmt,pot):0;
+  if(icmPrem>=0.01) extra.push(C('icmNote',Math.round(icmPrem*100),aliveN,Math.min(PAYOUTS(state.cfg.numPlayers).length,aliveN)));
+
   let rec,why=[];
   if(state.stage==='preflop'){
     const bucket=posBucket(pos), prTxt='top ~'+Math.round(pr*100)+'%';
@@ -2134,7 +2239,12 @@ function updateCoach(p){
     /* pocket pairs gain implied-odds value when deep: sets are disguised and win stacks */
     const isPair=p.hole[0].r===p.hole[1].r;
     const pairAdj=isPair&&stackBB>=40;
-    const prEff=pairAdj?pr*0.8:pr;
+    /* suited connectors also play above their raw ranking when deep (hidden straights/flushes) */
+    const gapSC=Math.abs(p.hole[0].r-p.hole[1].r);
+    const scAdj=!isPair&&p.hole[0].s===p.hole[1].s&&gapSC>=1&&gapSC<=2
+      &&Math.max(p.hole[0].r,p.hole[1].r)<=12&&Math.min(p.hole[0].r,p.hole[1].r)>=5&&stackBB>=30;
+    const prEff=(pairAdj?pr*0.8:pr)*(scAdj?0.85:1);
+    if(scAdj&&state.currentBet<=state.bb) extra.push(C('suitedConn'));
     /* zone-drop warning: what does the NEXT blind level do to your M? */
     if(state.level<state.levels.length-1){
       const per=SPEED_HANDS[state.cfg.speed];
@@ -2155,7 +2265,7 @@ function updateCoach(p){
       }else if(callAmt===0){
         rec='CHECK';
         why.push(C('pfShortCheck',code,pos));
-      }else if(eq>=odds+0.07){
+      }else if(eq>=odds+0.07+icmPrem){
         rec='CALL';
         why.push(C('pfShortCall',code,pct(eq),pct(odds)));
       }else{
@@ -2198,7 +2308,7 @@ function updateCoach(p){
       if(pr<=0.05){
         rec='RAISE';
         why.push(C('pf3bet',code));
-      }else if(pr<=ct&&eq>=odds){
+      }else if(pr<=ct&&eq>=odds+icmPrem){
         rec='CALL';
         why.push(C('pfCallRange',pos,Math.round(ct*100),code,prTxt,pct(eq),pct(odds)));
       }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
@@ -2234,14 +2344,37 @@ function updateCoach(p){
     const d=state.stage!=='river'?detectDraws(p.hole,state.board):null;
     const myScore=evalBest(p.hole.concat(state.board));
     const drawOnly=d&&(d.gutshot||d.oesd||d.flush)&&myScore[0]<2;
+    /* WHO is betting, and WHAT LINE did they take? exploit the player, read the story */
+    const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+    let exploitAdj=0;
+    if(agg&&agg.style&&!agg.folded){
+      if(agg.style.id==='rock'){exploitAdj=-0.04;extra.push(C('profRock'));}
+      else if(agg.style.id==='maniac'){exploitAdj=+0.05;extra.push(C('profManiac'));}
+      else if(agg.style.id==='station'){exploitAdj=-0.03;extra.push(C('profStation'));}
+    }
+    if(agg&&agg.lineRead){
+      if(agg.lineRead==='cbet')extra.push(C('lineCbet'));
+      else if(agg.lineRead==='donk')extra.push(C('lineDonk'));
+      else if(agg.lineRead==='barrel2')extra.push(C('lineBarrel',2));
+      else if(agg.lineRead==='barrel3')extra.push(C('lineBarrel',3));
+      else if(agg.lineRead==='checkraise')extra.push(C('lineCR'));
+    }
+    /* blockers: cards in YOUR hand remove combos from HIS range */
+    let blockAdj=0;
+    if(betRatio>=0.6&&p.hole.some(c=>c.r===14)){blockAdj=0.02;extra.push(C('blockerAce'));}
+    {
+      const fsB=[0,0,0,0];for(const c of state.board)fsB[c.s]++;
+      const fSuit=fsB.findIndex(v=>v>=3);
+      if(fSuit>=0&&myScore[0]<5&&p.hole.some(c=>c.r===14&&c.s===fSuit))extra.push(C('blockerFlush'));
+    }
     /* "no hand, no draw" discipline: a pair that uses a hole card, or a real draw, is showdown value.
        High cards only (or just the board's pair) vs a bet = fold unless the price is absurdly good. */
     const usesHole=myScore[0]>=1&&myScore[0]<=2&&p.hole.some(c=>c.r===myScore[1]);
     const noMade=myScore[0]===0||(myScore[0]<=2&&!usesHole);
     const goodDraw=d&&(d.flush||d.oesd);
     const airPen=(noMade&&!goodDraw)?0.15:0;
-    const eqAdj=eq-bigBetPen-airPen;
-    const edge=eqAdj-odds-posAdj;
+    const eqAdj=eq-bigBetPen-airPen+exploitAdj+blockAdj;
+    const edge=eqAdj-odds-posAdj-icmPrem;
     if(bigBetPen>=0.05) extra.push(C('bigBet',Math.round(betRatio*100)));
     if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
     if(airPen) extra.push(C('airWarn'));
@@ -2284,6 +2417,7 @@ function updateCoach(p){
     (callAmt>0?`<div class="coach-row"><span>${T('potOdds')}</span><b>${T('need')}${pct(odds)} (${usd(callAmt)} &rarr; ${usd(pot)})</b></div>`:'')+
     `<div class="coach-row"><span>${T('yourStack')}</span><b>${bbs(p.chips+p.bet)}</b></div>`+
     `<div class="coach-row"><span>M-ratio</span><b>M = ${M>99?'99+':Math.round(M)} · ${T('zone'+mZone)}</b></div>`+
+    (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
     sizeRow+
     `<p class="why">${why.join(' ')}${extra.join('')}</p>`;
   /* rough chip-EV per available action (for blunder tracking) */

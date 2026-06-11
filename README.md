@@ -77,15 +77,27 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **Order of action**: every recommendation shows whether you're first or last to talk on the current street (or the upcoming flop when preflop).
 - **Checks as information**: a check trims the top of an opponent's assumed range (personality-scaled — a maniac's check says more than a shark's); check-raises read as traps; checked-to-you in position triggers stab recommendations at capped ranges.
 - **No-hand discipline**: with no made hand (high cards only, or just the board's pair) and no real draw, the coach heavily discounts equity when facing bets — bettors usually have at least a pair, and "pot-odds correct" high-card calls are a classic leak.
+- **ICM / prize pressure**: real payout structures with Malmuth-Harville prize-equity math; calls that risk tournament life require extra equity near the bubble, shown and explained in the panel.
+- **Line reading**: continuation bets, double/triple barrels, donk bets and check-raises each narrow opponent ranges differently — and the coach explains each in plain language.
+- **Blockers & playability**: ace blockers vs big bets, nut-flush blockers, suited-connector playability beyond raw rankings.
+- **Postflop exploitation**: bluff-catching decisions adjust to WHO is betting (rocks don't bluff; maniacs do; stations' raises are real).
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
 
+### 2026-06-10 — The road to "follow the coach, win the tournament"
+- **💰 ICM prize pressure**: the game now has a real payout structure (50/30/20 for 7–9 players, 65/35 for 5–6, winner-takes-all under 5) and the coach computes Malmuth-Harville ICM. When a call risks your tournament life near the bubble, the panel shows "Prize pressure: +6% extra needed" and explains in plain words why chips you might lose are worth more than chips you might win
+- **Reading the story of the hand**: the coach now understands betting lines — a routine continuation bet barely narrows a range, a second/third barrel narrows it hard, a donk bet into the raiser reads as strength, a check-raise reads as a trap — and explains each read in plain language
+- **Blockers**: holding an ace against a big bet (fewer monster aces in his range) or the ace of the flush suit (he can't have the nut flush) now adjusts and explains the decision
+- **Suited connectors**: recognized as playing above their raw ranking when deep — hidden straights and flushes win big pots
+- **Exploit the player postflop**: facing a bet, the coach uses WHO bet — a 🪨 rock's big bet almost never bluffs (fold more), a 🔥 maniac's bet is bluff-heavy (call lighter), a 📞 station's sudden raise is always real — and says so in plain words
+
+
 ### 2026-06-10 — Tournament pressure & live training
-- **M-ratio & Harrington zones in the coach**: every recommendation shows "M = 14 · yellow zone", with a plain-language explainer of what M means whenever it starts to matter, and a warning when the next blind level will drop you a zone ("look for spots now rather than being forced later")
+- **M-ratio & Harrington zones in the coach**: every recommendation shows "M = 14 · yellow zone", with a warning when the next blind level will drop you a zone ("look for spots now rather than being forced later")
 - **Stack-depth steal scaling**: late-position opening ranges widen progressively from 25 BB down to 10 BB (BTN ~42% → ~60%), early position stays disciplined — matching Harrington zone theory and solver stack-depth ranges
 - **Ante-aware opens**: dead money from antes widens recommended opening ranges proportionally
-- **Profile-aware stealing**: the coach reads the profiles still to act — steal wider when rocks/tights wait behind, tighter into stations and maniacs who defend or 3-bet — and explains the adjustment in its reasoning whenever profiles shift the math
+- **Profile-aware stealing**: the coach reads the profiles still to act — steal wider when rocks/tights wait behind, tighter into stations and maniacs who defend or 3-bet
 - **🧮 Live mental math teaching**: facing any bet, the coach shows how to compute the price (call ÷ (pot + call)), estimate win% with the ×4/×2 outs rule, and apply the same discounts it uses — so you can do it at a real table
 
 
