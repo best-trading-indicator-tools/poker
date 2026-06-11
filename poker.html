@@ -1487,7 +1487,7 @@ function newGame(cfg){
     gameOver:false, bb:levels[0], sb:levels[0]/2, ante:0, handOver:false
   };
   const stack=cfg.startBB*startBlind;
-  const mk=(i,name,avatar,isHuman)=>({i,name,avatar,isHuman,chips:stack,hole:[],folded:false,out:false,allIn:false,bet:0,totalBet:0,acted:false,lastAct:'',revealed:false,place:0});
+  const mk=(i,name,avatar,isHuman)=>({i,name,avatar,isHuman,chips:stack,hole:[],folded:false,out:false,allIn:false,bet:0,totalBet:0,acted:false,lastAct:'',revealed:false,place:0,bank:TT_BANK});
   state.players.push(mk(0, cfg.allAI?'Bot-You':'You', '😎', !cfg.allAI));
   const names=shuffle(AI_NAMES.map((n,k)=>[n,AI_AVATARS[k]]));
   const styles=shuffle(STYLES.concat(STYLES));
@@ -1666,6 +1666,7 @@ function promptNext(){
 }
 
 function applyAction(p,type,amt){
+  if(p.bankInUse){p.bank=Math.max(0,(p.bank||0)-(Date.now()-p.bankInUse));p.bankInUse=0;state.turnBank=false;}
   const callAmt=state.currentBet-p.bet;
   const cbBefore=state.currentBet;   // bet level BEFORE this action (for line reading)
   if(type==='fold'){
@@ -3449,7 +3450,7 @@ function mpBecomeHost(peer,newId){
            ante:ck.cfg.ante,speed:ck.cfg.speed,difficulty:ck.cfg.difficulty});
   ck.players.forEach((cp,i)=>{
     const q=state.players[i]; if(!q)return;
-    q.name=cp.name; q.avatar=cp.avatar||q.avatar; q.chips=cp.chips; q.out=cp.out; q.place=cp.place||0;
+    q.name=cp.name; q.avatar=cp.avatar||q.avatar; q.chips=cp.chips; q.out=cp.out; q.place=cp.place||0; q.bank=cp.bank!=null?cp.bank:TT_BANK;
     if(cp.ai){q.isHuman=false;q.remote=false;q.style=STYLES.find(s2=>s2.id===cp.style)||q.style;}
     else if(cp.name===myName){q.isHuman=true;q.remote=false;q.avatar='😎';}
     else{q.isHuman=false;q.remote=true;q.style=null;}
@@ -3527,23 +3528,40 @@ function mpStartGame(){
   renderStats(); updateOrient();
   setTimeout(startHand,600);
 }
-/* multiplayer turn timer: 25s to act, then auto check/fold so the table never stalls */
+/* multiplayer turn timer: 25s to act, then your personal TIME BANK (60s per tournament)
+   kicks in automatically for the big decisions; only then auto check/fold */
+let TT_BASE=25000,TT_BANK=60000;
 function armTurnTimer(p){
   if(!state||!state.cfg||!state.cfg.mpRemotes)return;   // human-vs-human games only
-  state.turnDeadline=Date.now()+25000;
+  state.turnDeadline=Date.now()+TT_BASE;
+  state.turnBank=false;
   const tok=state.handNum+'-'+state.stage+'-'+state.turnIdx+'-'+state.currentBet;
   state._tt=tok;
-  setTimeout(()=>{
-    if(!state||state.gameOver||state.handOver||state._tt!==tok)return;
-    const q=state.players[state.turnIdx];
-    if(!q||(!q.isHuman&&!q.remote))return;
+  const expire=q=>{
     const ca=Math.min(state.currentBet-q.bet,q.chips);
     log(`${q.name}: ⏱`);
     if(q.isHuman&&HAS_DOM)hideActions();
     applyAction(q,ca>0?'fold':'call');
     state.turnIdx=(q.i+1)%state.players.length;
     promptNext();
-  },25600);
+  };
+  setTimeout(()=>{
+    if(!state||state.gameOver||state.handOver||state._tt!==tok)return;
+    const q=state.players[state.turnIdx];
+    if(!q||(!q.isHuman&&!q.remote))return;
+    if((q.bank||0)>1000){
+      /* big decision: burn the time bank */
+      state.turnBank=true;
+      state.turnDeadline=Date.now()+q.bank;
+      q.bankInUse=Date.now();
+      render();
+      setTimeout(()=>{
+        if(!state||state.gameOver||state.handOver||state._tt!==tok)return;
+        q.bank=0;q.bankInUse=0;
+        expire(q);
+      },q.bank+600);
+    }else expire(q);
+  },TT_BASE+600);
 }
 
 /* checkpoint: PUBLIC tournament state at each hand boundary — chips, seats, level.
@@ -3555,7 +3573,7 @@ function mpBroadcastCK(){
     cfg:{numPlayers:state.players.length,startBB:state.cfg.startBB,startBlind:state.cfg.startBlind,
          ante:state.cfg.ante,speed:state.cfg.speed,difficulty:state.cfg.difficulty},
     players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,
-      ai:!q.isHuman&&!q.remote,style:q.style?q.style.id:null}))};
+      ai:!q.isHuman&&!q.remote,style:q.style?q.style.id:null,bank:q.bank||0}))};
   MP.lastCK=d;
   for(const c of MP.conns){try{c.conn.send({t:'ck',d});}catch(e){}}
 }
@@ -3579,13 +3597,13 @@ function mpSeatPending(){
       mpChatAll('🛜',C2('mpReplaced',q.name,ai.name));
       ai.name=q.name; ai.avatar='🙂'; ai.remote=true; ai.isHuman=false; ai.style=null;
       ai.chips=state.cfg.startBB*(state.cfg.startBlind||100);
-      ai.rangeCap=1; ai.rangeFloor=0; ai.aggStreets=[]; ai.lineRead='';
+      ai.rangeCap=1; ai.rangeFloor=0; ai.aggStreets=[]; ai.lineRead=''; ai.bank=TT_BANK;
     }else if(state.players.length<9){
       i=state.players.length;
       state.players.push({i,name:q.name,avatar:'🙂',isHuman:false,remote:true,
         chips:state.cfg.startBB*(state.cfg.startBlind||100),hole:[],folded:false,out:false,allIn:false,
         bet:0,totalBet:0,acted:false,lastAct:'',revealed:false,place:0,style:null,
-        rangeCap:1,rangeFloor:0,checkedStreet:false,aggStreets:[],lineRead:''});
+        rangeCap:1,rangeFloor:0,checkedStreet:false,aggStreets:[],lineRead:'',bank:TT_BANK});
       mpChatAll('🛜',C2('mpJoined',q.name));
     }else{
       try{q.conn.send({t:'full'});}catch(e){}
@@ -3612,7 +3630,7 @@ function mpSnapshotFor(seat){
     players[rot(q.i)]={i:rot(q.i),name:q.name,avatar:q.avatar,
       isHuman:seat>=0&&q.i===seat,remote:false,chips:q.chips,bet:q.bet,totalBet:q.totalBet,
       folded:q.folded,out:q.out,allIn:q.allIn,acted:q.acted,lastAct:q.lastAct,
-      revealed:q.revealed,place:q.place||0,pos:q.pos,style:q.style||null,
+      revealed:q.revealed,place:q.place||0,pos:q.pos,style:q.style||null,bank:q.bank||0,
       rangeCap:q.rangeCap,rangeFloor:q.rangeFloor,checkedStreet:q.checkedStreet,
       aggStreets:q.aggStreets||[],lineRead:q.lineRead||'',
       hole:((seat>=0&&q.i===seat)||q.revealed)?q.hole:(q.hole||[]).map(()=>({r:2,s:0,hid:1}))};
@@ -3624,6 +3642,7 @@ function mpSnapshotFor(seat){
     lastAggIdx:state.lastAggIdx>=0?rot(state.lastAggIdx):-1,
     handNum:state.handNum,level:state.level,levels:state.levels,bb:state.bb,sb:state.sb,ante:state.ante,
     turnLeft:state.turnDeadline?Math.max(0,state.turnDeadline-Date.now()):0,
+    turnBank:!!state.turnBank,
     handOver:state.handOver,gameOver:state.gameOver,resultText:state.resultText||'',
     cfg:{numPlayers:state.cfg.numPlayers,speed:state.cfg.speed,ante:state.cfg.ante,
          startBlind:state.cfg.startBlind,startBB:state.cfg.startBB,difficulty:state.cfg.difficulty,mpClient:true},
@@ -3649,6 +3668,7 @@ function mpBroadcast(){
 function mpApplySnapshot(s){
   state=s;
   state.turnDeadline=s.turnLeft?Date.now()+s.turnLeft:0;
+  state.turnBank=!!s.turnBank;
   if(MP&&typeof MP.lastHand==='number'&&s.handNum!==MP.lastHand){gameSeries.push({h:s.handNum,c:s.players[0].chips});}
   if(MP)MP.lastHand=s.handNum;
   logLines=s.log||logLines;
@@ -3759,7 +3779,7 @@ if(HAS_DOM)setInterval(()=>{
   const left=Math.ceil((state.turnDeadline-Date.now())/1000);
   if(left<=0||left>30)return;
   const el=$('tmr'+state.turnIdx);
-  if(el){el.textContent='⏱ '+left;el.classList.toggle('low',left<=5);}
+  if(el){el.textContent=(state.turnBank?'🏦 ':'⏱ ')+left;el.classList.toggle('low',!state.turnBank&&left<=5);}
 },400);
 
 /* ================= INIT / WIRING ================= */

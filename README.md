@@ -87,7 +87,7 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 ## Changelog
 
 ### 2026-06-11 — Timer, emotes & game history
-- **⏱ Turn timer (multiplayer)**: 25 seconds to act with a live countdown on the acting seat (red under 5s) — time out and you're auto check/folded, so an AFK friend can never stall the table
+- **⏱ Turn timer + 🏦 time bank (multiplayer)**: 25 seconds for routine decisions; when the clock runs out on a big spot, your personal 60-second time bank kicks in automatically (the seat shows 🏦 instead of ⏱), draining only as used — once per tournament, preserved across host migration. Only when both are gone are you auto check/folded
 - **😂 Emotes**: tap 😊 in the action bar for quick reactions (👍 😂 😱 🔥 🐔 🤝) that pop over your seat for everyone, rate-limited
 - **📈 Game history**: every finished game is logged (placement, hands, net, EV leaked, full stack-per-hand series, up to 200 games) and the game-over screen now shows your stack graph for the tournament — groundwork for the full session-review dashboard
 
