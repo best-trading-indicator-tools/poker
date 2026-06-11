@@ -79,6 +79,10 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 
 #tableWrap{flex:1;position:relative;padding:14px;display:flex;gap:14px;min-height:0;}
 #coach{width:268px;flex-shrink:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;overflow-y:auto;}
+/* desktop: drag the coach panel's right edge to resize it */
+#coachResize{flex-shrink:0;width:7px;margin:0 -11px 0 -10px;cursor:col-resize;border-radius:4px;background:transparent;transition:background .15s;touch-action:none;}
+#coachResize:hover,#coachResize.dragging{background:rgba(230,180,60,.35);}
+#coachResize.hidden{display:none;}
 #coach h3{font-size:14px;margin-bottom:12px;color:var(--gold);letter-spacing:.4px;}
 #coach .rec{display:inline-block;font-weight:800;font-size:17px;letter-spacing:.6px;padding:7px 16px;border-radius:9px;margin-bottom:14px;color:#fff;}
 #coach .rec.FOLD{background:var(--red);}
@@ -280,6 +284,7 @@ body.fl #centerArea{top:46%;}
   #coach{position:fixed!important;left:6px;right:6px;top:0;bottom:auto!important;width:auto!important;max-height:66vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-radius:0 0 16px 16px;transform:translateY(-112%);transition:transform .28s ease;display:block!important;z-index:90;box-shadow:0 18px 50px rgba(0,0,0,.7);padding-top:max(16px,env(safe-area-inset-top));}
   #coach.open{transform:translateY(0);}
   #coachClose{display:block;}
+  #coachResize{display:none;}
 
   /* smaller seats so 9 fit on a phone — but keep the text legible */
   .seat{width:102px;margin-left:-51px;margin-top:-32px;}
@@ -458,6 +463,7 @@ body.fl #centerArea{top:46%;}
       <div id="coachFeed" class="hidden"></div>
       <div id="coachStats"></div>
     </aside>
+    <div id="coachResize" title="Drag to resize the coach panel"></div>
     <div id="tableArea">
     <div id="felt">
       <div id="centerArea">
@@ -2115,6 +2121,7 @@ function setCoach(on){
   }else{
     c.classList.toggle('hidden',!on);
     c.classList.toggle('open',on);
+    const cr=$('coachResize'); if(cr)cr.classList.toggle('hidden',!on);
   }
   layoutSeats();
 }
@@ -3030,6 +3037,32 @@ function initUI(){
   $('rpNextS').onclick=()=>{rpStreet++;rpRender();};
   $('coachChk').onchange=e=>setCoach(e.target.checked);
   $('coachClose').onclick=()=>setCoach(false);
+  /* --- desktop: drag-resize the coach panel --- */
+  {
+    const cr=$('coachResize'), panel=$('coach');
+    let drag=null;
+    try{const w=+localStorage.getItem('sg_poker_coachw'); if(w)panel.style.width=clamp(w,240,620)+'px';}catch(e){}
+    cr.addEventListener('pointerdown',e=>{
+      drag={x:e.clientX,w:panel.offsetWidth};
+      cr.classList.add('dragging');
+      cr.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    cr.addEventListener('pointermove',e=>{
+      if(!drag)return;
+      const w=clamp(drag.w+(e.clientX-drag.x),240,Math.min(620,window.innerWidth*0.45));
+      panel.style.width=w+'px';
+      layoutSeats();
+    });
+    const end=e=>{
+      if(!drag)return;
+      drag=null; cr.classList.remove('dragging');
+      try{localStorage.setItem('sg_poker_coachw',panel.offsetWidth);}catch(e2){}
+      layoutSeats();
+    };
+    cr.addEventListener('pointerup',end);
+    cr.addEventListener('pointercancel',end);
+  }
   setCoach(!isMobile());   // default: docked on desktop, hidden sheet on mobile
   $('autoNext').onchange=e=>{
     if(!e.target.checked){
