@@ -84,8 +84,11 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 @keyframes emoPulse{0%,100%{box-shadow:none;}50%{box-shadow:0 0 0 4px rgba(230,180,60,.45);}}
 .emoPop{position:absolute;font-size:32px;z-index:46;pointer-events:none;transform:translate(-50%,-100%);animation:emoUp 1.5s ease-out forwards;}
 @keyframes emoUp{0%{opacity:0;transform:translate(-50%,-60%) scale(.5);}15%{opacity:1;}100%{opacity:0;transform:translate(-50%,-190%) scale(1.2);}}
-.tmr{font-size:11.5px;color:var(--gold);min-height:14px;font-weight:700;text-align:center;}
-.tmr.low{color:#e2574c;}
+.tmr{min-height:20px;font-size:14px;font-weight:800;color:var(--gold);text-align:center;}
+.tmr:not(:empty){background:rgba(10,12,16,.88);border:1.5px solid var(--gold);border-radius:13px;padding:2px 11px;width:max-content;margin:3px auto 0;}
+.tmr.low{color:#fff;}
+.tmr.low:not(:empty){border-color:#e2574c;background:#6a201a;animation:tmrPulse .5s infinite;}
+@keyframes tmrPulse{50%{transform:scale(1.14);}}
 #chat{position:fixed;right:12px;bottom:96px;width:270px;height:330px;background:var(--panel);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;z-index:60;box-shadow:0 18px 50px rgba(0,0,0,.6);}
 #chat.hidden{display:none;}
 #chatMsgs{flex:1;overflow-y:auto;padding:10px;font-size:12.5px;line-height:1.5;overscroll-behavior:contain;}
@@ -690,7 +693,7 @@ mpMigrated:n=>`${n} is the new host — the tournament continues!`,
 mpRejoined:n=>`${n} is back at the table`,
 mpReplaced:(n,b2)=>`${n} takes over from 🤖 ${b2} — humans beat robots`,
 mpWaitingPlayers:"Table open — waiting for players to join. Share the invite link!",
-react:"React",reactHint:"Tap to react — appears over your seat for everyone",timerOpt:"⏱ Turn timer (25s + bank)",timerInfo:"Like a real casino clock: you get 25 seconds for each decision — a countdown appears under your seat. If it runs out on a tough spot, your personal TIME BANK takes over automatically (60 extra seconds for the whole tournament, it only burns what you actually use — shown as 🏦). When both are empty, the game checks or folds for you. Great training for live games. Always on when playing with friends.",
+react:"React",reactHint:"Tap to react — appears over your seat for everyone",timerOpt:"⏱ Turn timer (25s + bank)",timerBank:"🏦 Time bank engaged — extra seconds burning!",timerInfo:"Like a real casino clock: you get 25 seconds for each decision — a countdown appears under your seat. If it runs out on a tough spot, your personal TIME BANK takes over automatically (60 extra seconds for the whole tournament, it only burns what you actually use — shown as 🏦). When both are empty, the game checks or folds for you. Great training for live games. Always on when playing with friends.",
 mpKnock:n=>`${n} joins at the next hand`,
 mpVerMismatch:"The host is running a different version of the game. BOTH of you: refresh the page (hold Shift while reloading), then create the room again.",
 mpNeed2:"You need at least one friend in the room to start — or tick \"Fill empty seats with AI bots\".",
@@ -741,7 +744,7 @@ mpMigrated:n=>`${n} est le nouvel hôte — le tournoi continue !`,
 mpRejoined:n=>`${n} est de retour à la table`,
 mpReplaced:(n,b2)=>`${n} remplace 🤖 ${b2} — les humains avant les robots`,
 mpWaitingPlayers:"Table ouverte — en attente de joueurs. Partagez le lien d'invitation !",
-react:"Réagir",reactHint:"Touchez pour réagir — visible au-dessus de votre siège par tous",timerOpt:"⏱ Minuteur de tour (25s + réserve)",timerInfo:"Comme au casino : 25 secondes par décision — un compte à rebours s'affiche sous votre siège. S'il expire sur un choix difficile, votre RÉSERVE DE TEMPS prend le relais automatiquement (60 secondes pour tout le tournoi, elle ne consomme que ce que vous utilisez — affichée 🏦). Quand tout est épuisé, le jeu checke ou se couche pour vous. Excellent entraînement pour le live. Toujours actif entre amis.",
+react:"Réagir",reactHint:"Touchez pour réagir — visible au-dessus de votre siège par tous",timerOpt:"⏱ Minuteur de tour (25s + réserve)",timerBank:"🏦 Réserve de temps enclenchée — les secondes filent !",timerInfo:"Comme au casino : 25 secondes par décision — un compte à rebours s'affiche sous votre siège. S'il expire sur un choix difficile, votre RÉSERVE DE TEMPS prend le relais automatiquement (60 secondes pour tout le tournoi, elle ne consomme que ce que vous utilisez — affichée 🏦). Quand tout est épuisé, le jeu checke ou se couche pour vous. Excellent entraînement pour le live. Toujours actif entre amis.",
 mpKnock:n=>`${n} rejoint à la prochaine main`,
 mpVerMismatch:"L'hôte utilise une autre version du jeu. TOUS LES DEUX : rechargez la page (Maj + rechargement), puis recréez le salon.",
 mpNeed2:"Il faut au moins un ami dans le salon pour lancer — ou cochez « Compléter avec des bots IA ».",
@@ -792,7 +795,7 @@ mpMigrated:n=>`${n} es el nuevo anfitrión — ¡el torneo continúa!`,
 mpRejoined:n=>`${n} ha vuelto a la mesa`,
 mpReplaced:(n,b2)=>`${n} sustituye a 🤖 ${b2} — los humanos antes que los robots`,
 mpWaitingPlayers:"Mesa abierta — esperando jugadores. ¡Comparte el enlace!",
-react:"Reaccionar",reactHint:"Toca para reaccionar — aparece sobre tu asiento para todos",timerOpt:"⏱ Temporizador (25s + banco)",timerInfo:"Como en un casino real: 25 segundos por decisión — aparece una cuenta atrás bajo tu asiento. Si se agota en una decisión difícil, tu BANCO DE TIEMPO entra automáticamente (60 segundos extra para todo el torneo, solo gasta lo que uses — se muestra 🏦). Cuando ambos se acaban, el juego pasa o se retira por ti. Gran entrenamiento para el directo. Siempre activo con amigos.",
+react:"Reaccionar",reactHint:"Toca para reaccionar — aparece sobre tu asiento para todos",timerOpt:"⏱ Temporizador (25s + banco)",timerBank:"🏦 ¡Banco de tiempo activado — segundos extra en marcha!",timerInfo:"Como en un casino real: 25 segundos por decisión — aparece una cuenta atrás bajo tu asiento. Si se agota en una decisión difícil, tu BANCO DE TIEMPO entra automáticamente (60 segundos extra para todo el torneo, solo gasta lo que uses — se muestra 🏦). Cuando ambos se acaban, el juego pasa o se retira por ti. Gran entrenamiento para el directo. Siempre activo con amigos.",
 mpKnock:n=>`${n} entra en la próxima mano`,
 mpVerMismatch:"El anfitrión usa otra versión del juego. AMBOS: recargad la página (Shift + recargar) y cread la sala de nuevo.",
 mpNeed2:"Necesitas al menos un amigo en la sala para empezar — o marca \"Rellenar asientos vacíos con bots\".",
@@ -1994,6 +1997,7 @@ function sfx(kind){
     else if(kind==='chip'){tone(1500,0,0.04,0.05,'square');tone(1900,0.05,0.04,0.04,'square');}
     else if(kind==='fold'){tone(220,0,0.08,0.045);}
     else if(kind==='check'){tone(480,0,0.045,0.04);}
+    else if(kind==='tick'){tone(1150,0,0.03,0.09,'square');tone(750,0.05,0.025,0.05,'square');}
     else if(kind==='alert'){tone(660,0,0.11,0.06);tone(880,0.12,0.11,0.05);}
     else if(kind==='win'){tone(523,0,0.12,0.07);tone(659,0.12,0.12,0.07);tone(784,0.24,0.22,0.07);}
   }catch(e){}
@@ -3808,15 +3812,22 @@ function mpEmote(i){
     try{MP.conn.send({t:'emo',e:i});}catch(e){}
   }
 }
-/* visible countdown on the acting seat (multiplayer) */
+/* visible countdown on the acting seat — audible tic-tac for the last 5 seconds */
+let tmrLastTick=0,tmrPrevBank=false;
 if(HAS_DOM)setInterval(()=>{
-  document.querySelectorAll('.tmr').forEach(el=>{if(el.textContent)el.textContent='';});
-  if(!state||!state.turnDeadline||state.handOver||state.gameOver)return;
+  document.querySelectorAll('.tmr').forEach(el=>{if(el.textContent){el.textContent='';el.classList.remove('low');}});
+  if(!state||!state.turnDeadline||state.handOver||state.gameOver){tmrPrevBank=false;return;}
   const left=Math.ceil((state.turnDeadline-Date.now())/1000);
-  if(left<=0||left>30)return;
+  if(left<=0||left>65){tmrPrevBank=!!state.turnBank;return;}
   const el=$('tmr'+state.turnIdx);
-  if(el){el.textContent=(state.turnBank?'🏦 ':'⏱ ')+left;el.classList.toggle('low',!state.turnBank&&left<=5);}
-},400);
+  if(el){el.textContent=(state.turnBank?'🏦 ':'⏱ ')+left;el.classList.toggle('low',left<=5);}
+  const myTurn=state.turnIdx===0&&state.players[0]&&state.players[0].isHuman;
+  if(myTurn){
+    if(left<=5&&left>=1&&left!==tmrLastTick){tmrLastTick=left;sfx('tick');haptic(20);}
+    if(state.turnBank&&!tmrPrevBank){showBanner(T('timerBank'));sfx('alert');}
+  }
+  tmrPrevBank=!!state.turnBank;
+},350);
 
 /* ================= INIT / WIRING ================= */
 function initUI(){
