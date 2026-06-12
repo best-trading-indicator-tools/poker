@@ -284,7 +284,8 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 /* forced landscape on phones: the game is rotated 90° when the device is held portrait.
    The rotated frame is short and wide — the action bar must be ONE slim row, not stacked. */
 body.fl{overflow:hidden;}
-body.fl #game{position:fixed;top:0;left:0;transform-origin:left top;z-index:10;}
+body.fl #game{position:fixed;top:0;left:0;transform-origin:left top;z-index:10;box-sizing:border-box;
+  padding-left:max(8px,env(safe-area-inset-top));padding-right:max(14px,env(safe-area-inset-bottom));}
 /* in rotated mode the coach sheet must size against the ROTATED frame, not physical vh */
 body.fl #coach{max-height:calc(100% - 14px);}
 body.fl #chartOv .rp-card{max-height:92%;overflow-y:auto;}
@@ -4063,6 +4064,7 @@ function initUI(){
   ['chartOv','overlay','chat','emoBar'].forEach(id=>{const el=$(id);if(el)$('game').appendChild(el);});
   window.addEventListener('resize',updateOrient);
   window.addEventListener('orientationchange',()=>setTimeout(updateOrient,250));
+  if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>setTimeout(updateOrient,80));
 }
 
 if(HAS_DOM) initUI();
