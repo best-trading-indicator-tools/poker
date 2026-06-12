@@ -73,7 +73,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #mpList .mpdot{color:#62d68a;margin-right:7px;}
 #mpLobby button{margin:4px 4px 0;}
 #mpLobby #mpLeave{background:none;border:1px solid var(--line);color:var(--dim);}
-#chatBtn,#emoBtn{background:none;border:1px solid var(--line);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:14px;color:var(--dim);}
+#chatBtn,#emoBtn{background:none;border:1px solid var(--line);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:14px;color:var(--text);font-weight:600;}
 #emoBar{position:fixed;bottom:96px;left:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;z-index:60;box-shadow:0 12px 36px rgba(0,0,0,.5);}
 #emoBar.hidden{display:none;}
 #emoHint{font-size:10.5px;color:var(--dim);margin:0 2px 6px;}
@@ -118,6 +118,7 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 .rp-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
 .rp-nav button{background:none;border:1px solid var(--line);border-radius:7px;color:var(--text);padding:4px 10px;cursor:pointer;font-size:12px;}
 .rp-nav button:disabled{opacity:.35;cursor:default;}
+.mixtip{margin-top:8px;padding:8px 10px;border:1px dashed var(--gold);border-radius:9px;font-size:12.5px;line-height:1.45;color:var(--text);background:rgba(232,182,76,.07);}
 .rp-nav span{font-size:12px;color:var(--gold);font-weight:600;}
 
 /* ---------- GAME ---------- */
@@ -898,6 +899,10 @@ suitedConn:` Hands like this (suited and connected) play better than their raw r
 gtoSolving:'⚖️ Running GTO solve…',gtoUnavail:'GTO solve unavailable for this spot.',gtoFail:'GTO solve failed for this spot.',
 gtoMulti:n=>'⚖️ GTO solving applies heads-up only (like commercial solvers). With '+n+' opponents, advice uses range-equity math.',
 gtoNote:'Equilibrium of your range vs theirs on this exact board. Abstractions: current street only, 66%-pot + all-in sizings, 8 strength buckets, check-down rollouts. Directionally GTO — not solver-exact.',
+mixTitle:'🎭 Mix it up (optional)',
+mixCall:'The math says call — but once in a while, raising here instead keeps sharp opponents guessing. If you always play the same hand the same way, they will read you like a book. Slightly worse for this exact hand, but it pays off across the session.',
+mixCheck:'Checking is the solid play — but every now and then, throw in a small bet here. Opponents who learn that your check always means weakness will run you over. A rare surprise bet keeps them honest.',
+mixTrap:'Raising is the money play — but with a hand this strong you can occasionally just call and trap. If you always raise your monsters, observant players fold and you win less. Mixing in a slow-play hides your strength.',
 coachErr:'Coach unavailable this turn.'},
 fr:{
 rangesNote:(n,c)=>` L'équité est simulée contre des ranges réalistes : ${n} adversaire${n>1?'s ont':' a'} montré de la force et ${n>1?'sont modélisés':'est modélisé'} sur environ le top ${c}% des mains, pas des cartes aléatoires.`,
@@ -970,6 +975,10 @@ suitedConn:` Ce genre de main (assortie et connectée) joue mieux que son classe
 gtoSolving:'⚖️ Calcul GTO en cours…',gtoUnavail:'Calcul GTO indisponible pour ce spot.',gtoFail:'Échec du calcul GTO pour ce spot.',
 gtoMulti:n=>'⚖️ Le calcul GTO ne s’applique qu’en tête-à-tête (comme les solveurs commerciaux). Avec '+n+' adversaires, le conseil repose sur l’équité contre les ranges.',
 gtoNote:'Équilibre de votre range contre la sienne sur ce board exact. Abstractions : rue courante seulement, mises 66% pot + tapis, 8 niveaux de force, rollouts en check-down. Directionnellement GTO — pas exact au solveur près.',
+mixTitle:'🎭 Variez votre jeu (optionnel)',
+mixCall:'Les maths disent de payer — mais de temps en temps, relancer ici garde vos adversaires dans le flou. Si vous jouez toujours la même main de la même façon, ils vous liront comme un livre ouvert. Un peu moins bon pour cette main précise, mais rentable sur la durée.',
+mixCheck:'Checker est le jeu solide — mais de temps en temps, glissez une petite mise ici. Les adversaires qui apprennent que votre check signifie toujours faiblesse vous marcheront dessus. Une mise surprise rare les garde honnêtes.',
+mixTrap:'Relancer est le jeu rentable — mais avec une main aussi forte, vous pouvez parfois juste payer et tendre un piège. Si vous relancez toujours vos monstres, les joueurs attentifs se couchent et vous gagnez moins. Un slow-play occasionnel cache votre force.',
 coachErr:'Coach indisponible pour ce tour.'},
 es:{
 rangesNote:(n,c)=>` La equidad se simula contra rangos realistas: ${n} rival${n>1?'es han':' ha'} mostrado fuerza y se ${n>1?'modelan':'modela'} sobre aproximadamente el top ${c}% de manos, no cartas aleatorias.`,
@@ -1042,6 +1051,10 @@ suitedConn:` Manos así (del mismo palo y conectadas) juegan mejor que su rankin
 gtoSolving:'⚖️ Calculando GTO…',gtoUnavail:'Cálculo GTO no disponible para esta situación.',gtoFail:'Falló el cálculo GTO en esta situación.',
 gtoMulti:n=>'⚖️ El cálculo GTO solo aplica mano a mano (como los solvers comerciales). Con '+n+' rivales, el consejo usa equidad contra rangos.',
 gtoNote:'Equilibrio de tu rango contra el suyo en esta mesa exacta. Abstracciones: solo la calle actual, apuestas de 66% del bote + all-in, 8 niveles de fuerza, rollouts de check-down. Direccionalmente GTO — no exacto a nivel solver.',
+mixTitle:'🎭 Varía tu juego (opcional)',
+mixCall:'Las matemáticas dicen pagar — pero de vez en cuando, subir aquí mantiene a los rivales atentos adivinando. Si siempre juegas la misma mano igual, te leerán como un libro. Algo peor para esta mano exacta, pero rentable a lo largo de la sesión.',
+mixCheck:'Pasar es la jugada sólida — pero de vez en cuando, mete una apuesta pequeña aquí. Los rivales que aprenden que tu check siempre es debilidad te pasarán por encima. Una apuesta sorpresa ocasional los mantiene honestos.',
+mixTrap:'Subir es la jugada rentable — pero con una mano tan fuerte puedes a veces solo pagar y tender una trampa. Si siempre subes tus monstruos, los jugadores observadores se retiran y ganas menos. Un slow-play ocasional esconde tu fuerza.',
 coachErr:'Coach no disponible este turno.'}};
 function C(k,...a){
   const d=CPROSE[lang]||CPROSE.en;
@@ -2849,6 +2862,25 @@ function coachBotDecide(p){
 }
 
 /* the coach DISPLAY: renders what the brain decided */
+/* Anti-predictability: rarely (~1 in 8 eligible spots, deterministic per decision so it
+   doesn't flicker), suggest taking a different line than the EV-best one. Skipped on clear
+   folds, all-ins, prize-pressure (ICM) spots and short stacks, where deviating is just lighting
+   money on fire. The main recommendation stays EV-best; this is an optional deception layer. */
+function mixTip(rec,R){
+  if(rec==='FOLD'||rec==='ALLIN')return'';
+  if(R.icmPrem>=0.01||R.M<8)return'';                       // never mix under tournament pressure
+  let key=null;
+  if(rec==='CALL'&&R.eq>=0.30)key='mixCall';                 // call -> occasional raise
+  else if(rec==='CHECK'&&R.eq>=0.30&&R.eq<=0.65)key='mixCheck'; // check -> occasional small bet
+  else if(rec==='RAISE'&&state.stage!=='preflop'&&R.eq>=0.78)key='mixTrap'; // monster -> occasional trap
+  if(!key)return'';
+  /* deterministic 1-in-8 per decision point */
+  const seed=(state.gameId||0)+'-'+state.handNum+'-'+state.stage+'-'+state.turnIdx+'-'+state.currentBet;
+  let h=0; for(let i=0;i<seed.length;i++)h=(h*31+seed.charCodeAt(i))>>>0;
+  if(h%8!==0)return'';
+  return `<div class="mixtip"><b>${C('mixTitle')}</b><br>${C(key)}</div>`;
+}
+
 function updateCoach(p){
   if(!HAS_DOM)return;
   const R=coachDecide(p);
@@ -2879,7 +2911,8 @@ function updateCoach(p){
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
     sizeRow+
     (R.chartInfo?`<button class="chart-link" id="chartViewBtn">${T(R.chartInfo.kind==='range'?'viewRange':'viewChart')}</button>`:'')+
-    `<p class="why">${why.join(' ')}${extra.join('')}</p>`;
+    `<p class="why">${why.join(' ')}${extra.join('')}</p>`+
+    mixTip(rec,R);
   if(R.chartInfo){
     const cb=$('chartViewBtn');
     if(cb) cb.onclick=()=>showChartMatrix(R.chartInfo,R.code);
@@ -3562,37 +3595,39 @@ function mpStartGame(){
 /* multiplayer turn timer: 25s to act, then your personal TIME BANK (60s per tournament)
    kicks in automatically for the big decisions; only then auto check/fold */
 let TT_BASE=25000,TT_BANK=60000;
+/* Deadline-driven expiry. ttCheck() is called BOTH from setTimeout backups and from the
+   350ms UI interval, so auto check/fold fires even when the browser throttles or drops
+   timers (phone screen dim, tab switch, suspended PWA, game resumed from a snapshot). */
+function ttCheck(){
+  if(!state||!state._tt||!state.turnDeadline||state.gameOver||state.handOver)return;
+  if(typeof MP!=='undefined'&&MP&&MP.role==='guest')return;   // host enforces; guests just display
+  if(Date.now()<state.turnDeadline+600)return;
+  const q=state.players[state.turnIdx];
+  if(!q||(!q.isHuman&&!q.remote)){state._tt=null;return;}
+  if(!state.turnBank&&(q.bank||0)>1000){
+    /* big decision: burn the time bank */
+    state.turnBank=true;
+    state.turnDeadline=Date.now()+q.bank;
+    q.bankInUse=Date.now();
+    setTimeout(ttCheck,q.bank+700);   // backup for the bank leg (headless / belt & suspenders)
+    if(HAS_DOM)render();
+    return;
+  }
+  if(state.turnBank){q.bank=0;q.bankInUse=0;state.turnBank=false;}
+  state._tt=null;state.turnDeadline=0;
+  const ca=Math.min(state.currentBet-q.bet,q.chips);
+  log(`${q.name}: ⏱`);
+  if(q.isHuman&&HAS_DOM)hideActions();
+  applyAction(q,ca>0?'fold':'call');
+  state.turnIdx=(q.i+1)%state.players.length;
+  promptNext();
+}
 function armTurnTimer(p){
   if(!state||!state.cfg||(!state.cfg.mpRemotes&&!state.cfg.timer))return;   // multiplayer, or solo opt-in
   state.turnDeadline=Date.now()+TT_BASE;
   state.turnBank=false;
-  const tok=state.handNum+'-'+state.stage+'-'+state.turnIdx+'-'+state.currentBet;
-  state._tt=tok;
-  const expire=q=>{
-    const ca=Math.min(state.currentBet-q.bet,q.chips);
-    log(`${q.name}: ⏱`);
-    if(q.isHuman&&HAS_DOM)hideActions();
-    applyAction(q,ca>0?'fold':'call');
-    state.turnIdx=(q.i+1)%state.players.length;
-    promptNext();
-  };
-  setTimeout(()=>{
-    if(!state||state.gameOver||state.handOver||state._tt!==tok)return;
-    const q=state.players[state.turnIdx];
-    if(!q||(!q.isHuman&&!q.remote))return;
-    if((q.bank||0)>1000){
-      /* big decision: burn the time bank */
-      state.turnBank=true;
-      state.turnDeadline=Date.now()+q.bank;
-      q.bankInUse=Date.now();
-      render();
-      setTimeout(()=>{
-        if(!state||state.gameOver||state.handOver||state._tt!==tok)return;
-        q.bank=0;q.bankInUse=0;
-        expire(q);
-      },q.bank+600);
-    }else expire(q);
-  },TT_BASE+600);
+  state._tt=state.handNum+'-'+state.stage+'-'+state.turnIdx+'-'+state.currentBet;
+  setTimeout(ttCheck,TT_BASE+700);   // backup; the UI interval is the primary enforcer
 }
 
 /* checkpoint: PUBLIC tournament state at each hand boundary — chips, seats, level.
@@ -3818,6 +3853,7 @@ function mpEmote(i){
 /* visible countdown on the acting seat — audible tic-tac for the last 5 seconds */
 let tmrLastTick=0,tmrPrevBank=false;
 if(HAS_DOM)setInterval(()=>{
+  ttCheck();   // primary expiry enforcement — survives throttled/dropped setTimeouts
   document.querySelectorAll('.tmr').forEach(el=>{if(el.textContent){el.textContent='';el.classList.remove('low');}});
   if(!state||!state.turnDeadline||state.handOver||state.gameOver){tmrPrevBank=false;return;}
   const left=Math.ceil((state.turnDeadline-Date.now())/1000);

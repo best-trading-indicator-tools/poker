@@ -86,10 +86,10 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
-### 2026-06-11 — Timer, emotes & game history
-- **⏱ Turn timer + 🏦 time bank (multiplayer)**: 25 seconds for routine decisions; when the clock runs out on a big spot, your personal 60-second time bank kicks in automatically (the seat shows 🏦 instead of ⏱), draining only as used — once per tournament, preserved across host migration. Only when both are gone are you auto check/folded
-- **😂 Emotes**: tap 😊 in the action bar for quick reactions (👍 😂 😱 🔥 🐔 🤝) that pop over your seat for everyone, rate-limited
-- **📈 Game history**: every finished game is logged (placement, hands, net, EV leaked, full stack-per-hand series, up to 200 games) and the game-over screen now shows your stack graph for the tournament — groundwork for the full session-review dashboard
+### 2026-06-12 — Timer reliability & coach deception layer
+- **Turn timer is now throttle-proof**: auto check/fold is enforced from the 350 ms UI loop based on the deadline itself, not just `setTimeout` — it fires reliably even when the browser throttles or drops timers (phone screen dim, tab switch, suspended PWA, game resumed from a snapshot). Guests never enforce; the host stays authoritative.
+- **Coach "Mix it up" tips**: rarely (~1 in 8 eligible spots, deterministic so it doesn't flicker), the coach suggests deviating from the EV-best line — raise instead of call, surprise bet instead of check, trap instead of raise with a monster — so observant opponents can't pattern-read you. Never on clear folds, all-ins, ICM prize-pressure spots or short stacks. EN/FR/ES.
+- **React button readable**: emote/chat buttons now use full text color + semibold
 
 ### 2026-06-11 — Multiplayer polish
 - **Open table**: start alone with bots off — you wait at your own table and dealing begins automatically when the first friend arrives
