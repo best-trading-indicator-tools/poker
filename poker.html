@@ -287,6 +287,8 @@ body.fl{overflow:hidden;}
 body.fl #game{position:fixed;top:0;left:0;transform-origin:left top;z-index:10;}
 /* in rotated mode the coach sheet must size against the ROTATED frame, not physical vh */
 body.fl #coach{max-height:calc(100% - 14px);}
+body.fl #chartOv .rp-card{max-height:92%;overflow-y:auto;}
+body.fl #overlay .over-card{max-height:92%;overflow-y:auto;}
 body.fl #topbar{padding:4px 8px;font-size:10.5px;gap:9px;}
 body.fl #actionbar{flex-wrap:nowrap;padding:5px 8px;min-height:0;gap:6px;overflow-x:auto;}
 body.fl #actionbar>#logToggle,body.fl #actionbar>#exportBtn{display:none;}
@@ -4056,6 +4058,9 @@ function initUI(){
     $('setup').classList.remove('hidden');
     refreshResume(); updateOrient();
   };
+  /* in-game overlays must live INSIDE #game so the forced-landscape rotation applies to them
+     (mpLobby & replayOv stay outside — they are also used from the setup screen) */
+  ['chartOv','overlay','chat','emoBar'].forEach(id=>{const el=$(id);if(el)$('game').appendChild(el);});
   window.addEventListener('resize',updateOrient);
   window.addEventListener('orientationchange',()=>setTimeout(updateOrient,250));
 }
