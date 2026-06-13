@@ -114,7 +114,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 body.fl #chat{right:8px;bottom:64px;height:60%;}
 
 /* 13×13 range matrix viewer */
-#chartOv{position:fixed;inset:0;background:rgba(8,10,14,.85);display:flex;align-items:center;justify-content:center;z-index:70;}
+#chartOv{position:fixed;inset:0;background:rgba(8,10,14,.85);display:flex;align-items:center;justify-content:center;z-index:100;}
 #chartOv.hidden{display:none;}
 #chartGrid{display:grid;grid-template-columns:repeat(13,1fr);gap:2px;margin:10px 0;}
 #chartGrid .cc{width:30px;height:26px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;border-radius:4px;background:#1d232e;color:#5b6675;font-variant-numeric:tabular-nums;}
@@ -154,6 +154,10 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #coach .rec.RAISE,#coach .rec.ALLIN{background:var(--gold);color:#1a1408;}
 .coach-row{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:8px;color:var(--dim);}
 .coach-row b{color:var(--text);text-align:right;font-weight:600;}
+.coach-info-btn{margin-left:5px;background:none;border:1px solid var(--line);color:var(--dim);border-radius:50%;width:18px;height:18px;padding:0;font-size:11px;line-height:1;cursor:pointer;vertical-align:middle;}
+.coach-info-btn:hover,.coach-info-btn[aria-expanded="true"]{color:var(--gold);border-color:var(--gold);}
+.coach-info-tip{margin:-4px 0 10px;font-size:11.5px;line-height:1.5;color:var(--dim);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:8px 10px;}
+.coach-info-tip.hidden{display:none;}
 #coach .why{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;}
 #coach .why-p{font-size:12.5px;line-height:1.55;color:#c4cdd9;margin:0 0 11px;}
 #coach .why-p:last-child{margin-bottom:0;}
