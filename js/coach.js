@@ -57,6 +57,9 @@ mentalMath:(c,s,o)=>` 🧮 Live mental math: price = call ÷ (pot + call) = ${c}
 mWarn:(n,m,z)=>` Blinds go up in ${n} hand${n>1?'s':''} — your M drops to ~${m} (${z}). Look for spots now rather than being forced to gamble later.`,
 mExplain:m=>` What "M = ${m}" means: your stack divided by the cost of one full round of blinds and antes — i.e. you could survive ${m} more rounds folding everything. Above 20 🟢 play your normal game; 10–20 🟡 start fighting for pots; 5–10 🟠 favor shoving over small raises; under 5 🔴 it's all-in or fold.`,
 widenNote:(b,e,d)=>` Rising blinds and dead money change the math: your normal ~${b}% opening range here is adjusted to ~${e}%${d===1?' — and the players left to act fold too much, so attack them':d===-1?' — tempered, because the players left to act defend wide, so steal less into them':''}.`,
+stackDomNote:(r,c,n)=>` You have ~${r}× the largest stack and cover ${c} of ${n} opponents still in — shorter stacks fold more often, so the coach widens steal/iso ranges slightly. Calling marginal hands is still a leak; raise or fold.`,
+stackDomIso:(c,p,r)=>`${c} is outside the standard ${p} chart, but with ~${r}× the table's biggest stack you can iso-raise as a pressure play — shorter stacks can't gamble back easily. Raise, don't call.`,
+stackDomFoldHint:` Your stack edge makes an iso-raise possible here, but this hand is still too weak even for that line. Fold — patience preserves your advantage.`,
 icmNote:(x,left,paid)=>` 💰 Prize pressure: ${paid} place${paid>1?'s':''} get paid and ${left} player${left>1?'s are':' is'} left. In a tournament, chips you might LOSE are worth more than chips you might WIN — going broke costs you your shot at the prizes. So this call needs an extra ~${x}% win chance on top of the normal pot math. Near the bubble, when in doubt: fold and let the others bust each other.`,
 lineCbet:` His flop bet is a routine "continuation bet" — players who raised before the flop bet again on almost any flop, good or bad. It tells us very little, so his range is barely narrowed for it.`,
 lineBarrel:n=>` He has now bet ${n===3?'THREE streets in a row (flop, turn and river)':'two streets in a row'} — most players don't keep firing like that without a real hand. His range is read much tighter.`,
@@ -150,6 +153,9 @@ mentalMath:(c,s,o)=>` 🧮 Calcul mental en live : prix = mise à payer ÷ (pot 
 mWarn:(n,m,z)=>` Les blinds montent dans ${n} main${n>1?'s':''} — votre M tombera à ~${m} (${z}). Cherchez des spots maintenant plutôt que d'être forcé de jouer à pile ou face plus tard.`,
 mExplain:m=>` Ce que signifie « M = ${m} » : votre tapis divisé par le coût d'un tour complet de blinds et d'antes — vous pourriez survivre ${m} tours en jetant tout. Au-dessus de 20 🟢, jouez votre jeu normal ; 10–20 🟡, commencez à vous battre pour les pots ; 5–10 🟠, préférez le tapis aux petites relances ; sous 5 🔴, c'est tapis ou couché.`,
 widenNote:(b,e,d)=>` Les blinds qui montent et l'argent mort changent le calcul : votre range d'ouverture normale (~${b}%) est ajustée à ~${e}%${d===1?' — et les joueurs restants se couchent trop : attaquez-les':d===-1?' — tempérée, car les joueurs restants défendent large : volez moins contre eux':''}.`,
+stackDomNote:(r,c,n)=>` Vous avez ~${r}× le plus gros tapis et couvrez ${c} sur ${n} adversaires encore en jeu — les tapis courts se couchent plus souvent : le coach élargit légèrement les ranges de vol/iso. Suivre des mains marginales reste une fuite ; relancez ou couchez.`,
+stackDomIso:(c,p,r)=>`${c} n'est pas dans la charte ${p} standard, mais avec ~${r}× le plus gros tapis vous pouvez iso-relancer pour faire pression — les courts ne peuvent pas vous contrer facilement. Relancez, ne suivez pas.`,
+stackDomFoldHint:` Votre avantage de tapis rend une iso possible, mais cette main reste trop faible même pour ça. Couchez — la patience préserve votre avantage.`,
 icmNote:(x,left,paid)=>` 💰 Pression des prix : ${paid} place${paid>1?'s sont payées':' est payée'} et il reste ${left} joueur${left>1?'s':''}. En tournoi, les jetons que vous risquez de PERDRE valent plus que ceux que vous pouvez GAGNER — sauter vous coûte votre chance de prix. Ce call demande donc ~${x}% de chances de gain EN PLUS du calcul normal du pot. Près de la bulle, dans le doute : couchez-vous et laissez les autres s'éliminer.`,
 lineCbet:` Sa mise au flop est un « continuation bet » de routine — celui qui a relancé avant le flop remise sur presque n'importe quel flop, bon ou mauvais. Cela ne nous apprend presque rien : sa range n'est guère resserrée.`,
 lineBarrel:n=>` Il vient de miser ${n===3?'TROIS rues d\'affilée (flop, turn et river)':'deux rues d\'affilée'} — la plupart des joueurs ne continuent pas à tirer ainsi sans une vraie main. Sa range est lue beaucoup plus serrée.`,
@@ -243,6 +249,9 @@ mentalMath:(c,s,o)=>` 🧮 Cálculo mental en vivo: precio = llamada ÷ (bote + 
 mWarn:(n,m,z)=>` Las ciegas suben en ${n} mano${n>1?'s':''} — tu M caerá a ~${m} (${z}). Busca jugadas ahora antes de verte forzado a jugártela.`,
 mExplain:m=>` Qué significa «M = ${m}»: tu stack dividido por el coste de una ronda completa de ciegas y antes — sobrevivirías ${m} rondas tirándolo todo. Por encima de 20 🟢, juega tu juego normal; 10–20 🟡, empieza a pelear por los botes; 5–10 🟠, prefiere el all-in a subidas pequeñas; bajo 5 🔴, all-in o retirarse.`,
 widenNote:(b,e,d)=>` Las ciegas crecientes y el dinero muerto cambian el cálculo: tu rango de apertura normal (~${b}%) se ajusta a ~${e}%${d===1?' — y los jugadores por hablar se retiran demasiado: atácalos':d===-1?' — moderado, porque los que quedan defienden mucho: roba menos contra ellos':''}.`,
+stackDomNote:(r,c,n)=>` Tienes ~${r}× el stack más grande y cubres a ${c} de ${n} rivales en juego — los stacks cortos se retiran más: el coach amplía un poco los rangos de robo/iso. Pagar manos marginales sigue siendo fuga; sube o retírate.`,
+stackDomIso:(c,p,r)=>`${c} no está en la tabla ${p} estándar, pero con ~${r}× el mayor stack puedes iso-subir como presión — los cortos no pueden devolverte la apuesta fácilmente. Sube, no pagues.`,
+stackDomFoldHint:` Tu ventaja de stack hace posible un iso, pero esta mano sigue siendo demasiado débil incluso para eso. Retírate — la paciencia conserva tu ventaja.`,
 icmNote:(x,left,paid)=>` 💰 Presión de premios: se paga${paid>1?'n':''} ${paid} puesto${paid>1?'s':''} y quedan ${left} jugador${left>1?'es':''}. En un torneo, las fichas que puedes PERDER valen más que las que puedes GANAR — quedarte sin fichas te cuesta tu opción a premio. Esta llamada necesita ~${x}% extra de probabilidad además del cálculo normal del bote. Cerca de la burbuja, ante la duda: retírate y deja que los demás se eliminen.`,
 lineCbet:` Su apuesta en el flop es una "apuesta de continuación" rutinaria — quien subió antes del flop vuelve a apostar en casi cualquier flop, bueno o malo. Dice muy poco, así que su rango apenas se estrecha.`,
 lineBarrel:n=>` Ya ha apostado ${n===3?'TRES calles seguidas (flop, turn y river)':'dos calles seguidas'} — la mayoría no sigue disparando así sin una mano real. Su rango se lee mucho más estrecho.`,
@@ -737,6 +746,22 @@ function coachPassiveLines(p,extra){
   }
   if(tablePassive>=2)extra.push(C('lineTablePassive',tablePassive));
 }
+/* stack vs table: widen steals/isos when hero covers most opponents by a large margin */
+function stackDominance(p){
+  const hero=p.chips+p.bet;
+  const oppStacks=inHand().filter(q=>q!==p).map(q=>q.chips+q.bet);
+  if(!oppStacks.length) return {factor:1,ratio:1,avgRatio:1,covers:0,coverPct:0,iso:false,tier:0,oppN:0};
+  const maxOpp=Math.max(...oppStacks);
+  const avg=oppStacks.reduce((s,x)=>s+x,0)/oppStacks.length;
+  const ratio=hero/Math.max(maxOpp,1);
+  const avgRatio=hero/Math.max(avg,1);
+  const covers=oppStacks.filter(s=>hero>s*1.02).length;
+  const coverPct=covers/oppStacks.length;
+  let tier=0,factor=1,iso=false;
+  if(ratio>=1.6&&coverPct>=0.5){tier=2;factor=1.12;iso=true;}
+  else if(ratio>=1.35||avgRatio>=1.55){tier=1;factor=1.07;iso=true;}
+  return {factor,ratio,avgRatio,covers,coverPct,iso,tier,oppN:oppStacks.length};
+}
 /* the coach BRAIN: pure decision logic, runs headless (also powers the benchmark bot) */
 function coachDecide(p){
   const sims=BENCH?180:500;
@@ -914,7 +939,12 @@ function coachDecide(p){
           profDir=fProf>1.08?1:fProf<0.92?-1:0;
         }
       }
-      const thrEff=Math.min(0.6,thr*fStack*fAnte*fProf);
+      let thrEff=Math.min(0.62,thr*fStack*fAnte*fProf);
+      const dom=stackDominance(p);
+      if(lateSteal&&dom.tier>0){
+        thrEff=Math.min(0.62,thrEff*dom.factor);
+        extra.push(C('stackDomNote',Math.round(dom.ratio*10)/10,dom.covers,dom.oppN));
+      }
       /* always explain when profiles behind shift the steal math, even slightly */
       if(Math.abs(thrEff-thr)/thr>0.12||profDir!==0) extra.push(C('widenNote',Math.round(thr*100),Math.round(thrEff*100),profDir));
       /* solver chart first: is this exact hand in this position's opening matrix? */
@@ -922,15 +952,21 @@ function coachDecide(p){
       if(rfi) chartInfo={kind:'rfi',pos,list:rfi};
       const chartHit=rfi?rfi.includes(code):false;
       const pressureOpen=prEff<=thrEff&&callAmt>0||prEff<=Math.min(thrEff,0.10)&&callAmt===0;
+      const isoSlack=dom.tier===2?0.13:dom.tier===1?0.08:0;
+      const borderlineIso=dom.iso&&lateSteal&&callAmt>0&&!chartHit&&prEff<=thrEff+isoSlack&&eq>=0.14;
       if(chartHit&&callAmt>0||pressureOpen){
         rec='RAISE';
         why.push(chartHit?C('chartOpen',code,pos):C('pfOpen',code,prTxt,Math.round(thrEff*100),pos,pairAdj&&pr>thrEff));
+      }else if(borderlineIso){
+        rec='RAISE';
+        why.push(C('stackDomIso',code,pos,Math.round(dom.ratio*10)/10));
       }else if(callAmt===0){
         rec='CHECK';
         why.push(C('pfBBfree',code));
       }else{
         rec='FOLD';
         why.push(rfi?C('chartNotIn',code,pos):C('pfOpenFold',code,prTxt,Math.round(thrEff*100),pos));
+        if(dom.tier>=1&&lateSteal&&callAmt>0) extra.push(C('stackDomFoldHint'));
       }
     }else{
       /* facing a raise: per-raiser-position solver chart, then EP/LP bucket fallback */

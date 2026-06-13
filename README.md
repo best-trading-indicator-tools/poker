@@ -123,6 +123,9 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-12 — Coach: stack dominance (big stack vs table)
+- **Relative stack edge**: when you have ~1.35×+ the largest stack (or ~1.55× average), late-position steal/iso ranges widen slightly; borderline hands can iso-raise for pressure — not loose calls
+
 ### 2026-06-12 — Coach teaching: leaks, micro-lessons, multiway, dirty outs
 - **Leak finder** (session review): groups EV lost by spot — preflop opens, facing raises, c-bet defense, multiway, river calls (with high-card subtotals); persisted per game in `decisions[]`
 - **Post-hand micro-lesson**: immediate one-line why when you deviate from the coach (uses discounted equity vs pot odds / air penalty)
