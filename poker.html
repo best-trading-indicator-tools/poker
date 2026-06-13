@@ -137,7 +137,7 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #game{height:100%;display:flex;flex-direction:column;}
 #topbar{display:flex;align-items:center;gap:18px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);font-size:13px;color:var(--dim);}
 #topbar b{color:var(--text);font-weight:600;}
-#quitBtn{margin-left:auto;background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:12px;}
+#quitBtn{margin-left:auto;flex-shrink:0;background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:12px;}
 #quitBtn:hover{color:var(--text);border-color:var(--dim);}
 
 #tableWrap{flex:1;position:relative;padding:14px;display:flex;gap:14px;min-height:0;}
@@ -322,13 +322,30 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
    The rotated frame is short and wide — the action bar must be ONE slim row, not stacked. */
 body.fl{overflow:hidden;}
 body.fl #game{position:fixed;top:0;left:0;transform-origin:left top;z-index:10;box-sizing:border-box;
-  padding-left:max(8px,env(safe-area-inset-top));padding-right:max(14px,env(safe-area-inset-bottom));}
+  padding-left:max(8px,env(safe-area-inset-top));padding-right:max(12px,env(safe-area-inset-right),env(safe-area-inset-bottom));}
 /* in rotated mode the coach sheet must size against the ROTATED frame, not physical vh */
 body.fl #coach{max-height:calc(100% - 14px);}
 body.fl #chartOv .rp-card{max-height:92%;overflow-y:auto;}
 body.fl #overlay .over-card{max-height:92%;overflow-y:auto;}
-body.fl #topbar{padding:4px 8px;font-size:10.5px;gap:9px;}
-body.fl #actionbar{flex-wrap:nowrap;padding:5px 8px;min-height:0;gap:6px;overflow-x:auto;}
+body.fl #topbar{
+  padding:4px 6px;
+  padding-right:max(10px,env(safe-area-inset-right));
+  scroll-padding-right:max(16px,env(safe-area-inset-right));
+  font-size:10px;
+  gap:7px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  flex-wrap:nowrap;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  flex-shrink:0;
+}
+body.fl #topbar::-webkit-scrollbar{display:none;}
+body.fl #topbar .tb-touch{min-height:32px;padding:2px 6px;margin:0;gap:6px;}
+body.fl #topbar .tb-touch input{width:18px;height:18px;}
+body.fl #quitBtn{flex-shrink:0;margin-left:4px;padding:5px 10px;}
+body.fl #sndBtn,body.fl #langTop{flex-shrink:0;padding:3px 7px;font-size:11px;}
+body.fl #actionbar{flex-wrap:nowrap;padding:5px 8px;padding-left:max(8px,env(safe-area-inset-left));min-height:0;gap:5px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;}
 body.fl #actionbar>#logToggle,body.fl #actionbar>#exportBtn{display:none;}
 body.fl #actionbar>#replayBtn{flex:0 0 auto;padding:8px 9px;font-size:10.5px;}
 body.fl #humanCtls{flex-wrap:nowrap;width:auto;flex:1;gap:6px;align-items:center;}
@@ -338,10 +355,24 @@ body.fl #raiseCtl .preset{flex:0 0 auto;padding:8px 7px;font-size:10.5px;}
 body.fl #raiseSlider{flex:1 1 40px;flex-basis:auto;min-width:36px;height:24px;}
 body.fl #raiseBtn{flex:0 0 auto;padding:10px 11px;font-size:12px;white-space:nowrap;}
 body.fl #waitMsg{display:none;}
-body.fl #tableWrap{padding:4px;}
-body.fl #felt{inset:4px 6px 4px 6px;border-width:6px;}
-body.fl .seat .hole{min-height:42px;}
-body.fl #centerArea{top:46%;}
+body.fl #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}
+body.fl #felt{inset:10px 14px 10px 14px;border-width:5px;}
+body.fl .seat{width:86px;margin-left:-43px;margin-top:-26px;}
+body.fl .seat .plate{gap:4px;padding:4px 7px 4px 5px;border-radius:8px;min-width:0;}
+body.fl .seat .avatar{font-size:16px;}
+body.fl .seat .pname{font-size:10.5px;}
+body.fl .seat .pchips{font-size:9.5px;}
+body.fl .seat .pstyle{font-size:8.5px;}
+body.fl .seat .ppos{font-size:8px;}
+body.fl .seat .lastact{font-size:10px;}
+body.fl .seat .hole{min-height:38px;gap:2px;}
+body.fl .card{width:34px;height:48px;border-radius:5px;}
+body.fl .card .pip{font-size:17px;}
+body.fl .card.small{width:24px;height:34px;}
+body.fl .card.small .pip{font-size:13px;}
+body.fl #centerArea{top:44%;width:min(94vw,420px);}
+body.fl #board{min-height:52px;gap:3px;}
+body.fl #pot{font-size:12px;}
 
 /* ================= MOBILE / TOUCH =================
    applies to phones AND any portrait screen up to 980px (large phones, small tablets,
@@ -363,10 +394,10 @@ body.fl #centerArea{top:46%;}
   .rp-nav span{font-size:11px;}
 
   /* top bar: compact, horizontally scrollable, hide low-value items */
-  #topbar{gap:12px;padding:8px 10px;font-size:11.5px;overflow-x:auto;flex-wrap:nowrap;white-space:nowrap;-webkit-overflow-scrolling:touch;padding-top:max(8px,env(safe-area-inset-top));}
+  #topbar{gap:12px;padding:8px 10px;padding-right:max(10px,env(safe-area-inset-right));font-size:11.5px;overflow-x:auto;flex-wrap:nowrap;white-space:nowrap;-webkit-overflow-scrolling:touch;padding-top:max(8px,env(safe-area-inset-top));scrollbar-width:none;}
   #topbar::-webkit-scrollbar{display:none;}
   #tAnteWrap,#topbar .tb-opt{display:none;}
-  #quitBtn{padding:6px 10px;}
+  #quitBtn{flex-shrink:0;margin-left:8px;padding:6px 10px;}
 
   #tableWrap{padding:6px;}
 

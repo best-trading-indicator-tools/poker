@@ -123,6 +123,10 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-12 — Mobile landscape layout (rotated phone)
+- **Forced-landscape (`body.fl`)**: smaller seats/cards, wider felt inset, inward seat slots so topbar/action bar no longer cover players
+- **Topbar**: horizontal scroll + safe-area padding so **Quit** stays reachable; compact checkbox row
+
 ### 2026-06-12 — Modular source layout
 - **Split `poker.html` logic** into `js/eval.js`, `js/engine.js`, `js/coach.js`, `js/ai.js`, `js/mp.js`, `js/ui.js` — same behavior, shared globals, load order documented in README
 - **`scripts/build.mjs`**: `extract` / `multifile` (default deploy) / `bundle` (optional single-file inline for offline double-click)

@@ -283,6 +283,16 @@ const SEAT_SLOTS={
 7:[[.50,.92],[.18,.80],[.05,.40],[.28,.09],[.72,.09],[.95,.40],[.82,.80]],
 8:[[.50,.92],[.21,.82],[.05,.50],[.14,.13],[.50,.08],[.86,.13],[.95,.50],[.79,.82]],
 9:[[.50,.92],[.24,.84],[.05,.56],[.08,.20],[.33,.07],[.67,.07],[.92,.20],[.95,.56],[.76,.84]]};
+/* rotated-phone (body.fl): pull seats inward — topbar/action bar sit on the felt edges */
+const SEAT_SLOTS_FL={
+2:[[.50,.84],[.50,.16]],
+3:[[.50,.84],[.16,.28],[.84,.28]],
+4:[[.50,.84],[.12,.52],[.50,.16],[.88,.52]],
+5:[[.50,.84],[.14,.62],[.30,.16],[.70,.16],[.86,.62]],
+6:[[.50,.84],[.14,.66],[.14,.22],[.50,.14],[.86,.22],[.86,.66]],
+7:[[.50,.84],[.22,.74],[.12,.44],[.30,.16],[.70,.16],[.88,.44],[.78,.74]],
+8:[[.50,.84],[.24,.76],[.12,.50],[.18,.18],[.50,.14],[.82,.18],[.88,.50],[.76,.76]],
+9:[[.50,.84],[.26,.74],[.12,.54],[.14,.24],[.33,.14],[.67,.14],[.86,.24],[.88,.54],[.74,.74]]};
 function layoutSeats(){
   if(!HAS_DOM||!state||BENCH)return;
   const felt=$('felt');
@@ -299,7 +309,8 @@ function layoutSeats(){
   const n=state.players.length;
   /* on mobile, an ellipse bunches seats at its ends — use hand-tuned edge slots instead
      (hero is always slot 0 at bottom center, others run counterclockwise like the ellipse) */
-  const slots=isMobile()?SEAT_SLOTS[n]:null;
+  const fl=HAS_DOM&&document.body.classList.contains('fl');
+  const slots=isMobile()?(fl?SEAT_SLOTS_FL[n]:SEAT_SLOTS[n]):null;
   for(const p of state.players){
     let x,y;
     if(slots){
@@ -312,14 +323,15 @@ function layoutSeats(){
     if(seat){seat.style.left=x+'px'; seat.style.top=(y-28)+'px';}
   }
   /* clamp pass: no seat may leave the felt (offset* geometry — safe under CSS transforms) */
+  const pad=fl?{l:18,r:22,t:8,b:14}:isMobile()?{l:6,r:6,t:4,b:10}:{l:2,r:2,t:2,b:2};
   for(const p of state.players){
     const seat=$('seat'+p.i); if(!seat||!seat.offsetHeight)continue;
     const l=seat.offsetLeft,t=seat.offsetTop,w=seat.offsetWidth,h=seat.offsetHeight;
     let dx=0,dy=0;
-    if(t+h>H-2) dy=H-2-(t+h);
-    if(t+dy<2)  dy=2-t;
-    if(l<1)     dx=1-l;
-    if(l+dx+w>W-1) dx=W-1-(l+w);
+    if(t+h>H-pad.b) dy=H-pad.b-(t+h);
+    if(t+dy<pad.t)  dy=pad.t-t;
+    if(l<pad.l)     dx=pad.l-l;
+    if(l+dx+w>W-pad.r) dx=W-pad.r-(l+w);
     if(dx)seat.style.left=(parseFloat(seat.style.left)+dx)+'px';
     if(dy)seat.style.top=(parseFloat(seat.style.top)+dy)+'px';
   }
