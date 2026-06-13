@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="docs/icon.svg">
 <title>Sit &amp; Go Hold'em</title>
 <style>
 :root{
@@ -74,6 +79,8 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #mpLobby button{margin:4px 4px 0;}
 #mpLobby #mpLeave{background:none;border:1px solid var(--line);color:var(--dim);}
 #chatBtn,#emoBtn{background:none;border:1px solid var(--line);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:14px;color:var(--text);font-weight:600;}
+#coachToggle{background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;flex-shrink:0;}
+#coachToggle.on{border-color:var(--gold);color:var(--gold);}
 #emoBar{position:fixed;bottom:96px;left:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;z-index:60;box-shadow:0 12px 36px rgba(0,0,0,.5);}
 #emoBar.hidden{display:none;}
 #emoHint{font-size:10.5px;color:var(--dim);margin:0 2px 6px;}
@@ -242,7 +249,10 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #banner.show{animation:bannerPop .45s ease both;}
 /* flying chips (slide-to-pot, push-to-winner) */
 .flychip{position:absolute;z-index:35;pointer-events:none;transition:left .42s cubic-bezier(.45,.05,.3,1),top .42s cubic-bezier(.45,.05,.3,1),opacity .42s ease;}
-@media(prefers-reduced-motion:reduce){.card.deal,.card.flip,.seat.winner .plate,#banner.show{animation:none;}.flychip{transition:none;}}
+@media(prefers-reduced-motion:reduce){
+  .card.deal,.card.flip,.seat.winner .plate,.seat.active .plate,#banner.show,.emoPop,#emoBtn.pulse,.tmr.low:not(:empty){animation:none;}
+  .flychip,#coach{transition:none;}
+}
 
 /* ---------- PERSONALITY / STATS / FEEDBACK ---------- */
 .seat .pstyle{font-size:9.5px;color:#93a1b3;text-align:left;margin-top:1px;}
@@ -557,6 +567,7 @@ body.fl #centerArea{top:46%;}
     <button id="exportBtn" title="Download full hand history as JSON" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;">Export history</button>
     <span id="waitMsg"></span>
     <div id="humanCtls" class="hidden" style="display:flex;align-items:center;gap:14px;flex:1;">
+      <button id="coachToggle" type="button" aria-pressed="false">Coach</button>
       <button class="btn" id="foldBtn">Fold</button>
       <button class="btn" id="callBtn">Call</button>
       <div id="raiseCtl">
@@ -672,7 +683,7 @@ en:{sub:"No-Limit Texas Hold'em tournament vs AI",players:"Players",blinds:"Blin
 speed:"Blinds Change Speed",turbo:"Turbo",standard:"Standard",slow:"Slow",diff:"AI Difficulty",easy:"Easy",medium:"Medium",hard:"Hard",language:"Language",
 deal:"Deal me in",resume:"▶ Resume tournament",review:"🎞 Review past hands",
 resetData:"Clear saved data",resetInfo:"Deletes everything this game keeps in your browser: lifetime stats, hand history and any unfinished tournament you could resume. Your language choice stays. This can't be undone.",resetConfirm:"Delete all saved stats, hand history and any unfinished tournament?",resetDone:"✓ Cleared",
-level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",quit:"Quit",
+level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",
 fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
 log:"Log",lastHand:"Last hand",exportH:"Export history",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",
 waiting:"Advice appears here when it's your turn.",
@@ -723,7 +734,7 @@ fr:{sub:"Tournoi de Texas Hold'em No-Limit contre l'IA",players:"Joueurs",blinds
 speed:"Vitesse des blinds",turbo:"Turbo",standard:"Standard",slow:"Lente",diff:"Niveau de l'IA",easy:"Facile",medium:"Moyen",hard:"Difficile",language:"Langue",
 deal:"Distribuez !",resume:"▶ Reprendre le tournoi",review:"🎞 Revoir les mains",
 resetData:"Effacer les données sauvegardées",resetInfo:"Supprime tout ce que le jeu garde dans votre navigateur : statistiques globales, historique des mains et tout tournoi en cours à reprendre. Votre choix de langue est conservé. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l'historique des mains et tout tournoi en cours ?",resetDone:"✓ Effacé",
-level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",quit:"Quitter",
+level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",
 fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",
 log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",
 waiting:"Les conseils apparaissent ici quand c'est votre tour.",
@@ -774,7 +785,7 @@ es:{sub:"Torneo de Texas Hold'em No-Limit contra la IA",players:"Jugadores",blin
 speed:"Velocidad de ciegas",turbo:"Turbo",standard:"Estándar",slow:"Lenta",diff:"Nivel de la IA",easy:"Fácil",medium:"Medio",hard:"Difícil",language:"Idioma",
 deal:"¡Reparte!",resume:"▶ Reanudar torneo",review:"🎞 Revisar manos",
 resetData:"Borrar datos guardados",resetInfo:"Elimina todo lo que el juego guarda en tu navegador: estadísticas globales, historial de manos y cualquier torneo sin terminar. Tu idioma se mantiene. No se puede deshacer.",resetConfirm:"¿Borrar todas las estadísticas, el historial de manos y cualquier torneo sin terminar?",resetDone:"✓ Borrado",
-level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",quit:"Salir",
+level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",
 fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
 log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",
 waiting:"Los consejos aparecen aquí cuando es tu turno.",
@@ -2074,7 +2085,7 @@ function sfx(kind){
 }
 
 /* ================= HAPTICS ================= */
-function haptic(pat){ if(HAS_DOM&&soundOn&&navigator.vibrate){try{navigator.vibrate(pat);}catch(e){}} }
+function haptic(pat){ if(HAS_DOM&&navigator.vibrate){try{navigator.vibrate(pat);}catch(e){}} }
 
 /* ================= FLYING CHIPS ================= */
 function feltCenter(){ const f=$('felt'); return {x:f.clientWidth/2,y:f.clientHeight/2}; }
@@ -2419,6 +2430,8 @@ function setCoach(on){
   if(!HAS_DOM)return;
   const c=$('coach'); if(!c)return;
   $('coachChk').checked=on;
+  const tb=$('coachToggle');
+  if(tb){tb.classList.toggle('on',on);tb.setAttribute('aria-pressed',on?'true':'false');}
   if(isMobile()){
     c.classList.remove('hidden');   // keep in DOM so it can slide; transform handles on/off
     c.classList.toggle('open',on);
@@ -2946,7 +2959,8 @@ function updateCoach(p){
     /* pre-set the raise slider to the coach's size so R raises exactly this */
     if($('raiseCtl').style.visibility!=='hidden'){
       const sl=$('raiseSlider');
-      sl.value=clamp(coachT,+sl.min,+sl.max); updateRaiseLabel();
+      if(rec==='ALLIN') setRaiseExact(p.bet+p.chips);
+      else{ clearRaiseExact(); sl.value=clamp(coachT,+sl.min,+sl.max); updateRaiseLabel(); }
     }
   }
   const recLabel = rec==='ALLIN' ? `${T('recALLIN')} ${usd(p.bet+p.chips)}`
@@ -3103,6 +3117,25 @@ function showHistoryReplay(){
   $('replayOv').classList.remove('hidden');
 }
 
+function raiseAllInAmt(){
+  const p=state.players[0];
+  return p?p.bet+p.chips:0;
+}
+function getRaiseSliderAmt(){
+  const sl=$('raiseSlider');
+  if(sl&&sl.dataset.exact) return +sl.dataset.exact;
+  return sl?+sl.value:0;
+}
+function clearRaiseExact(){
+  const sl=$('raiseSlider'); if(sl) delete sl.dataset.exact;
+}
+function setRaiseExact(amt){
+  const sl=$('raiseSlider'); if(!sl)return;
+  sl.dataset.exact=String(amt);
+  sl.value=Math.min(+sl.max, amt);
+  updateRaiseLabel();
+}
+
 /* ---------- human actions ---------- */
 function showActions(p){
   if(!HAS_DOM)return;
@@ -3118,10 +3151,12 @@ function showActions(p){
   $('raiseCtl').style.visibility=canRaise?'visible':'hidden';
   if(canRaise){
     const sl=$('raiseSlider');
+    clearRaiseExact();
     sl.min=minTarget; sl.max=maxTarget; sl.step=state.sb; sl.value=minTarget;
     updateRaiseLabel();
   }
   try{ updateCoach(p); }catch(err){ $('coachBody').innerHTML=`<div class="waiting">${C('coachErr')}</div>`; }
+  if(isMobile()) setCoach(true);
 }
 function hideActions(){
   if(!HAS_DOM)return;
@@ -3130,9 +3165,10 @@ function hideActions(){
   coachWait();
 }
 function updateRaiseLabel(){
-  const v=+$('raiseSlider').value;
+  const v=getRaiseSliderAmt();
   const p=state.players[0];
-  $('raiseBtn').textContent = (v>=p.bet+p.chips ? T('allin')+' ' : (state.currentBet>0?T('raiseTo'):T('betW')))
+  const allin=raiseAllInAmt();
+  $('raiseBtn').textContent = (v>=allin ? T('allin')+' ' : (state.currentBet>0?T('raiseTo'):T('betW')))
     + `${usd(v)} (${bbs(v)})`;
   $('chipPreview').innerHTML=chipStackHTML(v,true);
 }
@@ -3275,7 +3311,7 @@ function applyLang(){
   const cc=$('coachChk'); if(cc&&cc.parentNode.lastChild) cc.parentNode.lastChild.nodeValue=' '+T('coachLbl');
   set('quitBtn','quit');
   /* bottom bar + modals */
-  set('logToggle','log'); set('replayBtn','lastHand'); set('exportBtn','exportH'); set('nextHandBtn','nextHand');
+  set('logToggle','log'); set('replayBtn','lastHand'); set('exportBtn','exportH'); set('coachToggle','coachBtn'); set('nextHandBtn','nextHand');
   set('foldBtn','fold'); set('prMin','min'); set('prHalf','halfPot'); set('prPot','pot'); set('prMax','allin');
   set('rpClose','close'); set('rpTitle','replayTitle'); set('ovBtn','playAgain'); set('chartClose','close');
   set('rpPrevH','handNavP'); set('rpNextH','handNavN'); set('rpPrevS','streetNavP'); set('rpNextS','streetNavN');
@@ -3654,7 +3690,7 @@ let TT_BASE=25000,TT_BANK=60000;
    timers (phone screen dim, tab switch, suspended PWA, game resumed from a snapshot). */
 function ttCheck(){
   if(!state||!state._tt||!state.turnDeadline||state.gameOver||state.handOver)return;
-  if(typeof MP!=='undefined'&&MP&&MP.role==='guest')return;   // host enforces; guests just display
+  if(typeof MP!=='undefined'&&MP&&MP.role==='client')return;   // host enforces; clients just display
   if(Date.now()<state.turnDeadline+600)return;
   const q=state.players[state.turnIdx];
   if(!q||(!q.isHuman&&!q.remote)){state._tt=null;return;}
@@ -3960,17 +3996,19 @@ function initUI(){
   };
   $('foldBtn').onclick=()=>humanAct('fold');
   $('callBtn').onclick=()=>humanAct('call');
-  $('raiseBtn').onclick=()=>humanAct('raise',+$('raiseSlider').value);
-  $('raiseSlider').oninput=updateRaiseLabel;
-  $('prMin').onclick=()=>{const sl=$('raiseSlider');sl.value=sl.min;updateRaiseLabel();};
-  $('prMax').onclick=()=>{const sl=$('raiseSlider');sl.value=sl.max;updateRaiseLabel();};
+  $('raiseBtn').onclick=()=>humanAct('raise',getRaiseSliderAmt());
+  $('raiseSlider').oninput=()=>{clearRaiseExact();updateRaiseLabel();};
+  $('prMin').onclick=()=>{clearRaiseExact();const sl=$('raiseSlider');sl.value=sl.min;updateRaiseLabel();};
+  $('prMax').onclick=()=>setRaiseExact(raiseAllInAmt());
   $('prHalf').onclick=()=>{
+    clearRaiseExact();
     const pot=state.players.reduce((s,p)=>s+p.totalBet,0);
     const sl=$('raiseSlider');
     sl.value=clamp(Math.round((state.currentBet+pot*0.5)/state.sb)*state.sb,+sl.min,+sl.max);
     updateRaiseLabel();
   };
   $('prPot').onclick=()=>{
+    clearRaiseExact();
     const pot=state.players.reduce((s,p)=>s+p.totalBet,0);
     const sl=$('raiseSlider');
     sl.value=clamp(Math.round((state.currentBet+pot)/state.sb)*state.sb,+sl.min,+sl.max);
@@ -4049,7 +4087,7 @@ function initUI(){
     if(!$('humanCtls').classList.contains('hidden')){
       if(k==='f'&&!$('foldBtn').disabled){e.preventDefault();humanAct('fold');}
       else if(k==='c'){e.preventDefault();humanAct('call');}
-      else if(k==='r'){if($('raiseCtl').style.visibility!=='hidden'){e.preventDefault();humanAct('raise',+$('raiseSlider').value);}}
+      else if(k==='r'){if($('raiseCtl').style.visibility!=='hidden'){e.preventDefault();humanAct('raise',getRaiseSliderAmt());}}
       else if(k>='1'&&k<='4'){e.preventDefault();$(['prMin','prHalf','prPot','prMax'][+k-1]).click();}
     }else if(k==='n'&&!$('nextHandBtn').classList.contains('hidden')){e.preventDefault();doNextHand();}
   });
@@ -4059,6 +4097,7 @@ function initUI(){
   $('rpPrevS').onclick=()=>{rpStreet--;rpRender();};
   $('rpNextS').onclick=()=>{rpStreet++;rpRender();};
   $('coachChk').onchange=e=>setCoach(e.target.checked);
+  $('coachToggle').onclick=()=>setCoach(!$('coachChk').checked);
   $('coachClose').onclick=()=>setCoach(false);
   /* --- desktop: drag-resize the coach panel --- */
   {
@@ -4161,11 +4200,7 @@ if(HAS_DOM) initUI();
 
 /* ---------- offline mode (PWA): cache the game so it runs with no internet ---------- */
 if(HAS_DOM && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
-  try{
-    const m=document.createElement('link'); m.rel='manifest'; m.href='manifest.json';
-    document.head.appendChild(m);
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
-  }catch(e){}
+  try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
 }
 
 /* ---------- exports for node testing ---------- */

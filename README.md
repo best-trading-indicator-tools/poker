@@ -94,6 +94,14 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-12 — Tier 1 UX fixes
+- **All-in button**: uses your full stack exactly (`bet + chips`) — the raise slider step no longer leaves chips behind (e.g. $3,650 not $3,520)
+- **MP turn timer**: clients no longer auto-fold locally (`guest` → `client` role fix); only the host enforces timer actions
+- **Mobile coach**: auto-opens on your turn; thumb-reachable **Coach** toggle in the action bar (synced with topbar checkbox)
+- **Haptics decoupled from mute**: vibration works even when sound is off
+- **`prefers-reduced-motion`**: also disables active-seat glow, timer pulse, coach sheet slide, emote animations
+- **PWA install**: static manifest link, `theme-color`, and `apple-touch-icon` in `<head>`
+
 ### 2026-06-12 — Profile-specific AI ranges & behavior
 - **Distinct preflop ranges per profile**: rocks open ~6–21%, stations ~16–57%, sharks ~12–48% (wider steals on CO/BTN), maniacs ~17–61% — scaled by position from GTO charts, not shared equity thresholds
 - **Stations never bluff** and only raise with top ~15%; **rocks over-fold to raises** and bet at 0.70× sizing; **maniac aggression varies** (~22% check-back, randomized raise frequency); **sharks widen steals** from late position under blind pressure
