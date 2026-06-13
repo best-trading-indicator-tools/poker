@@ -790,7 +790,8 @@ function coachDecide(p){
           const dirtyTxt=formatOutList(split.dirty.map(x=>x.card));
           if(cleanTxt) drawRow+=`<div class="coach-row"><span>${T('outs')}</span><b>${cleanTxt}</b></div>`;
           if(dirtyTxt){
-            drawRow+=`<div class="coach-row"><span>${T('dirtyOuts')}</span><b>${dirtyTxt}</b></div>`;
+            drawRow+=`<div class="coach-row coach-row-dirty"><span>${T('dirtyOuts')}<button type="button" class="coach-info-btn" aria-expanded="false" aria-label="${T('dirtyOutsInfoLbl')}">&#8505;</button></span><b>${dirtyTxt}</b></div>`+
+              `<p class="coach-info-tip hidden">${T('dirtyOutsInfo')}</p>`;
             const pairs=split.dirty.filter(x=>x.why==='pairs').map(x=>x.card);
             const fl=split.dirty.filter(x=>x.why==='flush').map(x=>x.card);
             if(pairs.length) extra.push(C('dirtyOutPairs',formatOutList(pairs)));
@@ -811,6 +812,7 @@ function coachDecide(p){
     coachMultiwayBuckets(p,extra,opps,callAmt);
   }
   eqAdj=eq;
+  const odds=callAmt>0?callAmt/(pot+callAmt):0;
 
   /* position adjustment: tighter early, looser late (preflop) */
   const pos=p.pos||'';
