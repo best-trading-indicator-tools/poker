@@ -123,6 +123,9 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-12 — Coach: multi-street passive lines
+- **Check–check reads**: tracks `checkStreets` per player; coach calls out 2+ consecutive passive streets with **profile-specific** prose (🪨 capped / 🔥 air / 🦈 trap risk / 📞 medium pairs) and multiway “table looks weak” notes
+
 ### 2026-06-12 — Mobile collapsible action menu
 - **Tap-to-open action panel (landscape right)**: on phones in forced/native landscape, a scrollable panel slides in from the **landscape right** (inside the rotated game frame); tap **◀ Menu** / **◀ Your turn**, tap the table to dismiss
 
