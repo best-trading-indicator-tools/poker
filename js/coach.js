@@ -493,6 +493,26 @@ function chartFor(kind,key){
     return key!==undefined?(GTO_CHARTS[kind][key]||null):GTO_CHARTS[kind];
   }catch(e){return null;}
 }
+/* pick shove ladder by effective stack depth (BB); 15 used for 11–15 BB reshove spots */
+function shoveChartKey(stackBB){
+  if(stackBB<=5) return '5';
+  if(stackBB<=7) return '8';
+  if(stackBB<=10) return '10';
+  if(stackBB<=15) return '15';
+  return '10';
+}
+/* per-raiser-position 3-bet/call matrix, falling back to EP/LP buckets */
+function facingChartFor(raiser){
+  const rp=raiser&&raiser.pos;
+  if(rp){
+    const direct=chartFor('facing',rp);
+    if(direct&&direct.raise&&direct.call) return {fc:direct,label:rp,perPos:true};
+  }
+  const vsEarlyR=raiser?/^(UTG|MP)/.test(raiser.pos||''):false;
+  const key=vsEarlyR?'vsEarly':'vsLate';
+  const fc=chartFor('facing',key);
+  return fc&&fc.raise&&fc.call?{fc,label:key,perPos:false}:null;
+}
 
 /* ===== ICM: tournament prize-money math (Malmuth-Harville) ===== */
 const PAYOUTS=n=>n<=4?[1]:n<=6?[0.65,0.35]:[0.5,0.3,0.2];
@@ -660,7 +680,7 @@ function coachDecide(p){
     if(stackBB<=10){
       /* push/fold territory: prefer the external solver chart, fall back to Nash threshold */
       const thr=PUSH_THR[bucket];
-      const shoveCharts=chartFor('shove',stackBB<=5?'5':'10');
+      const shoveCharts=chartFor('shove',shoveChartKey(stackBB));
       const sChart=shoveCharts?shoveCharts[bucket]:null;
       if(sChart) chartInfo={kind:'shove',pos:pos||bucket,list:sChart};
       const shoveYes=sChart?sChart.includes(code):pr<=thr;
@@ -719,12 +739,13 @@ function coachDecide(p){
         why.push(rfi?C('chartNotIn',code,pos):C('pfOpenFold',code,prTxt,Math.round(thrEff*100),pos));
       }
     }else{
-      /* facing a raise: vs-raise solver chart first (3-bet / call / fold), percentile fallback */
+      /* facing a raise: per-raiser-position solver chart, then EP/LP bucket fallback */
       const raiser=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
-      const vsEarlyR=raiser?/^(UTG|MP)/.test(raiser.pos||''):false;
-      const fc=chartFor('facing',vsEarlyR?'vsEarly':'vsLate');
-      if(fc&&fc.raise&&fc.call){
-        chartInfo={kind:'facing',pos:(raiser&&raiser.pos)||pos,list:fc.raise,list2:fc.call};
+      const facing=facingChartFor(raiser);
+      if(facing){
+        const {fc,label,perPos}=facing;
+        chartInfo={kind:'facing',pos:perPos?`vs ${label}`:label,list:fc.raise,list2:fc.call};
+        const vsEarlyR=raiser?/^(UTG|MP)/.test(raiser.pos||''):false;
         if(fc.raise.includes(code)){
           rec='RAISE';
           why.push(C('chart3bet',code,vsEarlyR));
