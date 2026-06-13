@@ -1,12 +1,37 @@
 # Sit & Go Hold'em
 
-A free, single-file No-Limit Texas Hold'em tournament game vs AI. No install, no ads, works offline — just open `poker.html` in any browser. Engine, AI, GTO solver and UI are all in the one file. Plays on desktop and mobile.
+A free No-Limit Texas Hold'em tournament game vs AI. No install, no ads, works offline — open `poker.html` in any browser (loads `js/*.js` modules; optional single-file bundle via `node scripts/build.mjs bundle`). Plays on desktop and mobile.
 
 ![Gameplay — live coach with per-game stats, GTO advice and order-of-action awareness](docs/screenshot.png)
 
 ## Quick start
 
 Double-click `poker.html`, or serve it from any static host. Set up your table (players, blinds, buy-in, ante, blind speed, AI difficulty) and play.
+
+## Code layout
+
+Game logic is split from `poker.html` into six modules (shared global scope, loaded in order):
+
+| File | Responsibility |
+|------|----------------|
+| `js/eval.js` | Hand evaluation (`evalFive`, `evalSeven`, `handName`), deck helpers, `seatOrderFromDealer` (side-pot tiebreaks) |
+| `js/engine.js` | Tournament constants, game state, hand flow (`startHand`, `applyAction`, showdown/side pots), sound/haptics/chip animations, solo resume snapshots |
+| `js/coach.js` | Preflop charts, `mcEquityR`, GTO mini-solver (CFR), `coachDecide`, ICM, coach prose (EN/FR/ES) |
+| `js/ai.js` | AI profiles (`STYLES`), `aiDecide`, range/equity reads |
+| `js/mp.js` | PeerJS multiplayer, host migration, public checkpoints, P2P snapshots |
+| `js/ui.js` | i18n UI strings, rendering, coach panel display, replayer, session review, init/wiring |
+
+`poker.html` holds HTML/CSS plus `<script src="js/…">` tags. `charts.js` remains separate (GTO chart data).
+
+### Build
+
+```bash
+node scripts/build.mjs multifile   # default — refresh js/*.js from git HEAD monolith & wire poker.html
+node scripts/build.mjs extract     # re-split js/*.js only
+node scripts/build.mjs bundle      # inline all modules back into poker.html (true single-file deploy)
+```
+
+Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel serves the split files). Run `bundle` before shipping a one-file drop if you need double-click-without-folder layout.
 
 ## Features
 
@@ -97,6 +122,10 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
+
+### 2026-06-12 — Modular source layout
+- **Split `poker.html` logic** into `js/eval.js`, `js/engine.js`, `js/coach.js`, `js/ai.js`, `js/mp.js`, `js/ui.js` — same behavior, shared globals, load order documented in README
+- **`scripts/build.mjs`**: `extract` / `multifile` (default deploy) / `bundle` (optional single-file inline for offline double-click)
 
 ### 2026-06-12 — Mobile bet legibility + accessibility
 - **Mobile bet amounts**: on phones, floating bet chips show for **you** and the **current actor** only (compact amount label; full chip stack on desktop)
