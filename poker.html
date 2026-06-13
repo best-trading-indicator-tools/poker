@@ -318,6 +318,11 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 
 #coachClose{display:none;position:absolute;top:10px;right:12px;background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;z-index:2;}
 
+/* mobile: action bar slides up on tap; tap table backdrop to dismiss */
+#actBackdrop{display:none;}
+#actFab{display:none;}
+@keyframes actPulse{0%,100%{box-shadow:0 4px 18px rgba(232,182,76,.35)}50%{box-shadow:0 4px 30px rgba(232,182,76,.85)}}
+
 /* forced landscape on phones: the game is rotated 90° when the device is held portrait.
    The rotated frame is short and wide — the action bar must be ONE slim row, not stacked. */
 body.fl{overflow:hidden;}
@@ -446,7 +451,56 @@ body.fl #pot{font-size:12px;}
   #felt{inset:8px 6px 8px 6px;border-width:7px;}
   #dbtn{width:20px;height:20px;font-size:10px;}
 
-  /* big, thumb-friendly action bar */
+  /* collapsible action sheet — hidden until tap; frees the table */
+  #actFab{
+    display:block;
+    position:fixed;
+    z-index:44;
+    bottom:max(10px,env(safe-area-inset-bottom));
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--panel);
+    border:2px solid var(--line);
+    color:var(--text);
+    border-radius:22px;
+    padding:9px 16px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 18px rgba(0,0,0,.5);
+  }
+  #actFab.pulse{border-color:var(--gold);color:var(--gold);animation:actPulse 1.2s ease infinite;}
+  #actBackdrop{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.42);}
+  #game.act-open #actBackdrop{display:block;}
+  #game.act-collapsed #actionbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    transform:translateY(110%);
+    pointer-events:none;
+    visibility:hidden;
+    transition:transform .22s ease;
+    max-height:72vh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    box-shadow:0 -10px 36px rgba(0,0,0,.55);
+  }
+  #game.act-open #actionbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    transform:translateY(0);
+    pointer-events:auto;
+    visibility:visible;
+    transition:transform .22s ease;
+    max-height:72vh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    box-shadow:0 -10px 36px rgba(0,0,0,.55);
+  }
+  body.fl #actFab{bottom:auto;top:50%;left:max(8px,env(safe-area-inset-left));transform:translateY(-50%);}
+  body.fl #game.act-collapsed #actionbar,body.fl #game.act-open #actionbar{
+    padding-left:max(8px,env(safe-area-inset-left));
+    padding-bottom:max(6px,env(safe-area-inset-bottom));
+  }
+
+  /* big, thumb-friendly action bar (when open) */
   #actionbar{padding:8px 8px max(8px,env(safe-area-inset-bottom));gap:7px;min-height:0;}
   #actionbar>#logToggle,#actionbar>#replayBtn,#actionbar>#exportBtn{padding:8px 10px;font-size:11px;flex:1;}
   #humanCtls{width:100%;flex-wrap:wrap;gap:8px;}
@@ -617,6 +671,8 @@ body.fl #pot{font-size:12px;}
     <div id="log" class="hidden"></div>
     </div>
   </div>
+  <div id="actBackdrop" aria-hidden="true"></div>
+  <button type="button" id="actFab" class="hidden" aria-expanded="false">Menu</button>
   <div id="actionbar">
     <button id="chatBtn" class="hidden">💬</button>
     <button id="emoBtn" class="hidden" title="Send a reaction">😂 <span id="emoLbl">React</span></button>

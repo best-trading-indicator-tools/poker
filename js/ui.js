@@ -9,6 +9,7 @@ revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidB
 resetData:"Clear saved data",resetInfo:"Deletes everything this game keeps in your browser: lifetime stats, hand history and any unfinished tournament you could resume. Your language choice stays. This can't be undone.",resetConfirm:"Delete all saved stats, hand history and any unfinished tournament?",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",
 fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
+actMenu:"▲ Menu",actTurn:"▲ Your turn",
 log:"Log",lastHand:"Last hand",exportH:"Export history",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",
 waiting:"Advice appears here when it's your turn.",
 yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",draws:"Draws",potOdds:"Pot odds",yourStack:"Your stack",sugSize:"Suggested size",
@@ -63,6 +64,7 @@ revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour 
 resetData:"Effacer les données sauvegardées",resetInfo:"Supprime tout ce que le jeu garde dans votre navigateur : statistiques globales, historique des mains et tout tournoi en cours à reprendre. Votre choix de langue est conservé. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l'historique des mains et tout tournoi en cours ?",resetDone:"✓ Effacé",
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",
 fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",
+actMenu:"▲ Menu",actTurn:"▲ À vous",
 log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",
 waiting:"Les conseils apparaissent ici quand c'est votre tour.",
 yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",draws:"Tirages",potOdds:"Cote du pot",yourStack:"Votre tapis",sugSize:"Taille suggérée",
@@ -117,6 +119,7 @@ revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir
 resetData:"Borrar datos guardados",resetInfo:"Elimina todo lo que el juego guarda en tu navegador: estadísticas globales, historial de manos y cualquier torneo sin terminar. Tu idioma se mantiene. No se puede deshacer.",resetConfirm:"¿Borrar todas las estadísticas, el historial de manos y cualquier torneo sin terminar?",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",
 fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
+actMenu:"▲ Menú",actTurn:"▲ Tu turno",
 log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",
 waiting:"Los consejos aparecen aquí cuando es tu turno.",
 yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",draws:"Proyectos",potOdds:"Odds del bote",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
@@ -323,7 +326,8 @@ function layoutSeats(){
     if(seat){seat.style.left=x+'px'; seat.style.top=(y-28)+'px';}
   }
   /* clamp pass: no seat may leave the felt (offset* geometry — safe under CSS transforms) */
-  const pad=fl?{l:18,r:22,t:8,b:14}:isMobile()?{l:6,r:6,t:4,b:10}:{l:2,r:2,t:2,b:2};
+  const actOpen=HAS_DOM&&$('game')?.classList.contains('act-open');
+  const pad=fl?{l:actOpen?18:4,r:22,t:8,b:actOpen?14:4}:isMobile()?{l:actOpen?6:2,r:6,t:4,b:actOpen?10:2}:{l:2,r:2,t:2,b:2};
   for(const p of state.players){
     const seat=$('seat'+p.i); if(!seat||!seat.offsetHeight)continue;
     const l=seat.offsetLeft,t=seat.offsetTop,w=seat.offsetWidth,h=seat.offsetHeight;
@@ -481,6 +485,26 @@ function render(winners){
 /* ---------- live coach ---------- */
 const pct=e=>Math.round(e*100)+'%';
 function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:980px) and (orientation:portrait)').matches; }
+function setActBar(open){
+  if(!HAS_DOM||!isMobile())return;
+  const g=$('game'); if(!g)return;
+  g.classList.toggle('act-open',open);
+  g.classList.toggle('act-collapsed',!open);
+  const bd=$('actBackdrop'),fab=$('actFab');
+  if(fab){fab.setAttribute('aria-expanded',open?'true':'false');}
+  syncActFab();
+  layoutSeats();
+}
+function syncActFab(){
+  if(!HAS_DOM||!isMobile())return;
+  const fab=$('actFab'),g=$('game');
+  if(!fab||!g||g.classList.contains('hidden')){if(fab)fab.classList.add('hidden');return;}
+  const open=g.classList.contains('act-open');
+  const onTurn=$('humanCtls')&&!$('humanCtls').classList.contains('hidden');
+  fab.classList.toggle('hidden',open);
+  fab.textContent=onTurn?T('actTurn'):T('actMenu');
+  fab.classList.toggle('pulse',onTurn&&!open);
+}
 /* force landscape on phones: rotate the whole game 90° when held portrait */
 function updateOrient(){
   if(!HAS_DOM)return;
@@ -497,8 +521,8 @@ function updateOrient(){
     g.style.width=''; g.style.height=''; g.style.transform='';
   }
   layoutSeats();
+  syncActFab();
 }
-/* media-aware coach visibility: docked panel on desktop, slide-down sheet on mobile */
 function setCoach(on){
   if(!HAS_DOM)return;
   const c=$('coach'); if(!c)return;
@@ -739,12 +763,15 @@ function showActions(p){
     updateRaiseLabel();
   }
   try{ updateCoach(p); }catch(err){ $('coachBody').innerHTML=`<div class="waiting">${C('coachErr')}</div>`; }
+  syncActFab();
 }
 function hideActions(){
   if(!HAS_DOM)return;
   $('humanCtls').classList.add('hidden');
   $('waitMsg').textContent='';
   coachWait();
+  setActBar(false);
+  syncActFab();
 }
 function updateRaiseLabel(){
   const v=getRaiseSliderAmt();
@@ -955,6 +982,7 @@ function applyLang(){
   set('foldBtn','fold'); set('prMin','min'); set('prHalf','halfPot'); set('prPot','pot'); set('prMax','allin');
   set('rpClose','close'); set('rpTitle','replayTitle'); set('ovBtn','playAgain'); set('chartClose','close');
   set('rpPrevH','handNavP'); set('rpNextH','handNavN'); set('rpPrevS','streetNavP'); set('rpNextS','streetNavN');
+  const af=$('actFab'); if(af)af.textContent=T('actMenu');
   const ch=$('coach').querySelector('h3'); if(ch)ch.textContent=T('liveCoach');
   const w=$('coachBody').querySelector('.waiting'); if(w)w.textContent=T('waiting');
   $('langSel').value=lang; $('langTop').value=lang;
@@ -1171,6 +1199,13 @@ function initUI(){
     cr.addEventListener('pointercancel',end);
   }
   setCoach(!isMobile());   // default: docked on desktop, hidden sheet on mobile
+  if(isMobile()){
+    $('game').classList.add('act-collapsed');
+    $('actFab').classList.remove('hidden');
+    $('actFab').onclick=e=>{e.stopPropagation();setActBar(true);};
+    $('actBackdrop').onclick=()=>setActBar(false);
+    syncActFab();
+  }
   $('autoNext').onchange=e=>{
     if(!e.target.checked){
       clearTimeout(nextTimer);
