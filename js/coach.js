@@ -62,6 +62,12 @@ mExplain:m=>` What "M = ${m}" means: your stack divided by the cost of one full 
 cashModeNote:` Fixed blinds in cash — chip EV equals real money EV here (no ICM or prize pressure).`,
 cashDeepNote:bb=>` At ${bb} BB deep in cash, implied odds matter: pocket pairs and suited connectors play bigger than their rank suggests, and you can widen steals in position — but blinds never rise, so play for value and avoid bloating pots out of position without equity.`,
 cashDeepIp:bb=>` In position at ${bb} BB, you can open wider and stab after checks — deep stacks let callers continue with medium hands, so pressure capped ranges; still fold trash to big raises.`,
+sprDeep:s=>` SPR ~${s} (deep) — implied odds are live: sets and draws can win big pots; one pair alone is rarely worth stacking off unless the board is dry.`,
+sprMid:s=>` SPR ~${s} (medium) — top pair+ can stack off vs aggression; draws need correct odds; don't inflate pots OOP with marginal made hands.`,
+sprLow:s=>` SPR ~${s} (low) — you're committed territory: one pair or better often has to get the money in; don't float wide hoping to improve.`,
+chartBb3bet:(c,v)=>`${c} is in the BB defense chart (${v}) — 3-bet for value or as a blocker bluff vs this steal.`,
+chartBbCall:(c,v,e,o)=>`${c} is in the BB calling range vs ${v} — defend wide enough that steals can't print money. Your equity (${e}) covers the price (${o}).`,
+chartBbFold:(c,v)=>`${c} is outside the BB defense chart vs ${v} — folding saves chips; calling trash from the BB is a classic cash-game leak.`,
 widenNote:(b,e,d)=>` Rising blinds and dead money change the math: your normal ~${b}% opening range here is adjusted to ~${e}%${d===1?' — and the players left to act fold too much, so attack them':d===-1?' — tempered, because the players left to act defend wide, so steal less into them':''}.`,
 stackDomNote:(r,c,n)=>` You have ~${r}× the largest stack and cover ${c} of ${n} opponents still in — shorter stacks fold more often, so the coach widens steal/iso ranges slightly. Calling marginal hands is still a leak; raise or fold.`,
 stackDomIso:(c,p,r)=>`${c} is outside the standard ${p} chart, but with ~${r}× the table's biggest stack you can iso-raise as a pressure play — shorter stacks can't gamble back easily. Raise, don't call.`,
@@ -173,6 +179,12 @@ mExplain:m=>` Ce que signifie « M = ${m} » : votre tapis divisé par le coût 
 cashModeNote:` Blinds fixes en cash — l'EV en jetons = l'argent réel (pas d'ICM ni de pression des prix).`,
 cashDeepNote:bb=>` À ${bb} BB en cash, les cotes implicites comptent : paires et connecteurs assortis jouent plus fort que leur rang, et vous pouvez élargir les steals en position — mais les blinds ne montent jamais : jouez pour la valeur, évitez de gonfler les pots hors position sans équité.`,
 cashDeepIp:bb=>` En position à ${bb} BB, ouvrez plus large et stabe après checks — les tapis profonds laissent suivre avec des mains moyennes ; couchez quand même le trash face aux grosses relances.`,
+sprDeep:s=>` SPR ~${s} (profond) — les cotes implicites comptent : sets et tirages peuvent gagner gros ; une paire seule ne suffit souvent pas pour tout miser.`,
+sprMid:s=>` SPR ~${s} (moyen) — top paire+ peut aller au tapis sous pression ; les tirages ont besoin des bonnes cotes ; ne gonflez pas les pots hors position.`,
+sprLow:s=>` SPR ~${s} (bas) — zone d'engagement : une paire ou mieux doit souvent aller chercher l'argent ; ne flottez pas large en espérant vous améliorer.`,
+chartBb3bet:(c,v)=>`${c} figure dans la charte de défense BB (${v}) — 3-bet pour valeur ou en bluff bloqueur face à ce steal.`,
+chartBbCall:(c,v,e,o)=>`${c} est dans la range de call BB vs ${v} — défendez assez large pour que les steals ne soient pas gratuits. Votre équité (${e}) couvre le prix (${o}).`,
+chartBbFold:(c,v)=>`${c} est hors de la charte BB vs ${v} — couchez et économisez ; suivre du trash en BB est une fuite classique.`,
 widenNote:(b,e,d)=>` Les blinds qui montent et l'argent mort changent le calcul : votre range d'ouverture normale (~${b}%) est ajustée à ~${e}%${d===1?' — et les joueurs restants se couchent trop : attaquez-les':d===-1?' — tempérée, car les joueurs restants défendent large : volez moins contre eux':''}.`,
 stackDomNote:(r,c,n)=>` Vous avez ~${r}× le plus gros tapis et couvrez ${c} sur ${n} adversaires encore en jeu — les tapis courts se couchent plus souvent : le coach élargit légèrement les ranges de vol/iso. Suivre des mains marginales reste une fuite ; relancez ou couchez.`,
 stackDomIso:(c,p,r)=>`${c} n'est pas dans la charte ${p} standard, mais avec ~${r}× le plus gros tapis vous pouvez iso-relancer pour faire pression — les courts ne peuvent pas vous contrer facilement. Relancez, ne suivez pas.`,
@@ -284,6 +296,12 @@ mExplain:m=>` Qué significa «M = ${m}»: tu stack dividido por el coste de una
 cashModeNote:` Ciegas fijas en cash — el EV en fichas = dinero real (sin ICM ni presión de premios).`,
 cashDeepNote:bb=>` Con ${bb} BB en cash, las odds implícitas importan: parejas y conectores suited juegan mejor que su ranking; puedes ampliar robos en posición — pero las ciegas no suben: juega por valor y no hinches botes fuera de posición sin equity.`,
 cashDeepIp:bb=>` En posición con ${bb} BB, abre más ancho y apuesta tras checks — stacks profundos permiten calls con manos medias; retírate igual ante subidas grandes con basura.`,
+sprDeep:s=>` SPR ~${s} (profundo) — las odds implícitas importan: sets y proyectos pueden ganar botes grandes; un par solo rara vez basta para apilar.`,
+sprMid:s=>` SPR ~${s} (medio) — top pair+ puede ir all-in bajo presión; los proyectos necesitan odds correctas; no hinches botes fuera de posición.`,
+sprLow:s=>` SPR ~${s} (bajo) — territorio de compromiso: un par o mejor suele tener que meter el dinero; no flotes ancho esperando mejorar.`,
+chartBb3bet:(c,v)=>`${c} está en la tabla de defensa BB (${v}) — 3-bet por valor o como bluff bloqueador contra este steal.`,
+chartBbCall:(c,v,e,o)=>`${c} está en el rango de call BB vs ${v} — defiende lo bastante ancho para que los steals no sean gratis. Tu equity (${e}) cubre el precio (${o}).`,
+chartBbFold:(c,v)=>`${c} está fuera de la tabla BB vs ${v} — retírate y ahorra; pagar basura desde BB es una fuga clásica en cash.`,
 widenNote:(b,e,d)=>` Las ciegas crecientes y el dinero muerto cambian el cálculo: tu rango de apertura normal (~${b}%) se ajusta a ~${e}%${d===1?' — y los jugadores por hablar se retiran demasiado: atácalos':d===-1?' — moderado, porque los que quedan defienden mucho: roba menos contra ellos':''}.`,
 stackDomNote:(r,c,n)=>` Tienes ~${r}× el stack más grande y cubres a ${c} de ${n} rivales en juego — los stacks cortos se retiran más: el coach amplía un poco los rangos de robo/iso. Pagar manos marginales sigue siendo fuga; sube o retírate.`,
 stackDomIso:(c,p,r)=>`${c} no está en la tabla ${p} estándar, pero con ~${r}× el mayor stack puedes iso-subir como presión — los cortos no pueden devolverte la apuesta fácilmente. Sube, no pagues.`,
@@ -751,6 +769,22 @@ function facingChartFor(raiser){
   const fc=chartFor('facing',key);
   return fc&&fc.raise&&fc.call?{fc,label:key,perPos:false}:null;
 }
+/* BB defense vs CO/BTN/SB steals — wider than generic facing charts */
+function bbDefendChartFor(raiser,heroPos){
+  if(heroPos!=='BB'||!raiser)return null;
+  const rp=raiser.pos||'';
+  const key=/^CO$/.test(rp)?'vsCO':/^BTN$/.test(rp)?'vsBTN':/^SB$/.test(rp)?'vsSB':null;
+  if(!key)return null;
+  const fc=chartFor('bbDefend',key);
+  return fc&&fc.raise&&fc.call?{fc,label:rp,key,bbDefend:true}:null;
+}
+function coachSpr(p,callAmt,pot){
+  const villains=inHand().filter(q=>q!==p);
+  let eff=p.chips;
+  for(const v of villains) eff=Math.min(eff,v.chips+v.bet);
+  const potLine=pot+(callAmt>0?callAmt:0);
+  return potLine>0?eff/potLine:99;
+}
 
 /* ===== ICM: tournament prize-money math (Malmuth-Harville) ===== */
 const PAYOUTS=n=>n<=4?[1]:n<=6?[0.65,0.35]:[0.5,0.3,0.2];
@@ -918,6 +952,12 @@ function coachDecide(p){
   }
   eqAdj=eq;
   const odds=callAmt>0?callAmt/(pot+callAmt):0;
+  let spr,sprZone;
+  if(flags.showSpr&&state.stage!=='preflop'){
+    spr=coachSpr(p,callAmt,pot);
+    sprZone=spr>=10?'deep':spr>=4?'mid':'low';
+    extra.push(C(spr>=10?'sprDeep':spr>=4?'sprMid':'sprLow',Math.round(spr*10)/10));
+  }
 
   /* position adjustment: tighter early, looser late (preflop) */
   const pos=p.pos||'';
@@ -1069,12 +1109,31 @@ function coachDecide(p){
         if(dom.tier>=1&&lateSteal&&callAmt>0) extra.push(C('stackDomFoldHint'));
       }
     }else{
-      /* facing a raise: per-raiser-position solver chart, then EP/LP bucket fallback */
+      /* facing a raise: BB defense vs steals, then per-raiser-position chart, then EP/LP bucket */
       const raiser=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
-      const facing=facingChartFor(raiser);
+      let facing=pos==='BB'?bbDefendChartFor(raiser,pos):null;
+      if(!facing) facing=facingChartFor(raiser);
       if(facing){
-        const {fc,label,perPos}=facing;
-        chartInfo={kind:'facing',pos:perPos?`vs ${label}`:label,list:fc.raise,list2:fc.call};
+        const {fc,label,perPos,bbDefend}=facing;
+        chartInfo={kind:bbDefend?'bbDefend':'facing',pos:bbDefend?`BB vs ${label}`:(perPos?`vs ${label}`:label),list:fc.raise,list2:fc.call};
+        if(bbDefend){
+          if(fc.raise.includes(code)){
+            rec='RAISE';
+            why.push(C('chartBb3bet',code,label));
+          }else if(fc.call.includes(code)&&eq>=odds+icmPrem){
+            rec='CALL';
+            why.push(C('chartBbCall',code,label,pct(eq),pct(odds)));
+          }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
+            rec='CALL';
+            why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
+          }else if(fc.call.includes(code)){
+            rec='FOLD';
+            why.push(C('chartIcmFold',code,pct(eq),pct(odds)));
+          }else{
+            rec='FOLD';
+            why.push(C('chartBbFold',code,label));
+          }
+        }else{
         const vsEarlyR=raiser?/^(UTG|MP)/.test(raiser.pos||''):false;
         if(fc.raise.includes(code)){
           rec='RAISE';
@@ -1091,6 +1150,7 @@ function coachDecide(p){
         }else{
           rec='FOLD';
           why.push(C('chartFoldVs',code));
+        }
         }
       }else{
         const ct=clamp(0.13+(late?0.05:0)+(early?-0.03:0),0.06,0.25);
@@ -1209,7 +1269,7 @@ function coachDecide(p){
   };
   coachSpotBrief(p,extra,{eq,eqAdj,odds,callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,odds,callAmt,pot,opps,pos,early,late,
-          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,code};
+          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,code,spr,sprZone};
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */
@@ -1223,10 +1283,10 @@ function showChartMatrix(info,heroCode){
     html+=`<div class="cc${inSet.has(h)?' in':inSet2.has(h)?' in2':''}${h===heroCode?' me':''}">${h}</div>`;
   }
   $('chartGrid').innerHTML=html;
-  const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='iso'?'chartTitleIso':info.kind==='facing'?'chartTitleFacing':info.kind==='range'?'chartTitleRange':'chartTitleShove';
+  const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='iso'?'chartTitleIso':info.kind==='facing'?'chartTitleFacing':info.kind==='bbDefend'?'chartTitleBbDefend':info.kind==='range'?'chartTitleRange':'chartTitleShove';
   $('chartTitle').textContent=`${info.pos} — ${T(titleKey)}`;
   $('chartLegend').innerHTML=
-    `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'||info.kind==='iso'?'legendOpen':info.kind==='facing'?'legend3bet':info.kind==='range'?'legendRange':'legendShove')}</span>`+
+    `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'||info.kind==='iso'?'legendOpen':info.kind==='facing'||info.kind==='bbDefend'?'legend3bet':info.kind==='range'?'legendRange':'legendShove')}</span>`+
     (info.list2?`<span><span class="sw" style="background:#2e7d8f;"></span>${T('legendCall')}</span>`:'')+
     `<span><span class="sw" style="background:#1d232e;"></span>${T('legendFold')}</span>`+
     `<span><span class="sw" style="background:none;outline:2px solid #4da3ff;outline-offset:-1px;"></span>${T('legendYou')}</span>`;

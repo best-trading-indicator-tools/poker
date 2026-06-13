@@ -9,6 +9,10 @@ cashRebuy:b=>`Rebuy for ${b}`,
 revTitle:"Session review",revWinRate:"Win rate",revITM:"In the money",revAvgFinish:"Avg finish",
 revNet:"Total net",revEVLeaked:"EV leaked",revGames:"Games",revNoGames:"No finished games yet — play a tournament!",revNoGamesCash:"No finished sessions yet — play a cash game!",
 revCashBadge:"Cash",revSngBadge:"Sit & Go",
+revFilterAll:"All",revFilterCash:"Cash",revFilterSng:"Sit & Go",
+revBB100:"BB/100",revCashHands:"Cash hands",revCashNetBB:"Net (BB)",revCashRebuys:"Rebuys",
+sprLbl:"SPR",sprZoneDeep:"deep",sprZoneMid:"medium",sprZoneLow:"low",
+statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Leak finder (by spot)",revLeaksNone:"No classified leaks yet — deviate from the coach and finish games to populate this.",
 leakPfOpen:"Preflop opens",leakPfFace:"Facing raises",leakCbet:"C-bet defense",leakMultiway:"Multiway pots",leakRiver:"River calls",leakRiverAir:n=>`${n} river call${n>1?'s':''} with high card / no hand`,
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
@@ -50,7 +54,7 @@ mpRoomGone:"Room not found — check the code, and make sure the host still has 
 mpConnFail:"Could not connect to the room. Phone networks sometimes block direct connections — try joining from the same Wi-Fi as the host, then retry.",
 mpJoined:n=>`${n} joined the room`,mpGone:n=>`${n} disconnected — their hand is folded`,
 mpYou:"(you · host)",mpYouG:"(you)",chatPh:"Message…",
-viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleIso:"iso vs limpers chart",chartTitleShove:"all-in chart",chartTitleFacing:"chart vs this raise",
+viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleIso:"iso vs limpers chart",chartTitleShove:"all-in chart",chartTitleFacing:"chart vs this raise",chartTitleBbDefend:"BB defense chart",
 viewRange:"📊 View the bettor's estimated range",chartTitleRange:"estimated range right now",legendRange:"hands he could still have",
 legendOpen:"raise first-in",legendShove:"go all-in",legendFold:"fold",legendYou:"your hand",legend3bet:"re-raise (3-bet)",legendCall:"call",
 benchConfirm:"Simulate 25 full 9-player tournaments where a bot plays PURE coach advice, to measure how good the coach really is. Takes a minute or two. Run it?",
@@ -70,6 +74,10 @@ cashRebuy:b=>`Rebuy pour ${b}`,
 revTitle:"Bilan des sessions",revWinRate:"Taux de victoire",revITM:"Dans l'argent",revAvgFinish:"Place moyenne",
 revNet:"Net total",revEVLeaked:"EV perdu",revGames:"Parties",revNoGames:"Aucune partie terminée — jouez un tournoi !",revNoGamesCash:"Aucune session terminée — jouez une partie cash !",
 revCashBadge:"Cash",revSngBadge:"Sit & Go",
+revFilterAll:"All",revFilterCash:"Cash",revFilterSng:"Sit & Go",
+revBB100:"BB/100",revCashHands:"Cash hands",revCashNetBB:"Net (BB)",revCashRebuys:"Rebuys",
+sprLbl:"SPR",sprZoneDeep:"deep",sprZoneMid:"medium",sprZoneLow:"low",
+statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Fuites par type de spot",revLeaksNone:"Pas encore de fuites classées — écartez-vous du coach et terminez des parties.",
 leakPfOpen:"Ouvertures préflop",leakPfFace:"Face aux relances",leakCbet:"Défense c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls rivière",leakRiverAir:n=>`${n} call${n>1?'s':''} rivière sans main`,
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
@@ -111,7 +119,7 @@ mpRoomGone:"Salon introuvable — vérifiez le code et que l'hôte a toujours le
 mpConnFail:"Connexion au salon impossible. Les réseaux mobiles bloquent parfois les connexions directes — essayez le même Wi-Fi que l'hôte, puis réessayez.",
 mpJoined:n=>`${n} a rejoint le salon`,mpGone:n=>`${n} s'est déconnecté — sa main est couchée`,
 mpYou:"(vous · hôte)",mpYouG:"(vous)",chatPh:"Message…",
-viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleIso:"charte iso vs limps",chartTitleShove:"charte de tapis",chartTitleFacing:"charte face à cette relance",
+viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleIso:"charte iso vs limps",chartTitleShove:"charte de tapis",chartTitleFacing:"charte face à cette relance",chartTitleBbDefend:"charte défense BB",
 viewRange:"📊 Voir la range estimée du miseur",chartTitleRange:"range estimée en ce moment",legendRange:"mains qu'il peut encore avoir",
 legendOpen:"relancer en premier",legendShove:"partir à tapis",legendFold:"se coucher",legendYou:"votre main",legend3bet:"sur-relancer (3-bet)",legendCall:"suivre",
 benchConfirm:"Simuler 25 tournois complets à 9 joueurs où un bot suit UNIQUEMENT les conseils du coach, pour mesurer sa vraie valeur. Compte une à deux minutes. Lancer ?",
@@ -131,6 +139,10 @@ cashRebuy:b=>`Rebuy por ${b}`,
 revTitle:"Resumen de sesiones",revWinRate:"Tasa de victorias",revITM:"En premios",revAvgFinish:"Puesto medio",
 revNet:"Neto total",revEVLeaked:"EV perdido",revGames:"Partidas",revNoGames:"Sin partidas terminadas — ¡juega un torneo!",revNoGamesCash:"Sin sesiones terminadas — ¡juega cash!",
 revCashBadge:"Cash",revSngBadge:"Sit & Go",
+revFilterAll:"All",revFilterCash:"Cash",revFilterSng:"Sit & Go",
+revBB100:"BB/100",revCashHands:"Cash hands",revCashNetBB:"Net (BB)",revCashRebuys:"Rebuys",
+sprLbl:"SPR",sprZoneDeep:"deep",sprZoneMid:"medium",sprZoneLow:"low",
+statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Fugas por tipo de spot",revLeaksNone:"Sin fugas clasificadas aún — desvíate del coach y termina partidas.",
 leakPfOpen:"Aperturas preflop",leakPfFace:"Frente a subidas",leakCbet:"Defensa c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls en river",leakRiverAir:n=>`${n} call${n>1?'s':''} en river sin mano`,
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
@@ -172,7 +184,7 @@ mpRoomGone:"Sala no encontrada — revisa el código y que el anfitrión siga co
 mpConnFail:"No se pudo conectar a la sala. Las redes móviles a veces bloquean conexiones directas — prueba el mismo Wi-Fi que el anfitrión y reintenta.",
 mpJoined:n=>`${n} entró en la sala`,mpGone:n=>`${n} se desconectó — su mano se retira`,
 mpYou:"(tú · anfitrión)",mpYouG:"(tú)",chatPh:"Mensaje…",
-viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleIso:"tabla iso vs limps",chartTitleShove:"tabla de all-in",chartTitleFacing:"tabla contra esta subida",
+viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleIso:"tabla iso vs limps",chartTitleShove:"tabla de all-in",chartTitleFacing:"tabla contra esta subida",chartTitleBbDefend:"tabla defensa BB",
 viewRange:"📊 Ver el rango estimado del apostador",chartTitleRange:"rango estimado ahora mismo",legendRange:"manos que aún puede tener",
 legendOpen:"subir de primeras",legendShove:"ir all-in",legendFold:"retirarse",legendYou:"tu mano",legend3bet:"resubir (3-bet)",legendCall:"igualar",
 benchConfirm:"Simular 25 torneos completos de 9 jugadores donde un bot sigue SOLO los consejos del coach, para medir lo bueno que es de verdad. Tarda uno o dos minutos. ¿Lanzar?",
@@ -797,7 +809,8 @@ function updateCoach(p){
   if(!HAS_DOM)return;
   const R=coachDecide(p);
   const {rec,coachT,evs,why,extra,handDesc,drawRow,eq,odds,callAmt,pot,opps,pos,early,late,
-         actsFirst,actsLast,ordIdx,ordLen,M,mZone,icmPrem}=R;
+         actsFirst,actsLast,ordIdx,ordLen,M,mZone,icmPrem,spr,sprZone}=R;
+  const flags=getMode().coachFlags||{};
   let sizeRow='';
   if(rec==='RAISE'||rec==='ALLIN'){
     sizeRow=`<div class="coach-row"><span>${T('sugSize')}</span><b>${usd(coachT)} (${bbs(coachT)})</b></div>`;
@@ -811,7 +824,9 @@ function updateCoach(p){
   const recLabel = rec==='ALLIN' ? `${T('recALLIN')} ${usd(p.bet+p.chips)}`
     : rec==='RAISE' ? `${state.currentBet>0?T('recRAISETO'):T('recBET')} ${usd(coachT)} · ${bbs(coachT)}`
     : T('rec'+rec);
-  const showM=(getMode().coachFlags||{}).mRatio;
+  const showM=flags.mRatio;
+  const sprRow=flags.showSpr&&spr!=null&&state.stage!=='preflop'
+    ?`<div class="coach-row"><span>${T('sprLbl')}</span><b>~${Math.round(spr*10)/10} · ${T(sprZone==='deep'?'sprZoneDeep':sprZone==='mid'?'sprZoneMid':'sprZoneLow')}</b></div>`:'';
   $('coachBody').innerHTML=
     `<div class="rec ${rec}">${recLabel}</div>`+
     `<div class="coach-row"><span>${T('yourHand')}</span><b>${handDesc}</b></div>`+
@@ -820,6 +835,7 @@ function updateCoach(p){
     `<div class="coach-row"><span>${T('winChance')}</span><b>~${pct(eq)} ${T('vs')} ${opps} ${opps>1?T('opps'):T('opp')}</b></div>`+
     drawRow+
     (callAmt>0?`<div class="coach-row"><span>${T('potOdds')}</span><b>${T('need')}${pct(odds)} (${usd(callAmt)} &rarr; ${usd(pot)})</b></div>`:'')+
+    sprRow+
     `<div class="coach-row"><span>${T('yourStack')}</span><b>${bbs(p.chips+p.bet)}</b></div>`+
     (showM?`<div class="coach-row"><span>M-ratio</span><b>M = ${M>99?'99+':Math.round(M)} · ${T('zone'+mZone)}</b></div>`:'')+
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
@@ -883,10 +899,19 @@ function renderStats(){
   const fp=S=>S.decisions>0?Math.round(100*S.followed/S.decisions)+'%':'—';
   const pof=(a,b)=>b>0?Math.round(100*(a||0)/b)+'%':'—';
   const af=(s.aCalls||0)>0?((s.aBets||0)/s.aCalls).toFixed(1):((s.aBets||0)>0?'∞':'—');
+  const cash=isCashGame();
+  const blind=cash?(state.cfg?.startBlind||state.bb||1):1;
+  const bbNet=cash?Math.round((s.net/blind)*10)/10:0;
+  const bb100=cash&&s.hands>0?Math.round((bbNet/s.hands)*1000)/10:0;
+  const fmtBB=v=>(v>=0?'+':'−')+Math.abs(v).toFixed(1)+' BB';
   $('coachStats').innerHTML=
     `<h4>${T('thisGame')}</h4>`+
-    `<div class="srow"><span>${T('handsPW')}</span><b>${s.hands} / ${s.won}</b></div>`+
-    `<div class="srow"><span>${T('net')}</span><b>${s.net>=0?'+':'−'}${usd(Math.abs(s.net))}</b></div>`+
+    `<div class="srow"><span>${T('handsPW')}</span><b>${cash?s.hands:`${s.hands} / ${s.won}`}</b></div>`+
+    (cash
+      ?`<div class="srow"><span>${T('statBB100')}</span><b class="${bb100>=0?'pos':'neg'}">${bb100>=0?'+':''}${bb100}</b></div>`+
+       `<div class="srow"><span>${T('statNetBB')}</span><b class="${bbNet>=0?'pos':'neg'}">${fmtBB(bbNet)}</b></div>`+
+       `<div class="srow"><span>${T('statRebuys')}</span><b>${state.cashRebuys||0}</b></div>`
+      :`<div class="srow"><span>${T('net')}</span><b>${s.net>=0?'+':'−'}${usd(Math.abs(s.net))}</b></div>`)+
     `<div class="srow"><span>${T('biggestPot')}</span><b>${s.biggest?usd(s.biggest):'—'}</b></div>`+
     `<div class="srow"><span>${T('vpipPfr')}</span><b>${pof(s.vpipH,s.hands)} / ${pof(s.pfrH,s.hands)}</b></div>`+
     `<div class="srow"><span>${T('aggF')}</span><b>${af}</b></div>`+
@@ -1096,12 +1121,17 @@ function saveGameRecord(won,place){
   try{
     const cash=isCashGame();
     const net=cash?getMode().sessionPnL(state):(state.sessStats?state.sessStats.net:0);
+    const startBlind=cash?(state.cfg?.startBlind||state.bb||1):0;
+    const startBB=cash?(state.cfg?.startBB||0):0;
+    const bbNet=cash&&startBlind>0?net/startBlind:0;
+    const bbPer100=cash&&state.handNum>0?(bbNet/state.handNum)*100:0;
     const a2=JSON.parse(localStorage.getItem('sg_poker_games')||'[]');
     a2.push({gameId:state.gameId,t:Date.now(),gameType:state.cfg?.gameType||'sng',
       mp:!!(state.cfg&&(state.cfg.mpRemotes||state.cfg.mpClient)),
       n:state.cfg?state.cfg.numPlayers:0,diff:state.cfg?state.cfg.difficulty:'medium',
       place:cash?0:(won?1:(place||0)),hands:state.handNum,rebuys:cash?(state.cashRebuys||0):0,
       net,evLost:state.sessStats?(state.sessStats.evLost||0):0,
+      startBlind,startBB,bbNet,bbPer100,
       decisions:(state.gameDecisions||[]).slice(),
       series:(gameSeries||[]).slice(-300)});
     while(a2.length>200)a2.shift();
@@ -1117,28 +1147,63 @@ function evSparklineSVG(games){
   const series=games.map((g,i)=>({h:i+1,c:games.slice(0,i+1).reduce((s,x)=>s+(x.evLost||0),0)}));
   return sparklineSVG(series);
 }
+let revFilter='all';
+function cashBB100(games){
+  const cash=games.filter(g=>g.gameType==='cash'&&g.hands>0);
+  if(!cash.length)return 0;
+  const bbTot=cash.reduce((s,g)=>s+(g.bbNet!=null?g.bbNet:(g.startBlind>0?(g.net||0)/g.startBlind:0)),0);
+  const hands=cash.reduce((s,g)=>s+g.hands,0);
+  return hands>0?Math.round(bbTot/hands*1000)/10:0;
+}
 function showSessionReview(){
   if(!HAS_DOM)return;
-  const games=loadGames().filter(g=>!g.mp).reverse();
+  const allGames=loadGames().filter(g=>!g.mp).reverse();
+  const games=revFilter==='cash'?allGames.filter(g=>g.gameType==='cash')
+    :revFilter==='sng'?allGames.filter(g=>g.gameType!=='cash'):allGames;
   const n=games.length;
   const sngGames=games.filter(g=>g.gameType!=='cash');
+  const cashGames=games.filter(g=>g.gameType==='cash');
   const wins=sngGames.filter(g=>g.place===1).length;
   const itm=sngGames.filter(g=>g.place>0&&g.place<=paidPlaces(g.n)).length;
   const finishes=sngGames.filter(g=>g.place>0);
   const avgFin=finishes.length?finishes.reduce((s,g)=>s+g.place,0)/finishes.length:0;
   const netTot=games.reduce((s,g)=>s+(g.net||0),0);
   const evTot=games.reduce((s,g)=>s+(g.evLost||0),0);
-  $('revSummary').innerHTML=
-    `<div class="rv"><span>${T('revGames')}</span><b>${n}</b></div>`+
-    `<div class="rv"><span>${T('revWinRate')}</span><b>${sngGames.length?Math.round(wins/sngGames.length*100):0}%</b></div>`+
-    `<div class="rv"><span>${T('revITM')}</span><b>${sngGames.length?Math.round(itm/sngGames.length*100):0}%</b></div>`+
-    `<div class="rv"><span>${T('revAvgFinish')}</span><b>${avgFin?avgFin.toFixed(1):'—'}</b></div>`+
-    `<div class="rv"><span>${T('revNet')}</span><b class="${netTot>=0?'pos':'neg'}">${netTot>=0?'+':'−'}${usd(Math.abs(netTot))}</b></div>`+
-    `<div class="rv"><span>${T('revEVLeaked')}</span><b class="neg">−${usd(evTot)}</b></div>`;
+  const cashHands=cashGames.reduce((s,g)=>s+g.hands,0);
+  const cashNetBB=cashGames.reduce((s,g)=>s+(g.bbNet!=null?g.bbNet:(g.startBlind>0?(g.net||0)/g.startBlind:0)),0);
+  const cashRebuys=cashGames.reduce((s,g)=>s+(g.rebuys||0),0);
+  const bb100=cashBB100(cashGames);
+  let summary='';
+  if(revFilter==='cash'){
+    summary=
+      `<div class="rv"><span>${T('revGames')}</span><b>${n}</b></div>`+
+      `<div class="rv"><span>${T('revCashHands')}</span><b>${cashHands}</b></div>`+
+      `<div class="rv"><span>${T('revBB100')}</span><b class="${bb100>=0?'pos':'neg'}">${bb100>=0?'+':''}${bb100}</b></div>`+
+      `<div class="rv"><span>${T('revCashNetBB')}</span><b class="${cashNetBB>=0?'pos':'neg'}">${cashNetBB>=0?'+':'−'}${Math.abs(cashNetBB).toFixed(1)} BB</b></div>`+
+      `<div class="rv"><span>${T('revCashRebuys')}</span><b>${cashRebuys}</b></div>`+
+      `<div class="rv"><span>${T('revEVLeaked')}</span><b class="neg">−${usd(evTot)}</b></div>`;
+  }else if(revFilter==='sng'){
+    summary=
+      `<div class="rv"><span>${T('revGames')}</span><b>${n}</b></div>`+
+      `<div class="rv"><span>${T('revWinRate')}</span><b>${n?Math.round(wins/n*100):0}%</b></div>`+
+      `<div class="rv"><span>${T('revITM')}</span><b>${n?Math.round(itm/n*100):0}%</b></div>`+
+      `<div class="rv"><span>${T('revAvgFinish')}</span><b>${avgFin?avgFin.toFixed(1):'—'}</b></div>`+
+      `<div class="rv"><span>${T('revNet')}</span><b class="${netTot>=0?'pos':'neg'}">${netTot>=0?'+':'−'}${usd(Math.abs(netTot))}</b></div>`+
+      `<div class="rv"><span>${T('revEVLeaked')}</span><b class="neg">−${usd(evTot)}</b></div>`;
+  }else{
+    summary=
+      `<div class="rv"><span>${T('revGames')}</span><b>${n}</b></div>`+
+      `<div class="rv"><span>${T('revWinRate')}</span><b>${sngGames.length?Math.round(wins/sngGames.length*100):0}%</b></div>`+
+      `<div class="rv"><span>${T('revITM')}</span><b>${sngGames.length?Math.round(itm/sngGames.length*100):0}%</b></div>`+
+      (cashGames.length?`<div class="rv"><span>${T('revBB100')}</span><b class="${bb100>=0?'pos':'neg'}">${bb100>=0?'+':''}${bb100}</b></div>`:'')+
+      `<div class="rv"><span>${T('revNet')}</span><b class="${netTot>=0?'pos':'neg'}">${netTot>=0?'+':'−'}${usd(Math.abs(netTot))}</b></div>`+
+      `<div class="rv"><span>${T('revEVLeaked')}</span><b class="neg">−${usd(evTot)}</b></div>`;
+  }
+  $('revSummary').innerHTML=summary;
   $('revSpark').innerHTML=n>=2?evSparklineSVG(games.slice().reverse()):'';
   $('revLeaks').innerHTML=renderRevLeaks(games.slice().reverse());
   if(!n){
-    $('revList').innerHTML=`<p style="color:var(--dim);font-size:13px;">${T('revNoGames')}</p>`;
+    $('revList').innerHTML=`<p style="color:var(--dim);font-size:13px;">${T(revFilter==='cash'?'revNoGamesCash':'revNoGames')}</p>`;
   }else{
     $('revList').innerHTML=`<p style="color:var(--dim);font-size:12px;margin-bottom:8px;">${T('revReplay')}</p>`+
       games.map(g=>{
@@ -1148,9 +1213,10 @@ function showSessionReview(){
         const badge=isCash?T('revCashBadge'):T('revSngBadge');
         const place=isCash?badge:(g.place===1?T('youWin'):g.place?T('ord')(g.place):'—');
         const rebuyTxt=isCash&&g.rebuys?` · ${g.rebuys} rebuy${g.rebuys!==1?'s':''}`:'';
+        const bbTxt=isCash&&g.hands>0?` · ${(g.bbPer100!=null?g.bbPer100:0)>=0?'+':''}${Math.round((g.bbPer100||0)*10)/10} BB/100`:'';
         return `<div class="rev-game" data-gid="${g.gameId||''}"><div class="rg-main">`+
           `<div class="rg-title">${place} · ${g.n}p ${g.diff||''} · ${g.hands} hands</div>`+
-          `<div class="rg-sub">${when}${rebuyTxt}${g.evLost?` · EV −${usd(g.evLost)}`:''}</div></div>`+
+          `<div class="rg-sub">${when}${rebuyTxt}${bbTxt}${g.evLost?` · EV −${usd(g.evLost)}`:''}</div></div>`+
           `<span class="rg-net ${net>=0?'pos':'neg'}">${net>=0?'+':'−'}${usd(Math.abs(net))}</span></div>`;
       }).join('');
     $('revList').querySelectorAll('.rev-game').forEach(el=>{
@@ -1259,6 +1325,7 @@ function applyLang(){
   ['easy','medium','hard'].forEach((k,i)=>{if(dBtns[i])dBtns[i].textContent=T(k);});
   set('startBtn',setupGameType==='cash'?'startCash':'deal'); set('resumeBtn','resume'); set('reviewBtn','review');
   set('revTitle','revTitle'); set('revAllHands','revAllHands'); set('revClose','close');
+  ['revFilterAll','revFilterCash','revFilterSng'].forEach(id=>set(id,id));
   set('resetLbl','resetData'); set('resetInfo','resetInfo');
   set('mpTitle','mpTitle'); set('mpSub','mpSub'); set('mpCreate','mpCreate'); set('mpJoinBtn','mpJoinB');
   set('mpLobbyTitle','mpLobbyTitle'); set('mpCopy','mpCopy'); set('mpFillLbl','mpFillLbl');
@@ -1449,6 +1516,15 @@ function initUI(){
   $('reviewBtn').onclick=showSessionReview;
   $('revClose').onclick=()=>closeDialog($('reviewOv'));
   $('reviewOv').onclick=e=>{if(e.target.id==='reviewOv')closeDialog($('reviewOv'));};
+  ['revFilterAll','revFilterCash','revFilterSng'].forEach(id=>{
+    const el=$(id);
+    if(!el)return;
+    el.onclick=()=>{
+      revFilter=id==='revFilterCash'?'cash':id==='revFilterSng'?'sng':'all';
+      ['revFilterAll','revFilterCash','revFilterSng'].forEach(x=>$(x)?.classList.toggle('on',x===id));
+      showSessionReview();
+    };
+  });
   $('revAllHands').onclick=()=>{closeDialog($('reviewOv'));showHistoryReplay();};
   /* --- clear saved data (human name for localStorage wipe) --- */
   $('resetInfoBtn').onclick=()=>$('resetInfo').classList.toggle('hidden');

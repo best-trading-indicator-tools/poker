@@ -111,10 +111,36 @@ for (const pos of POS) {
   iso[pos] = uniq([...(G.rfi[pos] || []), ...(ISO_EXTRA[pos] || [])]);
 }
 
+/* BB defense vs steals — wider call ranges than facing; 3-bet value + blockers */
+const BB_CALL_CO = uniq([
+  ...vsE.call,
+  '22', '33', '44', '55', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'K9s', 'K8s', 'Q9s', 'J9s', 'T9s', '98s', '87s', '76s',
+  'A9o', 'A8o', 'KJo', 'QJo', 'JTo', 'T9o',
+]);
+const BB_CALL_BTN = uniq([
+  ...vsL.call,
+  '22', '33', '44', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'K9s', 'K8s', 'K7s', 'Q9s', 'Q8s', 'J9s', 'J8s', 'T9s', 'T8s', '98s', '97s', '87s', '76s', '65s', '54s',
+  'A9o', 'A8o', 'A7o', 'KTo', 'QTo', 'JTo', 'T9o', '98o',
+]);
+const BB_CALL_SB = uniq([
+  ...vsL.call,
+  '22', '33', '44', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s', 'K9s', 'K8s', 'K7s', 'K6s', 'Q9s', 'Q8s', 'J9s', 'J8s', 'T9s', 'T8s', 'T7s', '98s', '97s', '87s', '76s', '65s', '54s', '43s',
+  'A9o', 'A8o', 'A7o', 'A6o', 'A5o', 'KTo', 'K9o', 'QTo', 'JTo', 'T9o', '98o', '87o',
+]);
+const BB_3B_CO = uniq([...vsE.raise, 'A5s', 'A4s', 'KQs', 'KJs', 'AQo']);
+const BB_3B_BTN = uniq([...vsL.raise, 'A5s', 'A4s', 'A3s', 'K9s', 'KJs', 'QJs', 'AQo', 'KQo']);
+const BB_3B_SB = uniq([...vsL.raise, 'A5s', 'A4s', 'A3s', 'A2s', 'K9s', 'K8s', 'Q9s', 'KJs', 'QJs', 'JTs', 'AQo', 'AJo']);
+const bbDefend = {
+  vsCO: { raise: BB_3B_CO, call: BB_CALL_CO },
+  vsBTN: { raise: BB_3B_BTN, call: BB_CALL_BTN },
+  vsSB: { raise: BB_3B_SB, call: BB_CALL_SB },
+};
+
 G._source =
-  'Approximations of published 9-max solver/Nash ranges. rfi = raise-first-in; iso = isolate limpers (wider than rfi); shove = all-in by BB depth (5/8/10/12/15/20); facing = 3-bet/call vs a raise with per-position matrices and vsEarly/vsLate fallback.';
+  'Approximations of published 9-max solver/Nash ranges. rfi = raise-first-in; iso = isolate limpers; bbDefend = BB 3-bet/call vs steals; shove = all-in by BB depth; facing = 3-bet/call vs a raise.';
 G.facing = { ...facingPos, vsEarly: vsE, vsLate: vsL };
 G.iso = iso;
+G.bbDefend = bbDefend;
 G.shove = { ...G.shove, 8: shove8, 12: shove12, 15: shove15, 20: shove20 };
 
 const out =
@@ -127,6 +153,8 @@ fs.writeFileSync(CHARTS, out);
 console.log(
   'charts.js:',
   Object.keys(iso).length,
-  'iso positions, shove depths',
+  'iso positions,',
+  Object.keys(bbDefend).length,
+  'BB defend, shove depths',
   Object.keys(G.shove).sort((a, b) => +a - +b).join(','),
 );

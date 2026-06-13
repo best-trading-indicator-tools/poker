@@ -300,6 +300,9 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #revSummary{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:14px;font-size:12.5px;}
 #revSummary .rv b{display:block;font-size:15px;color:var(--text);font-weight:700;margin-top:2px;}
 #revSummary .rv span{color:var(--dim);}
+#revFilter{display:flex;gap:6px;margin-bottom:12px;}
+#revFilter button{flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--dim);font-size:12px;cursor:pointer;}
+#revFilter button.on{border-color:var(--gold);color:var(--gold);background:rgba(212,175,55,.08);}
 #revSpark{margin-bottom:14px;}
 #revLeaks{margin-bottom:14px;}
 .leak-h3{font-size:13px;margin-bottom:8px;color:var(--text);}
@@ -745,6 +748,11 @@ body.act-panel-mode #chipPreview{display:none!important;}
 <div id="reviewOv" class="hidden" aria-hidden="true">
   <div class="rev-card" role="document">
     <h2 id="revTitle">Session review</h2>
+    <div id="revFilter">
+      <button type="button" id="revFilterAll" class="on">All</button>
+      <button type="button" id="revFilterCash">Cash</button>
+      <button type="button" id="revFilterSng">Sit & Go</button>
+    </div>
     <div id="revSummary"></div>
     <div id="revSpark"></div>
     <div id="revLeaks"></div>

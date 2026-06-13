@@ -125,7 +125,9 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 
 **Setup:** players, blind level ($10/$20 … $100/$200), starting stack (BB), difficulty, optional turn timer. Ante, blind speed, and multiplayer are hidden in cash.
 
-**Coach in cash:** GTO charts, equity, pot odds, and postflop buckets unchanged. Tournament-only prose (ICM, Harrington M, “blinds up in N hands”) is off. At **50+ BB**, the coach adds deep-stack cash notes (implied odds, IP steals). Iso charts apply only when someone **limped** — the big blind alone does not count.
+**Coach in cash:** GTO charts, equity, pot odds, and postflop buckets unchanged. Tournament-only prose (ICM, Harrington M, “blinds up in N hands”) is off. At **50+ BB**, the coach adds deep-stack cash notes (implied odds, IP steals). **SPR** (stack-to-pot ratio) appears postflop with zone-specific prose. **BB defense charts** vs CO/BTN/SB steals. Iso charts apply only when someone **limped** — the big blind alone does not count.
+
+**Cash stats:** live panel shows **BB/100**, net in BB, and rebuys. Session review filters All / Cash / Sit & Go with cash-specific BB/100 summary.
 
 **AI in cash:** bots use **depth-based** ranges instead of escalating-blind pressure — wider opens IP when deep (100 BB), more postflop c-bets and calls from stations, push/fold only under ~14 BB. Rocks stay tight; maniacs bluff more with deep stacks.
 
@@ -144,6 +146,11 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
+
+### 2026-06-12 — Cash coach tier: SPR, BB defense, session stats
+- **SPR row + prose (cash)**: postflop stack-to-pot ratio in coach panel with deep/medium/low zone notes (en/fr/es)
+- **BB defense charts**: `charts.js` `bbDefend` vs CO/BTN/SB; coach 3-bet/call/fold branch + matrix viewer
+- **Cash session stats**: BB/100 and net in BB in live stats; session review filters All / Cash / SNG with cash BB/100 summary
 
 ### 2026-06-12 — Cash depth: coach prose + tuned bots
 - **Coach (cash, 50+ BB)**: deep-stack notes on implied odds, IP steals; lower set-mining / suited-connector thresholds; depth-based open widening (not blind-pressure)
