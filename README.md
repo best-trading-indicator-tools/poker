@@ -36,7 +36,7 @@ Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel s
 ## Features
 
 - **👥 Multiplayer with friends (P2P, no server)**: create a room, share the invite link (your address bar IS the link), friends join from any browser — host-authoritative WebRTC with free signaling, each player receives only their own hole cards. Open a table alone and play starts when friends arrive; start vs AI bots and friends replace them as they join; late joiners spectate live until dealt in next hand. Built-in chat, auto-start at N players, **host migration** (host dies → another player takes over from a public checkpoint), seat+chips reconnect, version handshake, connection self-test. 100% free, nothing to install or maintain
-- **Configurable Sit & Go**: 2–9 players, starting blinds ($10/$20 up to $100/$200 — the whole blind ladder scales), buy-in in BB (50–200), ante as a fraction of the BB (none / 5% / 10% / 20%), turbo/standard/slow blind schedule (turbo raises blinds every 3 hands)
+- **Configurable Sit & Go**: 2–9 players, starting blinds ($10/$20 up to $100/$200 — the whole blind ladder scales), buy-in in BB (50–200), ante as a fraction of the BB (none / 5% / 10% / 20%), turbo/standard/slow blind schedule (turbo raises blinds every 5 hands)
 - **Money display**: $ and BB shown everywhere, casino-style chip stacks
 - **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, order-of-action awareness (first/last to talk, including your *future* postflop position when advising preflop), bet-size-aware range reading, plain-English reasoning
 - **GTO mini-solver**: real CFR (counterfactual regret minimization) for heads-up postflop spots — shows the equilibrium mixed strategy with EVs
@@ -122,6 +122,9 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
+
+### 2026-06-12 — Turbo blind schedule
+- **Turbo** raises blinds every **5 hands** (was 3)
 
 ### 2026-06-12 — Coach: stack dominance (big stack vs table)
 - **Relative stack edge**: when you have ~1.35×+ the largest stack (or ~1.55× average), late-position steal/iso ranges widen slightly; borderline hands can iso-raise for pressure — not loose calls
@@ -266,6 +269,6 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **Order-of-action awareness**: every recommendation shows first/last to act on the current street, and preflop advice accounts for your *future* postflop position
 - Street-aware advice — no more "take a free card" on the river
 - Start menu: selectable **starting blinds** (whole ladder scales), **buy-in in BB**, **ante** (% of BB)
-- **Turbo** now raises blinds every 3 hands
+- **Turbo** now raises blinds every 5 hands
 
 Built with Claude.

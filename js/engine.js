@@ -1,7 +1,7 @@
 /* ================= CONSTANTS ================= */
 const BASE_BB = 100;
 const LEVELS = [100,150,200,300,400,600,800,1200,1600,2400,3200,4800,6400,9600,12800,19200,25600];
-const SPEED_HANDS = {turbo:3, standard:10, slow:16};
+const SPEED_HANDS = {turbo:5, standard:10, slow:16};
 const AI_NAMES   = ['Viktor','Mia','Doyle','Selma','Ivan','Nora','Phil','Daria'];
 /* personality styles: margin = extra equity needed to call, raiseT = raise threshold shift,
    raiseF = raise frequency shift, bluff = bluff freq shift, size = bet sizing multiplier,
