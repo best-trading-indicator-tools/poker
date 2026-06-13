@@ -901,6 +901,7 @@ function coachDecide(p){
   if(tightOpps>0) extra.push(C('rangesNote',tightOpps,Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)));
   if(weakOpps>0) extra.push(C('checksNote',weakOpps));
   coachPassiveLines(p,extra);
+  const flags=getMode().coachFlags||{};
   if(state.stage==='preflop'){
     eq=mcEquityR(p.hole,[],oppCaps,sims);
     handDesc=`${RANK_CH[p.hole[0].r]}${SUIT_CH[p.hole[0].s]} ${RANK_CH[p.hole[1].r]}${SUIT_CH[p.hole[1].s]} — ${code}, top ~${Math.round(pr*100)}%`;
@@ -982,7 +983,6 @@ function coachDecide(p){
   }
 
   /* M-ratio (Harrington): stack vs the cost of one orbit's blinds+antes */
-  const flags=getMode().coachFlags||{};
   const aliveN=alive().length;
   const orbitCost=state.sb+state.bb+state.ante*aliveN;
   const M=(p.chips+p.bet)/Math.max(orbitCost,1);
