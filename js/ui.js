@@ -580,6 +580,12 @@ function mixTip(rec,R){
   return `<div class="mixtip"><b>${C('mixTitle')}</b><br>${C(key)}</div>`;
 }
 
+function coachProseHtml(why,extra){
+  const paras=[...why,...extra].map(s=>(s||'').trim()).filter(Boolean);
+  if(!paras.length)return'';
+  return`<div class="why">${paras.map(t=>`<p class="why-p">${t}</p>`).join('')}</div>`;
+}
+
 function updateCoach(p){
   if(!HAS_DOM)return;
   const R=coachDecide(p);
@@ -611,7 +617,7 @@ function updateCoach(p){
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
     sizeRow+
     (R.chartInfo?`<button class="chart-link" id="chartViewBtn">${T(R.chartInfo.kind==='range'?'viewRange':'viewChart')}</button>`:'')+
-    `<p class="why">${why.join(' ')}${extra.join('')}</p>`+
+    coachProseHtml(why,extra)+
     mixTip(rec,R);
   if(R.chartInfo){
     const cb=$('chartViewBtn');
