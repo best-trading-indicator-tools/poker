@@ -40,7 +40,7 @@ Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel s
 
 - **👥 Multiplayer with friends (P2P, no server)**: create a room, share the invite link (your address bar IS the link), friends join from any browser — host-authoritative WebRTC with free signaling, each player receives only their own hole cards. Open a table alone and play starts when friends arrive; start vs AI bots and friends replace them as they join; late joiners spectate live until dealt in next hand. Built-in chat, auto-start at N players, **host migration** (host dies → another player takes over from a public checkpoint), seat+chips reconnect, version handshake, connection self-test. 100% free, nothing to install or maintain
 - **Configurable Sit & Go**: 2–9 players, starting blinds ($10/$20 up to $100/$200 — the whole blind ladder scales), buy-in in BB (50–200), ante as a fraction of the BB (none / 5% / 10% / 20%), turbo/standard/slow blind schedule (turbo raises blinds every 5 hands)
-- **Cash game mode** (solo vs AI): fixed blinds, auto-rebuy on bust, live session P&L in the top bar, coach without ICM/M-ratio tournament warnings; leave the table anytime for a session summary
+- **Cash game mode** (solo vs AI): choose **Cash Game** on the start screen — same NLHE rules with **fixed SB/BB every hand** (blinds do not escalate; no antes). Starting stack in BB (50–200), auto-rebuy on bust, live **session P&L** in the top bar, resume mid-session, quit anytime for a session summary. Multiplayer stays Sit & Go only for now.
 - **Money display**: $ and BB shown everywhere, casino-style chip stacks
 - **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, order-of-action awareness (first/last to talk, including your *future* postflop position when advising preflop), bet-size-aware range reading, plain-English reasoning
 - **GTO mini-solver**: real CFR (counterfactual regret minimization) for heads-up postflop spots — shows the equilibrium mixed strategy with EVs
@@ -111,6 +111,22 @@ Real players don't play the same with 100 BB at level 1 as with 15 BB at level 8
 
 As pressure rises, an adapting bot lowers the equity it needs to continue, widens its raising/3-bet threshold, raises more often, and — especially from late position in unopened pots — opens up its **stealing** range to fight for the blinds and antes that are now worth winning. A 🦈 shark on the button with 18 BB will open hands it would fold at 100 BB; a 🪨 rock in the same spot mostly won't budge.
 
+## Cash game mode
+
+Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash uses the same hand engine and live coach as tournaments, with mode-specific rules in [`js/modes/cash.js`](js/modes/cash.js):
+
+| | Sit & Go | Cash |
+|---|---|---|
+| Blinds | Escalate on a schedule | **Fixed** SB/BB every hand |
+| Antes | Optional | None |
+| Bust | Eliminated | **Auto-rebuy** to starting stack |
+| Session end | Win tournament or bust | **Quit** → P&L summary |
+| Coach | ICM, M-ratio, blind-pressure | Chip EV only; no ICM/M-ratio panel row |
+
+**Setup:** players, blind level ($10/$20 … $100/$200), starting stack (BB), difficulty, optional turn timer. Ante, blind speed, and multiplayer are hidden in cash.
+
+**Coach in cash:** GTO charts, equity, pot odds, and postflop buckets unchanged. Tournament-only prose (ICM, Harrington M, “blinds up in N hands”) is off; a one-line note reminds you that chip EV equals real money EV. Iso charts apply only when someone **limped** — the big blind posting alone does not count as a limp.
+
 ## Coach & GTO solver
 
 - **Preflop**: hands are ranked against all 169 starting hands; advice uses position-based GTO opening ranges scaled by tournament pressure (stack depth in M/BB, antes, and the profiles left to act), 3-bet/fold logic against raises, and Nash push/fold under ~10 BB. The coach shows your M-ratio and Harrington zone, warns before a blind level drops you a zone, and tells you whether you'll act first or last *after* the flop.
@@ -126,6 +142,10 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
+
+### 2026-06-12 — Cash coach polish
+- **Limp detection fix**: BB blind post no longer counted as a limper — facing BB only uses RFI charts, iso charts only with real limps
+- **Coach panel**: M-ratio row hidden in cash mode (tournament-only metric)
 
 ### 2026-06-12 — Cash game mode
 - **Main menu toggle**: Sit & Go vs Cash Game; tournament-only setup rows (ante, blind speed, multiplayer) hidden in cash

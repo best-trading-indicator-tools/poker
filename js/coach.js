@@ -638,7 +638,8 @@ function classifyLeakSpot(callAmt,opps){
 }
 function limperCount(p){
   if(state.stage!=='preflop'||state.currentBet>state.bb)return 0;
-  return inHand().filter(q=>q!==p&&q.bet>=state.bb).length;
+  /* voluntary limps only — BB posting the blind is not a limp */
+  return inHand().filter(q=>q!==p&&q.bet>=state.bb&&(q.pos||'')!=='BB').length;
 }
 function boardTexture(board){
   if(!board.length) return {paired:false,monotone:false,wet:false,flushDraw:false,dry:true};
@@ -1022,14 +1023,14 @@ function coachDecide(p){
       }
       /* always explain when profiles behind shift the steal math, even slightly */
       if(Math.abs(thrEff-thr)/thr>0.12||profDir!==0) extra.push(C('widenNote',Math.round(thr*100),Math.round(thrEff*100),profDir));
-      const limpPot=callAmt>0&&state.currentBet<=state.bb;
-      const nLimps=limpPot?limperCount(p):0;
-      if(limpPot&&nLimps>0){
+      const nLimps=limperCount(p);
+      const limpPot=nLimps>0&&state.currentBet<=state.bb;
+      if(limpPot){
         extra.push(C('limpPotNote',nLimps));
         thrEff=Math.min(0.65,thrEff*(1+0.04*Math.min(nLimps,3)));
       }
       /* solver chart: iso over limpers, else raise-first-in */
-      const isoList=limpPot&&nLimps>0?chartFor('iso',pos):null;
+      const isoList=limpPot?chartFor('iso',pos):null;
       const rfi=chartFor('rfi',pos);
       const chartList=isoList||rfi;
       if(chartList) chartInfo={kind:isoList?'iso':'rfi',pos,list:chartList};

@@ -811,6 +811,7 @@ function updateCoach(p){
   const recLabel = rec==='ALLIN' ? `${T('recALLIN')} ${usd(p.bet+p.chips)}`
     : rec==='RAISE' ? `${state.currentBet>0?T('recRAISETO'):T('recBET')} ${usd(coachT)} · ${bbs(coachT)}`
     : T('rec'+rec);
+  const showM=(getMode().coachFlags||{}).mRatio;
   $('coachBody').innerHTML=
     `<div class="rec ${rec}">${recLabel}</div>`+
     `<div class="coach-row"><span>${T('yourHand')}</span><b>${handDesc}</b></div>`+
@@ -820,7 +821,7 @@ function updateCoach(p){
     drawRow+
     (callAmt>0?`<div class="coach-row"><span>${T('potOdds')}</span><b>${T('need')}${pct(odds)} (${usd(callAmt)} &rarr; ${usd(pot)})</b></div>`:'')+
     `<div class="coach-row"><span>${T('yourStack')}</span><b>${bbs(p.chips+p.bet)}</b></div>`+
-    `<div class="coach-row"><span>M-ratio</span><b>M = ${M>99?'99+':Math.round(M)} · ${T('zone'+mZone)}</b></div>`+
+    (showM?`<div class="coach-row"><span>M-ratio</span><b>M = ${M>99?'99+':Math.round(M)} · ${T('zone'+mZone)}</b></div>`:'')+
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
     sizeRow+
     (R.chartInfo?`<button class="chart-link" id="chartViewBtn">${T(R.chartInfo.kind==='range'?'viewRange':'viewChart')}</button>`:'')+
