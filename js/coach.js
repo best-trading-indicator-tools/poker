@@ -60,6 +60,8 @@ mentalMath:(c,s,o)=>` 🧮 Live mental math: price = call ÷ (pot + call) = ${c}
 mWarn:(n,m,z)=>` Blinds go up in ${n} hand${n>1?'s':''} — your M drops to ~${m} (${z}). Look for spots now rather than being forced to gamble later.`,
 mExplain:m=>` What "M = ${m}" means: your stack divided by the cost of one full round of blinds and antes — i.e. you could survive ${m} more rounds folding everything. Above 20 🟢 play your normal game; 10–20 🟡 start fighting for pots; 5–10 🟠 favor shoving over small raises; under 5 🔴 it's all-in or fold.`,
 cashModeNote:` Fixed blinds in cash — chip EV equals real money EV here (no ICM or prize pressure).`,
+cashDeepNote:bb=>` At ${bb} BB deep in cash, implied odds matter: pocket pairs and suited connectors play bigger than their rank suggests, and you can widen steals in position — but blinds never rise, so play for value and avoid bloating pots out of position without equity.`,
+cashDeepIp:bb=>` In position at ${bb} BB, you can open wider and stab after checks — deep stacks let callers continue with medium hands, so pressure capped ranges; still fold trash to big raises.`,
 widenNote:(b,e,d)=>` Rising blinds and dead money change the math: your normal ~${b}% opening range here is adjusted to ~${e}%${d===1?' — and the players left to act fold too much, so attack them':d===-1?' — tempered, because the players left to act defend wide, so steal less into them':''}.`,
 stackDomNote:(r,c,n)=>` You have ~${r}× the largest stack and cover ${c} of ${n} opponents still in — shorter stacks fold more often, so the coach widens steal/iso ranges slightly. Calling marginal hands is still a leak; raise or fold.`,
 stackDomIso:(c,p,r)=>`${c} is outside the standard ${p} chart, but with ~${r}× the table's biggest stack you can iso-raise as a pressure play — shorter stacks can't gamble back easily. Raise, don't call.`,
@@ -169,6 +171,8 @@ mentalMath:(c,s,o)=>` 🧮 Calcul mental en live : prix = mise à payer ÷ (pot 
 mWarn:(n,m,z)=>` Les blinds montent dans ${n} main${n>1?'s':''} — votre M tombera à ~${m} (${z}). Cherchez des spots maintenant plutôt que d'être forcé de jouer à pile ou face plus tard.`,
 mExplain:m=>` Ce que signifie « M = ${m} » : votre tapis divisé par le coût d'un tour complet de blinds et d'antes — vous pourriez survivre ${m} tours en jetant tout. Au-dessus de 20 🟢, jouez votre jeu normal ; 10–20 🟡, commencez à vous battre pour les pots ; 5–10 🟠, préférez le tapis aux petites relances ; sous 5 🔴, c'est tapis ou couché.`,
 cashModeNote:` Blinds fixes en cash — l'EV en jetons = l'argent réel (pas d'ICM ni de pression des prix).`,
+cashDeepNote:bb=>` À ${bb} BB en cash, les cotes implicites comptent : paires et connecteurs assortis jouent plus fort que leur rang, et vous pouvez élargir les steals en position — mais les blinds ne montent jamais : jouez pour la valeur, évitez de gonfler les pots hors position sans équité.`,
+cashDeepIp:bb=>` En position à ${bb} BB, ouvrez plus large et stabe après checks — les tapis profonds laissent suivre avec des mains moyennes ; couchez quand même le trash face aux grosses relances.`,
 widenNote:(b,e,d)=>` Les blinds qui montent et l'argent mort changent le calcul : votre range d'ouverture normale (~${b}%) est ajustée à ~${e}%${d===1?' — et les joueurs restants se couchent trop : attaquez-les':d===-1?' — tempérée, car les joueurs restants défendent large : volez moins contre eux':''}.`,
 stackDomNote:(r,c,n)=>` Vous avez ~${r}× le plus gros tapis et couvrez ${c} sur ${n} adversaires encore en jeu — les tapis courts se couchent plus souvent : le coach élargit légèrement les ranges de vol/iso. Suivre des mains marginales reste une fuite ; relancez ou couchez.`,
 stackDomIso:(c,p,r)=>`${c} n'est pas dans la charte ${p} standard, mais avec ~${r}× le plus gros tapis vous pouvez iso-relancer pour faire pression — les courts ne peuvent pas vous contrer facilement. Relancez, ne suivez pas.`,
@@ -278,6 +282,8 @@ mentalMath:(c,s,o)=>` 🧮 Cálculo mental en vivo: precio = llamada ÷ (bote + 
 mWarn:(n,m,z)=>` Las ciegas suben en ${n} mano${n>1?'s':''} — tu M caerá a ~${m} (${z}). Busca jugadas ahora antes de verte forzado a jugártela.`,
 mExplain:m=>` Qué significa «M = ${m}»: tu stack dividido por el coste de una ronda completa de ciegas y antes — sobrevivirías ${m} rondas tirándolo todo. Por encima de 20 🟢, juega tu juego normal; 10–20 🟡, empieza a pelear por los botes; 5–10 🟠, prefiere el all-in a subidas pequeñas; bajo 5 🔴, all-in o retirarse.`,
 cashModeNote:` Ciegas fijas en cash — el EV en fichas = dinero real (sin ICM ni presión de premios).`,
+cashDeepNote:bb=>` Con ${bb} BB en cash, las odds implícitas importan: parejas y conectores suited juegan mejor que su ranking; puedes ampliar robos en posición — pero las ciegas no suben: juega por valor y no hinches botes fuera de posición sin equity.`,
+cashDeepIp:bb=>` En posición con ${bb} BB, abre más ancho y apuesta tras checks — stacks profundos permiten calls con manos medias; retírate igual ante subidas grandes con basura.`,
 widenNote:(b,e,d)=>` Las ciegas crecientes y el dinero muerto cambian el cálculo: tu rango de apertura normal (~${b}%) se ajusta a ~${e}%${d===1?' — y los jugadores por hablar se retiran demasiado: atácalos':d===-1?' — moderado, porque los que quedan defienden mucho: roba menos contra ellos':''}.`,
 stackDomNote:(r,c,n)=>` Tienes ~${r}× el stack más grande y cubres a ${c} de ${n} rivales en juego — los stacks cortos se retiran más: el coach amplía un poco los rangos de robo/iso. Pagar manos marginales sigue siendo fuga; sube o retírate.`,
 stackDomIso:(c,p,r)=>`${c} no está en la tabla ${p} estándar, pero con ~${r}× el mayor stack puedes iso-subir como presión — los cortos no pueden devolverte la apuesta fácilmente. Sube, no pagues.`,
@@ -954,13 +960,14 @@ function coachDecide(p){
     const unopened=state.currentBet<=state.bb;
     /* pocket pairs gain implied-odds value when deep: sets are disguised and win stacks */
     const isPair=p.hole[0].r===p.hole[1].r;
-    const pairAdj=isPair&&stackBB>=40;
+    const pairAdj=isPair&&stackBB>=(flags.deepStack?30:40);
     /* suited connectors also play above their raw ranking when deep (hidden straights/flushes) */
     const gapSC=Math.abs(p.hole[0].r-p.hole[1].r);
     const scAdj=!isPair&&p.hole[0].s===p.hole[1].s&&gapSC>=1&&gapSC<=2
-      &&Math.max(p.hole[0].r,p.hole[1].r)<=12&&Math.min(p.hole[0].r,p.hole[1].r)>=5&&stackBB>=30;
+      &&Math.max(p.hole[0].r,p.hole[1].r)<=12&&Math.min(p.hole[0].r,p.hole[1].r)>=5&&stackBB>=(flags.deepStack?25:30);
     const prEff=(pairAdj?pr*0.8:pr)*(scAdj?0.85:1);
     if(scAdj&&state.currentBet<=state.bb) extra.push(C('suitedConn'));
+    if(flags.deepStack&&stackBB>=50) extra.push(C('cashDeepNote',Math.round(stackBB)));
     /* zone-drop warning: what does the NEXT blind level do to your M? */
     if(flags.blindLevelWarn&&state.level<state.levels.length-1){
       const per=SPEED_HANDS[state.cfg.speed];
@@ -1000,11 +1007,18 @@ function coachDecide(p){
       }
     }else if(unopened){
       const thr=OPEN_THR[bucket];
-      /* tournament pressure: shorter stacks widen steals (late pos), antes add dead money,
-         and the profiles still to act matter — steal more vs folders, less vs defenders */
+      /* tournament: blind pressure widens steals as stacks shrink; cash: depth widens IP, short only when actually short */
       const lateSteal=/(BTN|CO|HJ|SB)/.test(pos);
-      const press=clamp((25-stackBB)/15,0,1);                 // 0 at 25BB+, 1 at 10BB
-      const fStack=lateSteal?1+0.45*press:/^MP/.test(pos)?1+0.15*press:1;
+      let press,fStack;
+      if(flags.deepStack){
+        const deep=clamp((stackBB-40)/60,0,1);
+        press=clamp((18-stackBB)/8,0,1);
+        fStack=lateSteal?1+0.28*deep+0.22*press:/^MP/.test(pos)?1+0.12*deep+0.10*press:1;
+        if(actsLast&&stackBB>=60) extra.push(C('cashDeepIp',Math.round(stackBB)));
+      }else{
+        press=clamp((25-stackBB)/15,0,1);
+        fStack=lateSteal?1+0.45*press:/^MP/.test(pos)?1+0.15*press:1;
+      }
       const fAnte=flags.anteWiden?Math.min(1.35,1+0.6*(state.ante*aliveN)/(1.5*state.bb)):1;
       let fProf=1, profDir=0;
       if(lateSteal){

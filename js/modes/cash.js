@@ -2,7 +2,7 @@
 registerMode('cash',{
   id:'cash',
   isCash:true,
-  coachFlags:{icm:false,mRatio:false,anteWiden:false,blindLevelWarn:false,cashNote:true},
+  coachFlags:{icm:false,mRatio:false,anteWiden:false,blindLevelWarn:false,cashNote:true,deepStack:true},
 
   initState(cfg,state){
     const startBlind=cfg.startBlind||BASE_BB;

@@ -125,7 +125,9 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 
 **Setup:** players, blind level ($10/$20 … $100/$200), starting stack (BB), difficulty, optional turn timer. Ante, blind speed, and multiplayer are hidden in cash.
 
-**Coach in cash:** GTO charts, equity, pot odds, and postflop buckets unchanged. Tournament-only prose (ICM, Harrington M, “blinds up in N hands”) is off; a one-line note reminds you that chip EV equals real money EV. Iso charts apply only when someone **limped** — the big blind posting alone does not count as a limp.
+**Coach in cash:** GTO charts, equity, pot odds, and postflop buckets unchanged. Tournament-only prose (ICM, Harrington M, “blinds up in N hands”) is off. At **50+ BB**, the coach adds deep-stack cash notes (implied odds, IP steals). Iso charts apply only when someone **limped** — the big blind alone does not count.
+
+**AI in cash:** bots use **depth-based** ranges instead of escalating-blind pressure — wider opens IP when deep (100 BB), more postflop c-bets and calls from stations, push/fold only under ~14 BB. Rocks stay tight; maniacs bluff more with deep stacks.
 
 ## Coach & GTO solver
 
@@ -142,6 +144,10 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
+
+### 2026-06-12 — Cash depth: coach prose + tuned bots
+- **Coach (cash, 50+ BB)**: deep-stack notes on implied odds, IP steals; lower set-mining / suited-connector thresholds; depth-based open widening (not blind-pressure)
+- **AI (cash)**: depth-based opens and steals, wider postflop play deep, push/fold only &lt;14 BB, slightly larger IP opens at 60+ BB
 
 ### 2026-06-12 — Cash coach polish
 - **Limp detection fix**: BB blind post no longer counted as a limper — facing BB only uses RFI charts, iso charts only with real limps

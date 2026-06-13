@@ -41,23 +41,35 @@ function mcEquity(hole,board,opps,sims){
   return win/sims;
 }
 
+function aiCashDepth(stackBB){
+  return clamp((stackBB-35)/65,0,1);
+}
 function aiOpenThr(p, press){
   const bucket=posBucket(p.pos||'BTN');
   const mult=(p.style&&{rock:0.50,station:1.35,shark:1.00,maniac:1.45}[p.style.id])||1;
   let thr=(OPEN_THR[bucket]||0.20)*mult;
   const adapt=p.style?.adapt||0;
-  if(p.style?.id==='shark' && /^(CO|BTN|SB)$/.test(p.pos))
+  const stackBB=(p.chips+p.bet)/state.bb;
+  if(isCashGame()){
+    const deep=aiCashDepth(stackBB);
+    if(/^(CO|BTN|SB)$/.test(p.pos||''))
+      thr=Math.min(0.72, thr+0.05+deep*0.12);
+    else if(/^MP/.test(p.pos||'')||p.pos==='HJ')
+      thr=Math.min(0.58, thr+0.02+deep*0.06);
+    if(stackBB<25) thr=Math.min(0.72, thr+press*adapt*0.08);
+  }else if(p.style?.id==='shark' && /^(CO|BTN|SB)$/.test(p.pos))
     thr=Math.min(0.62, thr+0.06+press*adapt*0.14);
-  else if(p.style?.id==='rock' && /^UTG/.test(p.pos))
-    thr*=0.85;
-  return Math.min(0.72, thr+press*adapt*0.10);
+  else
+    thr=Math.min(0.72, thr+press*adapt*0.10);
+  if(p.style?.id==='rock' && /^UTG/.test(p.pos||'')) thr*=0.85;
+  return Math.min(0.72, thr);
 }
 function handInOpenRange(p, press){
   return (handPct[holeCode(p.hole)]||1)<=aiOpenThr(p, press);
 }
 function aiShortPushThr(p, stackBB){
   const bucket=posBucket(p.pos||'BTN');
-  const press=tourneyPressure(stackBB);
+  const press=isCashGame()?clamp((16-stackBB)/6,0,1)*0.5:tourneyPressure(stackBB);
   const sid=p.style?.id;
   let thr=(PUSH_THR[bucket]||0.25)*((p.style&&{rock:0.50,station:1.35,shark:1.00,maniac:1.45}[p.style.id])||1);
   if(sid==='rock') thr*=0.50;
@@ -95,6 +107,7 @@ function aiPostflopAdj(p, callAmt, pot){
   if(state.stage==='preflop'||!p.style) return {margin:0, bluffMult:1, betBoost:0, giveUp:false};
   const sid=p.style.id;
   let margin=0, bluffMult=1, betBoost=0, giveUp=false;
+  const cashDeep=isCashGame()?aiCashDepth((p.chips+p.bet)/state.bb):0;
   if(sid==='rock'){
     bluffMult=0;
     if(callAmt>0){
@@ -111,6 +124,12 @@ function aiPostflopAdj(p, callAmt, pot){
     bluffMult=1.15;
     if(callAmt===0&&Math.random()<0.15) giveUp=true;
   }
+  if(cashDeep>=0.3){
+    if(sid==='shark'&&callAmt===0) betBoost+=0.10*cashDeep;
+    if(sid==='station') margin-=0.05*cashDeep;
+    if(sid==='maniac') bluffMult+=0.12*cashDeep;
+    if(sid==='rock'&&callAmt>0&&callAmt>=pot*0.55) margin+=0.05*cashDeep;
+  }
   return {margin, bluffMult, betBoost, giveUp};
 }
 
@@ -120,6 +139,8 @@ function aiDecide(p){
   const live=inHand().length;
   const d=state.cfg.difficulty;
   const stackBB=(p.chips+p.bet)/state.bb;
+  const cash=isCashGame();
+  const cashDeep=cash?aiCashDepth(stackBB):0;
 
   let eq=aiEstEquity(p, live, d);
 
@@ -134,8 +155,9 @@ function aiDecide(p){
     posBonus=(dist===0||dist===n-1)?0.04:0;
   }
 
-  // Short-stack push/fold preflop — profile-specific (medium & hard)
-  if(state.stage==='preflop' && stackBB<12 && d!=='easy'){
+  // Short-stack push/fold preflop — profile-specific (medium & hard); cash waits until ~14 BB
+  const pushCut=cash?14:12;
+  if(state.stage==='preflop' && stackBB<pushCut && d!=='easy'){
     const pr=handPct[holeCode(p.hole)]||1;
     const pushThr=aiShortPushThr(p, stackBB);
     const sid=p.style?.id;
@@ -153,12 +175,12 @@ function aiDecide(p){
   }
 
   const base=p.style||{margin:0,raiseT:0,raiseF:0,bluff:0,size:1,adapt:0};
-  /* tournament pressure: shorter effective stacks => widen ranges, steal/fight more,
-     scaled by each profile's adapt coefficient (shark adapts most, rock least) */
-  const press=tourneyPressure(stackBB)*(base.adapt||0);
+  /* tournament: blind pressure widens ranges; cash: depth-based IP play, no escalating-blind steal panic */
+  const press=cash?clamp((20-stackBB)/10,0,1)*(base.adapt||0)*0.6:tourneyPressure(stackBB)*(base.adapt||0);
   const n=state.players.length;
   const late=((p.i-state.dealerIdx+n)%n)===0 || ((p.i-state.dealerIdx+n)%n)===n-1;
-  const stealBoost = (late && state.stage==='preflop' && callAmt<=state.bb) ? press*0.18 : 0;
+  const stealBoost=(late&&state.stage==='preflop'&&callAmt<=state.bb)
+    ?(cash?cashDeep*0.16:press*0.18):0;
   const st={
     margin: base.margin - press*0.06,
     raiseT: base.raiseT - press*0.13 - stealBoost,
@@ -166,6 +188,11 @@ function aiDecide(p){
     bluff:  (base.id==='rock'||base.id==='station') ? 0 : base.bluff + press*0.05,
     size:   base.size
   };
+  if(cash){
+    st.margin-=cashDeep*0.05;
+    if(cashDeep>=0.35&&late){ st.raiseF+=0.12*cashDeep; st.raiseT-=0.04*cashDeep; }
+    if(stackBB>=80) st.size=Math.min(1.25, st.size+0.08);
+  }
   const pfAdj=aiPostflopAdj(p, callAmt, pot);
   const facingRaise=state.currentBet>state.bb*2;
   const foldRaise=(base.foldRaise||0)+(base.id==='rock'&&facingRaise?0.08:0);
@@ -211,6 +238,7 @@ function betTarget(p,pot,eq,d){
   let t;
   if(state.stage==='preflop'){
     t = (state.currentBet>state.bb ? state.currentBet*2.6 : state.bb*(2.5+Math.random()))*size;
+    if(isCashGame()&&aiIsLate(p)&&(p.chips+p.bet)/state.bb>=60) t*=1.08;
   }else{
     const f = (d==='easy' ? (0.3+Math.random()*0.7) : (0.5+Math.random()*0.35))*size;
     t = state.currentBet + Math.max(state.lastRaiseSize, Math.round(pot*f));
