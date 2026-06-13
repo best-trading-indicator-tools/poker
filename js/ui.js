@@ -346,7 +346,7 @@ const SEAT_SLOTS={
 3:[[.50,.92],[.12,.24],[.88,.24]],
 4:[[.50,.92],[.06,.52],[.50,.09],[.94,.52]],
 5:[[.50,.92],[.09,.62],[.26,.10],[.74,.10],[.91,.62]],
-6:[[.50,.92],[.06,.72],[.06,.13],[.50,.06],[.94,.13],[.94,.72]],
+6:[[.50,.92],[.06,.74],[.05,.10],[.50,.04],[.95,.10],[.94,.74]],
 7:[[.50,.92],[.18,.80],[.05,.40],[.28,.09],[.72,.09],[.95,.40],[.82,.80]],
 8:[[.50,.92],[.21,.82],[.05,.50],[.14,.13],[.50,.08],[.86,.13],[.95,.50],[.79,.82]],
 9:[[.50,.92],[.24,.84],[.05,.56],[.08,.20],[.33,.07],[.67,.07],[.92,.20],[.95,.56],[.76,.84]]};
@@ -356,7 +356,7 @@ const SEAT_SLOTS_FL={
 3:[[.50,.84],[.16,.28],[.84,.28]],
 4:[[.50,.84],[.12,.52],[.50,.16],[.88,.52]],
 5:[[.50,.84],[.14,.62],[.30,.16],[.70,.16],[.86,.62]],
-6:[[.50,.84],[.10,.70],[.10,.16],[.50,.10],[.90,.16],[.90,.70]],
+6:[[.50,.84],[.10,.72],[.08,.14],[.50,.08],[.92,.14],[.90,.72]],
 7:[[.50,.84],[.22,.74],[.12,.44],[.30,.16],[.70,.16],[.88,.44],[.78,.74]],
 8:[[.50,.84],[.24,.76],[.12,.50],[.18,.18],[.50,.14],[.82,.18],[.88,.50],[.76,.76]],
 9:[[.50,.84],[.26,.74],[.12,.54],[.14,.24],[.33,.14],[.67,.14],[.86,.24],[.88,.54],[.74,.74]]};
@@ -479,12 +479,17 @@ function layoutSeats(){
 }
 function seatBoxes(){
   if(!HAS_DOM||!state)return [];
+  const felt=$('felt');
+  if(!felt)return [];
+  const fr=felt.getBoundingClientRect();
   const boxes=[];
   for(const p of state.players){
     const s=$('seat'+p.i);
-    if(s&&s.offsetHeight)boxes.push({
-      l:s.offsetLeft,t:s.offsetTop,r:s.offsetLeft+s.offsetWidth,b:s.offsetTop+s.offsetHeight,
-      cx:s.offsetLeft+s.offsetWidth/2,cy:s.offsetTop+s.offsetHeight/2,
+    if(!s||!s.offsetHeight)continue;
+    const r=s.getBoundingClientRect();
+    boxes.push({
+      l:r.left-fr.left,t:r.top-fr.top,r:r.right-fr.left,b:r.bottom-fr.top,
+      cx:(r.left+r.right)/2-fr.left,cy:(r.top+r.bottom)/2-fr.top,
     });
   }
   return boxes;
@@ -497,7 +502,8 @@ function centerAreaBox(felt){
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
   const center=$('centerArea');
   if(!center||!isMobile())return {x:cx,y:cy,w:W*0.46,h:H*0.30,l:cx-W*0.23,t:cy-H*0.15,r:cx+W*0.23,b:cy+H*0.15};
-  const l=center.offsetLeft,t=center.offsetTop,w=center.offsetWidth,h=center.offsetHeight;
+  const fr=felt.getBoundingClientRect(), r=center.getBoundingClientRect();
+  const l=r.left-fr.left,t=r.top-fr.top,w=r.width,h=r.height;
   return {x:l+w/2,y:t+h/2,w,h,l,t,r:l+w,b:t+h};
 }
 function positionCenterArea(){
@@ -511,40 +517,59 @@ function positionCenterArea(){
   }
   const W=felt.clientWidth,H=felt.clientHeight;
   const cx=W/2, n=state.players.length;
-  const fl=document.body.classList.contains('fl');
-  const pad=8;
-  const widthFrac=clamp(0.76-n*0.028,0.50,0.74);
-  const maxW=clamp(300-n*10,190,300);
+  const pad=12;
+  const widthFrac=clamp(0.74-n*0.028,0.48,0.72);
+  const maxW=clamp(280-n*10,180,280);
   let cw=Math.min(W*widthFrac,maxW);
-  const ch=center.offsetHeight||100;
-  let centerY=H*(fl?0.49:0.50);
   const boxes=seatBoxes();
+  let ch=center.offsetHeight||100;
+  let floorT=pad, ceilB=H-pad;
   for(const b of boxes){
-    if(b.cy<H*0.18||b.cy>H*0.82)continue;
-    const rect={l:cx-cw/2,r:cx+cw/2,t:centerY-ch/2,b:centerY+ch/2};
-    if(!boxOverlap(rect,b,pad))continue;
-    if(b.cx<cx) cw=Math.min(cw,Math.max(80,2*(cx-pad-(b.r+pad))));
-    else cw=Math.min(cw,Math.max(80,2*((b.l-pad)-cx)));
+    if(b.cy<H*0.52) floorT=Math.max(floorT,b.b+pad);
+    if(b.cy>H*0.48) ceilB=Math.min(ceilB,b.t-pad);
   }
-  cw=Math.max(cw,W*0.36);
-  for(let iter=0;iter<24;iter++){
-    const rect={l:cx-cw/2,r:cx+cw/2,t:centerY-ch/2,b:centerY+ch/2};
-    let hit=null,best=0;
+  let centerY=clamp((floorT+ceilB)/2,floorT+ch/2,ceilB-ch/2);
+  function rectAt(cy,width){
+    return {l:cx-width/2,r:cx+width/2,t:cy-ch/2,b:cy+ch/2};
+  }
+  for(let pass=0;pass<3;pass++){
     for(const b of boxes){
-      const ox=Math.min(rect.r,b.r)-Math.max(rect.l,b.l);
-      const oy=Math.min(rect.b,b.b)-Math.max(rect.t,b.t);
-      if(ox>pad&&oy>pad){
-        const area=ox*oy;
-        if(area>best){best=area;hit={b,ox,oy};}
+      let r=rectAt(centerY,cw);
+      while(boxOverlap(r,b,pad)&&cw>W*0.30){
+        cw-=10;
+        r=rectAt(centerY,cw);
       }
     }
-    if(!hit)break;
-    if(hit.b.cy<=centerY) centerY+=hit.oy;
-    else centerY-=hit.oy;
-    centerY=clamp(centerY,ch/2+pad,H-ch/2-pad);
+    cw=Math.max(cw,W*0.30);
+    for(let iter=0;iter<32;iter++){
+      const r=rectAt(centerY,cw);
+      let hit=null,best=0;
+      for(const b of boxes){
+        const ox=Math.min(r.r,b.r)-Math.max(r.l,b.l);
+        const oy=Math.min(r.b,b.b)-Math.max(r.t,b.t);
+        if(ox>pad&&oy>pad){
+          const area=ox*oy;
+          if(area>best){best=area;hit={b,ox,oy};}
+        }
+      }
+      if(!hit)break;
+      if(hit.b.cy<=centerY) centerY+=hit.oy+pad;
+      else centerY-=hit.oy+pad;
+      centerY=clamp(centerY,floorT+ch/2,ceilB-ch/2);
+    }
+    center.style.width=cw+'px';
+    center.style.top=(centerY/H*100)+'%';
+    void center.offsetHeight;
+    const ch2=center.offsetHeight;
+    if(ch2===ch)break;
+    ch=ch2;
+    floorT=pad; ceilB=H-pad;
+    for(const b of seatBoxes()){
+      if(b.cy<H*0.52) floorT=Math.max(floorT,b.b+pad);
+      if(b.cy>H*0.48) ceilB=Math.min(ceilB,b.t-pad);
+    }
+    centerY=clamp(centerY,floorT+ch/2,ceilB-ch/2);
   }
-  center.style.width=cw+'px';
-  center.style.top=(centerY/H*100)+'%';
 }
 function positionDealerBtn(){
   if(!HAS_DOM||!state)return;
