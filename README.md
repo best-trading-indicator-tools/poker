@@ -50,12 +50,20 @@ The big lever is **judgment noise**: Easy "feels" its hand is much better or wor
 
 ### Player profiles
 
-On top of difficulty, every bot is dealt a random temperament (shown on its seat) that shifts how it calls, raises, bluffs and sizes bets:
+On top of difficulty, every bot is dealt a random temperament (shown on its seat). Each profile has its own **preflop opening range** (scaled from GTO charts by position), bet-sizing multiplier, and decision biases — not just label tweaks on the same formula:
 
-- 🪨 **Tight (rock)** — folds a lot, only plays strong hands, raises rarely, bets small. Exploitable by stealing relentlessly.
-- 📞 **Loose (station)** — calls far too much, but doesn't raise enough. Punish it by value-betting thin and never bluffing.
-- 🦈 **Aggressive (shark)** — raises and bluffs more, applies pressure, sizes up. The toughest baseline opponent.
-- 🔥 **Wild (maniac)** — huge bets, constant bluffs, very loose. High-variance; trap it with strong hands.
+| Profile | Opens (~UTG→BTN) | Raises with | Bluffs | Bet size | Short stack |
+|---|---|---|---|---|---|
+| 🪨 **Tight** | ~6%→21% | top 8% only | rarely | 0.70× | tight push/fold; over-folds to raises |
+| 📞 **Loose** | ~16%→57% | top 15% only | never | 0.85× | calls shoves too wide; won't fold |
+| 🦈 **Aggressive** | ~12%→48% (+ steals) | top 22% | sometimes | 1.15× | position-aware push/fold; adapts fully |
+| 🔥 **Wild** | ~17%→61% | top 35% | often | 1.40× | shoves wide late; aggression varies hand-to-hand |
+
+**How to exploit them:**
+- 🪨 **Tight** — steal relentlessly; they fold too much and almost never fight back.
+- 📞 **Loose** — value-bet thin, never bluff; they call everything but only bet when strong.
+- 🦈 **Aggressive** — toughest opponent; respect pressure but trap when you have it.
+- 🔥 **Wild** — trap with strong hands; call down lighter than vs anyone else.
 
 ### Tournament-pressure adaptation (blind pressure)
 
@@ -85,6 +93,11 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
+
+### 2026-06-12 — Profile-specific AI ranges & behavior
+- **Distinct preflop ranges per profile**: rocks open ~6–21%, stations ~16–57%, sharks ~12–48% (wider steals on CO/BTN), maniacs ~17–61% — scaled by position from GTO charts, not shared equity thresholds
+- **Stations never bluff** and only raise with top ~15%; **rocks over-fold to raises** and bet at 0.70× sizing; **maniac aggression varies** (~22% check-back, randomized raise frequency); **sharks widen steals** from late position under blind pressure
+- **Short-stack modes** (<12 BB): profile-specific push/fold — rocks tight, stations call too wide, maniacs shove any two from late position
 
 ### 2026-06-12 — Timer reliability & coach deception layer
 - **Turn timer is now throttle-proof**: auto check/fold is enforced from the 350 ms UI loop based on the deadline itself, not just `setTimeout` — it fires reliably even when the browser throttles or drops timers (phone screen dim, tab switch, suspended PWA, game resumed from a snapshot). Guests never enforce; the host stays authoritative.
