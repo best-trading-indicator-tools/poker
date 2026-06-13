@@ -489,7 +489,31 @@ function detectDraws(hole,board){
   }
   return out;
 }
-/* classify a made pair/two-pair relative to the board */
+function findDrawOuts(hole,board){
+  const known=new Set(hole.concat(board).map(c=>c.r*4+c.s));
+  const made=evalBest(hole.concat(board));
+  const flush=[], straight=[];
+  for(const c of FULL_DECK){
+    if(known.has(c.r*4+c.s))continue;
+    const all=hole.concat(board).concat([c]);
+    const sc=evalBest(all);
+    if(made[0]<5&&sc[0]>=5&&(hole[0].s===c.s||hole[1].s===c.s)) flush.push(c);
+    if(made[0]<4&&sc[0]>=4) straight.push(c);
+  }
+  const sort=(a,b)=>a.r-b.r||a.s-b.s;
+  flush.sort(sort); straight.sort(sort);
+  return {flush,straight};
+}
+function formatOutList(cards){
+  const seen=new Set(), out=[];
+  for(const c of cards){
+    const k=c.r*4+c.s;
+    if(seen.has(k))continue;
+    seen.add(k);
+    out.push(`${RANK_CH[c.r]}${SUIT_CH[c.s]}`);
+  }
+  return out.join(' · ');
+}
 function classifyMade(hole,board,score){
   if(board.length===0||score[0]>2) return '';
   const boardRanks=board.map(c=>c.r);
@@ -643,11 +667,16 @@ function coachDecide(p){
       const d=detectDraws(p.hole,state.board);
       const streets=state.stage==='flop'?2:1;
       const dr=[];
+      const outs=findDrawOuts(p.hole,state.board);
       if(d.flush) dr.push(C('drawFlush',pct(Math.min(0.9,9*0.02*streets+0.02))));
       if(d.oesd) dr.push(C('drawOESD',pct(8*0.02*streets+0.02)));
       else if(d.gutshot) dr.push(C('drawGut',pct(4*0.02*streets+0.01)));
       if(dr.length){
         drawRow=`<div class="coach-row"><span>${T('draws')}</span><b>${dr.join('<br>')}</b></div>`;
+        const outCards=d.flush&&d.oesd?[...outs.flush,...outs.straight]
+          :d.flush?outs.flush:d.oesd||d.gutshot?outs.straight:[];
+        const outTxt=formatOutList(outCards);
+        if(outTxt) drawRow+=`<div class="coach-row"><span>${T('outs')}</span><b>${outTxt}</b></div>`;
         extra.push(C('drawBaked'));
       }
     }

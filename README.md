@@ -123,6 +123,9 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-12 — Coach: draw outs listed
+- **Live coach outs row**: when you have a draw, the coach lists the exact cards that complete it (e.g. all four 2s for a gutshot)
+
 ### 2026-06-12 — Coach: multi-street passive lines
 - **Check–check reads**: tracks `checkStreets` per player; coach calls out 2+ consecutive passive streets with **profile-specific** prose (🪨 capped / 🔥 air / 🦈 trap risk / 📞 medium pairs) and multiway “table looks weak” notes
 
