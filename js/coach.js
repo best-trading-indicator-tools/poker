@@ -228,6 +228,11 @@ mixCall:'Las matemáticas dicen pagar — pero de vez en cuando, subir aquí man
 mixCheck:'Pasar es la jugada sólida — pero de vez en cuando, mete una apuesta pequeña aquí. Los rivales que aprenden que tu check siempre es debilidad te pasarán por encima. Una apuesta sorpresa ocasional los mantiene honestos.',
 mixTrap:'Subir es la jugada rentable — pero con una mano tan fuerte puedes a veces solo pagar y tender una trampa. Si siempre subes tus monstruos, los jugadores observadores se retiran y ganas menos. Un slow-play ocasional esconde tu fuerza.',
 coachErr:'Coach no disponible este turno.'}};
+function C(k,...a){
+  const d=CPROSE[lang]||CPROSE.en;
+  const f=d[k]!==undefined?d[k]:CPROSE.en[k];
+  return typeof f==='function'?f(...a):f;
+}
 
 /* ===== preflop chart (169 starting hands in strength order) ===== */
 const CODE_R={2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'T',11:'J',12:'Q',13:'K',14:'A'};
