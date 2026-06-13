@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Regenerate charts.js with per-position facing + 8/15 BB shove ladders. */
+/** Regenerate charts.js: facing matrices, shove ladders, iso-over-limp ranges. */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -44,10 +44,7 @@ function blendCall(t) {
 const facingPos = {};
 POS.forEach((pos, i) => {
   const t = i / (POS.length - 1);
-  facingPos[pos] = {
-    raise: blendRaise(t),
-    call: blendCall(t),
-  };
+  facingPos[pos] = { raise: blendRaise(t), call: blendCall(t) };
 });
 facingPos.BTN = { raise: [...vsL.raise], call: [...vsL.call] };
 facingPos.SB = {
@@ -57,12 +54,6 @@ facingPos.SB = {
 
 const SHOVE_POS = ['EP', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
 
-function shoveBetween(lo, hi, ratio) {
-  const onlyLo = hi.filter((h) => !lo.includes(h));
-  const pick = Math.ceil(onlyLo.length * ratio);
-  return uniq([...lo, ...onlyLo.slice(0, pick)]);
-}
-
 function shoveTighten(from, drop) {
   const d = new Set(drop);
   return from.filter((h) => !d.has(h));
@@ -71,29 +62,60 @@ function shoveTighten(from, drop) {
 const s5 = G.shove['5'];
 const s10 = G.shove['10'];
 const shove8 = {};
+const shove12 = {};
 const shove15 = {};
+const shove20 = {};
+const marginal15 = {
+  EP: ['AJo', 'ATo', 'KJs', 'QJs'],
+  MP: ['A9o', 'KQo', 'KJo', 'T9s'],
+  HJ: ['A8o', 'A7o', 'KTo', 'Q9o'],
+  CO: ['A6o', 'A5o', 'J9o', 'T9o'],
+  BTN: ['A4o', 'A3o', '98o', '87o', 'K9o'],
+  SB: ['A3o', 'A2o', '98o', '87o', 'K8o', 'Q9o'],
+  BB: ['A3o', 'A2o', '98o', '87o', 'K8o', 'Q9o'],
+};
+const marginal20 = {
+  EP: ['AJo', 'ATo', 'KJs', 'QJs', 'KQo', 'TT'],
+  MP: ['A9o', 'KQo', 'KJo', 'T9s', 'AJo', '99'],
+  HJ: ['A8o', 'A7o', 'KTo', 'Q9o', 'A9o', '88'],
+  CO: ['A6o', 'A5o', 'J9o', 'T9o', 'A8o', '77'],
+  BTN: ['A4o', 'A3o', '98o', '87o', 'K9o', 'A6o', '66'],
+  SB: ['A3o', 'A2o', '98o', '87o', 'K8o', 'Q9o', 'A5o'],
+  BB: ['A3o', 'A2o', '98o', '87o', 'K8o', 'Q9o', 'A5o'],
+};
+
 for (const p of SHOVE_POS) {
   const a = s5[p] || [];
   const b = s10[p] || [];
   const only5 = a.filter((h) => !b.includes(h));
-  const pick = Math.ceil(only5.length * 0.45);
-  shove8[p] = uniq([...b, ...only5.slice(0, pick)]);
-  const marginal = {
-    EP: ['AJo', 'ATo', 'KJs', 'QJs'],
-    MP: ['A9o', 'KQo', 'KJo', 'T9s'],
-    HJ: ['A8o', 'A7o', 'KTo', 'Q9o'],
-    CO: ['A6o', 'A5o', 'J9o', 'T9o'],
-    BTN: ['A4o', 'A3o', '98o', '87o', 'K9o'],
-    SB: ['A3o', 'A2o', '98o', '87o', 'K8o', 'Q9o'],
-    BB: ['A3o', 'A2o', '98o', '87o', 'K8o', 'Q9o'],
-  };
-  shove15[p] = shoveTighten(b, marginal[p] || []);
+  shove8[p] = uniq([...b, ...only5.slice(0, Math.ceil(only5.length * 0.45))]);
+  shove15[p] = shoveTighten(b, marginal15[p] || []);
+  const only10not15 = b.filter((h) => !shove15[p].includes(h));
+  shove12[p] = uniq([...shove15[p], ...only10not15.slice(0, Math.ceil(only10not15.length * 0.4))]);
+  shove20[p] = shoveTighten(b, marginal20[p] || []);
 }
 
-G._source +=
-  ' facing now includes per-raiser-position matrices (UTG→SB) with vsEarly/vsLate kept as fallback. shove adds 8 BB and 15 BB depth ladders.';
+/* iso-raise over limpers: RFI + position-specific wideners */
+const ISO_EXTRA = {
+  UTG: ['55', 'A8s', 'KJo'],
+  'UTG+1': ['44', 'A8s', 'KJo', 'QJo'],
+  MP: ['33', 'A9o', 'JTs', '98o'],
+  'MP+1': ['22', 'A9o', 'T9o', '87o', 'KTo'],
+  HJ: ['A8o', 'KTo', 'QTo', '76o', '65o', 'J9o'],
+  CO: ['A5o', 'K8o', 'J9o', 'T8o', '97o', '86o', '54o', '76o'],
+  BTN: ['65o', '54o', '43o', '32o', 'K7o', 'Q8o', 'J7o', 'T7o', '96o', '85o', '75o', '64o', '53o'],
+  SB: ['A2o', 'K7o', 'Q8o', 'J8o', 'T8o', '87o', '76o', '65o', '54o', '43o'],
+};
+const iso = {};
+for (const pos of POS) {
+  iso[pos] = uniq([...(G.rfi[pos] || []), ...(ISO_EXTRA[pos] || [])]);
+}
+
+G._source =
+  'Approximations of published 9-max solver/Nash ranges. rfi = raise-first-in; iso = isolate limpers (wider than rfi); shove = all-in by BB depth (5/8/10/12/15/20); facing = 3-bet/call vs a raise with per-position matrices and vsEarly/vsLate fallback.';
 G.facing = { ...facingPos, vsEarly: vsE, vsLate: vsL };
-G.shove = { ...G.shove, 8: shove8, 15: shove15 };
+G.iso = iso;
+G.shove = { ...G.shove, 8: shove8, 12: shove12, 15: shove15, 20: shove20 };
 
 const out =
   '/* GTO preflop range charts — external data file. Loaded via <script src>; the game falls back\n' +
@@ -102,4 +124,9 @@ const out =
   JSON.stringify(G) +
   ';\n';
 fs.writeFileSync(CHARTS, out);
-console.log('charts.js expanded:', Object.keys(facingPos).length, 'facing positions, shove depths', Object.keys(G.shove).join(','));
+console.log(
+  'charts.js:',
+  Object.keys(iso).length,
+  'iso positions, shove depths',
+  Object.keys(G.shove).sort((a, b) => +a - +b).join(','),
+);

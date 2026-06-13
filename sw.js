@@ -1,5 +1,5 @@
 /* offline support: network-first with full cache fallback */
-const CACHE='sg-poker-v9';
+const CACHE='sg-poker-v10';
 const ASSETS=['/','/poker.html','/charts.js','/manifest.json','/docs/icon.svg',
   '/js/eval.js','/js/engine.js','/js/coach.js','/js/ai.js','/js/mp.js','/js/ui.js'];
 self.addEventListener('install',e=>{

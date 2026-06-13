@@ -123,6 +123,12 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-12 — Coach depth: iso charts, shove ladders, multiway buckets, spot brief
+- **Iso charts** (`charts.js`): per-position raise-over-limp matrices; coach uses them when facing limpers (not just RFI)
+- **Shove depths**: 12 BB and 20 BB ladders added (now 5 / 8 / 10 / 12 / 15 / 20)
+- **Multiway buckets**: IP/OOP, paired board, flush-draw board, big pot, squeeze spots
+- **Spot brief**: structured top-line summary (equity, price, position, villain line) before detailed prose
+
 ### 2026-06-12 — Turbo blind schedule
 - **Turbo** raises blinds every **5 hands** (was 3)
 
@@ -214,7 +220,7 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ### 2026-06-11 — Solver range charts (external data file)
 - **`charts.js`**: real per-position GTO range matrices now live in an external, human-editable data file — raise-first-in charts for all 8 positions (UTG 11% → BTN 41%) and short-stack all-in charts at 10 BB and 5 BB depths, approximating published solver/Nash ranges
-- **`charts.js` expanded**: per-raiser-position 3-bet/call matrices (UTG through SB, not just EP/LP buckets) and shove ladders at 5 / 8 / 10 / 15 BB; coach picks the nearest depth automatically
+- **`charts.js` expanded**: per-raiser-position 3-bet/call matrices (UTG through SB), **iso-over-limp** ranges, and shove ladders at 5 / 8 / 10 / 12 / 15 / 20 BB; coach picks the nearest depth automatically
 - The coach consults the chart FIRST ("77 is in the MP opening chart — solver-computed ranges say raising it is profitable") and falls back to the percentile engine when no chart covers the spot (facing raises, missing file) — so the single-file copy still works standalone
 - Unlike a single hand ranking with cutoffs, true matrices capture solver non-linearities (suited connectors and small pairs enter ranges "early", weak offsuit broadways late)
 - Tournament-pressure scaling, antes, profiles, ICM and all postflop logic apply unchanged on top

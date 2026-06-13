@@ -48,6 +48,9 @@ chartCallRaise:(c,e,o)=>`${c} is in the calling chart against this raise — str
 chartIcmFold:(c,e,o)=>`${c} is normally a call here, but right now your simulated win chance (${e}) doesn't cover the price (${o}) once prize pressure and this raiser's range are counted. The chart is a guide — the math of THIS table says fold.`,
 chartFoldVs:c=>`${c} is in neither the re-raise nor the calling chart against this raise — solver ranges simply fold it. Calling raises with hands like this is one of the most expensive habits in poker.`,
 chartOpen:(c,p)=>`${c} is in the ${p} opening chart — a hand list taken from solver-computed ranges: raising it first-in from this seat is profitable in the long run. Come in raising, not limping.`,
+chartIso:(c,p,n)=>`${c} is in the ${p} iso chart — solver-style ranges for raising over ${n} limper${n>1?'s':''}. Isolate with a raise; calling behind limpers bleeds chips.`,
+chartNotInIso:(c,p)=>`${c} is not in the ${p} iso chart — even over limpers, this hand loses money as a raise long-term. Fold, or make a very tight exception only with a huge stack edge.`,
+limpPotNote:n=>` ${n} limper${n>1?'s':''} — dead money widens iso-raise ranges slightly; still raise or fold, don't call behind with marginal hands.`,
 chartNotIn:(c,p)=>`${c} is not in the ${p} opening chart — solver-computed ranges say this hand loses money when raised from this seat over the long run. Folding now saves chips for a better spot.`,
 chartShove:(c,bb,p)=>`At ${bb} BB, ${c} is in the ${p} all-in chart (solver-computed shove ranges for short stacks). Going all-in maximizes your chance of winning the blinds and antes uncontested.`,
 chartNotInShove:(c,p)=>`${c} is not in the ${p} all-in chart for this stack depth — shoving it loses money long-term. Fold and wait: even one round of patience usually offers a better hand.`,
@@ -80,6 +83,15 @@ bucketMWCbet:n=>` Multiway (${n} opponents) facing a c-bet — defend tighter th
 bucketMWWet:n=>` Multiway (${n} opponents) on a wet board — straights and flushes are live for someone; don't stack off with one pair.`,
 bucketMWDry:n=>` Multiway (${n} opponents) on a dry board — bluffs work more often, but multiple players still means someone often has a pair.`,
 bucketMWFace:n=>` Multiway (${n} opponents) facing a bet — continue only with strong made hands or draws with clear odds.`,
+bucketMWIP:n=>` Multiway (${n} opponents) and you act last (IP) — more bluffs and thin value bets work; still respect raises.`,
+bucketMWOOP:n=>` Multiway (${n} opponents) and you act first (OOP) — check more marginal hands; betting gets called by someone too often.`,
+bucketMWPaired:n=>` Multiway (${n} opponents) on a paired board — trips/full houses are live; one pair is often not enough.`,
+bucketMWFlushDraw:n=>` Multiway (${n} opponents) with a flush draw possible — someone may already have a flush or be drawing.`,
+bucketMWBigPot:p=>` Large multiway pot (~${p} BB) — mistakes are costly; continue only with clear equity or strong draws.`,
+bucketMWSqueeze:n=>` Multiway (${n} opponents) facing a squeeze/raise — ranges are strong; fold marginal continues unless odds are excellent.`,
+briefSpot:(eq,need,call,pot,pos,ip,opps)=>` 📋 Spot: ~${eq} equity${need!=='—'?` vs ${need} needed`:''}${call!=='—'?` · price ${call} → ${pot}`:''} · ${pos} (${ip}) · ${opps} opp${opps>1?'s':''}.`,
+briefAir:` No real made hand — equity heavily discounted vs bets.`,
+briefVillain:(name,style,line)=>` vs ${name} (${style}) on a ${line} line.`,
 dirtyOutPairs:c=>` Dirty outs (${c}): pairing the board — helps everyone, not just you.`,
 dirtyOutFlush:c=>` Dirty outs (${c}): fourth card to a board flush — often gives an opponent the winning flush.`,
 profRock:` The bettor is the 🪨 tight type — players like this almost never bluff big. Give this bet extra respect: without a strong hand yourself, folding is usually right.`,
@@ -144,6 +156,9 @@ chartCallRaise:(c,e,o)=>`${c} figure dans la charte de call contre cette relance
 chartIcmFold:(c,e,o)=>`${c} serait normalement un call ici, mais votre chance de gain simulée (${e}) ne couvre pas le prix (${o}) une fois la pression des prix et la range de ce relanceur comptées. La charte est un guide — le calcul de CETTE table dit de se coucher.`,
 chartFoldVs:c=>`${c} ne figure ni dans la charte de 3-bet ni dans celle de call contre cette relance — les ranges solveur la couchent, tout simplement. Suivre des relances avec ce genre de main est l'une des habitudes les plus coûteuses du poker.`,
 chartOpen:(c,p)=>`${c} figure dans la charte d'ouverture ${p} — une liste de mains issue de ranges calculées par solveur : la relancer en premier depuis ce siège est rentable à long terme. Entrez en relançant, pas en limpant.`,
+chartIso:(c,p,n)=>`${c} figure dans la charte iso ${p} — ranges pour relancer sur ${n} limpeur${n>1?'s':''}. Isolez en relançant ; suivre derrière des limps perd des jetons.`,
+chartNotInIso:(c,p)=>`${c} n'est pas dans la charte iso ${p} — même sur des limps, cette main perd de l'argent en relance. Couchez-vous.`,
+limpPotNote:n=>` ${n} limpeur${n>1?'s':''} — argent mort : les ranges d'iso s'élargissent un peu ; relancez ou couchez, ne suivez pas en marginal.`,
 chartNotIn:(c,p)=>`${c} ne figure pas dans la charte d'ouverture ${p} — les ranges calculées par solveur indiquent que cette main perd de l'argent relancée depuis ce siège. Se coucher maintenant garde des jetons pour un meilleur spot.`,
 chartShove:(c,bb,p)=>`À ${bb} BB, ${c} figure dans la charte de tapis ${p} (ranges de shove calculées par solveur pour tapis courts). Partir à tapis maximise vos chances de gagner blinds et antes sans bagarre.`,
 chartNotInShove:(c,p)=>`${c} ne figure pas dans la charte de tapis ${p} à cette profondeur — la jouer à tapis perd de l'argent à long terme. Couchez-vous : un tour de patience offre souvent une meilleure main.`,
@@ -176,6 +191,15 @@ bucketMWCbet:n=>` Multiway (${n} adversaires) face à un c-bet — défendez plu
 bucketMWWet:n=>` Multiway (${n} adversaires) sur board humide — quintes et couleurs vivantes pour quelqu'un ; ne stack pas avec une paire.`,
 bucketMWDry:n=>` Multiway (${n} adversaires) sur board sec — les bluffs passent plus, mais plusieurs joueurs = souvent une paire.`,
 bucketMWFace:n=>` Multiway (${n} adversaires) face à une mise — continuez seulement avec main forte ou tirage avec cotes claires.`,
+bucketMWIP:n=>` Multiway (${n} adversaires) et vous parlez en dernier (IP) — plus de bluffs et de mises fines ; respectez quand même les relances.`,
+bucketMWOOP:n=>` Multiway (${n} adversaires) et vous parlez en premier (OOP) — checkez plus de mains marginales ; miser se fait trop souvent suivre.`,
+bucketMWPaired:n=>` Multiway (${n} adversaires) sur board apparié — brelans/full sont possibles ; une paire ne suffit souvent pas.`,
+bucketMWFlushDraw:n=>` Multiway (${n} adversaires) avec tirage couleur possible — quelqu'un peut déjà avoir la couleur.`,
+bucketMWBigPot:p=>` Gros pot multiway (~${p} BB) — les erreurs coûtent cher ; continuez seulement avec équité claire.`,
+bucketMWSqueeze:n=>` Multiway (${n} adversaires) face à une squeeze — ranges fortes ; couchez les marginales sauf excellentes cotes.`,
+briefSpot:(eq,need,call,pot,pos,ip,opps)=>` 📋 Spot : ~${eq} d'équité${need!=='—'?` vs ${need} requis`:''}${call!=='—'?` · prix ${call} → ${pot}`:''} · ${pos} (${ip}) · ${opps} adv.`,
+briefAir:` Pas de vraie main faite — équité fortement décotée face aux mises.`,
+briefVillain:(name,style,line)=>` vs ${name} (${style}) sur une ligne ${line}.`,
 dirtyOutPairs:c=>` Outs sales (${c}) : pair le board — aide tout le monde, pas seulement vous.`,
 dirtyOutFlush:c=>` Outs sales (${c}) : 4e carte à une couleur au board — donne souvent la couleur gagnante à l'adversaire.`,
 profRock:` Le miseur est du type 🪨 serré — ces joueurs ne bluffent presque jamais gros. Respectez cette mise : sans main forte, se coucher est généralement correct.`,
@@ -240,6 +264,9 @@ chartCallRaise:(c,e,o)=>`${c} está en la tabla de llamada contra esta subida �
 chartIcmFold:(c,e,o)=>`${c} normalmente sería una llamada aquí, pero tu probabilidad simulada (${e}) no cubre el precio (${o}) contando la presión de premios y el rango de quien sube. La tabla es una guía — las cuentas de ESTA mesa dicen retirarse.`,
 chartFoldVs:c=>`${c} no está ni en la tabla de 3-bet ni en la de llamada contra esta subida — los rangos de solver simplemente la tiran. Igualar subidas con manos así es uno de los hábitos más caros del póker.`,
 chartOpen:(c,p)=>`${c} está en la tabla de apertura de ${p} — una lista de manos sacada de rangos calculados por solver: subirla primero desde este asiento es rentable a largo plazo. Entra subiendo, no de limp.`,
+chartIso:(c,p,n)=>`${c} está en la tabla iso de ${p} — rangos para subir sobre ${n} limper${n>1?'s':''}. Aísla con subida; pagar detrás de limps pierde fichas.`,
+chartNotInIso:(c,p)=>`${c} no está en la tabla iso de ${p} — incluso sobre limps, subir pierde dinero a largo plazo. Retírate.`,
+limpPotNote:n=>` ${n} limper${n>1?'s':''} — dinero muerto: los rangos iso se amplían un poco; sube o retírate, no pagues marginal.`,
 chartNotIn:(c,p)=>`${c} no está en la tabla de apertura de ${p} — los rangos calculados por solver dicen que esta mano pierde dinero subida desde este asiento. Retirarse ahora guarda fichas para un momento mejor.`,
 chartShove:(c,bb,p)=>`Con ${bb} BB, ${c} está en la tabla de all-in de ${p} (rangos de shove calculados por solver para stacks cortos). Ir all-in maximiza tus opciones de llevarte ciegas y antes sin pelea.`,
 chartNotInShove:(c,p)=>`${c} no está en la tabla de all-in de ${p} a esta profundidad — jugarla all-in pierde dinero a largo plazo. Retírate: una ronda de paciencia suele traer una mano mejor.`,
@@ -272,6 +299,15 @@ bucketMWCbet:n=>` Multiway (${n} rivales) frente a c-bet — defiende más tight
 bucketMWWet:n=>` Multiway (${n} rivales) en board húmedo — escaleras y colores vivos para alguien; no apilar con una pareja.`,
 bucketMWDry:n=>` Multiway (${n} rivales) en board seco — los faroles funcionan más, pero varios jugadores = alguien con pareja.`,
 bucketMWFace:n=>` Multiway (${n} rivales) frente a apuesta — continúa solo con mano fuerte o proyecto con odds claras.`,
+bucketMWIP:n=>` Multiway (${n} rivales) y hablas último (IP) — más faroles y apuestas finas; respeta subidas.`,
+bucketMWOOP:n=>` Multiway (${n} rivales) y hablas primero (OOP) — pasa más manos marginales; apostar suele recibir call.`,
+bucketMWPaired:n=>` Multiway (${n} rivales) en board emparejado — tríos/full son posibles; una pareja a menudo no basta.`,
+bucketMWFlushDraw:n=>` Multiway (${n} rivales) con posible proyecto de color — alguien puede tener ya el color.`,
+bucketMWBigPot:p=>` Bote multiway grande (~${p} BB) — los errores cuestan; continúa solo con equity clara.`,
+bucketMWSqueeze:n=>` Multiway (${n} rivales) frente a squeeze — rangos fuertes; retira marginales salvo odds excelentes.`,
+briefSpot:(eq,need,call,pot,pos,ip,opps)=>` 📋 Spot: ~${eq} equity${need!=='—'?` vs ${need} necesario`:''}${call!=='—'?` · precio ${call} → ${pot}`:''} · ${pos} (${ip}) · ${opps} rival${opps>1?'es':''}.`,
+briefAir:` Sin mano hecha real — equity muy descontada vs apuestas.`,
+briefVillain:(name,style,line)=>` vs ${name} (${style}) en línea ${line}.`,
 dirtyOutPairs:c=>` Outs sucios (${c}): emparejan el board — ayuda a todos, no solo a ti.`,
 dirtyOutFlush:c=>` Outs sucios (${c}): 4ª carta a color en el board — a menudo le da el color ganador al rival.`,
 profRock:` El apostador es del tipo 🪨 cerrado — estos jugadores casi nunca farolean fuerte. Respeta esta apuesta: sin una mano fuerte, retirarse suele ser lo correcto.`,
@@ -597,19 +633,51 @@ function classifyLeakSpot(callAmt,opps){
   }
   return 'other';
 }
-function coachMultiwayBuckets(p,extra,opps,callAmt){
+function limperCount(p){
+  if(state.stage!=='preflop'||state.currentBet>state.bb)return 0;
+  return inHand().filter(q=>q!==p&&q.bet>=state.bb).length;
+}
+function boardTexture(board){
+  if(!board.length) return {paired:false,monotone:false,wet:false,flushDraw:false,dry:true};
+  const bs=[0,0,0,0]; for(const c of board)bs[c.s]++;
+  const br=board.map(c=>c.r).sort((a,b)=>a-b);
+  const paired=br.some((r,i,a)=>i&&a[i-1]===r);
+  const monotone=Math.max(...bs)>=3;
+  const twoTone=bs.filter(v=>v>=2).length>=1&&Math.max(...bs)<3;
+  const connected=br.length>=3&&br[br.length-1]-br[0]<=4;
+  const wet=paired||monotone||connected;
+  return {paired,monotone,wet,flushDraw:monotone||twoTone,dry:!wet};
+}
+function coachSpotBrief(p,extra,ctx){
+  const {eq,eqAdj,odds,callAmt,pot,opps,pos,actsFirst,actsLast,airPen}=ctx;
+  const eqShow=pct(eqAdj!=null?eqAdj:eq);
+  const ip=actsLast?'IP':actsFirst?'OOP':'mid';
+  let line=C('briefSpot',eqShow,callAmt>0?pct(odds):'—',callAmt>0?usd(callAmt):'—',usd(pot),pos||'—',ip,opps);
+  if(airPen>=0.1) line+=C('briefAir');
+  const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+  if(agg&&callAmt>0&&state.stage!=='preflop'&&agg.lineRead)
+    line+=C('briefVillain',agg.name,agg.style?agg.style.label:'—',agg.lineRead);
+  extra.unshift(line);
+}
+function coachMultiwayBuckets(p,extra,opps,callAmt,actsFirst,actsLast){
   if(state.stage==='preflop'||opps<2)return;
-  const bs=[0,0,0,0]; for(const c of state.board)bs[c.s]++;
-  const br=state.board.map(c=>c.r).sort((a,b)=>a-b);
-  const wet=Math.max(...bs)>=3||(br.length>=3&&br[br.length-1]-br[0]<=4)||br.some((r,i,a)=>i&&a[i-1]===r);
+  const tex=boardTexture(state.board);
   const agg=state.lastAggIdx>=0?state.players[state.lastAggIdx]:null;
   const cbet=agg&&(agg.lineRead==='cbet'||(state.stage==='flop'&&state.pfAggIdx===agg.i));
   const checkedToMe=callAmt===0&&inHand().filter(q=>q!==p&&!q.allIn).some(q=>q.checkedStreet);
+  const potBB=state.players.reduce((s,q)=>s+q.totalBet,0)/state.bb;
+  if(actsLast) extra.push(C('bucketMWIP',opps));
+  else if(actsFirst) extra.push(C('bucketMWOOP',opps));
+  if(tex.paired) extra.push(C('bucketMWPaired',opps));
+  if(tex.flushDraw&&!tex.monotone) extra.push(C('bucketMWFlushDraw',opps));
   if(callAmt>0&&cbet) extra.push(C('bucketMWCbet',opps));
   else if(checkedToMe) extra.push(C('bucketMWCheck',opps));
-  else if(wet) extra.push(C('bucketMWWet',opps));
+  else if(tex.wet) extra.push(C('bucketMWWet',opps));
   else if(callAmt===0) extra.push(C('bucketMWDry',opps));
   else extra.push(C('bucketMWFace',opps));
+  if(potBB>=8) extra.push(C('bucketMWBigPot',Math.round(potBB)));
+  if(callAmt>0&&opps>=2&&agg&&state.pfAggIdx>=0&&agg.i!==state.pfAggIdx)
+    extra.push(C('bucketMWSqueeze',opps));
 }
 function coachMicroLesson(R,action){
   if(!R||!R.rec)return'';
@@ -655,8 +723,10 @@ function chartFor(kind,key){
 function shoveChartKey(stackBB){
   if(stackBB<=5) return '5';
   if(stackBB<=7) return '8';
-  if(stackBB<=10) return '10';
-  if(stackBB<=15) return '15';
+  if(stackBB<=9) return '10';
+  if(stackBB<=11) return '12';
+  if(stackBB<=16) return '15';
+  if(stackBB<=22) return '20';
   return '10';
 }
 /* per-raiser-position 3-bet/call matrix, falling back to EP/LP buckets */
@@ -834,7 +904,7 @@ function coachDecide(p){
     for(const r of br) brCnt[r]=(brCnt[r]||0)+1;
     if(Object.values(brCnt).some(c=>c>=2) && score0<6) extra.push(C('warnPaired'));
     if(opps>=3) extra.push(C('multiway',opps));
-    coachMultiwayBuckets(p,extra,opps,callAmt);
+    coachMultiwayBuckets(p,extra,opps,callAmt,actsFirst,actsLast);
   }
   eqAdj=eq;
   const odds=callAmt>0?callAmt/(pot+callAmt):0;
@@ -947,16 +1017,25 @@ function coachDecide(p){
       }
       /* always explain when profiles behind shift the steal math, even slightly */
       if(Math.abs(thrEff-thr)/thr>0.12||profDir!==0) extra.push(C('widenNote',Math.round(thr*100),Math.round(thrEff*100),profDir));
-      /* solver chart first: is this exact hand in this position's opening matrix? */
+      const limpPot=callAmt>0&&state.currentBet<=state.bb;
+      const nLimps=limpPot?limperCount(p):0;
+      if(limpPot&&nLimps>0){
+        extra.push(C('limpPotNote',nLimps));
+        thrEff=Math.min(0.65,thrEff*(1+0.04*Math.min(nLimps,3)));
+      }
+      /* solver chart: iso over limpers, else raise-first-in */
+      const isoList=limpPot&&nLimps>0?chartFor('iso',pos):null;
       const rfi=chartFor('rfi',pos);
-      if(rfi) chartInfo={kind:'rfi',pos,list:rfi};
-      const chartHit=rfi?rfi.includes(code):false;
+      const chartList=isoList||rfi;
+      if(chartList) chartInfo={kind:isoList?'iso':'rfi',pos,list:chartList};
+      const chartHit=chartList?chartList.includes(code):false;
       const pressureOpen=prEff<=thrEff&&callAmt>0||prEff<=Math.min(thrEff,0.10)&&callAmt===0;
       const isoSlack=dom.tier===2?0.13:dom.tier===1?0.08:0;
       const borderlineIso=dom.iso&&lateSteal&&callAmt>0&&!chartHit&&prEff<=thrEff+isoSlack&&eq>=0.14;
       if(chartHit&&callAmt>0||pressureOpen){
         rec='RAISE';
-        why.push(chartHit?C('chartOpen',code,pos):C('pfOpen',code,prTxt,Math.round(thrEff*100),pos,pairAdj&&pr>thrEff));
+        if(chartHit&&isoList) why.push(C('chartIso',code,pos,nLimps));
+        else why.push(chartHit?C('chartOpen',code,pos):C('pfOpen',code,prTxt,Math.round(thrEff*100),pos,pairAdj&&pr>thrEff));
       }else if(borderlineIso){
         rec='RAISE';
         why.push(C('stackDomIso',code,pos,Math.round(dom.ratio*10)/10));
@@ -965,7 +1044,8 @@ function coachDecide(p){
         why.push(C('pfBBfree',code));
       }else{
         rec='FOLD';
-        why.push(rfi?C('chartNotIn',code,pos):C('pfOpenFold',code,prTxt,Math.round(thrEff*100),pos));
+        if(isoList) why.push(C('chartNotInIso',code,pos));
+        else why.push(rfi?C('chartNotIn',code,pos):C('pfOpenFold',code,prTxt,Math.round(thrEff*100),pos));
         if(dom.tier>=1&&lateSteal&&callAmt>0) extra.push(C('stackDomFoldHint'));
       }
     }else{
@@ -1107,6 +1187,7 @@ function coachDecide(p){
     CALL:Math.round(callAmt>0 ? eq*(pot+callAmt)-callAmt : eq*pot),
     RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
   };
+  coachSpotBrief(p,extra,{eq,eqAdj,odds,callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,code};
 }
@@ -1122,10 +1203,10 @@ function showChartMatrix(info,heroCode){
     html+=`<div class="cc${inSet.has(h)?' in':inSet2.has(h)?' in2':''}${h===heroCode?' me':''}">${h}</div>`;
   }
   $('chartGrid').innerHTML=html;
-  const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='facing'?'chartTitleFacing':info.kind==='range'?'chartTitleRange':'chartTitleShove';
+  const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='iso'?'chartTitleIso':info.kind==='facing'?'chartTitleFacing':info.kind==='range'?'chartTitleRange':'chartTitleShove';
   $('chartTitle').textContent=`${info.pos} — ${T(titleKey)}`;
   $('chartLegend').innerHTML=
-    `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'?'legendOpen':info.kind==='facing'?'legend3bet':info.kind==='range'?'legendRange':'legendShove')}</span>`+
+    `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'||info.kind==='iso'?'legendOpen':info.kind==='facing'?'legend3bet':info.kind==='range'?'legendRange':'legendShove')}</span>`+
     (info.list2?`<span><span class="sw" style="background:#2e7d8f;"></span>${T('legendCall')}</span>`:'')+
     `<span><span class="sw" style="background:#1d232e;"></span>${T('legendFold')}</span>`+
     `<span><span class="sw" style="background:none;outline:2px solid #4da3ff;outline-offset:-1px;"></span>${T('legendYou')}</span>`;
