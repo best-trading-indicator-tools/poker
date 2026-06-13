@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <meta name="theme-color" content="#0b0e13">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,6 +15,11 @@
   --text:#e8ebf0; --dim:#8d99ab; --gold:#e8b64c; --red:#e2574c; --blue:#4c8fe2; --green:#2e7d4f;
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
+.btn:focus-visible,.preset:focus-visible,#actionbar button:focus-visible,.seg button:focus-visible,.rp-nav button:focus-visible,#revClose:focus-visible,#revAllHands:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.tb-touch{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:44px;padding:4px 8px;margin:-4px -8px;}
+.tb-touch input{width:22px;height:22px;accent-color:var(--gold);cursor:pointer;}
+.setup-touch{display:flex;align-items:center;gap:10px;cursor:pointer;min-height:44px;}
+.setup-touch input{width:22px;height:22px;accent-color:var(--gold);cursor:pointer;}
 html,body{height:100%;overscroll-behavior:none;}
 body{background:var(--bg);color:var(--text);overflow:hidden;}
 .hidden{display:none !important;}
@@ -381,10 +386,11 @@ body.fl #centerArea{top:46%;}
   .seat .ppos{font-size:9px;padding:1px 4px;}
   .seat .lastact{font-size:11px;margin-top:2px;font-weight:600;}
   .seat .hole{min-height:46px;gap:3px;}
-  /* on phones the floating bet chips/labels are redundant (each seat's action line
-     already shows "SB $10" / "Call $20") and there is no guaranteed free space for
-     them on a full table — hide them; chip-flight animations still run from their coords */
+  /* full-table bet chips crowd small screens — show hero + current actor only */
   .betchip{visibility:hidden;}
+  .betchip.mobile-show{visibility:visible;}
+  .betchip.mobile-show .chipstack{display:none;}
+  .betchip.mobile-show .amt{font-size:10px;padding:2px 6px;}
   /* short-handed tables (≤6 players) have room for bigger, clearer seats */
   body.few .seat{width:122px;margin-left:-61px;}
   body.few .seat .avatar{font-size:21px;}
@@ -489,11 +495,11 @@ body.fl #centerArea{top:46%;}
         <label><input type="radio" name="speed" value="slow"> Slow</label>
       </div>
     </div>
-    <div class="row">
+    <div class="row setup-touch">
       <label class="main" id="timerLbl">⏱ Turn timer</label>
       <span style="display:flex;gap:8px;align-items:center;">
-        <button id="timerInfoBtn" aria-label="What does this do?" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:1px 8px;cursor:pointer;font-size:12px;">&#8505;&#65039;</button>
-        <input type="checkbox" id="timerChk" style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;">
+        <button id="timerInfoBtn" aria-label="What does this do?" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;min-height:44px;">&#8505;&#65039;</button>
+        <input type="checkbox" id="timerChk" aria-labelledby="timerLbl">
       </span>
     </div>
     <p id="timerInfo" class="hidden"></p>
@@ -543,13 +549,13 @@ body.fl #centerArea{top:46%;}
     <span class="tb-opt">Hand <b id="tHand">1</b></span>
     <span class="tb-opt">Blinds up in <b id="tNext">6</b> hands</span>
     <span>AI: <b id="tDiff">Medium</b></span>
-    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--dim);">
-      <input type="checkbox" id="autoNext" checked style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;">
-      Auto next hand
+    <label class="tb-touch">
+      <input type="checkbox" id="autoNext" checked aria-labelledby="autoNextLbl">
+      <span id="autoNextLbl">Auto next hand</span>
     </label>
-    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--gold);font-weight:600;">
-      <input type="checkbox" id="coachChk" checked style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;">
-      🧭 Live coach
+    <label class="tb-touch" style="color:var(--gold);font-weight:600;">
+      <input type="checkbox" id="coachChk" aria-labelledby="coachTopLbl">
+      <span id="coachTopLbl">🧭 Live coach</span>
     </label>
     <select id="langTop" title="Language" style="background:none;border:1px solid var(--line);border-radius:7px;padding:4px 6px;cursor:pointer;font-size:12px;color:var(--dim);">
       <option value="en">EN</option><option value="fr">FR</option><option value="es">ES</option>
@@ -561,7 +567,7 @@ body.fl #centerArea{top:46%;}
     <aside id="coach" class="open">
       <button id="coachClose" aria-label="Close coach">✕</button>
       <h3>🧭 LIVE COACH</h3>
-      <div id="coachBody"><div class="waiting">Advice appears here when it&rsquo;s your turn.</div></div>
+      <div id="coachBody" aria-live="polite" aria-atomic="true"><div class="waiting">Advice appears here when it&rsquo;s your turn.</div></div>
       <div id="coachFeed" class="hidden"></div>
       <div id="coachStats"></div>
     </aside>
@@ -604,8 +610,8 @@ body.fl #centerArea{top:46%;}
   </div>
 </div>
 
-<div id="replayOv" class="hidden">
-  <div class="rp-card">
+<div id="replayOv" class="hidden" aria-hidden="true">
+  <div class="rp-card" role="document">
     <h2 id="rpTitle">Hand replay</h2>
     <div class="rp-nav"><button id="rpPrevH">&#8249; hand</button><span id="rpHandLbl"></span><button id="rpNextH">hand &#8250;</button></div>
     <div class="rp-nav"><button id="rpPrevS">&#8249; street</button><span id="rpStreetLbl"></span><button id="rpNextS">street &#8250;</button></div>
@@ -614,8 +620,8 @@ body.fl #centerArea{top:46%;}
   </div>
 </div>
 
-<div id="reviewOv" class="hidden">
-  <div class="rev-card">
+<div id="reviewOv" class="hidden" aria-hidden="true">
+  <div class="rev-card" role="document">
     <h2 id="revTitle">Session review</h2>
     <div id="revSummary"></div>
     <div id="revSpark"></div>
@@ -625,8 +631,8 @@ body.fl #centerArea{top:46%;}
   </div>
 </div>
 
-<div id="mpLobby" class="hidden">
-  <div class="over-card">
+<div id="mpLobby" class="hidden" aria-hidden="true">
+  <div class="over-card" role="document">
     <h2 id="mpLobbyTitle">Room</h2>
     <div id="mpLobbyCode"></div>
     <div id="mpVerTag" style="font-size:10px;color:var(--dim);margin:-8px 0 8px;"></div>
@@ -656,8 +662,8 @@ body.fl #centerArea{top:46%;}
   <div id="chatRow"><input id="chatIn" maxlength="200" placeholder="Message…"><button id="chatSend">➤</button></div>
 </div>
 
-<div id="chartOv" class="hidden">
-  <div class="rp-card" style="width:auto;">
+<div id="chartOv" class="hidden" aria-hidden="true">
+  <div class="rp-card" style="width:auto;" role="document">
     <h2 id="chartTitle"></h2>
     <div id="chartGrid"></div>
     <div id="chartLegend"></div>
@@ -665,8 +671,8 @@ body.fl #centerArea{top:46%;}
   </div>
 </div>
 
-<div id="overlay" class="hidden">
-  <div class="over-card">
+<div id="overlay" class="hidden" aria-hidden="true">
+  <div class="over-card" role="document">
     <div class="big" id="ovEmoji">🏆</div>
     <h2 id="ovTitle"></h2>
     <p id="ovSub"></p>
@@ -2310,7 +2316,7 @@ function applyResumeSnapshot(sv){
   logLines=[];
   $('setup').classList.add('hidden');
   $('game').classList.remove('hidden');
-  $('overlay').classList.add('hidden');
+  closeDialog($('overlay'));
   $('tDiff').textContent=sv.cfg.difficulty[0].toUpperCase()+sv.cfg.difficulty.slice(1);
   newGame(sv.cfg);
   state.gameId=sv.gameId||state.gameId;
@@ -2340,6 +2346,44 @@ let coachRecNow=null,lastHand=null,gameSeries=[];
 
 /* ================= UI ================= */
 const $=id=>HAS_DOM?document.getElementById(id):null;
+let _dlgFocus=null;
+function dlgFocusables(root){
+  return [...root.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')]
+    .filter(el=>!el.disabled&&el.tabIndex!==-1&&!el.closest('.hidden'));
+}
+function openDialog(ov,labelId){
+  if(!ov)return;
+  if(ov.classList.contains('hidden')) _dlgFocus=document.activeElement;
+  else if(ov._dlgKey){document.removeEventListener('keydown',ov._dlgKey);ov._dlgKey=null;}
+  ov.classList.remove('hidden');
+  ov.setAttribute('aria-hidden','false');
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  if(labelId) ov.setAttribute('aria-labelledby',labelId);
+  const onKey=e=>{
+    if(e.key==='Escape'){closeDialog(ov);return;}
+    if(e.key!=='Tab')return;
+    const items=dlgFocusables(ov);
+    if(!items.length)return;
+    const first=items[0],last=items[items.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  };
+  ov._dlgKey=onKey;
+  document.addEventListener('keydown',onKey);
+  const items=dlgFocusables(ov);
+  if(items.length) items[0].focus();
+}
+function closeDialog(ov){
+  if(!ov||ov.classList.contains('hidden'))return;
+  ov.classList.add('hidden');
+  ov.setAttribute('aria-hidden','true');
+  ov.removeAttribute('role');
+  ov.removeAttribute('aria-modal');
+  ov.removeAttribute('aria-labelledby');
+  if(ov._dlgKey){document.removeEventListener('keydown',ov._dlgKey);ov._dlgKey=null;}
+  if(_dlgFocus&&typeof _dlgFocus.focus==='function'){_dlgFocus.focus();_dlgFocus=null;}
+}
 let logLines=[],nextTimer=null,prevBoardLen=0;
 
 function log(msg){
@@ -2580,11 +2624,18 @@ function render(winners){
     else if(p.revealed) setHTML(hole,p.hole.map(c=>cardHTML(c,true,'flip')).join(''));
     else setHTML(hole,backHTML(true,true)+backHTML(true,true));
     const bet=$('bet'+p.i);
+    const mob=isMobile();
+    const actor=state.handOver?-1:state.turnIdx;
     if(p.bet>0){
-      setHTML(bet,chipStackHTML(p.bet,true)+`<span class="amt">${usd(p.bet)} · ${bbs(p.bet)}</span>`);
+      const showMobBet=mob&&(p.i===0||p.i===actor);
+      if(showMobBet) setHTML(bet,`<span class="amt">${usd(p.bet)} · ${bbs(p.bet)}</span>`);
+      else setHTML(bet,chipStackHTML(p.bet,true)+`<span class="amt">${usd(p.bet)} · ${bbs(p.bet)}</span>`);
+      bet.classList.toggle('mobile-show',showMobBet);
       bet.classList.remove('hidden');
+    }else{
+      bet.classList.remove('mobile-show');
+      bet.classList.add('hidden');
     }
-    else bet.classList.add('hidden');
   }
   layoutSeats();
   mpBroadcast();
@@ -3061,7 +3112,7 @@ function showChartMatrix(info,heroCode){
     (info.list2?`<span><span class="sw" style="background:#2e7d8f;"></span>${T('legendCall')}</span>`:'')+
     `<span><span class="sw" style="background:#1d232e;"></span>${T('legendFold')}</span>`+
     `<span><span class="sw" style="background:none;outline:2px solid #4da3ff;outline-offset:-1px;"></span>${T('legendYou')}</span>`;
-  $('chartOv').classList.remove('hidden');
+  openDialog($('chartOv'),'chartTitle');
 }
 
 /* run N headless tournaments with the coach bot in seat 0, report win/ITM/avg finish */
@@ -3290,7 +3341,7 @@ function showReplay(){
   rpHandIdx=((state&&state.gameHands)||[]).length-1;
   rpStreet=99;          // open on the final street
   rpRender();
-  $('replayOv').classList.remove('hidden');
+  openDialog($('replayOv'),'rpTitle');
 }
 function showHistoryReplay(){
   if(!HAS_DOM)return;
@@ -3299,7 +3350,7 @@ function showHistoryReplay(){
   rpAll=hist;
   rpHandIdx=hist.length-1; rpStreet=99;
   rpRender();
-  $('replayOv').classList.remove('hidden');
+  openDialog($('replayOv'),'rpTitle');
 }
 
 function raiseAllInAmt(){
@@ -3341,7 +3392,6 @@ function showActions(p){
     updateRaiseLabel();
   }
   try{ updateCoach(p); }catch(err){ $('coachBody').innerHTML=`<div class="waiting">${C('coachErr')}</div>`; }
-  if(isMobile()) setCoach(true);
 }
 function hideActions(){
   if(!HAS_DOM)return;
@@ -3482,13 +3532,13 @@ function showSessionReview(){
         rpAll=hist.filter(h=>h.gameId===gid);
         if(!rpAll.length)return;
         rpHandIdx=0; rpStreet=99;
-        $('reviewOv').classList.add('hidden');
+        closeDialog($('reviewOv'));
         rpRender();
-        $('replayOv').classList.remove('hidden');
+        openDialog($('replayOv'),'rpTitle');
       };
     });
   }
-  $('reviewOv').classList.remove('hidden');
+  openDialog($('reviewOv'),'revTitle');
 }
 function sparklineSVG(series){
   if(!series||series.length<2)return '';
@@ -3518,7 +3568,7 @@ function showGameOver(won,place){
         `<span class="bl-what">${T('coachSaid')} ${recWord(d.rec)} · ${T('youChose')} ${actWord(d.action)}</span>`+
         `<b>−${usd(d.evLoss)}</b></div>`).join('')+
       (gd.length>5?`<div class="bl-more">+ ${gd.length-5} ${T('smallerLeaks')}</div>`:'');
-  $('overlay').classList.remove('hidden');
+  openDialog($('overlay'),'ovTitle');
 }
 function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
 
@@ -3625,7 +3675,7 @@ function mpJoin(){
     const peer=new Peer(MP_ICE);
     MP={role:'client',peer,code,myName:name,seat:null,sentTok:'',lastBanner:0,ended:false,connected:false};
     const fail=msg=>{
-      $('mpLobby').classList.add('hidden');
+      closeDialog($('mpLobby'));
       mpStatus(msg);
       try{peer.destroy();}catch(e){}
       MP=null;
@@ -3716,7 +3766,7 @@ function mpClientData(d){
   if(d.t==='lobby'){MP.names=d.names;mpRosterRender(d.names);}
   else if(d.t==='start'){
     MP.seat=d.seat; MP.spectator=false; gameSeries=[]; MP.lastHand=null;
-    $('mpLobby').classList.add('hidden');
+    closeDialog($('mpLobby'));
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
     $('chatBtn').classList.remove('hidden');showEmoteBtn();
@@ -3733,7 +3783,7 @@ function mpClientData(d){
   else if(d.t==='wait'){
     /* game in progress — watch the table as a spectator until we're dealt in */
     MP.spectator=true;
-    $('mpLobby').classList.add('hidden');
+    closeDialog($('mpLobby'));
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
     $('chatBtn').classList.remove('hidden');showEmoteBtn();
@@ -3742,7 +3792,7 @@ function mpClientData(d){
   }
   else if(d.t==='badver'||d.t==='started'||d.t==='full'){
     MP.connected=false;          // suppress the "host left" path
-    $('mpLobby').classList.add('hidden');
+    closeDialog($('mpLobby'));
     mpStatus(T(d.t==='badver'?'mpVerMismatch':d.t==='full'?'mpFull':'mpStarted'));
     try{MP.peer.destroy();}catch(e){}
     MP=null;
@@ -3857,7 +3907,7 @@ function mpBecomeHost(peer,newId){
   state.cfg.numPlayers=ck.players.length;
   state.cfg.mpRemotes=[];   // marks this as a multiplayer game (no resume saving etc.)
   if(HAS_DOM){
-    $('mpLobby').classList.add('hidden');
+    closeDialog($('mpLobby'));
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
     $('chatBtn').classList.remove('hidden');showEmoteBtn();
@@ -3885,7 +3935,7 @@ function mpRosterRender(names){
   }).join('');
 }
 function mpLobbyShow(){
-  $('mpLobby').classList.remove('hidden');
+  openDialog($('mpLobby'),'mpLobbyTitle');
   $('mpLobbyCode').textContent=MP.code;
   $('mpVerTag').textContent='v '+MP_V;
   const host=MP.role==='host';
@@ -3913,7 +3963,7 @@ function mpStartGame(){
     mpRemotes:MP.conns.map(c=>({name:c.name,seat:c.seat}))
   };
   MP.conns.forEach(c=>{try{c.conn.send({t:'start',seat:c.seat});}catch(e){}});
-  $('mpLobby').classList.add('hidden');
+  closeDialog($('mpLobby'));
   logLines=[];
   $('setup').classList.add('hidden');
   $('game').classList.remove('hidden');
@@ -4225,7 +4275,7 @@ function initUI(){
     logLines=[];
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
-    $('overlay').classList.add('hidden');
+    closeDialog($('overlay'));
     $('tDiff').textContent=difficulty[0].toUpperCase()+difficulty.slice(1);
     newGame(cfg);
     buildSeats();
@@ -4274,9 +4324,9 @@ function initUI(){
   };
   refreshResume();
   $('reviewBtn').onclick=showSessionReview;
-  $('revClose').onclick=()=>$('reviewOv').classList.add('hidden');
-  $('reviewOv').onclick=e=>{if(e.target.id==='reviewOv')$('reviewOv').classList.add('hidden');};
-  $('revAllHands').onclick=()=>{$('reviewOv').classList.add('hidden');showHistoryReplay();};
+  $('revClose').onclick=()=>closeDialog($('reviewOv'));
+  $('reviewOv').onclick=e=>{if(e.target.id==='reviewOv')closeDialog($('reviewOv'));};
+  $('revAllHands').onclick=()=>{closeDialog($('reviewOv'));showHistoryReplay();};
   /* --- clear saved data (human name for localStorage wipe) --- */
   $('resetInfoBtn').onclick=()=>$('resetInfo').classList.toggle('hidden');
   $('timerInfoBtn').onclick=()=>$('timerInfo').classList.toggle('hidden');
@@ -4373,10 +4423,10 @@ function initUI(){
     a.click();
     URL.revokeObjectURL(a.href);
   };
-  $('chartClose').onclick=()=>$('chartOv').classList.add('hidden');
-  $('chartOv').onclick=e=>{if(e.target.id==='chartOv')$('chartOv').classList.add('hidden');};
-  $('rpClose').onclick=()=>$('replayOv').classList.add('hidden');
-  $('replayOv').onclick=e=>{if(e.target.id==='replayOv')$('replayOv').classList.add('hidden');};
+  $('chartClose').onclick=()=>closeDialog($('chartOv'));
+  $('chartOv').onclick=e=>{if(e.target.id==='chartOv')closeDialog($('chartOv'));};
+  $('rpClose').onclick=()=>closeDialog($('replayOv'));
+  $('replayOv').onclick=e=>{if(e.target.id==='replayOv')closeDialog($('replayOv'));};
   $('sndBtn').onclick=()=>{soundOn=!soundOn;$('sndBtn').textContent=soundOn?'🔊':'🔇';};
   /* --- multiplayer wiring --- */
   try{$('mpName').value=localStorage.getItem('sg_poker_mpname')||'';}catch(e){}
@@ -4408,7 +4458,7 @@ function initUI(){
     }
   };
   $('ovBtn').onclick=()=>{
-    $('overlay').classList.add('hidden');
+    closeDialog($('overlay'));
     $('game').classList.add('hidden');
     $('setup').classList.remove('hidden');
     refreshResume(); updateOrient();

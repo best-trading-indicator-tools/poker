@@ -98,6 +98,14 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-12 — Mobile bet legibility + accessibility
+- **Mobile bet amounts**: on phones, floating bet chips show for **you** and the **current actor** only (compact amount label; full chip stack on desktop)
+- **Pinch-zoom allowed**: viewport no longer blocks scaling (`maximum-scale=5`)
+- **Dialog focus trap**: replay, session review, range chart, game-over, and MP lobby — Tab cycles inside, Escape dismisses, focus returns on close
+- **`aria-live` coach**: `#coachBody` announces advice updates to screen readers
+- **Larger touch targets**: topbar checkboxes and setup timer toggle use 44px hit areas; `:focus-visible` outlines on primary controls
+- **Mobile coach off by default**: no longer auto-opens on your turn — only shows when you enable **Live coach** (top bar or action-bar **Coach** button)
+
 ### 2026-06-12 — Phase B: session review + mid-hand resume
 - **Session review dashboard** (setup screen): win rate, ITM %, avg finish, total net, cumulative EV-leaked sparkline; tap any finished game to replay its hands
 - **Mid-hand resume (solo)**: snapshot after every action — deck, board, bets, ranges, and turn; button reads "Resume mid-hand" when a pot is in progress
@@ -111,7 +119,7 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 ### 2026-06-12 — Tier 1 UX fixes
 - **All-in button**: uses your full stack exactly (`bet + chips`) — the raise slider step no longer leaves chips behind (e.g. $3,650 not $3,520)
 - **MP turn timer**: clients no longer auto-fold locally (`guest` → `client` role fix); only the host enforces timer actions
-- **Mobile coach**: auto-opens on your turn; thumb-reachable **Coach** toggle in the action bar (synced with topbar checkbox)
+- **Mobile coach**: thumb-reachable **Coach** toggle in the action bar (synced with topbar checkbox); off by default on phones — enable **Live coach** when you want the sheet
 - **Haptics decoupled from mute**: vibration works even when sound is off
 - **`prefers-reduced-motion`**: also disables active-seat glow, timer pulse, coach sheet slide, emote animations
 - **PWA install**: static manifest link, `theme-color`, and `apple-touch-icon` in `<head>`
