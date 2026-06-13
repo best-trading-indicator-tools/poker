@@ -935,8 +935,8 @@ function applyLang(){
   tn('tLevel','level'); tn('tHand','hand');
   const up=$('tNext');
   if(up){up.parentNode.firstChild.nodeValue=T('blindsUpA'); up.parentNode.lastChild.nodeValue=T('blindsUpB');}
-  const an=$('autoNext'); if(an&&an.parentNode.lastChild) an.parentNode.lastChild.nodeValue=' '+T('autoNext');
-  const cc=$('coachChk'); if(cc&&cc.parentNode.lastChild) cc.parentNode.lastChild.nodeValue=' '+T('coachLbl');
+  const an=$('autoNextLbl'); if(an) an.textContent=T('autoNext');
+  const cc=$('coachTopLbl'); if(cc) cc.textContent=T('coachLbl');
   set('quitBtn','quit');
   /* bottom bar + modals */
   set('logToggle','log'); set('replayBtn','lastHand'); set('exportBtn','exportH'); set('coachToggle','coachBtn'); set('nextHandBtn','nextHand');

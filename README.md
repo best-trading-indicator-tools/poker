@@ -129,7 +129,7 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ### 2026-06-12 — Mobile bet legibility + accessibility
 - **Mobile bet amounts**: on phones, floating bet chips show for **you** and the **current actor** only (compact amount label; full chip stack on desktop)
-- **Pinch-zoom allowed**: viewport no longer blocks scaling (`maximum-scale=5`)
+- **Pinch-zoom disabled on mobile**: viewport locked again (`user-scalable=no`) — accidental zoom while tapping was more annoying than helpful
 - **Dialog focus trap**: replay, session review, range chart, game-over, and MP lobby — Tab cycles inside, Escape dismisses, focus returns on close
 - **`aria-live` coach**: `#coachBody` announces advice updates to screen readers
 - **Larger touch targets**: topbar checkboxes and setup timer toggle use 44px hit areas; `:focus-visible` outlines on primary controls
