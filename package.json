@@ -2,7 +2,7 @@
   "name": "sit-and-go-holdem",
   "private": true,
   "scripts": {
-    "build": "node scripts/build.mjs multifile",
+    "rebuild": "node scripts/build.mjs multifile",
     "build:bundle": "node scripts/build.mjs bundle",
     "build:extract": "node scripts/build.mjs extract"
   }

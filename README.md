@@ -31,7 +31,7 @@ node scripts/build.mjs extract     # re-split js/*.js only
 node scripts/build.mjs bundle      # inline all modules back into poker.html (true single-file deploy)
 ```
 
-Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel serves the split files). Run `bundle` before shipping a one-file drop if you need double-click-without-folder layout.
+Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel serves the repo root as static files; no build step). Run `bundle` before shipping a one-file drop if you need double-click-without-folder layout.
 
 ## Features
 
