@@ -282,6 +282,27 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 .rp-log div{margin-bottom:2px;}
 #rpClose{background:var(--gold);color:#1a1408;border:none;border-radius:9px;padding:10px 24px;font-weight:700;cursor:pointer;}
 
+/* ---------- SESSION REVIEW ---------- */
+#reviewOv{position:fixed;inset:0;background:rgba(8,10,14,.85);display:flex;align-items:center;justify-content:center;z-index:60;}
+.rev-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 28px;width:500px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);}
+.rev-card h2{font-size:17px;margin-bottom:12px;}
+#revSummary{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:14px;font-size:12.5px;}
+#revSummary .rv b{display:block;font-size:15px;color:var(--text);font-weight:700;margin-top:2px;}
+#revSummary .rv span{color:var(--dim);}
+#revSpark{margin-bottom:14px;}
+#revList{max-height:42vh;overflow-y:auto;margin-bottom:14px;}
+.rev-game{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--panel2);}
+.rev-game:hover{border-color:var(--gold);}
+.rev-game .rg-main{flex:1;min-width:0;}
+.rev-game .rg-title{font-size:13px;font-weight:600;}
+.rev-game .rg-sub{font-size:11px;color:var(--dim);margin-top:2px;}
+.rev-game .rg-net{font-size:13px;font-weight:700;white-space:nowrap;}
+.rev-game .rg-net.pos{color:#62d68a;}
+.rev-game .rg-net.neg{color:#e2574c;}
+#revAllHands,#revClose{width:100%;margin-top:6px;border-radius:9px;padding:10px;font-weight:700;cursor:pointer;}
+#revAllHands{background:none;border:1px solid var(--line);color:var(--text);margin-bottom:8px;}
+#revClose{background:var(--gold);color:#1a1408;border:none;}
+
 /* ---------- OVERLAY ---------- */
 #overlay{position:fixed;inset:0;background:rgba(8,10,14,.82);display:flex;align-items:center;justify-content:center;z-index:50;}
 .over-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:40px 56px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.6);}
@@ -494,7 +515,7 @@ body.fl #centerArea{top:46%;}
     </div>
     <button id="startBtn">Deal me in</button>
     <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
-    <button id="reviewBtn" class="hidden">&#127902; Review past hands</button>
+    <button id="reviewBtn" class="hidden">&#128202; Session review</button>
     <div id="mpSec">
       <h3 id="mpTitle">👥 Play with friends</h3>
       <div id="mpSub">Invite friends with a link — free, no accounts</div>
@@ -593,6 +614,17 @@ body.fl #centerArea{top:46%;}
   </div>
 </div>
 
+<div id="reviewOv" class="hidden">
+  <div class="rev-card">
+    <h2 id="revTitle">Session review</h2>
+    <div id="revSummary"></div>
+    <div id="revSpark"></div>
+    <div id="revList"></div>
+    <button id="revAllHands" type="button">All saved hands</button>
+    <button id="revClose" type="button">Close</button>
+  </div>
+</div>
+
 <div id="mpLobby" class="hidden">
   <div class="over-card">
     <h2 id="mpLobbyTitle">Room</h2>
@@ -681,7 +713,10 @@ function later(fn,ms){ if(BENCH){queueMicrotask(fn);} else setTimeout(fn,ms); }
 const TR={
 en:{sub:"No-Limit Texas Hold'em tournament vs AI",players:"Players",blinds:"Blinds",buyin:"Buy-in",ante:"Ante",noAnte:"no ante",
 speed:"Blinds Change Speed",turbo:"Turbo",standard:"Standard",slow:"Slow",diff:"AI Difficulty",easy:"Easy",medium:"Medium",hard:"Hard",language:"Language",
-deal:"Deal me in",resume:"▶ Resume tournament",review:"🎞 Review past hands",
+deal:"Deal me in",resume:"▶ Resume tournament",resumeMid:"▶ Resume mid-hand",review:"📊 Session review",
+revTitle:"Session review",revWinRate:"Win rate",revITM:"In the money",revAvgFinish:"Avg finish",
+revNet:"Total net",revEVLeaked:"EV leaked",revGames:"Games",revNoGames:"No finished games yet — play a tournament!",
+revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
 resetData:"Clear saved data",resetInfo:"Deletes everything this game keeps in your browser: lifetime stats, hand history and any unfinished tournament you could resume. Your language choice stays. This can't be undone.",resetConfirm:"Delete all saved stats, hand history and any unfinished tournament?",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",
 fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
@@ -732,7 +767,10 @@ won:"won",foldedTag:"folded",showdown:"showdown",fullHand:"Full hand",preflop:"P
 ord:n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}},
 fr:{sub:"Tournoi de Texas Hold'em No-Limit contre l'IA",players:"Joueurs",blinds:"Blinds",buyin:"Cave (buy-in)",ante:"Ante",noAnte:"sans ante",
 speed:"Vitesse des blinds",turbo:"Turbo",standard:"Standard",slow:"Lente",diff:"Niveau de l'IA",easy:"Facile",medium:"Moyen",hard:"Difficile",language:"Langue",
-deal:"Distribuez !",resume:"▶ Reprendre le tournoi",review:"🎞 Revoir les mains",
+deal:"Distribuez !",resume:"▶ Reprendre le tournoi",resumeMid:"▶ Reprendre la main en cours",review:"📊 Bilan des sessions",
+revTitle:"Bilan des sessions",revWinRate:"Taux de victoire",revITM:"Dans l'argent",revAvgFinish:"Place moyenne",
+revNet:"Net total",revEVLeaked:"EV perdu",revGames:"Parties",revNoGames:"Aucune partie terminée — jouez un tournoi !",
+revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
 resetData:"Effacer les données sauvegardées",resetInfo:"Supprime tout ce que le jeu garde dans votre navigateur : statistiques globales, historique des mains et tout tournoi en cours à reprendre. Votre choix de langue est conservé. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l'historique des mains et tout tournoi en cours ?",resetDone:"✓ Effacé",
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",
 fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",
@@ -783,7 +821,10 @@ won:"gagné",foldedTag:"couché",showdown:"abattage",fullHand:"Main complète",p
 ord:n=>n===1?'1re':n+'e'},
 es:{sub:"Torneo de Texas Hold'em No-Limit contra la IA",players:"Jugadores",blinds:"Ciegas",buyin:"Entrada (buy-in)",ante:"Ante",noAnte:"sin ante",
 speed:"Velocidad de ciegas",turbo:"Turbo",standard:"Estándar",slow:"Lenta",diff:"Nivel de la IA",easy:"Fácil",medium:"Medio",hard:"Difícil",language:"Idioma",
-deal:"¡Reparte!",resume:"▶ Reanudar torneo",review:"🎞 Revisar manos",
+deal:"¡Reparte!",resume:"▶ Reanudar torneo",resumeMid:"▶ Reanudar mano en curso",review:"📊 Resumen de sesiones",
+revTitle:"Resumen de sesiones",revWinRate:"Tasa de victorias",revITM:"En premios",revAvgFinish:"Puesto medio",
+revNet:"Neto total",revEVLeaked:"EV perdido",revGames:"Partidas",revNoGames:"Sin partidas terminadas — ¡juega un torneo!",
+revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
 resetData:"Borrar datos guardados",resetInfo:"Elimina todo lo que el juego guarda en tu navegador: estadísticas globales, historial de manos y cualquier torneo sin terminar. Tu idioma se mantiene. No se puede deshacer.",resetConfirm:"¿Borrar todas las estadísticas, el historial de manos y cualquier torneo sin terminar?",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",
 fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
@@ -1478,6 +1519,54 @@ function aiCanValueRaise(p){
   if(!p.style) return true;
   return (handPct[holeCode(p.hole)]||1)<=(p.style.raiseCap||0.22);
 }
+function aiOppCaps(p){
+  return inHand().filter(q=>q!==p)
+    .map(q=>({cap:clamp(q.rangeCap||1,0.03,1),floor:clamp(q.rangeFloor||0,0,0.25)}))
+    .sort((a,b)=>a.cap-b.cap).slice(0,4);
+}
+function aiEstEquity(p, live, d){
+  const sims=d==='hard'?160:d==='medium'?70:35;
+  const caps=aiOppCaps(p);
+  if(state.stage==='preflop'){
+    if(caps.length) return mcEquityR(p.hole,[],caps,sims);
+    return preflopEq(p.hole,live);
+  }
+  if(caps.length) return mcEquityR(p.hole,state.board,caps,sims);
+  return mcEquity(p.hole,state.board,Math.min(live-1,3),sims);
+}
+function aiIsLate(p){
+  const n=state.players.length;
+  const dist=(p.i-state.dealerIdx+n)%n;
+  return dist===0||dist===n-1;
+}
+/* postflop profile biases: rocks/stations don't bluff; sharks c-bet more IP; maniacs sometimes check */
+function aiPostflopAdj(p, callAmt, pot){
+  if(state.stage==='preflop'||!p.style) return {margin:0, bluffMult:1, betBoost:0, giveUp:false};
+  const sid=p.style.id;
+  let margin=0, bluffMult=1, betBoost=0, giveUp=false;
+  if(sid==='rock'){
+    bluffMult=0;
+    if(callAmt>0){
+      const agg=state.lastAggIdx>=0?state.players[state.lastAggIdx]:null;
+      if(agg&&agg.aggStreets&&agg.aggStreets.length>=2) margin+=0.06;
+      else if(callAmt>=pot*0.5) margin+=0.04;
+    }
+  }else if(sid==='station'){
+    bluffMult=0;
+    margin-=0.03;
+  }else if(sid==='shark'){
+    if(callAmt===0&&state.stage==='flop'&&state.pfAggIdx===p.i&&aiIsLate(p)) betBoost=0.18;
+  }else if(sid==='maniac'){
+    bluffMult=1.15;
+    if(callAmt===0&&Math.random()<0.15) giveUp=true;
+  }
+  return {margin, bluffMult, betBoost, giveUp};
+}
+function seatOrderFromDealer(){
+  const n=state.players.length, o=[];
+  for(let k=1;k<=n;k++) o.push((state.dealerIdx+k)%n);
+  return o;
+}
 
 function aiDecide(p){
   const callAmt=Math.min(state.currentBet-p.bet, p.chips);
@@ -1486,9 +1575,7 @@ function aiDecide(p){
   const d=state.cfg.difficulty;
   const stackBB=(p.chips+p.bet)/state.bb;
 
-  let eq;
-  if(state.stage==='preflop') eq=preflopEq(p.hole,live);
-  else eq=mcEquity(p.hole,state.board,Math.min(live-1,3), d==='hard'?160:d==='medium'?70:35);
+  let eq=aiEstEquity(p, live, d);
 
   const noise = d==='hard'?0.045 : d==='medium'?0.10 : 0.22;
   eq=clamp(eq+(Math.random()*2-1)*noise,0,1);
@@ -1530,13 +1617,15 @@ function aiDecide(p){
     margin: base.margin - press*0.06,
     raiseT: base.raiseT - press*0.13 - stealBoost,
     raiseF: base.raiseF + press*0.28 + stealBoost,
-    bluff:  base.id==='station' ? 0 : base.bluff + press*0.05,
+    bluff:  (base.id==='rock'||base.id==='station') ? 0 : base.bluff + press*0.05,
     size:   base.size
   };
+  const pfAdj=aiPostflopAdj(p, callAmt, pot);
   const facingRaise=state.currentBet>state.bb*2;
   const foldRaise=(base.foldRaise||0)+(base.id==='rock'&&facingRaise?0.08:0);
 
   if(callAmt===0){
+    if(pfAdj.giveUp) return {type:'call'};
     if(state.stage==='preflop' && state.currentBet<=state.bb && !handInOpenRange(p, press))
       return {type:'call'};
     if(p.style?.id==='maniac' && Math.random()<0.22) return {type:'call'};
@@ -1547,24 +1636,27 @@ function aiDecide(p){
     if(betProb>0){
       let rf=st.raiseF;
       if(p.style?.id==='maniac') rf*=0.55+Math.random()*0.45;
-      betProb=clamp(betProb+rf,0.05,0.95);
+      betProb=clamp(betProb+rf+pfAdj.betBoost,0.05,0.95);
     }
     bluffProb=Math.max(0,bluffProb+st.bluff);
-    if(p.style?.id==='station') bluffProb=0;
+    if(p.style?.id==='rock'||p.style?.id==='station') bluffProb=0;
+    else if(state.stage!=='preflop') bluffProb*=pfAdj.bluffMult;
     if(!aiCanValueRaise(p) && eq>=0.52) betProb=0;
     if(Math.random()<betProb || (eq<0.40&&Math.random()<bluffProb))
       return {type:'raise',amount:betTarget(p,pot,eq,d)};
     return {type:'call'};
   }
 
-  const margin = (d==='easy'?-0.12 : d==='medium'?0.0 : 0.02-posBonus) + st.margin + foldRaise;
+  const margin = (d==='easy'?-0.12 : d==='medium'?0.0 : 0.02-posBonus) + st.margin + foldRaise + pfAdj.margin;
   const raiseThresh = (d==='easy'?0.82 : d==='medium'?0.68 : 0.64-posBonus) + st.raiseT;
   let raiseFreq   = clamp((d==='easy'?0.35 : d==='medium'?0.55 : 0.75) + st.raiseF, 0.05, 0.95);
   if(p.style?.id==='maniac') raiseFreq*=0.55+Math.random()*0.45;
   if(eq>raiseThresh && aiCanValueRaise(p) && Math.random()<raiseFreq)
     return {type:'raise',amount:betTarget(p,pot,eq,d)};
   if(eq>=odds+margin) return {type:'call'};
-  if(p.style?.id!=='station' && Math.random()<(d==='hard'?0.05:0.02)+st.bluff && callAmt<pot*0.4 && state.stage!=='preflop')
+  const bluffRaise=(p.style?.id==='rock'||p.style?.id==='station')?0
+    :((d==='hard'?0.05:0.02)+st.bluff)*pfAdj.bluffMult;
+  if(bluffRaise>0 && Math.random()<bluffRaise && callAmt<pot*0.4 && state.stage!=='preflop')
     return {type:'raise',amount:betTarget(p,pot,0.7,d)};
   return {type:'fold'};
 }
@@ -1721,7 +1813,7 @@ function startHand(){
   } else beginRound(first);
 }
 
-function beginRound(firstIdx){ state.turnIdx=firstIdx; promptNext(); }
+function beginRound(firstIdx){ state.turnIdx=firstIdx; saveResume(); promptNext(); }
 
 function findNextActor(){
   const n=state.players.length;
@@ -1838,6 +1930,7 @@ function applyAction(p,type,amt){
   }
   p.acted=true;
   log(`${p.name}: ${p.lastAct}`);
+  saveResume();
   render();
 }
 
@@ -1948,10 +2041,13 @@ function showdown(){
       if(!best||cmpScore(s,best)>0){best=s;winners=[p];}
       else if(cmpScore(s,best)===0)winners.push(p);
     }
-    const share=Math.floor(amt/winners.length/5)*5;
-    let rem=amt-share*winners.length;
-    for(const w of winners){
-      const add=share+(rem>0?rem:0); rem=0;
+    const share=Math.floor(amt/winners.length);
+    const rem=amt-share*winners.length;
+    const seatOrd=seatOrderFromDealer();
+    winners.sort((a,b)=>seatOrd.indexOf(a.i)-seatOrd.indexOf(b.i));
+    for(let wi=0;wi<winners.length;wi++){
+      const w=winners[wi];
+      const add=share+(wi<rem?1:0);
       w.chips+=add;
       winnings.set(w,(winnings.get(w)||0)+add);
     }
@@ -2135,20 +2231,109 @@ function loadStats(){
 }
 let lifeStats=loadStats();
 function saveStats(){try{localStorage.setItem('sg_poker_stats',JSON.stringify(lifeStats));}catch(e){}}
-/* tournament resume: snapshot at each hand boundary */
+/* tournament resume: snapshot at each hand boundary or mid-hand after every action */
+function cardToCode(c){ return RANK_CH[c.r]+'shdc'[c.s]; }
+function codesToCards(codes){ return (codes||[]).map(parseCardCode); }
 function saveResume(){
   if(!HAS_DOM||!state||state.cfg.allAI||state.cfg.mpRemotes||state.cfg.mpClient)return;
   try{
     if(state.gameOver||state.players[0].out||alive().length<=1){
       localStorage.removeItem('sg_poker_resume'); return;
     }
-    localStorage.setItem('sg_poker_resume',JSON.stringify({
-      v:1, t:Date.now(), cfg:state.cfg, gameId:state.gameId,
+    const snap={
+      v:2, t:Date.now(), cfg:state.cfg, gameId:state.gameId,
       handNum:state.handNum, dealerIdx:state.dealerIdx,
       sessStats:state.sessStats, gameDecisions:state.gameDecisions||[],
+      gameSeries:(gameSeries||[]).slice(),
       players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,style:q.style?q.style.id:null}))
-    }));
+    };
+    if(!state.handOver&&state.stage){
+      snap.midHand={
+        stage:state.stage, board:state.board.map(cardToCode), deck:state.deck.map(cardToCode),
+        currentBet:state.currentBet, lastRaiseSize:state.lastRaiseSize, turnIdx:state.turnIdx,
+        level:state.level, bb:state.bb, sb:state.sb, ante:state.ante,
+        pfAggIdx:state.pfAggIdx??-1, lastAggIdx:state.lastAggIdx??-1,
+        handLog:(state.handLog||[]).slice(), humanDecisions:(state.humanDecisions||[]).slice(),
+        humanStart:state.humanStart, humanPlayed:state.humanPlayed,
+        humanHandStats:state.humanHandStats?{...state.humanHandStats}:null,
+        players:state.players.map(q=>({
+          hole:q.hole.map(cardToCode), pos:q.pos||'', bet:q.bet, totalBet:q.totalBet,
+          folded:q.folded, allIn:q.allIn, acted:q.acted, lastAct:q.lastAct||'',
+          revealed:q.revealed, rangeCap:q.rangeCap, rangeFloor:q.rangeFloor,
+          checkedStreet:!!q.checkedStreet, aggStreets:(q.aggStreets||[]).slice(),
+          lineRead:q.lineRead||'', bank:q.bank??TT_BANK
+        }))
+      };
+    }
+    localStorage.setItem('sg_poker_resume',JSON.stringify(snap));
   }catch(e){}
+}
+function restoreMidHand(mh){
+  state.handOver=false;
+  state.level=mh.level; state.bb=mh.bb; state.sb=mh.sb; state.ante=mh.ante;
+  state.board=codesToCards(mh.board);
+  state.deck=codesToCards(mh.deck);
+  state.stage=mh.stage;
+  state.currentBet=mh.currentBet;
+  state.lastRaiseSize=mh.lastRaiseSize;
+  state.turnIdx=mh.turnIdx;
+  state.pfAggIdx=mh.pfAggIdx??-1;
+  state.lastAggIdx=mh.lastAggIdx??-1;
+  state.handLog=mh.handLog||[];
+  state.humanDecisions=mh.humanDecisions||[];
+  state.humanStart=mh.humanStart??state.players[0].chips;
+  state.humanPlayed=mh.humanPlayed??true;
+  state.humanHandStats=mh.humanHandStats||{vpip:false,pfr:false,aBets:0,aCalls:0,sd:false,sdWon:false};
+  state.humanWonAmt=0; state.resultText=''; state.noActionHand=false;
+  logLines=state.handLog.slice();
+  prevBoardLen=state.board.length;
+  coachRecNow=null;
+  mh.players.forEach((q,i)=>{
+    const p=state.players[i]; if(!p)return;
+    p.hole=codesToCards(q.hole);
+    p.bet=q.bet; p.totalBet=q.totalBet;
+    p.folded=q.folded; p.allIn=q.allIn; p.acted=q.acted;
+    p.lastAct=q.lastAct||''; p.revealed=q.revealed;
+    p.rangeCap=q.rangeCap??1; p.rangeFloor=q.rangeFloor??0;
+    p.checkedStreet=!!q.checkedStreet;
+    p.aggStreets=(q.aggStreets||[]).slice();
+    p.lineRead=q.lineRead||'';
+    p.bank=q.bank??TT_BANK;
+    p.pos=q.pos||'';
+  });
+  showBanner(T('revMidBanner'));
+  hideNextBtn();
+  render();
+  promptNext();
+}
+function applyResumeSnapshot(sv){
+  logLines=[];
+  $('setup').classList.add('hidden');
+  $('game').classList.remove('hidden');
+  $('overlay').classList.add('hidden');
+  $('tDiff').textContent=sv.cfg.difficulty[0].toUpperCase()+sv.cfg.difficulty.slice(1);
+  newGame(sv.cfg);
+  state.gameId=sv.gameId||state.gameId;
+  state.handNum=sv.handNum; state.dealerIdx=sv.dealerIdx;
+  if(sv.sessStats) state.sessStats=Object.assign(state.sessStats,sv.sessStats);
+  state.gameDecisions=sv.gameDecisions||[];
+  gameSeries=sv.gameSeries||[];
+  try{
+    const hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');
+    state.gameHands=hist.filter(h=>h.gameId===state.gameId);
+  }catch(e){}
+  sv.players.forEach((q,i)=>{
+    const p=state.players[i]; if(!p)return;
+    p.name=q.name; p.avatar=q.avatar; p.chips=q.chips; p.out=q.out; p.place=q.place||0;
+    if(q.style) p.style=STYLES.find(s=>s.id===q.style)||p.style;
+  });
+  buildSeats(); hideActions(); lastHand=null;
+  $('coachFeed').classList.add('hidden');
+  renderStats();
+  updateOrient();
+  showEmoteBtn();
+  if(sv.midHand) restoreMidHand(sv.midHand);
+  else setTimeout(startHand,400);
 }
 function clearResume(){try{localStorage.removeItem('sg_poker_resume');}catch(e){}}
 let coachRecNow=null,lastHand=null,gameSeries=[];
@@ -3240,13 +3425,70 @@ function saveGameRecord(won,place){
   if(BENCH||!state)return;
   try{
     const a2=JSON.parse(localStorage.getItem('sg_poker_games')||'[]');
-    a2.push({t:Date.now(),mp:!!(state.cfg&&(state.cfg.mpRemotes||state.cfg.mpClient)),n:state.cfg?state.cfg.numPlayers:0,
+    a2.push({gameId:state.gameId,t:Date.now(),mp:!!(state.cfg&&(state.cfg.mpRemotes||state.cfg.mpClient)),
+      n:state.cfg?state.cfg.numPlayers:0,diff:state.cfg?state.cfg.difficulty:'medium',
       place:won?1:(place||0),hands:state.handNum,
       net:state.sessStats?state.sessStats.net:0,evLost:state.sessStats?(state.sessStats.evLost||0):0,
       series:(gameSeries||[]).slice(-300)});
     while(a2.length>200)a2.shift();
     localStorage.setItem('sg_poker_games',JSON.stringify(a2));
   }catch(e){}
+}
+function loadGames(){
+  try{return JSON.parse(localStorage.getItem('sg_poker_games')||'[]');}catch(e){return [];}
+}
+function paidPlaces(n){ return PAYOUTS(n||9).length; }
+function evSparklineSVG(games){
+  if(!games||games.length<2)return '';
+  const series=games.map((g,i)=>({h:i+1,c:games.slice(0,i+1).reduce((s,x)=>s+(x.evLost||0),0)}));
+  return sparklineSVG(series);
+}
+function showSessionReview(){
+  if(!HAS_DOM)return;
+  const games=loadGames().filter(g=>!g.mp).reverse();
+  const n=games.length;
+  const wins=games.filter(g=>g.place===1).length;
+  const itm=games.filter(g=>g.place>0&&g.place<=paidPlaces(g.n)).length;
+  const finishes=games.filter(g=>g.place>0);
+  const avgFin=finishes.length?finishes.reduce((s,g)=>s+g.place,0)/finishes.length:0;
+  const netTot=games.reduce((s,g)=>s+(g.net||0),0);
+  const evTot=games.reduce((s,g)=>s+(g.evLost||0),0);
+  $('revSummary').innerHTML=
+    `<div class="rv"><span>${T('revGames')}</span><b>${n}</b></div>`+
+    `<div class="rv"><span>${T('revWinRate')}</span><b>${n?Math.round(wins/n*100):0}%</b></div>`+
+    `<div class="rv"><span>${T('revITM')}</span><b>${n?Math.round(itm/n*100):0}%</b></div>`+
+    `<div class="rv"><span>${T('revAvgFinish')}</span><b>${avgFin?avgFin.toFixed(1):'—'}</b></div>`+
+    `<div class="rv"><span>${T('revNet')}</span><b class="${netTot>=0?'pos':'neg'}">${netTot>=0?'+':'−'}${usd(Math.abs(netTot))}</b></div>`+
+    `<div class="rv"><span>${T('revEVLeaked')}</span><b class="neg">−${usd(evTot)}</b></div>`;
+  $('revSpark').innerHTML=n>=2?evSparklineSVG(games.slice().reverse()):'';
+  if(!n){
+    $('revList').innerHTML=`<p style="color:var(--dim);font-size:13px;">${T('revNoGames')}</p>`;
+  }else{
+    $('revList').innerHTML=`<p style="color:var(--dim);font-size:12px;margin-bottom:8px;">${T('revReplay')}</p>`+
+      games.map(g=>{
+        const when=new Date(g.t).toLocaleDateString();
+        const net=g.net||0;
+        const place=g.place===1?T('youWin'):g.place?T('ord')(g.place):'—';
+        return `<div class="rev-game" data-gid="${g.gameId||''}"><div class="rg-main">`+
+          `<div class="rg-title">${place} · ${g.n}p ${g.diff||''} · ${g.hands} hands</div>`+
+          `<div class="rg-sub">${when}${g.evLost?` · EV −${usd(g.evLost)}`:''}</div></div>`+
+          `<span class="rg-net ${net>=0?'pos':'neg'}">${net>=0?'+':'−'}${usd(Math.abs(net))}</span></div>`;
+      }).join('');
+    $('revList').querySelectorAll('.rev-game').forEach(el=>{
+      el.onclick=()=>{
+        const gid=el.dataset.gid;
+        if(!gid)return;
+        let hist=[]; try{hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');}catch(e){}
+        rpAll=hist.filter(h=>h.gameId===gid);
+        if(!rpAll.length)return;
+        rpHandIdx=0; rpStreet=99;
+        $('reviewOv').classList.add('hidden');
+        rpRender();
+        $('replayOv').classList.remove('hidden');
+      };
+    });
+  }
+  $('reviewOv').classList.remove('hidden');
 }
 function sparklineSVG(series){
   if(!series||series.length<2)return '';
@@ -3294,6 +3536,7 @@ function applyLang(){
   const dBtns=$('diffSeg').querySelectorAll('button');
   ['easy','medium','hard'].forEach((k,i)=>{if(dBtns[i])dBtns[i].textContent=T(k);});
   set('startBtn','deal'); set('resumeBtn','resume'); set('reviewBtn','review');
+  set('revTitle','revTitle'); set('revAllHands','revAllHands'); set('revClose','close');
   set('resetLbl','resetData'); set('resetInfo','resetInfo');
   set('mpTitle','mpTitle'); set('mpSub','mpSub'); set('mpCreate','mpCreate'); set('mpJoinBtn','mpJoinB');
   set('mpLobbyTitle','mpLobbyTitle'); set('mpCopy','mpCopy'); set('mpFillLbl','mpFillLbl');
@@ -4023,12 +4266,17 @@ function initUI(){
   const refreshResume=()=>{
     let sv=null; try{sv=JSON.parse(localStorage.getItem('sg_poker_resume'));}catch(e){}
     $('resumeBtn').classList.toggle('hidden',!sv);
+    if(sv) $('resumeBtn').textContent=sv.midHand?T('resumeMid'):T('resume');
     let nHist=0; try{nHist=(JSON.parse(localStorage.getItem('sg_poker_history')||'[]')).length;}catch(e){}
-    $('reviewBtn').classList.toggle('hidden',!nHist);
+    let nGames=0; try{nGames=loadGames().length;}catch(e){}
+    $('reviewBtn').classList.toggle('hidden',!nHist&&!nGames);
     return sv;
   };
   refreshResume();
-  $('reviewBtn').onclick=showHistoryReplay;
+  $('reviewBtn').onclick=showSessionReview;
+  $('revClose').onclick=()=>$('reviewOv').classList.add('hidden');
+  $('reviewOv').onclick=e=>{if(e.target.id==='reviewOv')$('reviewOv').classList.add('hidden');};
+  $('revAllHands').onclick=()=>{$('reviewOv').classList.add('hidden');showHistoryReplay();};
   /* --- clear saved data (human name for localStorage wipe) --- */
   $('resetInfoBtn').onclick=()=>$('resetInfo').classList.toggle('hidden');
   $('timerInfoBtn').onclick=()=>$('timerInfo').classList.toggle('hidden');
@@ -4038,6 +4286,7 @@ function initUI(){
       localStorage.removeItem('sg_poker_stats');
       localStorage.removeItem('sg_poker_history');
       localStorage.removeItem('sg_poker_resume');
+      localStorage.removeItem('sg_poker_games');
     }catch(e){}
     Object.assign(lifeStats,{hands:0,won:0,net:0,biggest:0,decisions:0,followed:0});
     refreshResume();
@@ -4048,31 +4297,7 @@ function initUI(){
   };
   $('resumeBtn').onclick=()=>{
     const sv=refreshResume(); if(!sv)return;
-    logLines=[];
-    $('setup').classList.add('hidden');
-    $('game').classList.remove('hidden');
-    $('overlay').classList.add('hidden');
-    $('tDiff').textContent=sv.cfg.difficulty[0].toUpperCase()+sv.cfg.difficulty.slice(1);
-    newGame(sv.cfg);
-    state.gameId=sv.gameId||state.gameId;
-    state.handNum=sv.handNum; state.dealerIdx=sv.dealerIdx;
-    if(sv.sessStats) state.sessStats=Object.assign(state.sessStats,sv.sessStats);
-    state.gameDecisions=sv.gameDecisions||[];
-    try{ // restore this game's hands for the replayer
-      const hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');
-      state.gameHands=hist.filter(h=>h.gameId===state.gameId);
-    }catch(e){}
-    sv.players.forEach((q,i)=>{
-      const p=state.players[i]; if(!p)return;
-      p.name=q.name; p.avatar=q.avatar; p.chips=q.chips; p.out=q.out; p.place=q.place||0;
-      if(q.style) p.style=STYLES.find(s=>s.id===q.style)||p.style;
-    });
-    buildSeats(); hideActions(); lastHand=null;
-    $('coachFeed').classList.add('hidden');
-    renderStats();
-    updateOrient();
-    showEmoteBtn();
-    setTimeout(startHand,400);
+    applyResumeSnapshot(sv);
   };
   /* --- keyboard shortcuts: F fold · C check/call · R raise · 1-4 sizes · N next hand --- */
   $('foldBtn').title='Fold (F)'; $('callBtn').title='Check / Call (C)'; $('raiseBtn').title='Raise (R)';

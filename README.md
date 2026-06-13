@@ -21,6 +21,8 @@ Double-click `poker.html`, or serve it from any static host. Set up your table (
 - **Prominent raise sizing**: the coach's recommendation button reads "RAISE TO $60 · 3 BB" and the bet slider pre-sets to the suggested size — pressing R takes exactly the coach's line
 - **Per-game poker stats**: VPIP, PFR, aggression factor and won-at-showdown tracked live in the coach panel
 - **Resume tournament**: progress is saved at every hand boundary; refreshing or closing the tab mid-game offers a "Resume tournament" button on the start screen
+- **Mid-hand resume (solo)**: progress is also saved after every action — refresh mid-pot and pick up exactly where you left off (cards, board, bets, whose turn)
+- **Session review dashboard**: finished games are logged with win rate, ITM %, avg finish, total net, cumulative EV leaked chart, and tap-any-game → hand replayer
 - **Keyboard shortcuts**: F fold · C check/call · R raise · 1–4 bet sizes (min / ½ pot / pot / all-in) · N next hand
 - **Offline mode (PWA)**: visit the hosted game once and it works with no internet afterwards; installable to home screen / dock. The local file always works offline by nature
 - **Multi-language**: English, Français, Español — selector on the start screen and in the game header; choice persists. everything is translated, including the coach's full reasoning, hand names ("une Paire de Dix", "Trío de Seises"), draw names and board warnings
@@ -59,6 +61,8 @@ On top of difficulty, every bot is dealt a random temperament (shown on its seat
 | 🦈 **Aggressive** | ~12%→48% (+ steals) | top 22% | sometimes | 1.15× | position-aware push/fold; adapts fully |
 | 🔥 **Wild** | ~17%→61% | top 35% | often | 1.40× | shoves wide late; aggression varies hand-to-hand |
 
+Postflop, bots estimate equity against opponents' **betting ranges** (same model as the coach). Profile bluffing: rocks and stations never bluff; sharks c-bet more in position; maniacs bluff most and sometimes check back.
+
 **How to exploit them:**
 - 🪨 **Tight** — steal relentlessly; they fold too much and almost never fight back.
 - 📞 **Loose** — value-bet thin, never bluff; they call everything but only bet when strong.
@@ -93,6 +97,16 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
+
+### 2026-06-12 — Phase B: session review + mid-hand resume
+- **Session review dashboard** (setup screen): win rate, ITM %, avg finish, total net, cumulative EV-leaked sparkline; tap any finished game to replay its hands
+- **Mid-hand resume (solo)**: snapshot after every action — deck, board, bets, ranges, and turn; button reads "Resume mid-hand" when a pot is in progress
+- **Game records** now store `gameId` + difficulty for linking to hand history
+
+### 2026-06-12 — Phase A: smarter AI + exact side pots
+- **Range-based postflop equity**: bots use `mcEquityR` against opponents' `rangeCap`/`rangeFloor` (same reads the coach uses), not random hands
+- **Profile postflop behavior**: rocks/stations never bluff; rocks fold more to barrels; stations call wider; sharks c-bet more IP; maniacs bluff more with occasional check-backs
+- **Exact side-pot splits**: odd chips go to winners left of the dealer — no more $5 rounding artifacts
 
 ### 2026-06-12 — Tier 1 UX fixes
 - **All-in button**: uses your full stack exactly (`bet + chips`) — the raise slider step no longer leaves chips behind (e.g. $3,650 not $3,520)
