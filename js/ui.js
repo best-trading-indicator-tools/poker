@@ -403,6 +403,8 @@ function layoutSeats(){
     if(dx)seat.style.left=(parseFloat(seat.style.left)+dx)+'px';
     if(dy)seat.style.top=(parseFloat(seat.style.top)+dy)+'px';
   }
+  positionCenterArea();
+  const centerBox=centerAreaBox(felt);
   /* bet chips: anchored to the seat's FINAL position, pushed toward the table center,
      never on top of the seat box and never inside the board/pot zone */
   for(const p of state.players){
@@ -418,10 +420,10 @@ function layoutSeats(){
     const off=Math.abs(ux)*(r.width/2+bw/2)+Math.abs(uy)*(r.height/2+bh/2)+12;
     let bx=scx+ux*off, by=scy+uy*off;
     /* rectangular exclusion zone around the board + pot text */
-    const ezX=W*0.30, ezY=H*0.16;
-    if(Math.abs(bx-cx)<ezX&&Math.abs(by-cy)<ezY){
-      const s=Math.min(ezX/Math.max(Math.abs(bx-cx),1), ezY/Math.max(Math.abs(by-cy),1));
-      const bx2=cx+(bx-cx)*s, by2=cy+(by-cy)*s;
+    const ezX=centerBox.w/2+10, ezY=centerBox.h/2+8;
+    if(Math.abs(bx-centerBox.x)<ezX&&Math.abs(by-centerBox.y)<ezY){
+      const s=Math.min(ezX/Math.max(Math.abs(bx-centerBox.x),1), ezY/Math.max(Math.abs(by-centerBox.y),1));
+      const bx2=centerBox.x+(bx-centerBox.x)*s, by2=centerBox.y+(by-centerBox.y)*s;
       /* if escaping the board zone would shove the label back onto its own seat
          (hero on short screens), put it BESIDE the seat instead */
       const hitsSeat=Math.abs(bx2-scx)<(r.width+bw)/2+6 && Math.abs(by2-scy)<(r.height+bh)/2+6;
@@ -447,7 +449,7 @@ function layoutSeats(){
       if(!b||(b.offsetWidth||0)<12)continue;   // empty = no bet this street
       labels.push({el:b,w:b.offsetWidth,h:b.offsetHeight||56});
     }
-    const boardBox={x:cx,y:cy,w:W*0.46,h:H*0.30};   // labels must not cover the board/pot either
+    const boardBox={x:centerBox.x,y:centerBox.y,w:centerBox.w,h:centerBox.h};
     for(let it=0;it<3;it++){
       for(const L of labels){
         /* label is anchored with translate(-50%,-60%): visual center ≈ (left, top-0.1h) */
@@ -473,8 +475,30 @@ function layoutSeats(){
       }
     }
   }
-  positionCenterArea();
   positionDealerBtn();
+}
+function seatBoxes(){
+  if(!HAS_DOM||!state)return [];
+  const boxes=[];
+  for(const p of state.players){
+    const s=$('seat'+p.i);
+    if(s&&s.offsetHeight)boxes.push({
+      l:s.offsetLeft,t:s.offsetTop,r:s.offsetLeft+s.offsetWidth,b:s.offsetTop+s.offsetHeight,
+      cx:s.offsetLeft+s.offsetWidth/2,cy:s.offsetTop+s.offsetHeight/2,
+    });
+  }
+  return boxes;
+}
+function boxOverlap(a,b,pad){
+  pad=pad||0;
+  return Math.min(a.r,b.r)-Math.max(a.l,b.l)>pad&&Math.min(a.b,b.b)-Math.max(a.t,b.t)>pad;
+}
+function centerAreaBox(felt){
+  const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
+  const center=$('centerArea');
+  if(!center||!isMobile())return {x:cx,y:cy,w:W*0.46,h:H*0.30,l:cx-W*0.23,t:cy-H*0.15,r:cx+W*0.23,b:cy+H*0.15};
+  const l=center.offsetLeft,t=center.offsetTop,w=center.offsetWidth,h=center.offsetHeight;
+  return {x:l+w/2,y:t+h/2,w,h,l,t,r:l+w,b:t+h};
 }
 function positionCenterArea(){
   if(!HAS_DOM||!state)return;
@@ -488,56 +512,39 @@ function positionCenterArea(){
   const W=felt.clientWidth,H=felt.clientHeight;
   const cx=W/2, n=state.players.length;
   const fl=document.body.classList.contains('fl');
-  const cw=Math.min(W*(n<=6?0.62:0.72), n<=6?280:320);
-  center.style.width=cw+'px';
-  const ch=center.offsetHeight||100;
-  let centerY=H*(fl?0.50:0.51);
   const pad=8;
-  let halfW=cw/2;
-  let ct=centerY-ch/2, cb=ct+ch, cl=cx-halfW, cr=cl+cw;
-  for(const p of state.players){
-    const s=$('seat'+p.i);
-    if(!s||!s.offsetHeight)continue;
-    const sl=s.offsetLeft,sr=sl+s.offsetWidth,st=s.offsetTop,sb=st+s.offsetHeight;
-    const scy=st+s.offsetHeight/2;
-    if(scy<H*0.20||scy>H*0.80)continue;
-    if(sr<=cl+pad||sl>=cr-pad)continue;
-    if(sb<=ct+pad||st>=cb-pad)continue;
-    const scx=sl+s.offsetWidth/2;
-    if(scx<cx) halfW=Math.min(halfW,Math.max(40,cx-pad-(sr+pad)));
-    else halfW=Math.min(halfW,Math.max(40,(sl-pad)-cx));
+  const widthFrac=clamp(0.76-n*0.028,0.50,0.74);
+  const maxW=clamp(300-n*10,190,300);
+  let cw=Math.min(W*widthFrac,maxW);
+  const ch=center.offsetHeight||100;
+  let centerY=H*(fl?0.49:0.50);
+  const boxes=seatBoxes();
+  for(const b of boxes){
+    if(b.cy<H*0.18||b.cy>H*0.82)continue;
+    const rect={l:cx-cw/2,r:cx+cw/2,t:centerY-ch/2,b:centerY+ch/2};
+    if(!boxOverlap(rect,b,pad))continue;
+    if(b.cx<cx) cw=Math.min(cw,Math.max(80,2*(cx-pad-(b.r+pad))));
+    else cw=Math.min(cw,Math.max(80,2*((b.l-pad)-cx)));
   }
-  const cwAdj=Math.max(halfW*2,W*0.40);
-  center.style.width=cwAdj+'px';
-  cl=cx-cwAdj/2; cr=cl+cwAdj;
-  ct=centerY-ch/2; cb=ct+ch;
-  for(const p of state.players){
-    const s=$('seat'+p.i);
-    if(!s||!s.offsetHeight)continue;
-    const sl=s.offsetLeft,st=s.offsetTop,sr=sl+s.offsetWidth,sb=st+s.offsetHeight;
-    const scy=st+s.offsetHeight/2;
-    if(scy>=H*0.45)continue;
-    const overlapX=Math.min(cr,sr)-Math.max(cl,sl);
-    const overlapY=Math.min(cb,sb)-Math.max(ct,st);
-    if(overlapX>pad&&overlapY>pad){
-      const push=sb+pad-ct;
-      if(push>0){ct+=push;cb=ct+ch;centerY=ct+ch/2;}
+  cw=Math.max(cw,W*0.36);
+  for(let iter=0;iter<24;iter++){
+    const rect={l:cx-cw/2,r:cx+cw/2,t:centerY-ch/2,b:centerY+ch/2};
+    let hit=null,best=0;
+    for(const b of boxes){
+      const ox=Math.min(rect.r,b.r)-Math.max(rect.l,b.l);
+      const oy=Math.min(rect.b,b.b)-Math.max(rect.t,b.t);
+      if(ox>pad&&oy>pad){
+        const area=ox*oy;
+        if(area>best){best=area;hit={b,ox,oy};}
+      }
     }
+    if(!hit)break;
+    if(hit.b.cy<=centerY) centerY+=hit.oy;
+    else centerY-=hit.oy;
+    centerY=clamp(centerY,ch/2+pad,H-ch/2-pad);
   }
-  for(const p of state.players){
-    const s=$('seat'+p.i);
-    if(!s||!s.offsetHeight)continue;
-    const st=s.offsetTop,sb=st+s.offsetHeight;
-    if(st<H*0.55)continue;
-    const sl=s.offsetLeft,sr=sl+s.offsetWidth;
-    const overlapX=Math.min(cr,sr)-Math.max(cl,sl);
-    const overlapY=Math.min(cb,sb)-Math.max(ct,st);
-    if(overlapX>pad&&overlapY>pad){
-      const push=cb-(st-pad);
-      if(push>0){ct-=push;cb=ct+ch;centerY=ct+ch/2;}
-    }
-  }
-  center.style.top=(clamp(centerY/H,0.42,0.58)*100)+'%';
+  center.style.width=cw+'px';
+  center.style.top=(centerY/H*100)+'%';
 }
 function positionDealerBtn(){
   if(!HAS_DOM||!state)return;
@@ -554,25 +561,29 @@ function positionDealerBtn(){
     let rxv=ux*Math.cos(A)-uy*Math.sin(A), ryv=ux*Math.sin(A)+uy*Math.cos(A);
     let off=Math.max(seat.offsetWidth,seat.offsetHeight)/2+18;
     let dx=scx+rxv*off, dy=scy+ryv*off;
-    /* keep dealer chip off the board / pot zone */
+    /* keep dealer chip off the board / pot zone and player seats */
     const center=$('centerArea');
-    if(center){
-      const dbW=d.offsetWidth||24, dbH=d.offsetHeight||24;
+    const dbW=d.offsetWidth||24, dbH=d.offsetHeight||24;
+    const obstacles=[];
+    if(center&&center.offsetHeight){
       const zoneCx=center.offsetLeft+center.offsetWidth/2;
       const zoneCy=center.offsetTop+center.offsetHeight/2;
-      const avoidW=center.offsetWidth/2+dbW/2+8;
-      const avoidH=center.offsetHeight/2+dbH/2+6;
-      for(let i=0;i<6;i++){
-        if(Math.abs(dx-zoneCx)>=avoidW||Math.abs(dy-zoneCy)>=avoidH)break;
-        off+=14;
-        rxv=ux*Math.cos(A)-uy*Math.sin(A); ryv=ux*Math.sin(A)+uy*Math.cos(A);
-        dx=scx+rxv*off; dy=scy+ryv*off;
+      obstacles.push({x:zoneCx,y:zoneCy,w:center.offsetWidth+dbW+16,h:center.offsetHeight+dbH+12});
+    }
+    for(const b of seatBoxes())obstacles.push({x:b.cx,y:b.cy,w:b.r-b.l+dbW+8,h:b.b-b.t+dbH+8});
+    for(let pass=0;pass<8;pass++){
+      let moved=false;
+      for(const o of obstacles){
+        if(Math.abs(dx-o.x)>=(o.w)/2||Math.abs(dy-o.y)>=(o.h)/2)continue;
+        const px=(o.w)/2-Math.abs(dx-o.x)+4;
+        const py=(o.h)/2-Math.abs(dy-o.y)+4;
+        if(px<py) dx+=(dx>=o.x?1:-1)*px;
+        else dy+=(dy>=o.y?1:-1)*py;
+        moved=true;
       }
-      if(Math.abs(dx-zoneCx)<avoidW&&Math.abs(dy-zoneCy)<avoidH){
-        const side=scx>zoneCx?1:-1;
-        dx=zoneCx+side*(avoidW+4);
-        dy=zoneCy;
-      }
+      if(!moved)break;
+      dx=clamp(dx,dbW/2+2,W-dbW/2-2);
+      dy=clamp(dy,dbH/2+2,H-dbH/2-2);
     }
     d.style.left=dx+'px';
     d.style.top=dy+'px';
