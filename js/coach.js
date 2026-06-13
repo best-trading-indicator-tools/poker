@@ -68,6 +68,17 @@ lineCCManiac:(n,len)=>`${n} (🔥 wild) checked ${len} streets — strong tell: 
 lineCCShark:(n,len)=>`${n} (🦈 aggressive) checked ${len} streets — sharks can trap, so respect a check-raise, but many lines are still capped medium hands.`,
 lineCCStation:(n,len)=>`${n} (📞 loose) checked ${len} streets — often a medium pair they'll call down with, but rarely two pair or better.`,
 lineTablePassive:n=>`${n} opponents have multi-street passive lines — the table looks weak and checked-through. Thin value bets and bluffs often work.`,
+lessonFold:(rec,eq,need)=>`Coach said ${rec}: ~${eq} after discounts vs ${need} needed — folding is the +EV line.`,
+lessonFoldAir:(eq,need)=>`Coach folded: high cards / no real hand (~${eq} vs ${need} needed) — calling is a classic leak.`,
+lessonCall:(rec,you,eq,need)=>`Coach said ${rec} (~${eq} vs ${need} needed) — you chose ${you} instead.`,
+lessonRaise:(rec,you)=>`Coach said ${rec} — you chose ${you}; raising risks more with a non-premium hand.`,
+bucketMWCheck:n=>` Multiway (${n} opponents): checked to you — ranges are capped; stab thin value or bluff, but respect check-raises (someone often has something).`,
+bucketMWCbet:n=>` Multiway (${n} opponents) facing a c-bet — defend tighter than heads-up; one caller often has a piece. Fold marginal pairs and draws without odds.`,
+bucketMWWet:n=>` Multiway (${n} opponents) on a wet board — straights and flushes are live for someone; don't stack off with one pair.`,
+bucketMWDry:n=>` Multiway (${n} opponents) on a dry board — bluffs work more often, but multiple players still means someone often has a pair.`,
+bucketMWFace:n=>` Multiway (${n} opponents) facing a bet — continue only with strong made hands or draws with clear odds.`,
+dirtyOutPairs:c=>` Dirty outs (${c}): pairing the board — helps everyone, not just you.`,
+dirtyOutFlush:c=>` Dirty outs (${c}): fourth card to a board flush — often gives an opponent the winning flush.`,
 profRock:` The bettor is the 🪨 tight type — players like this almost never bluff big. Give this bet extra respect: without a strong hand yourself, folding is usually right.`,
 profManiac:` The bettor is the 🔥 wild type — he bluffs so often that medium-strength hands go UP in value against him. You can call him down lighter than against anyone else.`,
 profStation:` The bettor is the 📞 loose-passive type — he calls everything but almost never bets big without a real hand. His sudden aggression deserves respect.`,
@@ -150,6 +161,17 @@ lineCCManiac:(n,len)=>`${n} (🔥 sauvage) a checké ${len} streets — tell for
 lineCCShark:(n,len)=>`${n} (🦈 agressif) a checké ${len} streets — les sharks piègent parfois, respectez le check-raise, mais beaucoup de lignes restent des mains moyennes capées.`,
 lineCCStation:(n,len)=>`${n} (📞 loose) a checké ${len} streets — souvent une paire moyenne qu'il paiera, mais rarement deux paires ou mieux.`,
 lineTablePassive:n=>`${n} adversaires ont des lignes passives sur plusieurs streets — la table semble faible. Mises de valeur fines et bluffs passent souvent.`,
+lessonFold:(rec,eq,need)=>`Le coach dit ${rec} : ~${eq} après décotes vs ${need} requis — se coucher est +EV.`,
+lessonFoldAir:(eq,need)=>`Le coach se couche : cartes hautes / pas de main (~${eq} vs ${need} requis) — payer est une fuite classique.`,
+lessonCall:(rec,you,eq,need)=>`Le coach dit ${rec} (~${eq} vs ${need} requis) — vous avez choisi ${you}.`,
+lessonRaise:(rec,you)=>`Le coach dit ${rec} — vous avez choisi ${you} ; relancer risque plus avec une main non premium.`,
+bucketMWCheck:n=>` Multiway (${n} adversaires) : checké sur vous — ranges plafonnées ; mise fine ou bluff, mais respectez les check-raises.`,
+bucketMWCbet:n=>` Multiway (${n} adversaires) face à un c-bet — défendez plus serré qu'en HU ; un caller a souvent un morceau.`,
+bucketMWWet:n=>` Multiway (${n} adversaires) sur board humide — quintes et couleurs vivantes pour quelqu'un ; ne stack pas avec une paire.`,
+bucketMWDry:n=>` Multiway (${n} adversaires) sur board sec — les bluffs passent plus, mais plusieurs joueurs = souvent une paire.`,
+bucketMWFace:n=>` Multiway (${n} adversaires) face à une mise — continuez seulement avec main forte ou tirage avec cotes claires.`,
+dirtyOutPairs:c=>` Outs sales (${c}) : pair le board — aide tout le monde, pas seulement vous.`,
+dirtyOutFlush:c=>` Outs sales (${c}) : 4e carte à une couleur au board — donne souvent la couleur gagnante à l'adversaire.`,
 profRock:` Le miseur est du type 🪨 serré — ces joueurs ne bluffent presque jamais gros. Respectez cette mise : sans main forte, se coucher est généralement correct.`,
 profManiac:` Le miseur est du type 🔥 fou — il bluffe si souvent que vos mains moyennes PRENNENT de la valeur contre lui. Vous pouvez le payer plus léger que n'importe qui d'autre.`,
 profStation:` Le miseur est du type 📞 passif — il paie tout mais ne mise presque jamais gros sans une vraie main. Son agression soudaine mérite le respect.`,
@@ -232,6 +254,17 @@ lineCCManiac:(n,len)=>`${n} (🔥 salvaje) pasó ${len} calles — tell fuerte: 
 lineCCShark:(n,len)=>`${n} (🦈 agresivo) pasó ${len} calles — los sharks pueden tender trampas; respeta el check-raise, pero muchas líneas siguen siendo manos medias capadas.`,
 lineCCStation:(n,len)=>`${n} (📞 pasivo) pasó ${len} calles — a menudo una pareja media que pagará, pero rara vez dos parejas o mejor.`,
 lineTablePassive:n=>`${n} rivales tienen líneas pasivas en varias calles — la mesa parece débil. Apuestas de valor finas y faroles suelen funcionar.`,
+lessonFold:(rec,eq,need)=>`El coach dice ${rec}: ~${eq} tras descuentos vs ${need} necesario — retirarse es +EV.`,
+lessonFoldAir:(eq,need)=>`El coach se retira: cartas altas / sin mano real (~${eq} vs ${need} necesario) — pagar es una fuga clásica.`,
+lessonCall:(rec,you,eq,need)=>`El coach dice ${rec} (~${eq} vs ${need} necesario) — elegiste ${you}.`,
+lessonRaise:(rec,you)=>`El coach dice ${rec} — elegiste ${you}; subir arriesga más sin mano premium.`,
+bucketMWCheck:n=>` Multiway (${n} rivales): check a ti — rangos limitados; apuesta fina o farol, pero respeta check-raises.`,
+bucketMWCbet:n=>` Multiway (${n} rivales) frente a c-bet — defiende más tight que HU; un caller suele tener algo.`,
+bucketMWWet:n=>` Multiway (${n} rivales) en board húmedo — escaleras y colores vivos para alguien; no apilar con una pareja.`,
+bucketMWDry:n=>` Multiway (${n} rivales) en board seco — los faroles funcionan más, pero varios jugadores = alguien con pareja.`,
+bucketMWFace:n=>` Multiway (${n} rivales) frente a apuesta — continúa solo con mano fuerte o proyecto con odds claras.`,
+dirtyOutPairs:c=>` Outs sucios (${c}): emparejan el board — ayuda a todos, no solo a ti.`,
+dirtyOutFlush:c=>` Outs sucios (${c}): 4ª carta a color en el board — a menudo le da el color ganador al rival.`,
 profRock:` El apostador es del tipo 🪨 cerrado — estos jugadores casi nunca farolean fuerte. Respeta esta apuesta: sin una mano fuerte, retirarse suele ser lo correcto.`,
 profManiac:` El apostador es del tipo 🔥 salvaje — farolea tanto que tus manos medias SUBEN de valor contra él. Puedes pagarle más ligero que a nadie.`,
 profStation:` El apostador es del tipo 📞 pasivo — lo paga todo pero casi nunca apuesta fuerte sin mano real. Su agresión repentina merece respeto.`,
@@ -514,6 +547,80 @@ function formatOutList(cards){
   }
   return out.join(' · ');
 }
+function dirtyOutReason(hole,board,card){
+  const br=board.map(c=>c.r), brCnt={};
+  for(const r of br) brCnt[r]=(brCnt[r]||0)+1;
+  if(brCnt[card.r]>=2){
+    const sc=evalBest(hole.concat(board).concat([card]));
+    if(sc[0]<3) return 'pairs';
+  }
+  const bs=[0,0,0,0]; for(const c of board) bs[c.s]++;
+  const flushSuit=bs.findIndex(v=>v>=3);
+  if(flushSuit>=0&&card.s===flushSuit){
+    const sc=evalBest(hole.concat(board).concat([card]));
+    if(sc[0]<5) return 'flush';
+  }
+  return null;
+}
+function splitCleanDirtyOuts(hole,board,cards){
+  const clean=[], dirty=[], seen=new Set();
+  for(const c of cards){
+    const k=c.r*4+c.s; if(seen.has(k))continue; seen.add(k);
+    const why=dirtyOutReason(hole,board,c);
+    if(why) dirty.push({card:c,why}); else clean.push(c);
+  }
+  return {clean,dirty};
+}
+function classifyLeakSpot(callAmt,opps){
+  const st=state.stage;
+  if(st==='preflop') return state.currentBet<=state.bb?'pf_open':'pf_face_raise';
+  if(st==='river'&&callAmt>0) return 'river_call';
+  if(opps>=2){
+    if(callAmt>0){
+      const agg=state.lastAggIdx>=0?state.players[state.lastAggIdx]:null;
+      if(agg&&(agg.lineRead==='cbet'||(st==='flop'&&state.pfAggIdx===agg.i))) return 'cbet_def';
+    }
+    return 'multiway';
+  }
+  if(callAmt>0){
+    const agg=state.lastAggIdx>=0?state.players[state.lastAggIdx]:null;
+    if(agg&&(agg.lineRead==='cbet'||(st==='flop'&&state.pfAggIdx===agg.i))) return 'cbet_def';
+  }
+  return 'other';
+}
+function coachMultiwayBuckets(p,extra,opps,callAmt){
+  if(state.stage==='preflop'||opps<2)return;
+  const bs=[0,0,0,0]; for(const c of state.board)bs[c.s]++;
+  const br=state.board.map(c=>c.r).sort((a,b)=>a-b);
+  const wet=Math.max(...bs)>=3||(br.length>=3&&br[br.length-1]-br[0]<=4)||br.some((r,i,a)=>i&&a[i-1]===r);
+  const agg=state.lastAggIdx>=0?state.players[state.lastAggIdx]:null;
+  const cbet=agg&&(agg.lineRead==='cbet'||(state.stage==='flop'&&state.pfAggIdx===agg.i));
+  const checkedToMe=callAmt===0&&inHand().filter(q=>q!==p&&!q.allIn).some(q=>q.checkedStreet);
+  if(callAmt>0&&cbet) extra.push(C('bucketMWCbet',opps));
+  else if(checkedToMe) extra.push(C('bucketMWCheck',opps));
+  else if(wet) extra.push(C('bucketMWWet',opps));
+  else if(callAmt===0) extra.push(C('bucketMWDry',opps));
+  else extra.push(C('bucketMWFace',opps));
+}
+function coachMicroLesson(R,action){
+  if(!R||!R.rec)return'';
+  const rec=R.rec, type=action;
+  const recLbl={FOLD:T('recFOLD'),CHECK:T('recCHECK'),CALL:T('recCALL'),RAISE:T('recRAISETO').trim(),ALLIN:T('recALLIN')}[rec]||rec;
+  const youLbl=type==='raise'?T('raiseW').toUpperCase():T(type).toUpperCase();
+  const eqShow=pct(R.eqAdj!=null?R.eqAdj:R.eq);
+  const need=pct(R.odds||0);
+  if(rec==='FOLD'&&type==='fold')return'';
+  if((rec==='CALL'||rec==='CHECK')&&type==='call')return'';
+  if((rec==='RAISE'||rec==='ALLIN')&&type==='raise')return'';
+  if(rec==='FOLD'||(rec==='CALL'&&type==='fold')||(rec==='CHECK'&&type==='fold')){
+    if(R.airPen>=0.1) return C('lessonFoldAir',eqShow,need);
+    return C('lessonFold',recLbl,eqShow,need);
+  }
+  if((rec==='RAISE'||rec==='ALLIN')&&type==='call') return C('lessonCall',recLbl,youLbl,eqShow,need);
+  if(rec==='CALL'&&type==='raise') return C('lessonRaise',recLbl,youLbl);
+  if(rec==='CHECK'&&type==='raise') return C('lessonRaise',recLbl,youLbl);
+  return C('lessonCall',recLbl,youLbl,eqShow,need);
+}
 function classifyMade(hole,board,score){
   if(board.length===0||score[0]>2) return '';
   const boardRanks=board.map(c=>c.r);
@@ -649,6 +756,7 @@ function coachDecide(p){
     .sort((a,b)=>a.cap-b.cap).slice(0,4);
   const code=holeCode(p.hole), pr=handPct[code]||1;
   let eq,handDesc,drawRow='',extra=[];
+  let eqAdj,airPen=0;
   const tightOpps=oppCaps.filter(o=>o.cap<1).length;
   const weakOpps=oppCaps.filter(o=>o.floor>0).length;
   if(tightOpps>0) extra.push(C('rangesNote',tightOpps,Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)));
@@ -676,7 +784,19 @@ function coachDecide(p){
         const outCards=d.flush&&d.oesd?[...outs.flush,...outs.straight]
           :d.flush?outs.flush:d.oesd||d.gutshot?outs.straight:[];
         const outTxt=formatOutList(outCards);
-        if(outTxt) drawRow+=`<div class="coach-row"><span>${T('outs')}</span><b>${outTxt}</b></div>`;
+        if(outTxt){
+          const split=splitCleanDirtyOuts(p.hole,state.board,outCards);
+          const cleanTxt=formatOutList(split.clean);
+          const dirtyTxt=formatOutList(split.dirty.map(x=>x.card));
+          if(cleanTxt) drawRow+=`<div class="coach-row"><span>${T('outs')}</span><b>${cleanTxt}</b></div>`;
+          if(dirtyTxt){
+            drawRow+=`<div class="coach-row"><span>${T('dirtyOuts')}</span><b>${dirtyTxt}</b></div>`;
+            const pairs=split.dirty.filter(x=>x.why==='pairs').map(x=>x.card);
+            const fl=split.dirty.filter(x=>x.why==='flush').map(x=>x.card);
+            if(pairs.length) extra.push(C('dirtyOutPairs',formatOutList(pairs)));
+            if(fl.length) extra.push(C('dirtyOutFlush',formatOutList(fl)));
+          }
+        }
         extra.push(C('drawBaked'));
       }
     }
@@ -688,8 +808,9 @@ function coachDecide(p){
     for(const r of br) brCnt[r]=(brCnt[r]||0)+1;
     if(Object.values(brCnt).some(c=>c>=2) && score0<6) extra.push(C('warnPaired'));
     if(opps>=3) extra.push(C('multiway',opps));
+    coachMultiwayBuckets(p,extra,opps,callAmt);
   }
-  const odds=callAmt>0?callAmt/(pot+callAmt):0;
+  eqAdj=eq;
 
   /* position adjustment: tighter early, looser late (preflop) */
   const pos=p.pos||'';
@@ -910,8 +1031,8 @@ function coachDecide(p){
     const usesHole=myScore[0]>=1&&myScore[0]<=2&&p.hole.some(c=>c.r===myScore[1]);
     const noMade=myScore[0]===0||(myScore[0]<=2&&!usesHole);
     const goodDraw=d&&(d.flush||d.oesd);
-    const airPen=(noMade&&!goodDraw)?0.15:0;
-    const eqAdj=eq-bigBetPen-airPen+exploitAdj+blockAdj;
+    airPen=(noMade&&!goodDraw)?0.15:0;
+    eqAdj=eq-bigBetPen-airPen+exploitAdj+blockAdj;
     const edge=eqAdj-odds-posAdj-icmPrem;
     if(bigBetPen>=0.05) extra.push(C('bigBet',Math.round(betRatio*100)));
     if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
@@ -948,7 +1069,7 @@ function coachDecide(p){
     CALL:Math.round(callAmt>0 ? eq*(pot+callAmt)-callAmt : eq*pot),
     RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
   };
-  return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,odds,callAmt,pot,opps,pos,early,late,
+  return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,code};
 }
 

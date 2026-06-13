@@ -123,6 +123,12 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 
 ## Changelog
 
+### 2026-06-12 — Coach teaching: leaks, micro-lessons, multiway, dirty outs
+- **Leak finder** (session review): groups EV lost by spot — preflop opens, facing raises, c-bet defense, multiway, river calls (with high-card subtotals); persisted per game in `decisions[]`
+- **Post-hand micro-lesson**: immediate one-line why when you deviate from the coach (uses discounted equity vs pot odds / air penalty)
+- **Multiway postflop buckets**: checked-to-you, facing c-bet, wet/dry board guidance when 2+ opponents (fills GTO HU-only gap)
+- **Dirty outs**: tainted outs row (pairs board, 4th flush card) alongside clean outs
+
 ### 2026-06-12 — Coach: draw outs listed
 - **Live coach outs row**: when you have a draw, the coach lists the exact cards that complete it (e.g. all four 2s for a gutshot)
 

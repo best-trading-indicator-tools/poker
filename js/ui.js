@@ -5,6 +5,8 @@ speed:"Blinds Change Speed",turbo:"Turbo",standard:"Standard",slow:"Slow",diff:"
 deal:"Deal me in",resume:"▶ Resume tournament",resumeMid:"▶ Resume mid-hand",review:"📊 Session review",
 revTitle:"Session review",revWinRate:"Win rate",revITM:"In the money",revAvgFinish:"Avg finish",
 revNet:"Total net",revEVLeaked:"EV leaked",revGames:"Games",revNoGames:"No finished games yet — play a tournament!",
+revLeaksTitle:"Leak finder (by spot)",revLeaksNone:"No classified leaks yet — deviate from the coach and finish games to populate this.",
+leakPfOpen:"Preflop opens",leakPfFace:"Facing raises",leakCbet:"C-bet defense",leakMultiway:"Multiway pots",leakRiver:"River calls",leakRiverAir:n=>`${n} river call${n>1?'s':''} with high card / no hand`,
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
 resetData:"Clear saved data",resetInfo:"Deletes everything this game keeps in your browser: lifetime stats, hand history and any unfinished tournament you could resume. Your language choice stays. This can't be undone.",resetConfirm:"Delete all saved stats, hand history and any unfinished tournament?",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",
@@ -12,7 +14,7 @@ fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"B
 actMenu:"◀ Menu",actTurn:"◀ Your turn",
 log:"Log",lastHand:"Last hand",exportH:"Export history",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",
 waiting:"Advice appears here when it's your turn.",
-yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",draws:"Draws",outs:"Outs",potOdds:"Pot odds",yourStack:"Your stack",sugSize:"Suggested size",
+yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",draws:"Draws",outs:"Outs",dirtyOuts:"Dirty outs",potOdds:"Pot odds",yourStack:"Your stack",sugSize:"Suggested size",
 firstToAct:"first to act (OOP)",lastToAct:"last to act (IP)",ofN:"of",need:"need ",vs:"vs",opp:"opp",opps:"opps",
 thisGame:"THIS GAME",lifetime:"LIFETIME",handsPW:"Hands played / won",net:"Net",biggestPot:"Biggest pot won",vpipPfr:"VPIP / PFR",aggF:"Aggression factor",wonSd:"Won at showdown",evLeak:"EV leaked vs coach",coachFollowed:"Coach followed",followedCoach:"followed coach",coachSaid:"coach said",youChose:"you chose",
 recFOLD:"FOLD",recCHECK:"CHECK",recCALL:"CALL",recRAISETO:"RAISE TO",recBET:"BET",recALLIN:"ALL-IN",
@@ -60,6 +62,8 @@ speed:"Vitesse des blinds",turbo:"Turbo",standard:"Standard",slow:"Lente",diff:"
 deal:"Distribuez !",resume:"▶ Reprendre le tournoi",resumeMid:"▶ Reprendre la main en cours",review:"📊 Bilan des sessions",
 revTitle:"Bilan des sessions",revWinRate:"Taux de victoire",revITM:"Dans l'argent",revAvgFinish:"Place moyenne",
 revNet:"Net total",revEVLeaked:"EV perdu",revGames:"Parties",revNoGames:"Aucune partie terminée — jouez un tournoi !",
+revLeaksTitle:"Fuites par type de spot",revLeaksNone:"Pas encore de fuites classées — écartez-vous du coach et terminez des parties.",
+leakPfOpen:"Ouvertures préflop",leakPfFace:"Face aux relances",leakCbet:"Défense c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls rivière",leakRiverAir:n=>`${n} call${n>1?'s':''} rivière sans main`,
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
 resetData:"Effacer les données sauvegardées",resetInfo:"Supprime tout ce que le jeu garde dans votre navigateur : statistiques globales, historique des mains et tout tournoi en cours à reprendre. Votre choix de langue est conservé. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l'historique des mains et tout tournoi en cours ?",resetDone:"✓ Effacé",
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",
@@ -67,7 +71,7 @@ fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer �
 actMenu:"◀ Menu",actTurn:"◀ À vous",
 log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",
 waiting:"Les conseils apparaissent ici quand c'est votre tour.",
-yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",draws:"Tirages",outs:"Outs",potOdds:"Cote du pot",yourStack:"Votre tapis",sugSize:"Taille suggérée",
+yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",draws:"Tirages",outs:"Outs",dirtyOuts:"Outs sales",potOdds:"Cote du pot",yourStack:"Votre tapis",sugSize:"Taille suggérée",
 firstToAct:"premier à parler (OOP)",lastToAct:"dernier à parler (IP)",ofN:"sur",need:"requis ",vs:"vs",opp:"adv.",opps:"adv.",
 thisGame:"CETTE PARTIE",lifetime:"GLOBAL",handsPW:"Mains jouées / gagnées",net:"Net",biggestPot:"Plus gros pot gagné",vpipPfr:"VPIP / PFR",aggF:"Facteur d'agression",wonSd:"Gagné à l'abattage",evLeak:"EV perdue vs coach",coachFollowed:"Coach suivi",followedCoach:"coach suivi",coachSaid:"le coach a dit",youChose:"vous avez choisi",
 recFOLD:"SE COUCHER",recCHECK:"PAROLE",recCALL:"SUIVRE",recRAISETO:"RELANCER À",recBET:"MISER",recALLIN:"TAPIS",
@@ -115,6 +119,8 @@ speed:"Velocidad de ciegas",turbo:"Turbo",standard:"Estándar",slow:"Lenta",diff
 deal:"¡Reparte!",resume:"▶ Reanudar torneo",resumeMid:"▶ Reanudar mano en curso",review:"📊 Resumen de sesiones",
 revTitle:"Resumen de sesiones",revWinRate:"Tasa de victorias",revITM:"En premios",revAvgFinish:"Puesto medio",
 revNet:"Neto total",revEVLeaked:"EV perdido",revGames:"Partidas",revNoGames:"Sin partidas terminadas — ¡juega un torneo!",
+revLeaksTitle:"Fugas por tipo de spot",revLeaksNone:"Sin fugas clasificadas aún — desvíate del coach y termina partidas.",
+leakPfOpen:"Aperturas preflop",leakPfFace:"Frente a subidas",leakCbet:"Defensa c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls en river",leakRiverAir:n=>`${n} call${n>1?'s':''} en river sin mano`,
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
 resetData:"Borrar datos guardados",resetInfo:"Elimina todo lo que el juego guarda en tu navegador: estadísticas globales, historial de manos y cualquier torneo sin terminar. Tu idioma se mantiene. No se puede deshacer.",resetConfirm:"¿Borrar todas las estadísticas, el historial de manos y cualquier torneo sin terminar?",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",
@@ -122,7 +128,7 @@ fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",
 actMenu:"◀ Menú",actTurn:"◀ Tu turno",
 log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",
 waiting:"Los consejos aparecen aquí cuando es tu turno.",
-yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",draws:"Proyectos",outs:"Outs",potOdds:"Odds del bote",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
+yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",draws:"Proyectos",outs:"Outs",dirtyOuts:"Outs sucios",potOdds:"Odds del bote",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
 firstToAct:"primero en hablar (OOP)",lastToAct:"último en hablar (IP)",ofN:"de",need:"necesitas ",vs:"vs",opp:"rival",opps:"rivales",
 thisGame:"ESTA PARTIDA",lifetime:"GLOBAL",handsPW:"Manos jugadas / ganadas",net:"Neto",biggestPot:"Mayor bote ganado",vpipPfr:"VPIP / PFR",aggF:"Factor de agresión",wonSd:"Ganadas en showdown",evLeak:"EV perdido vs coach",coachFollowed:"Coach seguido",followedCoach:"coach seguido",coachSaid:"el coach dijo",youChose:"tú elegiste",
 recFOLD:"RETIRARSE",recCHECK:"PASAR",recCALL:"IGUALAR",recRAISETO:"SUBIR A",recBET:"APOSTAR",recALLIN:"ALL-IN",
@@ -170,6 +176,64 @@ if(!TR[lang])lang='en';
 function T(k){return (TR[lang]&&TR[lang][k])!==undefined?TR[lang][k]:TR.en[k];}
 function recWord(r){return r==='RAISE'?T('raiseW').toUpperCase():r==='ALLIN'?T('recALLIN'):(T('rec'+r)||r);}
 function actWord(a){return (a==='raise'?T('raiseW'):T(a)||a).toUpperCase();}
+const LEAK_ORDER=['pf_open','pf_face_raise','cbet_def','multiway','river_call'];
+const LEAK_LABEL={pf_open:'leakPfOpen',pf_face_raise:'leakPfFace',cbet_def:'leakCbet',multiway:'leakMultiway',river_call:'leakRiver'};
+function classifyLeakSpotRetro(d){
+  if(d.spot) return d.spot;
+  if(d.stage==='preflop') return d.action==='raise'?'pf_open':'pf_face_raise';
+  if(d.stage==='river') return 'river_call';
+  if(d.stage==='flop'||d.stage==='turn') return d.action==='call'?'cbet_def':'multiway';
+  return 'other';
+}
+function aggregateLeaks(games){
+  const tot={};
+  for(const k of LEAK_ORDER) tot[k]={ev:0,n:0,airEv:0,airN:0};
+  for(const g of games){
+    for(const d of (g.decisions||[])){
+      const spot=classifyLeakSpotRetro(d);
+      if(!tot[spot]) continue;
+      tot[spot].ev+=d.evLoss||0;
+      tot[spot].n++;
+      if(d.air){tot[spot].airEv+=d.evLoss||0;tot[spot].airN++;}
+    }
+  }
+  let hist=[];
+  try{hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');}catch(e){}
+  const hasDec=games.some(g=>(g.decisions||[]).length);
+  if(!hasDec){
+    for(const h of hist){
+      if(h.mp) continue;
+      for(const d of (h.myDecisions||[])){
+        if(!d.evLoss||d.evLoss<=0) continue;
+        const spot=classifyLeakSpotRetro(d);
+        if(!tot[spot]) continue;
+        tot[spot].ev+=d.evLoss;
+        tot[spot].n++;
+      }
+    }
+  }
+  return tot;
+}
+function renderRevLeaks(games){
+  const leaks=aggregateLeaks(games);
+  const rows=LEAK_ORDER.map(k=>({k,...leaks[k]})).filter(r=>r.ev>0).sort((a,b)=>b.ev-a.ev);
+  if(!rows.length) return `<p class="leak-none">${T('revLeaksNone')}</p>`;
+  return `<h3 class="leak-h3">${T('revLeaksTitle')}</h3>`+
+    rows.map(r=>{
+      let sub='';
+      if(r.k==='river_call'&&r.airN>0)
+        sub=`<div class="leak-sub">${T('leakRiverAir')(r.airN)} · −${usd(r.airEv)} EV</div>`;
+      return `<div class="leak-row"><div class="leak-main"><b>${T(LEAK_LABEL[r.k])}</b>`+
+        `<span class="leak-meta">${r.n} ${T('deviations')}</span>${sub}</div>`+
+        `<span class="leak-ev neg">−${usd(r.ev)}</span></div>`;
+    }).join('');
+}
+function showInstantLesson(text){
+  if(!HAS_DOM||!text) return;
+  const el=$('coachFeed');
+  el.classList.remove('hidden');
+  el.innerHTML=`<div class="lesson">💡 ${text}</div>`;
+}
 
 
 /* ================= UI ================= */
@@ -623,7 +687,7 @@ function updateCoach(p){
     const cb=$('chartViewBtn');
     if(cb) cb.onclick=()=>showChartMatrix(R.chartInfo,R.code);
   }
-  coachRecNow={rec,stage:state.stage,evs};
+  coachRecNow={rec,stage:state.stage,evs,eq,eqAdj:R.eqAdj??eq,odds,callAmt,pot,airPen:R.airPen||0};
 
   /* GTO mini-solver: heads-up postflop spots */
   if(state.stage!=='preflop'){
@@ -849,8 +913,15 @@ function humanAct(type,amount){
     }
     state.humanDecisions.push({stage:state.stage,rec:r,action:type,followed,evLoss});
     if(evLoss>0&&state.sessStats){
+      const opps=inHand().length-1;
+      const spot=typeof classifyLeakSpot==='function'?classifyLeakSpot(callNow,opps):classifyLeakSpotRetro({stage:state.stage,action:type});
+      const air=!!(coachRecNow.airPen>=0.1);
       state.sessStats.evLost=(state.sessStats.evLost||0)+evLoss;
-      (state.gameDecisions=state.gameDecisions||[]).push({hand:state.handNum,stage:state.stage,rec:r,action:type,evLoss});
+      (state.gameDecisions=state.gameDecisions||[]).push({hand:state.handNum,stage:state.stage,rec:r,action:type,evLoss,spot,air});
+    }
+    if(!followed){
+      const lesson=typeof coachMicroLesson==='function'?coachMicroLesson(coachRecNow,type):'';
+      if(lesson) showInstantLesson(lesson);
     }
     coachRecNow=null;
   }
@@ -884,6 +955,7 @@ function saveGameRecord(won,place){
       n:state.cfg?state.cfg.numPlayers:0,diff:state.cfg?state.cfg.difficulty:'medium',
       place:won?1:(place||0),hands:state.handNum,
       net:state.sessStats?state.sessStats.net:0,evLost:state.sessStats?(state.sessStats.evLost||0):0,
+      decisions:(state.gameDecisions||[]).slice(),
       series:(gameSeries||[]).slice(-300)});
     while(a2.length>200)a2.shift();
     localStorage.setItem('sg_poker_games',JSON.stringify(a2));
@@ -916,6 +988,7 @@ function showSessionReview(){
     `<div class="rv"><span>${T('revNet')}</span><b class="${netTot>=0?'pos':'neg'}">${netTot>=0?'+':'−'}${usd(Math.abs(netTot))}</b></div>`+
     `<div class="rv"><span>${T('revEVLeaked')}</span><b class="neg">−${usd(evTot)}</b></div>`;
   $('revSpark').innerHTML=n>=2?evSparklineSVG(games.slice().reverse()):'';
+  $('revLeaks').innerHTML=renderRevLeaks(games.slice().reverse());
   if(!n){
     $('revList').innerHTML=`<p style="color:var(--dim);font-size:13px;">${T('revNoGames')}</p>`;
   }else{

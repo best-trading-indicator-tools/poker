@@ -297,6 +297,16 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #revSummary .rv b{display:block;font-size:15px;color:var(--text);font-weight:700;margin-top:2px;}
 #revSummary .rv span{color:var(--dim);}
 #revSpark{margin-bottom:14px;}
+#revLeaks{margin-bottom:14px;}
+.leak-h3{font-size:13px;margin-bottom:8px;color:var(--text);}
+.leak-none{color:var(--dim);font-size:12px;margin-bottom:8px;}
+.leak-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:var(--panel2);}
+.leak-main{flex:1;min-width:0;}
+.leak-main b{display:block;font-size:13px;}
+.leak-meta{font-size:11px;color:var(--dim);}
+.leak-sub{font-size:11px;color:#e8a87c;margin-top:3px;}
+.leak-ev{font-size:13px;font-weight:700;white-space:nowrap;}
+#coachFeed .lesson{color:#e8d4a8;font-size:12px;line-height:1.45;margin-top:4px;padding:8px 10px;background:rgba(232,168,124,.08);border-radius:8px;border-left:3px solid var(--gold);}
 #revList{max-height:42vh;overflow-y:auto;margin-bottom:14px;}
 .rev-game{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--panel2);}
 .rev-game:hover{border-color:var(--gold);}
@@ -724,6 +734,7 @@ body.act-panel-mode #chipPreview{display:none!important;}
     <h2 id="revTitle">Session review</h2>
     <div id="revSummary"></div>
     <div id="revSpark"></div>
+    <div id="revLeaks"></div>
     <div id="revList"></div>
     <button id="revAllHands" type="button">All saved hands</button>
     <button id="revClose" type="button">Close</button>
