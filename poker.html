@@ -370,6 +370,74 @@ body.fl #centerArea{top:44%;width:min(94vw,420px);}
 body.fl #board{min-height:52px;gap:3px;}
 body.fl #pot{font-size:12px;}
 
+/* mobile landscape only: scrollable right panel inside #game (rotates with the table) */
+body.act-panel-mode #actFab{
+  display:block;
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:70;
+  background:var(--panel);
+  border:2px solid var(--line);
+  color:var(--text);
+  border-radius:18px;
+  padding:8px 12px;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);
+  writing-mode:horizontal-tb;
+}
+body.act-panel-mode #actFab.pulse{border-color:var(--gold);color:var(--gold);animation:actPulse 1.2s ease infinite;}
+body.act-panel-mode #actBackdrop{
+  position:absolute;
+  inset:0;
+  z-index:65;
+  background:rgba(0,0,0,.42);
+  display:none;
+}
+body.act-panel-mode.act-panel-open #actBackdrop{display:block;}
+body.act-panel-mode #actionbar{
+  position:absolute;
+  top:0;
+  right:0;
+  bottom:0;
+  width:min(252px,40%);
+  min-width:196px;
+  z-index:68;
+  flex-direction:column;
+  flex-wrap:nowrap;
+  align-items:stretch;
+  gap:7px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  border-left:1px solid var(--line);
+  border-radius:14px 0 0 14px;
+  padding:10px 8px;
+  box-shadow:-8px 0 30px rgba(0,0,0,.55);
+  transition:transform .22s ease;
+  transform:translateX(105%);
+  pointer-events:none;
+  visibility:hidden;
+}
+body.act-panel-mode.act-panel-open #actionbar{
+  transform:translateX(0);
+  pointer-events:auto;
+  visibility:visible;
+}
+body.act-panel-mode #actionbar>#logToggle,body.act-panel-mode #actionbar>#replayBtn,body.act-panel-mode #actionbar>#exportBtn,body.act-panel-mode #actionbar>#emoBtn,body.act-panel-mode #actionbar>#chatBtn{width:100%;flex:none;}
+body.act-panel-mode #humanCtls{width:100%;flex-direction:column;flex-wrap:nowrap;gap:8px;}
+body.act-panel-mode #humanCtls #coachToggle{width:100%;}
+body.act-panel-mode #humanCtls #foldBtn,body.act-panel-mode #humanCtls #callBtn,body.act-panel-mode #raiseBtn{width:100%;flex:none;padding:12px 8px;font-size:14px;}
+body.act-panel-mode #raiseCtl{flex-direction:column;width:100%;gap:6px;flex-basis:auto;}
+body.act-panel-mode #raiseCtl .preset{width:100%;flex:none;padding:9px 6px;font-size:11.5px;}
+body.act-panel-mode #raiseSlider{width:100%;min-width:0;height:26px;}
+body.act-panel-mode #waitMsg{font-size:11px;width:100%;text-align:center;}
+body.act-panel-mode #chipPreview{display:none!important;}
+
 /* ================= MOBILE / TOUCH =================
    applies to phones AND any portrait screen up to 980px (large phones, small tablets,
    narrow browser windows) — desktop-sized seats never fit a portrait table */
@@ -442,70 +510,16 @@ body.fl #pot{font-size:12px;}
   #felt{inset:8px 6px 8px 6px;border-width:7px;}
   #dbtn{width:20px;height:20px;font-size:10px;}
 
-  /* collapsible action panel (right edge) — hidden until tap; keeps hero seat clear */
-  #actFab{
-    display:block;
-    position:fixed;
-    z-index:44;
-    right:max(8px,env(safe-area-inset-right));
-    top:50%;
-    left:auto;
-    bottom:auto;
-    transform:translateY(-50%);
-    background:var(--panel);
-    border:2px solid var(--line);
-    color:var(--text);
-    border-radius:20px;
-    padding:10px 12px;
-    font-size:12px;
-    font-weight:700;
-    cursor:pointer;
-    box-shadow:0 4px 18px rgba(0,0,0,.5);
-    writing-mode:vertical-rl;
-    text-orientation:mixed;
-    letter-spacing:.3px;
-  }
-  #actFab.pulse{border-color:var(--gold);color:var(--gold);animation:actPulse 1.2s ease infinite;}
-  #actBackdrop{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.42);display:none;}
-  body.act-panel-open #actBackdrop{display:block;}
-  #actionbar{
-    position:fixed;
-    top:max(8px,env(safe-area-inset-top));
-    right:0;
-    bottom:max(8px,env(safe-area-inset-bottom));
-    width:min(280px,72vw);
-    z-index:50;
-    flex-direction:column;
-    align-items:stretch;
-    flex-wrap:nowrap;
-    gap:8px;
-    overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-    border-left:1px solid var(--line);
-    border-radius:16px 0 0 16px;
-    padding:12px 10px;
-    padding-right:max(12px,env(safe-area-inset-right));
-    box-shadow:-10px 0 36px rgba(0,0,0,.55);
-    transition:transform .22s ease;
-    transform:translateX(110%);
-    pointer-events:none;
-    visibility:hidden;
-  }
-  body.act-panel-open #actionbar{
-    transform:translateX(0);
-    pointer-events:auto;
-    visibility:visible;
-  }
-  #actionbar>#logToggle,#actionbar>#replayBtn,#actionbar>#exportBtn,#actionbar>#emoBtn,#actionbar>#chatBtn{width:100%;flex:none;}
-  #humanCtls{width:100%;flex-direction:column;flex-wrap:nowrap;gap:8px;}
-  #humanCtls #coachToggle{width:100%;}
-  #humanCtls #foldBtn,#humanCtls #callBtn,#raiseBtn{width:100%;flex:none;padding:14px 10px;font-size:15px;}
-  #raiseCtl{flex-direction:column;width:100%;gap:7px;flex-basis:auto;}
-  #raiseCtl .preset{width:100%;flex:none;padding:10px 6px;font-size:12px;}
-  #raiseSlider{width:100%;min-width:0;height:28px;flex-basis:auto;}
-  #waitMsg{font-size:12px;width:100%;text-align:center;}
-
-  /* table uses full height — action panel lives on document.body */
+  /* portrait mobile (no forced landscape): classic bottom action bar */
+  body:not(.act-panel-mode) #actionbar{padding:8px 8px max(8px,env(safe-area-inset-bottom));gap:7px;min-height:0;}
+  body:not(.act-panel-mode) #actionbar>#logToggle,body:not(.act-panel-mode) #actionbar>#replayBtn,body:not(.act-panel-mode) #actionbar>#exportBtn{padding:8px 10px;font-size:11px;flex:1;}
+  body:not(.act-panel-mode) #humanCtls{width:100%;flex-wrap:wrap;gap:8px;}
+  body:not(.act-panel-mode) #humanCtls #foldBtn,body:not(.act-panel-mode) #humanCtls #callBtn{flex:1;padding:15px 8px;font-size:15px;}
+  body:not(.act-panel-mode) #raiseCtl{flex-basis:100%;gap:7px;}
+  body:not(.act-panel-mode) #raiseCtl .preset{flex:1;padding:9px 4px;font-size:11.5px;}
+  body:not(.act-panel-mode) #raiseSlider{flex-basis:100%;min-width:0;height:30px;}
+  body:not(.act-panel-mode) #raiseBtn{flex:1;padding:14px 8px;}
+  body:not(.act-panel-mode) #waitMsg{font-size:12px;flex-basis:100%;}
   #chipPreview{display:none!important;}
   #log{left:6px;right:6px;width:auto;bottom:6px;max-height:40vh;}
 }

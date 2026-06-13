@@ -9,7 +9,7 @@ revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidB
 resetData:"Clear saved data",resetInfo:"Deletes everything this game keeps in your browser: lifetime stats, hand history and any unfinished tournament you could resume. Your language choice stays. This can't be undone.",resetConfirm:"Delete all saved stats, hand history and any unfinished tournament?",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",
 fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
-actMenu:"◀ Menu",actTurn:"◀ Turn",
+actMenu:"◀ Menu",actTurn:"◀ Your turn",
 log:"Log",lastHand:"Last hand",exportH:"Export history",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",
 waiting:"Advice appears here when it's your turn.",
 yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",draws:"Draws",potOdds:"Pot odds",yourStack:"Your stack",sugSize:"Suggested size",
@@ -119,7 +119,7 @@ revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir
 resetData:"Borrar datos guardados",resetInfo:"Elimina todo lo que el juego guarda en tu navegador: estadísticas globales, historial de manos y cualquier torneo sin terminar. Tu idioma se mantiene. No se puede deshacer.",resetConfirm:"¿Borrar todas las estadísticas, el historial de manos y cualquier torneo sin terminar?",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",
 fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
-actMenu:"◀ Menú",actTurn:"◀ Turno",
+actMenu:"◀ Menú",actTurn:"◀ Tu turno",
 log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",
 waiting:"Los consejos aparecen aquí cuando es tu turno.",
 yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",draws:"Proyectos",potOdds:"Odds del bote",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
@@ -326,8 +326,8 @@ function layoutSeats(){
     if(seat){seat.style.left=x+'px'; seat.style.top=(y-28)+'px';}
   }
   /* clamp pass: no seat may leave the felt (offset* geometry — safe under CSS transforms) */
-  const actOpen=HAS_DOM&&document.body.classList.contains('act-panel-open');
-  const pad=fl?{l:4,r:actOpen?22:6,t:8,b:6}:isMobile()?{l:2,r:actOpen?16:2,t:4,b:2}:{l:2,r:2,t:2,b:2};
+  const actOpen=HAS_DOM&&document.body.classList.contains('act-panel-open')&&useLandscapePanel();
+  const pad=fl?{l:4,r:actOpen?20:6,t:8,b:4}:isMobile()?{l:2,r:actOpen?14:2,t:4,b:2}:{l:2,r:2,t:2,b:2};
   for(const p of state.players){
     const seat=$('seat'+p.i); if(!seat||!seat.offsetHeight)continue;
     const l=seat.offsetLeft,t=seat.offsetTop,w=seat.offsetWidth,h=seat.offsetHeight;
@@ -485,8 +485,29 @@ function render(winners){
 /* ---------- live coach ---------- */
 const pct=e=>Math.round(e*100)+'%';
 function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:980px) and (orientation:portrait)').matches; }
+function useLandscapePanel(){
+  if(!HAS_DOM||!isMobile())return false;
+  const g=$('game');
+  if(!g||g.classList.contains('hidden'))return false;
+  return document.body.classList.contains('fl')||
+    window.matchMedia('(orientation:landscape)').matches;
+}
+function syncActPanelMode(){
+  if(!HAS_DOM)return;
+  const on=useLandscapePanel();
+  document.body.classList.toggle('act-panel-mode',on);
+  if(!on){
+    document.body.classList.remove('act-panel-open','act-panel-collapsed');
+    const g=$('game');
+    if(g){g.classList.remove('act-open','act-collapsed');}
+  }else if(!document.body.classList.contains('act-panel-open')){
+    document.body.classList.add('act-panel-collapsed');
+    $('game')?.classList.add('act-collapsed');
+  }
+  syncActFab();
+}
 function setActBar(open){
-  if(!HAS_DOM||!isMobile())return;
+  if(!HAS_DOM||!useLandscapePanel())return;
   document.body.classList.toggle('act-panel-open',open);
   document.body.classList.toggle('act-panel-collapsed',!open);
   const g=$('game');
@@ -499,7 +520,10 @@ function setActBar(open){
 function syncActFab(){
   if(!HAS_DOM||!isMobile())return;
   const fab=$('actFab'),g=$('game');
-  if(!fab||!g||g.classList.contains('hidden')){if(fab)fab.classList.add('hidden');return;}
+  if(!fab||!g||g.classList.contains('hidden')||!useLandscapePanel()){
+    if(fab)fab.classList.add('hidden');
+    return;
+  }
   const open=document.body.classList.contains('act-panel-open');
   const onTurn=$('humanCtls')&&!$('humanCtls').classList.contains('hidden');
   fab.classList.toggle('hidden',open);
@@ -522,7 +546,7 @@ function updateOrient(){
     g.style.width=''; g.style.height=''; g.style.transform='';
   }
   layoutSeats();
-  syncActFab();
+  syncActPanelMode();
 }
 function setCoach(on){
   if(!HAS_DOM)return;
@@ -1201,15 +1225,14 @@ function initUI(){
   }
   setCoach(!isMobile());   // default: docked on desktop, hidden sheet on mobile
   if(isMobile()){
+    const g=$('game');
     ['actFab','actBackdrop','actionbar'].forEach(id=>{
-      const el=$(id); if(el) document.body.appendChild(el);
+      const el=$(id);
+      if(el&&g&&!g.contains(el)) g.appendChild(el);
     });
-    document.body.classList.add('act-panel-collapsed');
-    $('game').classList.add('act-collapsed');
-    $('actFab').classList.remove('hidden');
     $('actFab').onclick=e=>{e.stopPropagation();setActBar(true);};
     $('actBackdrop').onclick=()=>setActBar(false);
-    syncActFab();
+    syncActPanelMode();
   }
   $('autoNext').onchange=e=>{
     if(!e.target.checked){
