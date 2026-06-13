@@ -171,7 +171,7 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #tableArea{flex:1;position:relative;min-width:0;}
 #felt{position:absolute;inset:16px 46px 32px 46px;background:radial-gradient(ellipse at center,#2e6b46 0%,#235236 60%,#1b3f2a 100%);border-radius:48% / 46%;border:10px solid #3a2c1c;box-shadow:inset 0 0 70px rgba(0,0,0,.55), 0 16px 50px rgba(0,0,0,.45);}
 
-#centerArea{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);text-align:center;width:480px;}
+#centerArea{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);text-align:center;width:480px;z-index:6;}
 #pot{font-size:14px;color:#ffe9b0;font-weight:600;margin-bottom:8px;text-shadow:0 1px 3px rgba(0,0,0,.6);}
 #board{display:flex;gap:7px;justify-content:center;min-height:78px;}
 #banner{margin-top:10px;font-size:15px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.7);min-height:22px;}
@@ -222,7 +222,7 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 .chip+.chip{margin-top:-15px;}
 .chipstack.sm .chip{width:16px;height:16px;border-width:2px;}
 .chipstack.sm .chip+.chip{margin-top:-12px;}
-#dbtn{position:absolute;width:24px;height:24px;border-radius:50%;background:#f3f0e6;color:#222;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);box-shadow:0 2px 5px rgba(0,0,0,.5);}
+#dbtn{position:absolute;width:24px;height:24px;border-radius:50%;background:#f3f0e6;color:#222;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);box-shadow:0 2px 5px rgba(0,0,0,.5);z-index:5;}
 
 /* ---------- ACTION BAR ---------- */
 #actionbar{background:var(--panel);border-top:1px solid var(--line);padding:12px 18px;min-height:88px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:relative;z-index:40;}
@@ -379,6 +379,7 @@ body.fl .card .pip{font-size:17px;}
 body.fl .card.small{width:24px;height:34px;}
 body.fl .card.small .pip{font-size:13px;}
 body.fl #centerArea{top:44%;width:min(94vw,420px);}
+body.fl.few #centerArea{top:52%;width:min(68vw,260px);}
 body.fl #board{min-height:52px;gap:3px;}
 body.fl #pot{font-size:12px;}
 
@@ -498,14 +499,15 @@ body.act-panel-mode #chipPreview{display:none!important;}
   .betchip.mobile-show{visibility:visible;}
   .betchip.mobile-show .chipstack{display:none;}
   .betchip.mobile-show .amt{font-size:10px;padding:2px 6px;}
-  /* short-handed tables (≤6 players) have room for bigger, clearer seats */
-  body.few .seat{width:122px;margin-left:-61px;}
-  body.few .seat .avatar{font-size:21px;}
-  body.few .seat .pname{font-size:13px;}
-  body.few .seat .pchips{font-size:11.5px;}
-  body.few .seat .pstyle{font-size:10.5px;}
-  body.few .seat .ppos{font-size:10px;}
-  body.few .seat .lastact{font-size:12px;}
+  /* short-handed tables (≤6 players): slightly larger seats but keep center clear */
+  body.few .seat{width:112px;margin-left:-56px;}
+  body.few .seat .avatar{font-size:20px;}
+  body.few .seat .pname{font-size:12.5px;}
+  body.few .seat .pchips{font-size:11px;}
+  body.few .seat .pstyle{font-size:10px;}
+  body.few .seat .ppos{font-size:9.5px;}
+  body.few .seat .lastact{font-size:11.5px;}
+  body.few #centerArea{top:51%;width:min(68vw,280px;}
 
   /* tighter cards */
   .card{width:42px;height:60px;border-radius:6px;}

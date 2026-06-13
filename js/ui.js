@@ -346,7 +346,7 @@ const SEAT_SLOTS={
 3:[[.50,.92],[.12,.24],[.88,.24]],
 4:[[.50,.92],[.06,.52],[.50,.09],[.94,.52]],
 5:[[.50,.92],[.09,.62],[.26,.10],[.74,.10],[.91,.62]],
-6:[[.50,.92],[.09,.68],[.09,.18],[.50,.08],[.91,.18],[.91,.68]],
+6:[[.50,.92],[.06,.72],[.06,.13],[.50,.06],[.94,.13],[.94,.72]],
 7:[[.50,.92],[.18,.80],[.05,.40],[.28,.09],[.72,.09],[.95,.40],[.82,.80]],
 8:[[.50,.92],[.21,.82],[.05,.50],[.14,.13],[.50,.08],[.86,.13],[.95,.50],[.79,.82]],
 9:[[.50,.92],[.24,.84],[.05,.56],[.08,.20],[.33,.07],[.67,.07],[.92,.20],[.95,.56],[.76,.84]]};
@@ -356,7 +356,7 @@ const SEAT_SLOTS_FL={
 3:[[.50,.84],[.16,.28],[.84,.28]],
 4:[[.50,.84],[.12,.52],[.50,.16],[.88,.52]],
 5:[[.50,.84],[.14,.62],[.30,.16],[.70,.16],[.86,.62]],
-6:[[.50,.84],[.14,.66],[.14,.22],[.50,.14],[.86,.22],[.86,.66]],
+6:[[.50,.84],[.10,.70],[.10,.16],[.50,.10],[.90,.16],[.90,.70]],
 7:[[.50,.84],[.22,.74],[.12,.44],[.30,.16],[.70,.16],[.88,.44],[.78,.74]],
 8:[[.50,.84],[.24,.76],[.12,.50],[.18,.18],[.50,.14],[.82,.18],[.88,.50],[.76,.76]],
 9:[[.50,.84],[.26,.74],[.12,.54],[.14,.24],[.33,.14],[.67,.14],[.86,.24],[.88,.54],[.74,.74]]};
@@ -473,7 +473,71 @@ function layoutSeats(){
       }
     }
   }
+  positionCenterArea();
   positionDealerBtn();
+}
+function positionCenterArea(){
+  if(!HAS_DOM||!state)return;
+  const felt=$('felt'), center=$('centerArea');
+  if(!felt||!center)return;
+  if(!isMobile()){
+    center.style.top='';
+    center.style.width='';
+    return;
+  }
+  const W=felt.clientWidth,H=felt.clientHeight;
+  const cx=W/2, n=state.players.length;
+  const fl=document.body.classList.contains('fl');
+  const cw=Math.min(W*(n<=6?0.62:0.72), n<=6?280:320);
+  center.style.width=cw+'px';
+  const ch=center.offsetHeight||100;
+  let centerY=H*(fl?0.50:0.51);
+  const pad=8;
+  let halfW=cw/2;
+  let ct=centerY-ch/2, cb=ct+ch, cl=cx-halfW, cr=cl+cw;
+  for(const p of state.players){
+    const s=$('seat'+p.i);
+    if(!s||!s.offsetHeight)continue;
+    const sl=s.offsetLeft,sr=sl+s.offsetWidth,st=s.offsetTop,sb=st+s.offsetHeight;
+    const scy=st+s.offsetHeight/2;
+    if(scy<H*0.20||scy>H*0.80)continue;
+    if(sr<=cl+pad||sl>=cr-pad)continue;
+    if(sb<=ct+pad||st>=cb-pad)continue;
+    const scx=sl+s.offsetWidth/2;
+    if(scx<cx) halfW=Math.min(halfW,Math.max(40,cx-pad-(sr+pad)));
+    else halfW=Math.min(halfW,Math.max(40,(sl-pad)-cx));
+  }
+  const cwAdj=Math.max(halfW*2,W*0.40);
+  center.style.width=cwAdj+'px';
+  cl=cx-cwAdj/2; cr=cl+cwAdj;
+  ct=centerY-ch/2; cb=ct+ch;
+  for(const p of state.players){
+    const s=$('seat'+p.i);
+    if(!s||!s.offsetHeight)continue;
+    const sl=s.offsetLeft,st=s.offsetTop,sr=sl+s.offsetWidth,sb=st+s.offsetHeight;
+    const scy=st+s.offsetHeight/2;
+    if(scy>=H*0.45)continue;
+    const overlapX=Math.min(cr,sr)-Math.max(cl,sl);
+    const overlapY=Math.min(cb,sb)-Math.max(ct,st);
+    if(overlapX>pad&&overlapY>pad){
+      const push=sb+pad-ct;
+      if(push>0){ct+=push;cb=ct+ch;centerY=ct+ch/2;}
+    }
+  }
+  for(const p of state.players){
+    const s=$('seat'+p.i);
+    if(!s||!s.offsetHeight)continue;
+    const st=s.offsetTop,sb=st+s.offsetHeight;
+    if(st<H*0.55)continue;
+    const sl=s.offsetLeft,sr=sl+s.offsetWidth;
+    const overlapX=Math.min(cr,sr)-Math.max(cl,sl);
+    const overlapY=Math.min(cb,sb)-Math.max(ct,st);
+    if(overlapX>pad&&overlapY>pad){
+      const push=cb-(st-pad);
+      if(push>0){ct-=push;cb=ct+ch;centerY=ct+ch/2;}
+    }
+  }
+  center.style.top=(clamp(centerY/H,0.42,0.58)*100)+'%';
 }
 function positionDealerBtn(){
   if(!HAS_DOM||!state)return;
@@ -487,10 +551,31 @@ function positionDealerBtn(){
     const scx=seat.offsetLeft+seat.offsetWidth/2, scy=seat.offsetTop+seat.offsetHeight/2;
     let ux=cx-scx, uy=cy-scy; const L=Math.hypot(ux,uy)||1; ux/=L; uy/=L;
     const A=0.61; // ~35°
-    const rxv=ux*Math.cos(A)-uy*Math.sin(A), ryv=ux*Math.sin(A)+uy*Math.cos(A);
-    const off=Math.max(seat.offsetWidth,seat.offsetHeight)/2+18;
-    d.style.left=(scx+rxv*off)+'px';
-    d.style.top=(scy+ryv*off)+'px';
+    let rxv=ux*Math.cos(A)-uy*Math.sin(A), ryv=ux*Math.sin(A)+uy*Math.cos(A);
+    let off=Math.max(seat.offsetWidth,seat.offsetHeight)/2+18;
+    let dx=scx+rxv*off, dy=scy+ryv*off;
+    /* keep dealer chip off the board / pot zone */
+    const center=$('centerArea');
+    if(center){
+      const dbW=d.offsetWidth||24, dbH=d.offsetHeight||24;
+      const zoneCx=center.offsetLeft+center.offsetWidth/2;
+      const zoneCy=center.offsetTop+center.offsetHeight/2;
+      const avoidW=center.offsetWidth/2+dbW/2+8;
+      const avoidH=center.offsetHeight/2+dbH/2+6;
+      for(let i=0;i<6;i++){
+        if(Math.abs(dx-zoneCx)>=avoidW||Math.abs(dy-zoneCy)>=avoidH)break;
+        off+=14;
+        rxv=ux*Math.cos(A)-uy*Math.sin(A); ryv=ux*Math.sin(A)+uy*Math.cos(A);
+        dx=scx+rxv*off; dy=scy+ryv*off;
+      }
+      if(Math.abs(dx-zoneCx)<avoidW&&Math.abs(dy-zoneCy)<avoidH){
+        const side=scx>zoneCx?1:-1;
+        dx=zoneCx+side*(avoidW+4);
+        dy=zoneCy;
+      }
+    }
+    d.style.left=dx+'px';
+    d.style.top=dy+'px';
   }else{
     const n=state.players.length;
     const ang=(90+360*state.dealerIdx/n+14)*Math.PI/180;
