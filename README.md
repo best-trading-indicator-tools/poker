@@ -15,7 +15,10 @@ Game logic is split from `poker.html` into six modules (shared global scope, loa
 | File | Responsibility |
 |------|----------------|
 | `js/eval.js` | Hand evaluation (`evalFive`, `evalSeven`, `handName`), deck helpers, `seatOrderFromDealer` (side-pot tiebreaks) |
-| `js/engine.js` | Tournament constants, game state, hand flow (`startHand`, `applyAction`, showdown/side pots), sound/haptics/chip animations, solo resume snapshots |
+| `js/modes/registry.js` | Game mode dispatcher (`registerMode`, `getMode`, `isCashGame`) |
+| `js/modes/tournament.js` | Sit & Go rules: blind ladder, antes, elimination |
+| `js/modes/cash.js` | Cash game rules: fixed blinds, auto-rebuy, session P&L |
+| `js/engine.js` | Shared NLHE core: game state, hand flow (`startHand`, `applyAction`, showdown/side pots), sound/haptics/chip animations, resume snapshots |
 | `js/coach.js` | Preflop charts, `mcEquityR`, GTO mini-solver (CFR), `coachDecide`, ICM, coach prose (EN/FR/ES) |
 | `js/ai.js` | AI profiles (`STYLES`), `aiDecide`, range/equity reads |
 | `js/mp.js` | PeerJS multiplayer, host migration, public checkpoints, P2P snapshots |
@@ -37,6 +40,7 @@ Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel s
 
 - **👥 Multiplayer with friends (P2P, no server)**: create a room, share the invite link (your address bar IS the link), friends join from any browser — host-authoritative WebRTC with free signaling, each player receives only their own hole cards. Open a table alone and play starts when friends arrive; start vs AI bots and friends replace them as they join; late joiners spectate live until dealt in next hand. Built-in chat, auto-start at N players, **host migration** (host dies → another player takes over from a public checkpoint), seat+chips reconnect, version handshake, connection self-test. 100% free, nothing to install or maintain
 - **Configurable Sit & Go**: 2–9 players, starting blinds ($10/$20 up to $100/$200 — the whole blind ladder scales), buy-in in BB (50–200), ante as a fraction of the BB (none / 5% / 10% / 20%), turbo/standard/slow blind schedule (turbo raises blinds every 5 hands)
+- **Cash game mode** (solo vs AI): fixed blinds, auto-rebuy on bust, live session P&L in the top bar, coach without ICM/M-ratio tournament warnings; leave the table anytime for a session summary
 - **Money display**: $ and BB shown everywhere, casino-style chip stacks
 - **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, order-of-action awareness (first/last to talk, including your *future* postflop position when advising preflop), bet-size-aware range reading, plain-English reasoning
 - **GTO mini-solver**: real CFR (counterfactual regret minimization) for heads-up postflop spots — shows the equilibrium mixed strategy with EVs
@@ -122,6 +126,12 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 - **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
 
 ## Changelog
+
+### 2026-06-12 — Cash game mode
+- **Main menu toggle**: Sit & Go vs Cash Game; tournament-only setup rows (ante, blind speed, multiplayer) hidden in cash
+- **`js/modes/`**: `registry.js`, `tournament.js`, `cash.js` — mode hooks keep shared `engine.js` clean
+- **Cash rules**: fixed blinds, auto-rebuy to starting stack, session P&L top bar, quit → session summary
+- **Coach**: ICM/M-ratio/ante widen disabled in cash via `coachFlags`
 
 ### 2026-06-12 — Coach depth: iso charts, shove ladders, multiway buckets, spot brief
 - **Iso charts** (`charts.js`): per-position raise-over-limp matrices; coach uses them when facing limpers (not just RFI)

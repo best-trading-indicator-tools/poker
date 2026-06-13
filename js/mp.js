@@ -332,6 +332,7 @@ function mpStartGame(){
   const total=fill?Math.max(humans,Math.min(9,Math.max(want,humans))):humans;
   const cfg={
     numPlayers:total,
+    gameType:'sng',
     startBB:+$('startBB').value, startBlind:+$('startBlind').value,
     ante:+$('anteSel').value, speed:document.querySelector('input[name=speed]:checked').value,
     difficulty:'medium',

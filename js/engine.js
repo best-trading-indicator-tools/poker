@@ -1,7 +1,5 @@
 /* ================= CONSTANTS ================= */
 const BASE_BB = 100;
-const LEVELS = [100,150,200,300,400,600,800,1200,1600,2400,3200,4800,6400,9600,12800,19200,25600];
-const SPEED_HANDS = {turbo:5, standard:10, slow:16};
 const AI_NAMES   = ['Viktor','Mia','Doyle','Selma','Ivan','Nora','Phil','Daria'];
 /* personality styles: margin = extra equity needed to call, raiseT = raise threshold shift,
    raiseF = raise frequency shift, bluff = bluff freq shift, size = bet sizing multiplier,
@@ -38,13 +36,15 @@ const money=n=>usd(n)+' · '+bbs(n);
 let state=null;
 
 function newGame(cfg){
+  cfg.gameType=cfg.gameType||'sng';
   const startBlind=cfg.startBlind||BASE_BB;
-  const levels=LEVELS.map(v=>Math.round(v*startBlind/BASE_BB/2)*2); // scale ladder, keep BB even so SB stays whole
+  const mode=getMode(cfg);
   state={
-    cfg, levels, level:0, handNum:0, board:[], stage:null, deck:[],
+    cfg, levels:[startBlind], level:0, handNum:0, board:[], stage:null, deck:[],
     currentBet:0, lastRaiseSize:0, turnIdx:0, players:[],
-    gameOver:false, bb:levels[0], sb:levels[0]/2, ante:0, handOver:false
+    gameOver:false, bb:startBlind, sb:startBlind/2, ante:0, handOver:false
   };
+  mode.initState(cfg,state);
   const stack=cfg.startBB*startBlind;
   const mk=(i,name,avatar,isHuman)=>({i,name,avatar,isHuman,chips:stack,hole:[],folded:false,out:false,allIn:false,bet:0,totalBet:0,acted:false,lastAct:'',revealed:false,place:0,bank:TT_BANK});
   state.players.push(mk(0, cfg.allAI?'Bot-You':'You', '😎', !cfg.allAI));
@@ -130,10 +130,7 @@ function startHand(){
   state.handNum++;
   if(!state.cfg.allAI)gameSeries.push({h:state.handNum,c:state.players[0].chips});
   state.handOver=false;
-  const per=SPEED_HANDS[state.cfg.speed];
-  state.level=Math.min(Math.floor((state.handNum-1)/per), state.levels.length-1);
-  state.bb=state.levels[state.level]; state.sb=state.bb/2;
-  state.ante=state.cfg.ante ? Math.max(1,Math.round(state.bb*state.cfg.ante)) : 0;
+  getMode().applyBlinds(state);
   state.board=[]; state.stage='preflop';
   state.deck=shuffle(makeDeck());
   for(const p of state.players){
@@ -488,30 +485,20 @@ function finishHand(pause){
       localStorage.setItem('sg_poker_history',JSON.stringify(hist));
     }catch(e){}
   }
-  // eliminations
-  const stillIn=alive().length;
-  let bustedNow=state.players.filter(p=>!p.out&&p.chips===0);
-  // order busts: smaller starting position doesn't matter much; assign same place
-  for(const p of bustedNow){
-    p.out=true; p.place=stillIn; // approximate tie placement
-    log(`${p.name} is eliminated (#${p.place})`);
-  }
+  // eliminations / rebuys (mode-specific)
+  const endResult=getMode().afterHand(state);
   if(typeof globalThis.__onHandEnd==='function') globalThis.__onHandEnd(state);
   saveResume();
-  const human=state.players[0];
-  const rest=alive();
   if(state.cfg.allAI){
-    if(rest.length<=1){ state.gameOver=true; if(typeof globalThis.__onGameOver==='function') globalThis.__onGameOver(state); return; }
+    if(alive().length<=1){ state.gameOver=true; if(typeof globalThis.__onGameOver==='function') globalThis.__onGameOver(state); return; }
     later(startHand,pause); return;
   }
-  if(human.out){
+  if(endResult.gameOver){
     state.gameOver=true;
-    setTimeout(()=>showGameOver(false,human.place),Math.min(pause,2500));
-    return;
-  }
-  if(rest.length===1){
-    state.gameOver=true;
-    setTimeout(()=>showGameOver(true,1),Math.min(pause,2500));
+    setTimeout(()=>{
+      if(endResult.cash) showCashSessionEnd();
+      else showGameOver(endResult.won,endResult.place);
+    },Math.min(pause,2500));
     return;
   }
   showNextBtn(pause);
@@ -599,7 +586,7 @@ function codesToCards(codes){ return (codes||[]).map(parseCardCode); }
 function saveResume(){
   if(!HAS_DOM||!state||state.cfg.allAI||state.cfg.mpRemotes||state.cfg.mpClient)return;
   try{
-    if(state.gameOver||state.players[0].out||alive().length<=1){
+    if(getMode().shouldClearResume(state)){
       localStorage.removeItem('sg_poker_resume'); return;
     }
     const snap={
@@ -607,7 +594,8 @@ function saveResume(){
       handNum:state.handNum, dealerIdx:state.dealerIdx,
       sessStats:state.sessStats, gameDecisions:state.gameDecisions||[],
       gameSeries:(gameSeries||[]).slice(),
-      players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,style:q.style?q.style.id:null}))
+      players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,style:q.style?q.style.id:null})),
+      ...getMode().resumeFields(state)
     };
     if(!state.handOver&&state.stage){
       snap.midHand={
@@ -690,6 +678,7 @@ function applyResumeSnapshot(sv){
     p.name=q.name; p.avatar=q.avatar; p.chips=q.chips; p.out=q.out; p.place=q.place||0;
     if(q.style) p.style=STYLES.find(s=>s.id===q.style)||p.style;
   });
+  getMode().restoreFields(sv,state);
   buildSeats(); hideActions(); lastHand=null;
   $('coachFeed').classList.add('hidden');
   renderStats();

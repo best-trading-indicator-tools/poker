@@ -1,15 +1,19 @@
 /* ================= I18N (UI chrome; coach prose stays English for now) ================= */
 const TR={
-en:{sub:"No-Limit Texas Hold'em tournament vs AI",players:"Players",blinds:"Blinds",buyin:"Buy-in",ante:"Ante",noAnte:"no ante",
+en:{sub:"No-Limit Texas Hold'em tournament vs AI",subCash:"No-Limit Texas Hold'em cash game vs AI",modeLbl:"Game mode",modeSng:"Sit & Go",modeCash:"Cash Game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
+players:"Players",blinds:"Blinds",buyin:"Buy-in",stackDepth:"Starting stack",ante:"Ante",noAnte:"no ante",
 speed:"Blinds Change Speed",turbo:"Turbo",standard:"Standard",slow:"Slow",diff:"AI Difficulty",easy:"Easy",medium:"Medium",hard:"Hard",language:"Language",
-deal:"Deal me in",resume:"▶ Resume tournament",resumeMid:"▶ Resume mid-hand",review:"📊 Session review",
+deal:"Deal me in",startCash:"Sit down",resume:"▶ Resume tournament",resumeMid:"▶ Resume mid-hand",resumeCash:"▶ Resume cash session",review:"📊 Session review",
+sessionPnL:"Session",cashSessionEnd:"Session complete",cashSessionSub:(h,r,pnl)=>`${h} hands · ${r} rebuy${r!==1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} net`,
+cashRebuy:b=>`Rebuy for ${b}`,
 revTitle:"Session review",revWinRate:"Win rate",revITM:"In the money",revAvgFinish:"Avg finish",
-revNet:"Total net",revEVLeaked:"EV leaked",revGames:"Games",revNoGames:"No finished games yet — play a tournament!",
+revNet:"Total net",revEVLeaked:"EV leaked",revGames:"Games",revNoGames:"No finished games yet — play a tournament!",revNoGamesCash:"No finished sessions yet — play a cash game!",
+revCashBadge:"Cash",revSngBadge:"Sit & Go",
 revLeaksTitle:"Leak finder (by spot)",revLeaksNone:"No classified leaks yet — deviate from the coach and finish games to populate this.",
 leakPfOpen:"Preflop opens",leakPfFace:"Facing raises",leakCbet:"C-bet defense",leakMultiway:"Multiway pots",leakRiver:"River calls",leakRiverAir:n=>`${n} river call${n>1?'s':''} with high card / no hand`,
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
 resetData:"Clear saved data",resetInfo:"Deletes everything this game keeps in your browser: lifetime stats, hand history and any unfinished tournament you could resume. Your language choice stays. This can't be undone.",resetConfirm:"Delete all saved stats, hand history and any unfinished tournament?",resetDone:"✓ Cleared",
-level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",
+level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Quit this tournament?",quitCash:"Leave the table?",
 fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ Your turn",
 log:"Log",lastHand:"Last hand",exportH:"Export history",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",
@@ -57,16 +61,20 @@ evTotal:"📉 Total EV leaked",deviations:"deviations",cleanGame:"No EV leaked v
 handNavP:"‹ hand",handNavN:"hand ›",streetNavP:"‹ street",streetNavN:"street ›",close:"Close",replayTitle:"Hand replay",
 won:"won",foldedTag:"folded",showdown:"showdown",fullHand:"Full hand",preflop:"Preflop",flop:"Flop",turnSt:"Turn",riverSt:"River",noHands:"No completed hand yet this game.",
 ord:n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}},
-fr:{sub:"Tournoi de Texas Hold'em No-Limit contre l'IA",players:"Joueurs",blinds:"Blinds",buyin:"Cave (buy-in)",ante:"Ante",noAnte:"sans ante",
+fr:{sub:"Tournoi de Texas Hold'em No-Limit contre l'IA",subCash:"Cash game Texas Hold'em No-Limit contre l'IA",modeLbl:"Mode de jeu",modeSng:"Sit & Go",modeCash:"Cash game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
+players:"Joueurs",blinds:"Blinds",buyin:"Cave (buy-in)",stackDepth:"Tapis de départ",ante:"Ante",noAnte:"sans ante",
 speed:"Vitesse des blinds",turbo:"Turbo",standard:"Standard",slow:"Lente",diff:"Niveau de l'IA",easy:"Facile",medium:"Moyen",hard:"Difficile",language:"Langue",
-deal:"Distribuez !",resume:"▶ Reprendre le tournoi",resumeMid:"▶ Reprendre la main en cours",review:"📊 Bilan des sessions",
+deal:"Distribuez !",startCash:"S'asseoir",resume:"▶ Reprendre le tournoi",resumeMid:"▶ Reprendre la main en cours",resumeCash:"▶ Reprendre la session cash",review:"📊 Bilan des sessions",
+sessionPnL:"Session",cashSessionEnd:"Session terminée",cashSessionSub:(h,r,pnl)=>`${h} mains · ${r} rebuy${r>1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} net`,
+cashRebuy:b=>`Rebuy pour ${b}`,
 revTitle:"Bilan des sessions",revWinRate:"Taux de victoire",revITM:"Dans l'argent",revAvgFinish:"Place moyenne",
-revNet:"Net total",revEVLeaked:"EV perdu",revGames:"Parties",revNoGames:"Aucune partie terminée — jouez un tournoi !",
+revNet:"Net total",revEVLeaked:"EV perdu",revGames:"Parties",revNoGames:"Aucune partie terminée — jouez un tournoi !",revNoGamesCash:"Aucune session terminée — jouez une partie cash !",
+revCashBadge:"Cash",revSngBadge:"Sit & Go",
 revLeaksTitle:"Fuites par type de spot",revLeaksNone:"Pas encore de fuites classées — écartez-vous du coach et terminez des parties.",
 leakPfOpen:"Ouvertures préflop",leakPfFace:"Face aux relances",leakCbet:"Défense c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls rivière",leakRiverAir:n=>`${n} call${n>1?'s':''} rivière sans main`,
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
 resetData:"Effacer les données sauvegardées",resetInfo:"Supprime tout ce que le jeu garde dans votre navigateur : statistiques globales, historique des mains et tout tournoi en cours à reprendre. Votre choix de langue est conservé. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l'historique des mains et tout tournoi en cours ?",resetDone:"✓ Effacé",
-level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",
+level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter ce tournoi ?",quitCash:"Quitter la table ?",
 fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ À vous",
 log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",
@@ -114,16 +122,20 @@ evTotal:"📉 EV totale perdue",deviations:"écarts",cleanGame:"Aucune EV perdue
 handNavP:"‹ main",handNavN:"main ›",streetNavP:"‹ rue",streetNavN:"rue ›",close:"Fermer",replayTitle:"Revoir la main",
 won:"gagné",foldedTag:"couché",showdown:"abattage",fullHand:"Main complète",preflop:"Pré-flop",flop:"Flop",turnSt:"Turn",riverSt:"River",noHands:"Aucune main terminée pour cette partie.",
 ord:n=>n===1?'1re':n+'e'},
-es:{sub:"Torneo de Texas Hold'em No-Limit contra la IA",players:"Jugadores",blinds:"Ciegas",buyin:"Entrada (buy-in)",ante:"Ante",noAnte:"sin ante",
+es:{sub:"Torneo de Texas Hold'em No-Limit contra la IA",subCash:"Cash game Texas Hold'em No-Limit contra la IA",modeLbl:"Modo de juego",modeSng:"Sit & Go",modeCash:"Cash game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
+players:"Jugadores",blinds:"Ciegas",buyin:"Entrada (buy-in)",stackDepth:"Stack inicial",ante:"Ante",noAnte:"sin ante",
 speed:"Velocidad de ciegas",turbo:"Turbo",standard:"Estándar",slow:"Lenta",diff:"Nivel de la IA",easy:"Fácil",medium:"Medio",hard:"Difícil",language:"Idioma",
-deal:"¡Reparte!",resume:"▶ Reanudar torneo",resumeMid:"▶ Reanudar mano en curso",review:"📊 Resumen de sesiones",
+deal:"¡Reparte!",startCash:"Sentarse",resume:"▶ Reanudar torneo",resumeMid:"▶ Reanudar mano en curso",resumeCash:"▶ Reanudar sesión cash",review:"📊 Resumen de sesiones",
+sessionPnL:"Sesión",cashSessionEnd:"Sesión terminada",cashSessionSub:(h,r,pnl)=>`${h} manos · ${r} rebuy${r!==1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} neto`,
+cashRebuy:b=>`Rebuy por ${b}`,
 revTitle:"Resumen de sesiones",revWinRate:"Tasa de victorias",revITM:"En premios",revAvgFinish:"Puesto medio",
-revNet:"Neto total",revEVLeaked:"EV perdido",revGames:"Partidas",revNoGames:"Sin partidas terminadas — ¡juega un torneo!",
+revNet:"Neto total",revEVLeaked:"EV perdido",revGames:"Partidas",revNoGames:"Sin partidas terminadas — ¡juega un torneo!",revNoGamesCash:"Sin sesiones terminadas — ¡juega cash!",
+revCashBadge:"Cash",revSngBadge:"Sit & Go",
 revLeaksTitle:"Fugas por tipo de spot",revLeaksNone:"Sin fugas clasificadas aún — desvíate del coach y termina partidas.",
 leakPfOpen:"Aperturas preflop",leakPfFace:"Frente a subidas",leakCbet:"Defensa c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls en river",leakRiverAir:n=>`${n} call${n>1?'s':''} en river sin mano`,
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
 resetData:"Borrar datos guardados",resetInfo:"Elimina todo lo que el juego guarda en tu navegador: estadísticas globales, historial de manos y cualquier torneo sin terminar. Tu idioma se mantiene. No se puede deshacer.",resetConfirm:"¿Borrar todas las estadísticas, el historial de manos y cualquier torneo sin terminar?",resetDone:"✓ Borrado",
-level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",
+level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Salir de este torneo?",quitCash:"¿Dejar la mesa?",
 fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
 actMenu:"◀ Menú",actTurn:"◀ Tu turno",
 log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",
@@ -623,12 +635,22 @@ function positionDealerBtn(){
 function render(winners){
   if(!HAS_DOM||BENCH)return;
   if(!state)return;
-  $('tLevel').textContent=state.level+1;
+  const cash=isCashGame();
+  document.querySelectorAll('.tb-sng-only').forEach(el=>el.classList.toggle('hidden',cash));
+  const pnlWrap=$('tPnLWrap');
+  if(pnlWrap) pnlWrap.classList.toggle('hidden',!cash);
   $('tBlinds').textContent=usd(state.sb)+'/'+usd(state.bb);
-  $('tAnte').textContent=state.ante?usd(state.ante):'—';
   $('tHand').textContent=state.handNum;
-  const per=SPEED_HANDS[state.cfg.speed];
-  $('tNext').textContent= state.level>=LEVELS.length-1 ? '—' : (per-((state.handNum-1)%per+1)+1);
+  if(cash){
+    const pnl=getMode().sessionPnL(state);
+    const pnlEl=$('tPnLVal');
+    if(pnlEl) pnlEl.textContent=(pnl>=0?'+':'−')+usd(Math.abs(pnl));
+  }else{
+    $('tLevel').textContent=state.level+1;
+    $('tAnte').textContent=state.ante?usd(state.ante):'—';
+    const per=SPEED_HANDS[state.cfg.speed];
+    $('tNext').textContent= state.level>=state.levels.length-1 ? '—' : (per-((state.handNum-1)%per+1)+1);
+  }
   const potCollected=state.players.reduce((s,p)=>s+p.totalBet-p.bet,0);
   const totalPot=state.players.reduce((s,p)=>s+p.totalBet,0);
   $('pot').textContent= totalPot>0?`Pot: ${money(totalPot)}`:'';
@@ -1071,11 +1093,14 @@ function doNextHand(){ hideNextBtn(); startHand(); }
 function saveGameRecord(won,place){
   if(BENCH||!state)return;
   try{
+    const cash=isCashGame();
+    const net=cash?getMode().sessionPnL(state):(state.sessStats?state.sessStats.net:0);
     const a2=JSON.parse(localStorage.getItem('sg_poker_games')||'[]');
-    a2.push({gameId:state.gameId,t:Date.now(),mp:!!(state.cfg&&(state.cfg.mpRemotes||state.cfg.mpClient)),
+    a2.push({gameId:state.gameId,t:Date.now(),gameType:state.cfg?.gameType||'sng',
+      mp:!!(state.cfg&&(state.cfg.mpRemotes||state.cfg.mpClient)),
       n:state.cfg?state.cfg.numPlayers:0,diff:state.cfg?state.cfg.difficulty:'medium',
-      place:won?1:(place||0),hands:state.handNum,
-      net:state.sessStats?state.sessStats.net:0,evLost:state.sessStats?(state.sessStats.evLost||0):0,
+      place:cash?0:(won?1:(place||0)),hands:state.handNum,rebuys:cash?(state.cashRebuys||0):0,
+      net,evLost:state.sessStats?(state.sessStats.evLost||0):0,
       decisions:(state.gameDecisions||[]).slice(),
       series:(gameSeries||[]).slice(-300)});
     while(a2.length>200)a2.shift();
@@ -1095,16 +1120,17 @@ function showSessionReview(){
   if(!HAS_DOM)return;
   const games=loadGames().filter(g=>!g.mp).reverse();
   const n=games.length;
-  const wins=games.filter(g=>g.place===1).length;
-  const itm=games.filter(g=>g.place>0&&g.place<=paidPlaces(g.n)).length;
-  const finishes=games.filter(g=>g.place>0);
+  const sngGames=games.filter(g=>g.gameType!=='cash');
+  const wins=sngGames.filter(g=>g.place===1).length;
+  const itm=sngGames.filter(g=>g.place>0&&g.place<=paidPlaces(g.n)).length;
+  const finishes=sngGames.filter(g=>g.place>0);
   const avgFin=finishes.length?finishes.reduce((s,g)=>s+g.place,0)/finishes.length:0;
   const netTot=games.reduce((s,g)=>s+(g.net||0),0);
   const evTot=games.reduce((s,g)=>s+(g.evLost||0),0);
   $('revSummary').innerHTML=
     `<div class="rv"><span>${T('revGames')}</span><b>${n}</b></div>`+
-    `<div class="rv"><span>${T('revWinRate')}</span><b>${n?Math.round(wins/n*100):0}%</b></div>`+
-    `<div class="rv"><span>${T('revITM')}</span><b>${n?Math.round(itm/n*100):0}%</b></div>`+
+    `<div class="rv"><span>${T('revWinRate')}</span><b>${sngGames.length?Math.round(wins/sngGames.length*100):0}%</b></div>`+
+    `<div class="rv"><span>${T('revITM')}</span><b>${sngGames.length?Math.round(itm/sngGames.length*100):0}%</b></div>`+
     `<div class="rv"><span>${T('revAvgFinish')}</span><b>${avgFin?avgFin.toFixed(1):'—'}</b></div>`+
     `<div class="rv"><span>${T('revNet')}</span><b class="${netTot>=0?'pos':'neg'}">${netTot>=0?'+':'−'}${usd(Math.abs(netTot))}</b></div>`+
     `<div class="rv"><span>${T('revEVLeaked')}</span><b class="neg">−${usd(evTot)}</b></div>`;
@@ -1117,10 +1143,13 @@ function showSessionReview(){
       games.map(g=>{
         const when=new Date(g.t).toLocaleDateString();
         const net=g.net||0;
-        const place=g.place===1?T('youWin'):g.place?T('ord')(g.place):'—';
+        const isCash=g.gameType==='cash';
+        const badge=isCash?T('revCashBadge'):T('revSngBadge');
+        const place=isCash?badge:(g.place===1?T('youWin'):g.place?T('ord')(g.place):'—');
+        const rebuyTxt=isCash&&g.rebuys?` · ${g.rebuys} rebuy${g.rebuys!==1?'s':''}`:'';
         return `<div class="rev-game" data-gid="${g.gameId||''}"><div class="rg-main">`+
           `<div class="rg-title">${place} · ${g.n}p ${g.diff||''} · ${g.hands} hands</div>`+
-          `<div class="rg-sub">${when}${g.evLost?` · EV −${usd(g.evLost)}`:''}</div></div>`+
+          `<div class="rg-sub">${when}${rebuyTxt}${g.evLost?` · EV −${usd(g.evLost)}`:''}</div></div>`+
           `<span class="rg-net ${net>=0?'pos':'neg'}">${net>=0?'+':'−'}${usd(Math.abs(net))}</span></div>`;
       }).join('');
     $('revList').querySelectorAll('.rev-game').forEach(el=>{
@@ -1169,22 +1198,65 @@ function showGameOver(won,place){
       (gd.length>5?`<div class="bl-more">+ ${gd.length-5} ${T('smallerLeaks')}</div>`:'');
   openDialog($('overlay'),'ovTitle');
 }
+function showCashSessionEnd(){
+  if(!HAS_DOM)return;
+  state.gameOver=true;
+  clearResume();
+  const pnl=getMode().sessionPnL(state);
+  saveGameRecord(false,0);
+  render();
+  $('ovEmoji').textContent='💵';
+  $('ovTitle').textContent=T('cashSessionEnd');
+  $('ovSub').textContent=T('cashSessionSub')(state.handNum,state.cashRebuys||0,pnl);
+  $('ovSpark').innerHTML=sparklineSVG(gameSeries);
+  const gd=(state.gameDecisions||[]).slice().sort((a,b)=>b.evLoss-a.evLoss);
+  const tot=gd.reduce((s,d)=>s+d.evLoss,0);
+  const nDec=state.sessStats?state.sessStats.decisions:0;
+  $('ovBlunders').innerHTML = nDec===0 ? '' : gd.length===0
+    ? `<h3 class="bl-clean">${T('cleanGame')}</h3>`
+    : `<h3>${T('evTotal')}: −${usd(tot)} (${gd.length} ${T('deviations')})</h3>`+
+      gd.slice(0,5).map(d=>
+        `<div class="bl-row"><span>${T('hand')}#${d.hand} · ${d.stage}</span>`+
+        `<span class="bl-what">${T('coachSaid')} ${recWord(d.rec)} · ${T('youChose')} ${actWord(d.action)}</span>`+
+        `<b>−${usd(d.evLoss)}</b></div>`).join('')+
+      (gd.length>5?`<div class="bl-more">+ ${gd.length-5} ${T('smallerLeaks')}</div>`:'');
+  openDialog($('overlay'),'ovTitle');
+}
 function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+
+function updateSetupMode(gameType){
+  if(!HAS_DOM)return;
+  const cash=gameType==='cash';
+  document.querySelectorAll('#setup .sng-only').forEach(el=>el.classList.toggle('hidden',cash));
+  const title=$('setupTitle');
+  const sub=$('setupSub');
+  if(title) title.textContent=T(cash?'titleCash':'titleSng');
+  if(sub) sub.textContent=T(cash?'subCash':'sub');
+  const buyLbl=document.querySelectorAll('#setup .row label.main')[3];
+  if(buyLbl) buyLbl.textContent=T(cash?'stackDepth':'buyin');
+  $('startBtn').textContent=T(cash?'startCash':'deal');
+  $('modeSeg').querySelectorAll('button').forEach(b=>{
+    b.classList.toggle('on',b.dataset.m===gameType);
+  });
+}
 
 /* apply the chosen language to all static UI chrome */
 function applyLang(){
   if(!HAS_DOM)return;
   const set=(id,k)=>{const el=$(id);if(el)el.textContent=T(k);};
-  $('setup').querySelector('.sub').textContent=T('sub');
-  const rowKeys=['players','blinds','buyin','ante','speed','timerOpt','language','diff'];
+  updateSetupMode(setupGameType);
+  const rowKeys=['modeLbl','players','blinds','buyin','ante','speed','timerOpt','language','diff'];
   document.querySelectorAll('#setup .row label.main').forEach((el,i)=>{if(rowKeys[i])el.textContent=T(rowKeys[i]);});
+  const buyLbl=document.querySelectorAll('#setup .row label.main')[3];
+  if(buyLbl) buyLbl.textContent=T(setupGameType==='cash'?'stackDepth':'buyin');
+  $('modeSeg').querySelectorAll('button').forEach(b=>{b.textContent=T(b.dataset.m==='cash'?'modeCash':'modeSng');});
   const aSel=$('anteSel'); if(aSel) aSel.options[0].text=T('noAnte');
   const radios=document.querySelectorAll('#setup .radios label');
   const spKeys=['turbo','standard','slow'];
   radios.forEach((el,i)=>{if(el.lastChild)el.lastChild.nodeValue=' '+T(spKeys[i]);});
   const dBtns=$('diffSeg').querySelectorAll('button');
   ['easy','medium','hard'].forEach((k,i)=>{if(dBtns[i])dBtns[i].textContent=T(k);});
-  set('startBtn','deal'); set('resumeBtn','resume'); set('reviewBtn','review');
+  set('startBtn',setupGameType==='cash'?'startCash':'deal'); set('resumeBtn','resume'); set('reviewBtn','review');
   set('revTitle','revTitle'); set('revAllHands','revAllHands'); set('revClose','close');
   set('resetLbl','resetData'); set('resetInfo','resetInfo');
   set('mpTitle','mpTitle'); set('mpSub','mpSub'); set('mpCreate','mpCreate'); set('mpJoinBtn','mpJoinB');
@@ -1290,8 +1362,13 @@ function wireCoachInfoTips(){
 }
 
 /* ================= INIT / WIRING ================= */
+let setupGameType='sng';
 function initUI(){
   let numPlayers=9, difficulty='medium';
+  $('modeSeg').querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{setupGameType=b.dataset.m; updateSetupMode(setupGameType); refreshResume();};
+  });
+  updateSetupMode(setupGameType);
   $('pMinus').onclick=()=>{numPlayers=Math.max(2,numPlayers-1);$('pCount').textContent=numPlayers;};
   $('pPlus').onclick =()=>{numPlayers=Math.min(9,numPlayers+1);$('pCount').textContent=numPlayers;};
   $('diffSeg').querySelectorAll('button').forEach(b=>{
@@ -1302,14 +1379,17 @@ function initUI(){
   });
   $('startBtn').onclick=()=>{
     const cfg={
+      gameType:setupGameType,
       numPlayers,
       startBB:+$('startBB').value,
       startBlind:+$('startBlind').value,
       timer:$('timerChk').checked,
-      ante:+$('anteSel').value,
-      speed:document.querySelector('input[name=speed]:checked').value,
       difficulty
     };
+    if(setupGameType==='sng'){
+      cfg.ante=+$('anteSel').value;
+      cfg.speed=document.querySelector('input[name=speed]:checked').value;
+    }
     logLines=[];
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
@@ -1353,8 +1433,12 @@ function initUI(){
   /* --- resume saved tournament --- */
   const refreshResume=()=>{
     let sv=null; try{sv=JSON.parse(localStorage.getItem('sg_poker_resume'));}catch(e){}
-    $('resumeBtn').classList.toggle('hidden',!sv);
-    if(sv) $('resumeBtn').textContent=sv.midHand?T('resumeMid'):T('resume');
+    const match=sv&&(sv.cfg?.gameType||'sng')===setupGameType;
+    $('resumeBtn').classList.toggle('hidden',!sv||!match);
+    if(sv&&match){
+      const cash=(sv.cfg?.gameType||'sng')==='cash';
+      $('resumeBtn').textContent=sv.midHand?T('resumeMid'):(cash?T('resumeCash'):T('resume'));
+    }
     let nHist=0; try{nHist=(JSON.parse(localStorage.getItem('sg_poker_history')||'[]')).length;}catch(e){}
     let nGames=0; try{nGames=loadGames().length;}catch(e){}
     $('reviewBtn').classList.toggle('hidden',!nHist&&!nGames);
@@ -1386,6 +1470,8 @@ function initUI(){
   };
   $('resumeBtn').onclick=()=>{
     const sv=refreshResume(); if(!sv)return;
+    setupGameType=sv.cfg?.gameType||'sng';
+    updateSetupMode(setupGameType);
     applyResumeSnapshot(sv);
   };
   /* --- keyboard shortcuts: F fold · C check/call · R raise · 1-4 sizes · N next hand --- */
@@ -1500,7 +1586,15 @@ function initUI(){
   $('chatIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();mpChatSend();}});
   $('quitBtn').onclick=()=>{
     if(MP){ if(confirm(T('quit')+'?')) mpLeave(); return; }
-    if(confirm('Quit this tournament?')){
+    const cash=isCashGame();
+    if(confirm(T(cash?'quitCash':'quitSng'))){
+      if(cash){
+        showCashSessionEnd();
+        $('game').classList.add('hidden');
+        $('setup').classList.remove('hidden');
+        refreshResume(); updateOrient();
+        return;
+      }
       state.gameOver=true; clearResume(); hideNextBtn(); hideActions();
       $('game').classList.add('hidden'); $('setup').classList.remove('hidden');
       refreshResume(); updateOrient();

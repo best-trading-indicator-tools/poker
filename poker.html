@@ -563,8 +563,15 @@ body.act-panel-mode #chipPreview{display:none!important;}
 
 <div id="setup">
   <div class="setup-card">
-    <h1>Sit &amp; Go Hold&rsquo;em</h1>
-    <div class="sub">No-Limit Texas Hold&rsquo;em tournament vs AI</div>
+    <h1 id="setupTitle">Sit &amp; Go Hold&rsquo;em</h1>
+    <div class="sub" id="setupSub">No-Limit Texas Hold&rsquo;em tournament vs AI</div>
+    <div class="row">
+      <label class="main" id="modeLbl">Game mode</label>
+      <div class="seg" id="modeSeg">
+        <button data-m="sng" class="on">Sit &amp; Go</button>
+        <button data-m="cash">Cash Game</button>
+      </div>
+    </div>
     <div class="row">
       <label class="main">Players</label>
       <div class="stepper">
@@ -590,7 +597,7 @@ body.act-panel-mode #chipPreview{display:none!important;}
         <option value="200">200 BB</option>
       </select>
     </div>
-    <div class="row">
+    <div class="row sng-only">
       <label class="main">Ante</label>
       <select id="anteSel">
         <option value="0" selected>no ante</option>
@@ -599,7 +606,7 @@ body.act-panel-mode #chipPreview{display:none!important;}
         <option value="0.20">20% of BB</option>
       </select>
     </div>
-    <div class="row">
+    <div class="row sng-only">
       <label class="main">Blinds Change Speed</label>
       <div class="radios">
         <label><input type="radio" name="speed" value="turbo" checked> Turbo</label>
@@ -634,7 +641,7 @@ body.act-panel-mode #chipPreview{display:none!important;}
     <button id="startBtn">Deal me in</button>
     <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
     <button id="reviewBtn" class="hidden">&#128202; Session review</button>
-    <div id="mpSec">
+    <div id="mpSec" class="sng-only">
       <h3 id="mpTitle">👥 Play with friends</h3>
       <div id="mpSub">Invite friends with a link — free, no accounts</div>
       <input id="mpName" maxlength="14" placeholder="Your name">
@@ -655,11 +662,12 @@ body.act-panel-mode #chipPreview{display:none!important;}
 
 <div id="game" class="hidden">
   <div id="topbar">
-    <span>Level <b id="tLevel">1</b></span>
+    <span class="tb-sng-only">Level <b id="tLevel">1</b></span>
     <span>Blinds <b id="tBlinds">50/100</b></span>
-    <span id="tAnteWrap">Ante <b id="tAnte">0</b></span>
+    <span id="tAnteWrap" class="tb-sng-only">Ante <b id="tAnte">0</b></span>
     <span class="tb-opt">Hand <b id="tHand">1</b></span>
-    <span class="tb-opt">Blinds up in <b id="tNext">6</b> hands</span>
+    <span class="tb-opt tb-sng-only" id="tNextWrap">Blinds up in <b id="tNext">6</b> hands</span>
+    <span id="tPnLWrap" class="hidden tb-opt">Session <b id="tPnLVal">+$0</b></span>
     <span>AI: <b id="tDiff">Medium</b></span>
     <label class="tb-touch">
       <input type="checkbox" id="autoNext" checked aria-labelledby="autoNextLbl">
@@ -799,6 +807,9 @@ body.act-panel-mode #chipPreview{display:none!important;}
 
 <script src="charts.js"></script>
   <script src="js/eval.js"></script>
+  <script src="js/modes/registry.js"></script>
+  <script src="js/modes/tournament.js"></script>
+  <script src="js/modes/cash.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/coach.js"></script>
   <script src="js/ai.js"></script>
