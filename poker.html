@@ -350,15 +350,6 @@ body.fl #topbar .tb-touch{min-height:32px;padding:2px 6px;margin:0;gap:6px;}
 body.fl #topbar .tb-touch input{width:18px;height:18px;}
 body.fl #quitBtn{flex-shrink:0;margin-left:4px;padding:5px 10px;}
 body.fl #sndBtn,body.fl #langTop{flex-shrink:0;padding:3px 7px;font-size:11px;}
-body.fl #actionbar{flex-wrap:nowrap;padding:5px 8px;padding-left:max(8px,env(safe-area-inset-left));min-height:0;gap:5px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;}
-body.fl #actionbar>#logToggle,body.fl #actionbar>#exportBtn{display:none;}
-body.fl #actionbar>#replayBtn{flex:0 0 auto;padding:8px 9px;font-size:10.5px;}
-body.fl #humanCtls{flex-wrap:nowrap;width:auto;flex:1;gap:6px;align-items:center;}
-body.fl #humanCtls #foldBtn,body.fl #humanCtls #callBtn{flex:0 0 auto;padding:10px 13px;font-size:13px;white-space:nowrap;}
-body.fl #raiseCtl{display:flex;flex:1;flex-basis:auto;gap:5px;align-items:center;min-width:0;}
-body.fl #raiseCtl .preset{flex:0 0 auto;padding:8px 7px;font-size:10.5px;}
-body.fl #raiseSlider{flex:1 1 40px;flex-basis:auto;min-width:36px;height:24px;}
-body.fl #raiseBtn{flex:0 0 auto;padding:10px 11px;font-size:12px;white-space:nowrap;}
 body.fl #waitMsg{display:none;}
 body.fl #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}
 body.fl #felt{inset:10px 14px 10px 14px;border-width:5px;}
@@ -451,66 +442,71 @@ body.fl #pot{font-size:12px;}
   #felt{inset:8px 6px 8px 6px;border-width:7px;}
   #dbtn{width:20px;height:20px;font-size:10px;}
 
-  /* collapsible action sheet — hidden until tap; frees the table */
+  /* collapsible action panel (right edge) — hidden until tap; keeps hero seat clear */
   #actFab{
     display:block;
     position:fixed;
     z-index:44;
-    bottom:max(10px,env(safe-area-inset-bottom));
-    left:50%;
-    transform:translateX(-50%);
+    right:max(8px,env(safe-area-inset-right));
+    top:50%;
+    left:auto;
+    bottom:auto;
+    transform:translateY(-50%);
     background:var(--panel);
     border:2px solid var(--line);
     color:var(--text);
-    border-radius:22px;
-    padding:9px 16px;
-    font-size:13px;
+    border-radius:20px;
+    padding:10px 12px;
+    font-size:12px;
     font-weight:700;
     cursor:pointer;
     box-shadow:0 4px 18px rgba(0,0,0,.5);
+    writing-mode:vertical-rl;
+    text-orientation:mixed;
+    letter-spacing:.3px;
   }
   #actFab.pulse{border-color:var(--gold);color:var(--gold);animation:actPulse 1.2s ease infinite;}
-  #actBackdrop{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.42);}
-  #game.act-open #actBackdrop{display:block;}
-  #game.act-collapsed #actionbar{
-    position:fixed;left:0;right:0;bottom:0;z-index:50;
-    transform:translateY(110%);
+  #actBackdrop{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.42);display:none;}
+  body.act-panel-open #actBackdrop{display:block;}
+  #actionbar{
+    position:fixed;
+    top:max(8px,env(safe-area-inset-top));
+    right:0;
+    bottom:max(8px,env(safe-area-inset-bottom));
+    width:min(280px,72vw);
+    z-index:50;
+    flex-direction:column;
+    align-items:stretch;
+    flex-wrap:nowrap;
+    gap:8px;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    border-left:1px solid var(--line);
+    border-radius:16px 0 0 16px;
+    padding:12px 10px;
+    padding-right:max(12px,env(safe-area-inset-right));
+    box-shadow:-10px 0 36px rgba(0,0,0,.55);
+    transition:transform .22s ease;
+    transform:translateX(110%);
     pointer-events:none;
     visibility:hidden;
-    transition:transform .22s ease;
-    max-height:72vh;
-    overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-    box-shadow:0 -10px 36px rgba(0,0,0,.55);
   }
-  #game.act-open #actionbar{
-    position:fixed;left:0;right:0;bottom:0;z-index:50;
-    transform:translateY(0);
+  body.act-panel-open #actionbar{
+    transform:translateX(0);
     pointer-events:auto;
     visibility:visible;
-    transition:transform .22s ease;
-    max-height:72vh;
-    overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-    box-shadow:0 -10px 36px rgba(0,0,0,.55);
   }
-  body.fl #actFab{bottom:auto;top:50%;left:max(8px,env(safe-area-inset-left));transform:translateY(-50%);}
-  body.fl #game.act-collapsed #actionbar,body.fl #game.act-open #actionbar{
-    padding-left:max(8px,env(safe-area-inset-left));
-    padding-bottom:max(6px,env(safe-area-inset-bottom));
-  }
+  #actionbar>#logToggle,#actionbar>#replayBtn,#actionbar>#exportBtn,#actionbar>#emoBtn,#actionbar>#chatBtn{width:100%;flex:none;}
+  #humanCtls{width:100%;flex-direction:column;flex-wrap:nowrap;gap:8px;}
+  #humanCtls #coachToggle{width:100%;}
+  #humanCtls #foldBtn,#humanCtls #callBtn,#raiseBtn{width:100%;flex:none;padding:14px 10px;font-size:15px;}
+  #raiseCtl{flex-direction:column;width:100%;gap:7px;flex-basis:auto;}
+  #raiseCtl .preset{width:100%;flex:none;padding:10px 6px;font-size:12px;}
+  #raiseSlider{width:100%;min-width:0;height:28px;flex-basis:auto;}
+  #waitMsg{font-size:12px;width:100%;text-align:center;}
 
-  /* big, thumb-friendly action bar (when open) */
-  #actionbar{padding:8px 8px max(8px,env(safe-area-inset-bottom));gap:7px;min-height:0;}
-  #actionbar>#logToggle,#actionbar>#replayBtn,#actionbar>#exportBtn{padding:8px 10px;font-size:11px;flex:1;}
-  #humanCtls{width:100%;flex-wrap:wrap;gap:8px;}
-  #humanCtls #foldBtn,#humanCtls #callBtn{flex:1;padding:15px 8px;font-size:15px;}
-  #raiseCtl{flex-basis:100%;gap:7px;}
-  #raiseCtl .preset{flex:1;padding:9px 4px;font-size:11.5px;}
-  #raiseSlider{flex-basis:100%;min-width:0;height:30px;}
+  /* table uses full height — action panel lives on document.body */
   #chipPreview{display:none!important;}
-  #raiseBtn{flex:1;padding:14px 8px;}
-  #waitMsg{font-size:12px;flex-basis:100%;}
   #log{left:6px;right:6px;width:auto;bottom:6px;max-height:40vh;}
 }
 @media(max-width:980px) and (orientation:landscape) and (max-height:500px){

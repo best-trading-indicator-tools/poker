@@ -124,7 +124,7 @@ As pressure rises, an adapting bot lowers the equity it needs to continue, widen
 ## Changelog
 
 ### 2026-06-12 — Mobile collapsible action menu
-- **Tap-to-open action bar**: on phones the bottom/side menu is hidden by default; tap **▲ Menu** (pulses **▲ Your turn** when it's your action) to slide it up, tap the dimmed table to dismiss
+- **Tap-to-open action panel (right edge)**: on phones the menu is a slide-in **right panel** (not bottom bar) so your name/stack stay visible; tap **◀ Menu** / **◀ Turn**, tap the dimmed table to dismiss
 
 ### 2026-06-12 — Mobile landscape layout (rotated phone)
 - **Forced-landscape (`body.fl`)**: smaller seats/cards, wider felt inset, inward seat slots so topbar/action bar no longer cover players
