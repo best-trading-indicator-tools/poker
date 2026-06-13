@@ -421,13 +421,13 @@ function mpSeatPending(){
       mpChatAll('🛜',C2('mpReplaced',q.name,ai.name));
       ai.name=q.name; ai.avatar='🙂'; ai.remote=true; ai.isHuman=false; ai.style=null;
       ai.chips=state.cfg.startBB*(state.cfg.startBlind||100);
-      ai.rangeCap=1; ai.rangeFloor=0; ai.aggStreets=[]; ai.lineRead=''; ai.bank=TT_BANK;
+      ai.rangeCap=1; ai.rangeFloor=0; ai.aggStreets=[]; ai.checkStreets=[]; ai.lineRead=''; ai.bank=TT_BANK;
     }else if(state.players.length<9){
       i=state.players.length;
       state.players.push({i,name:q.name,avatar:'🙂',isHuman:false,remote:true,
         chips:state.cfg.startBB*(state.cfg.startBlind||100),hole:[],folded:false,out:false,allIn:false,
         bet:0,totalBet:0,acted:false,lastAct:'',revealed:false,place:0,style:null,
-        rangeCap:1,rangeFloor:0,checkedStreet:false,aggStreets:[],lineRead:'',bank:TT_BANK});
+        rangeCap:1,rangeFloor:0,checkedStreet:false,aggStreets:[],checkStreets:[],lineRead:'',bank:TT_BANK});
       mpChatAll('🛜',C2('mpJoined',q.name));
     }else{
       try{q.conn.send({t:'full'});}catch(e){}
@@ -456,7 +456,7 @@ function mpSnapshotFor(seat){
       folded:q.folded,out:q.out,allIn:q.allIn,acted:q.acted,lastAct:q.lastAct,
       revealed:q.revealed,place:q.place||0,pos:q.pos,style:q.style||null,bank:q.bank||0,
       rangeCap:q.rangeCap,rangeFloor:q.rangeFloor,checkedStreet:q.checkedStreet,
-      aggStreets:q.aggStreets||[],lineRead:q.lineRead||'',
+      aggStreets:q.aggStreets||[],checkStreets:q.checkStreets||[],lineRead:q.lineRead||'',
       hole:((seat>=0&&q.i===seat)||q.revealed)?q.hole:(q.hole||[]).map(()=>({r:2,s:0,hid:1}))};
   }
   return {players,board:state.board,stage:state.stage,

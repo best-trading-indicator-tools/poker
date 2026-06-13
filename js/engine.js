@@ -139,7 +139,7 @@ function startHand(){
   for(const p of state.players){
     p.hole=[]; p.folded=p.out; p.allIn=false; p.bet=0; p.totalBet=0;
     p.acted=false; p.lastAct=''; p.revealed=false; p.rangeCap=1; p.rangeFloor=0; p.checkedStreet=false;
-    p.aggStreets=[]; p.lineRead='';
+    p.aggStreets=[]; p.checkStreets=[]; p.lineRead='';
   }
   state.dealerIdx=nextSeat(state.dealerIdx,p=>!p.out);
   const n=alive().length;
@@ -240,6 +240,8 @@ function applyAction(p,type,amt){
     }else if(state.stage!=='preflop'){
       weakenRange(p);                        // a check usually means no strong hand
       p.checkedStreet=true;
+      if(!p.checkStreets)p.checkStreets=[];
+      if(!p.checkStreets.includes(state.stage))p.checkStreets.push(state.stage);
     }
   }else if(type==='raise'){
     let target=Math.min(amt,p.bet+p.chips);
@@ -621,7 +623,7 @@ function saveResume(){
           folded:q.folded, allIn:q.allIn, acted:q.acted, lastAct:q.lastAct||'',
           revealed:q.revealed, rangeCap:q.rangeCap, rangeFloor:q.rangeFloor,
           checkedStreet:!!q.checkedStreet, aggStreets:(q.aggStreets||[]).slice(),
-          lineRead:q.lineRead||'', bank:q.bank??TT_BANK
+          checkStreets:(q.checkStreets||[]).slice(), lineRead:q.lineRead||'', bank:q.bank??TT_BANK
         }))
       };
     }
@@ -657,6 +659,7 @@ function restoreMidHand(mh){
     p.rangeCap=q.rangeCap??1; p.rangeFloor=q.rangeFloor??0;
     p.checkedStreet=!!q.checkedStreet;
     p.aggStreets=(q.aggStreets||[]).slice();
+    p.checkStreets=(q.checkStreets||[]).slice();
     p.lineRead=q.lineRead||'';
     p.bank=q.bank??TT_BANK;
     p.pos=q.pos||'';

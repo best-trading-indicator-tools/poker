@@ -62,6 +62,12 @@ lineCbet:` His flop bet is a routine "continuation bet" — players who raised b
 lineBarrel:n=>` He has now bet ${n===3?'THREE streets in a row (flop, turn and river)':'two streets in a row'} — most players don't keep firing like that without a real hand. His range is read much tighter.`,
 lineDonk:` He bet INTO the player who raised before the flop (a "donk bet") — an unusual move that's usually either a sneaky monster or a wild bluff. To be safe, it's read as strength.`,
 lineCR:` He checked first, then raised (a "check-raise") — the classic trap move. That's read as a very strong range.`,
+lineCC:(n,len)=>`${n} has checked ${len} consecutive streets without betting — their range is heavily capped (mostly medium pairs, weak showdown hands, and give-ups). A bet often wins the pot here.`,
+lineCCRock:(n,len)=>`${n} (🪨 tight) passed on ${len} streets in a row — rocks rarely slowplay twice; you're usually facing one pair or less.`,
+lineCCManiac:(n,len)=>`${n} (🔥 wild) checked ${len} streets — strong tell: maniacs bet when they're strong, so passive lines are usually air or a weak float.`,
+lineCCShark:(n,len)=>`${n} (🦈 aggressive) checked ${len} streets — sharks can trap, so respect a check-raise, but many lines are still capped medium hands.`,
+lineCCStation:(n,len)=>`${n} (📞 loose) checked ${len} streets — often a medium pair they'll call down with, but rarely two pair or better.`,
+lineTablePassive:n=>`${n} opponents have multi-street passive lines — the table looks weak and checked-through. Thin value bets and bluffs often work.`,
 profRock:` The bettor is the 🪨 tight type — players like this almost never bluff big. Give this bet extra respect: without a strong hand yourself, folding is usually right.`,
 profManiac:` The bettor is the 🔥 wild type — he bluffs so often that medium-strength hands go UP in value against him. You can call him down lighter than against anyone else.`,
 profStation:` The bettor is the 📞 loose-passive type — he calls everything but almost never bets big without a real hand. His sudden aggression deserves respect.`,
@@ -138,6 +144,12 @@ lineCbet:` Sa mise au flop est un « continuation bet » de routine — celui qu
 lineBarrel:n=>` Il vient de miser ${n===3?'TROIS rues d\'affilée (flop, turn et river)':'deux rues d\'affilée'} — la plupart des joueurs ne continuent pas à tirer ainsi sans une vraie main. Sa range est lue beaucoup plus serrée.`,
 lineDonk:` Il a misé CONTRE le relanceur pré-flop (un « donk bet ») — un coup inhabituel : en général soit un monstre déguisé, soit un gros bluff. Par prudence, on le lit comme de la force.`,
 lineCR:` Il a d'abord checké, puis relancé (un « check-raise ») — le piège classique. C'est lu comme une range très forte.`,
+lineCC:(n,len)=>`${n} a checké ${len} streets d'affilée sans miser — sa range est très capée (paires moyennes, mains faibles, abandons). Une mise prend souvent le pot.`,
+lineCCRock:(n,len)=>`${n} (🪨 serré) a passé ${len} streets — les rocks slowplayent rarement deux fois ; vous voyez en général une paire ou moins.`,
+lineCCManiac:(n,len)=>`${n} (🔥 sauvage) a checké ${len} streets — tell fort : les maniacs misent quand ils sont forts, donc passif = souvent air ou float faible.`,
+lineCCShark:(n,len)=>`${n} (🦈 agressif) a checké ${len} streets — les sharks piègent parfois, respectez le check-raise, mais beaucoup de lignes restent des mains moyennes capées.`,
+lineCCStation:(n,len)=>`${n} (📞 loose) a checké ${len} streets — souvent une paire moyenne qu'il paiera, mais rarement deux paires ou mieux.`,
+lineTablePassive:n=>`${n} adversaires ont des lignes passives sur plusieurs streets — la table semble faible. Mises de valeur fines et bluffs passent souvent.`,
 profRock:` Le miseur est du type 🪨 serré — ces joueurs ne bluffent presque jamais gros. Respectez cette mise : sans main forte, se coucher est généralement correct.`,
 profManiac:` Le miseur est du type 🔥 fou — il bluffe si souvent que vos mains moyennes PRENNENT de la valeur contre lui. Vous pouvez le payer plus léger que n'importe qui d'autre.`,
 profStation:` Le miseur est du type 📞 passif — il paie tout mais ne mise presque jamais gros sans une vraie main. Son agression soudaine mérite le respect.`,
@@ -214,6 +226,12 @@ lineCbet:` Su apuesta en el flop es una "apuesta de continuación" rutinaria —
 lineBarrel:n=>` Ya ha apostado ${n===3?'TRES calles seguidas (flop, turn y river)':'dos calles seguidas'} — la mayoría no sigue disparando así sin una mano real. Su rango se lee mucho más estrecho.`,
 lineDonk:` Apostó CONTRA quien subió antes del flop (un "donk bet") — una jugada rara: suele ser un monstruo disimulado o un farol salvaje. Por seguridad, se lee como fuerza.`,
 lineCR:` Primero pasó y luego subió (un "check-raise") — la trampa clásica. Se lee como un rango muy fuerte.`,
+lineCC:(n,len)=>`${n} ha pasado ${len} calles seguidas sin apostar — su rango está muy capado (parejas medias, manos débiles, renuncias). Una apuesta suele llevarse el bote.`,
+lineCCRock:(n,len)=>`${n} (🪨 cerrado) pasó ${len} calles — los rocks rara vez hacen slowplay dos veces; suele ser una pareja o menos.`,
+lineCCManiac:(n,len)=>`${n} (🔥 salvaje) pasó ${len} calles — tell fuerte: los maníacos apuestan con fuerza, así que líneas pasivas suelen ser air o float débil.`,
+lineCCShark:(n,len)=>`${n} (🦈 agresivo) pasó ${len} calles — los sharks pueden tender trampas; respeta el check-raise, pero muchas líneas siguen siendo manos medias capadas.`,
+lineCCStation:(n,len)=>`${n} (📞 pasivo) pasó ${len} calles — a menudo una pareja media que pagará, pero rara vez dos parejas o mejor.`,
+lineTablePassive:n=>`${n} rivales tienen líneas pasivas en varias calles — la mesa parece débil. Apuestas de valor finas y faroles suelen funcionar.`,
 profRock:` El apostador es del tipo 🪨 cerrado — estos jugadores casi nunca farolean fuerte. Respeta esta apuesta: sin una mano fuerte, retirarse suele ser lo correcto.`,
 profManiac:` El apostador es del tipo 🔥 salvaje — farolea tanto que tus manos medias SUBEN de valor contra él. Puedes pagarle más ligero que a nadie.`,
 profStation:` El apostador es del tipo 📞 pasivo — lo paga todo pero casi nunca apuesta fuerte sin mano real. Su agresión repentina merece respeto.`,
@@ -565,6 +583,29 @@ function postflopOrder(){
   }
   return ord;
 }
+/* consecutive passive streets (flop→turn, turn→river, or all three) */
+function passiveLineLen(checkStreets){
+  if(!checkStreets||!checkStreets.length)return 0;
+  const s=new Set(checkStreets);
+  if(s.has('flop')&&s.has('turn')&&s.has('river'))return 3;
+  if(s.has('flop')&&s.has('turn'))return 2;
+  if(s.has('turn')&&s.has('river'))return 2;
+  return 0;
+}
+function coachPassiveLines(p,extra){
+  if(state.stage==='preflop')return;
+  const villains=inHand().filter(q=>q!==p&&!q.allIn);
+  let tablePassive=0;
+  for(const q of villains){
+    const len=passiveLineLen(q.checkStreets);
+    if(len<2)continue;
+    tablePassive++;
+    const sid=q.style?.id;
+    const k=sid==='rock'?'lineCCRock':sid==='maniac'?'lineCCManiac':sid==='shark'?'lineCCShark':sid==='station'?'lineCCStation':'lineCC';
+    extra.push(C(k,q.name,len));
+  }
+  if(tablePassive>=2)extra.push(C('lineTablePassive',tablePassive));
+}
 /* the coach BRAIN: pure decision logic, runs headless (also powers the benchmark bot) */
 function coachDecide(p){
   const sims=BENCH?180:500;
@@ -588,6 +629,7 @@ function coachDecide(p){
   const weakOpps=oppCaps.filter(o=>o.floor>0).length;
   if(tightOpps>0) extra.push(C('rangesNote',tightOpps,Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)));
   if(weakOpps>0) extra.push(C('checksNote',weakOpps));
+  coachPassiveLines(p,extra);
   if(state.stage==='preflop'){
     eq=mcEquityR(p.hole,[],oppCaps,sims);
     handDesc=`${RANK_CH[p.hole[0].r]}${SUIT_CH[p.hole[0].s]} ${RANK_CH[p.hole[1].r]}${SUIT_CH[p.hole[1].s]} — ${code}, top ~${Math.round(pr*100)}%`;
