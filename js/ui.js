@@ -545,35 +545,34 @@ function centerOverlapsSeats(rect,boxes,gap){
   const a={l:rect.l,t:rect.t,r:rect.r,b:rect.b};
   return boxes.some(b=>boxOverlap(a,b,gap));
 }
-function fitCenterRect(felt,seed,boxes,gap){
-  const W=felt.clientWidth,H=felt.clientHeight,cx=W/2;
-  let {l,r,t,b}=seed;
-  for(let pass=0;pass<24;pass++){
+function symmetricHalfW(cx,boxes,gap,initHalfW){
+  let hw=initHalfW;
+  for(const box of boxes){
+    if(box.cx<cx) hw=Math.min(hw,cx-box.r-gap);
+    if(box.cx>cx) hw=Math.min(hw,box.l-cx-gap);
+  }
+  return Math.max(28,hw);
+}
+function adjustCenterY(cx,cy,halfH,halfW,boxes,gap,H){
+  let y=cy;
+  for(let pass=0;pass<20;pass++){
     let changed=false;
     for(const box of boxes){
+      const l=cx-halfW,r=cx+halfW,t=y-halfH,b=y+halfH;
       const ox=Math.min(r,box.r)-Math.max(l,box.l);
       const oy=Math.min(b,box.b)-Math.max(t,box.t);
       if(ox<=gap||oy<=gap)continue;
-      const midY=(t+b)/2,midX=(l+r)/2;
-      if(box.cy<midY) t=Math.max(t,box.b+gap);
-      else if(box.cy>midY) b=Math.min(b,box.t-gap);
-      if(box.cx<midX) l=Math.max(l,box.r+gap);
-      else if(box.cx>midX) r=Math.min(r,box.l-gap);
-      changed=true;
+      if(box.cy<y){const ny=box.b+gap+halfH;if(ny>y){y=ny;changed=true;}}
+      else{const ny=box.t-gap-halfH;if(ny<y){y=ny;changed=true;}}
     }
     if(!changed)break;
   }
-  l=clamp(l,gap,W-gap);
-  r=clamp(r,l+60,W-gap);
-  t=clamp(t,gap,H-gap);
-  b=clamp(b,t+40,H-gap);
-  const w=Math.max(60,r-l),h=Math.max(40,b-t);
-  return {l,t,r:l+w,b:t+h,w,h,cx:(l+w/2),cy:(t+h)/2};
+  return clamp(y,halfH+gap,H-halfH-gap);
 }
-function applyCenterRect(center,felt,rect){
-  center.style.width=rect.w+'px';
-  center.style.left=(rect.cx/felt.clientWidth*100)+'%';
-  center.style.top=(rect.cy/felt.clientHeight*100)+'%';
+function applyCenterPlacement(center,felt,cx,cy,width){
+  center.style.left='50%';
+  center.style.width=width+'px';
+  center.style.top=(cy/felt.clientHeight*100)+'%';
 }
 function centerAreaBox(felt){
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
@@ -586,28 +585,28 @@ function positionCenterArea(){
   if(!HAS_DOM||!state)return;
   const felt=$('felt'), center=$('centerArea');
   if(!felt||!center)return;
-  const W=felt.clientWidth,H=felt.clientHeight;
-  const cx=W/2,cy=H/2,n=state.players.length;
-  const mob=isMobile();
-  const gap=mob?16:12;
-  const boxes=seatBoxes(gap);
+  const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
+  const n=state.players.length,mob=isMobile(),gap=mob?16:12;
   if(!mob){
     center.style.top='';
     center.style.width='';
     center.style.left='';
   }
-  let w=mob?Math.min(W*clamp(0.66-n*0.034,0.38,0.62),clamp(230-n*14,130,230)):Math.min(480,W*0.44);
-  let h=center.offsetHeight||100;
-  let seed={l:cx-w/2,r:cx+w/2,t:cy-h/2,b:cy+h/2};
-  let rect=fitCenterRect(felt,seed,boxes,gap);
-  applyCenterRect(center,felt,rect);
-  for(let i=0;i<10;i++){
+  const maxW=mob?Math.min(W*clamp(0.66-n*0.034,0.38,0.62),clamp(230-n*14,130,230)):Math.min(480,W*0.44);
+  for(let i=0;i<12;i++){
+    const boxes=seatBoxes(gap);
+    const halfW=symmetricHalfW(cx,boxes,gap,maxW/2);
+    const width=halfW*2;
+    applyCenterPlacement(center,felt,cx,cy,width);
+    void center.offsetHeight;
+    const dom=centerRectDOM(felt,center);
+    const halfH=dom.h/2;
+    const y=adjustCenterY(cx,cy,halfH,halfW,boxes,gap,H);
+    applyCenterPlacement(center,felt,cx,y,width);
     void center.offsetHeight;
     const actual=centerRectDOM(felt,center);
     const obstacles=seatBoxes(gap);
-    if(!centerOverlapsSeats(actual,obstacles,gap))break;
-    rect=fitCenterRect(felt,actual,obstacles,gap);
-    applyCenterRect(center,felt,rect);
+    if(!centerOverlapsSeats(actual,obstacles,gap)&&Math.abs(actual.cx-cx)<3)break;
   }
 }
 function positionDealerBtn(){
