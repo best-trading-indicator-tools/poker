@@ -566,14 +566,15 @@ function centerOverlapsSeats(rect,boxes,gap){
   const a={l:rect.l,t:rect.t,r:rect.r,b:rect.b};
   return boxes.some(b=>boxOverlap(a,b,gap));
 }
+function boardCardMetrics(){
+  if(!HAS_DOM)return {cardW:54,gap:7};
+  if(document.body.classList.contains('fl'))return {cardW:34,gap:3};
+  if(isMobile())return {cardW:42,gap:4};
+  return {cardW:54,gap:7};
+}
 function boardMinWidth(){
-  if(!HAS_DOM)return 150;
-  const mob=isMobile();
-  const cardW=mob?42:54;
-  const gap=mob?4:7;
-  const n=Math.max(state&&state.board?state.board.length:0,3);
-  const cards=Math.min(5,n);
-  return cards*cardW+(cards-1)*gap+20;
+  const {cardW,gap}=boardCardMetrics();
+  return 5*cardW+4*gap+20;
 }
 function symmetricHalfW(cx,boxes,gap,initHalfW){
   let hw=initHalfW;
@@ -628,7 +629,7 @@ function positionCenterArea(){
     return;
   }
   const boardMin=boardMinWidth();
-  const maxW=Math.min(W*clamp(0.82-n*0.024,0.58,0.84),clamp(300-n*6,boardMin,300));
+  const maxW=Math.max(boardMin,Math.min(W*clamp(0.82-n*0.024,0.58,0.84),300-n*6));
   let halfW=Math.max(boardMin/2,symmetricHalfW(cx,seatBoxes(gap),gap,maxW/2));
   center.style.left='50%';
   center.style.top='50%';
@@ -638,12 +639,12 @@ function positionCenterArea(){
     const dom=centerRectDOM(felt,center);
     const obstacles=seatBoxes(gap);
     if(!centerOverlapsSeats(dom,obstacles,gap)&&Math.abs(dom.cx-cx)<3&&Math.abs(dom.cy-cy)<8)break;
-    if(halfW*2>boardMin+8){
-      halfW-=4;
+    if(halfW>boardMin/2+4){
+      halfW=Math.max(boardMin/2,halfW-4);
       continue;
     }
     const y=adjustCenterY(cx,cy,dom.h/2,halfW,obstacles,gap,H);
-    center.style.top=(y/H*100)+'%';
+    if(Math.abs(y-cy)>10) center.style.top=(y/H*100)+'%';
     void center.offsetHeight;
     break;
   }
