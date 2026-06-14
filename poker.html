@@ -391,6 +391,12 @@ body.fl .card .pip{font-size:26px;}
 body.fl .card.small{width:36px;height:52px;}
 body.fl .card.small .pip{font-size:18px;}
 body.fl #centerArea{top:50%;width:auto;max-width:min(94vw,420px);}
+/* rotated-portrait, post-flop: row layout so that after the game's 90° rotation the
+   pot reads BELOW the flop (instead of beside it, over a side seat). DOM order is
+   pot then board, so row-reverse renders board first (up-screen), pot last (down-screen). */
+body.fl #centerArea.has-board{display:flex;flex-direction:row-reverse;align-items:center;justify-content:center;gap:8px;width:auto;max-width:none;}
+body.fl #centerArea.has-board #pot{margin:0;}
+body.fl #centerArea.has-board #board{margin:0;}
 body.fl #board{min-height:0;gap:5px;min-width:calc(5*50px + 4*5px);}
 body.fl #board.has-cards{min-height:72px;}
 body.fl #pot{font-size:15px;}

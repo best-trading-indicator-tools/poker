@@ -962,6 +962,12 @@ function positionCenterArea(){
   center.style.minWidth=boardMin+'px';
   center.style.maxWidth=maxW+'px';
   const fl=document.body.classList.contains('fl');
+  /* rotated-portrait post-flop: board+pot laid out in a row (see CSS) so the pot
+     renders below the flop after the 90° rotation — let it size to its content. */
+  if(fl&&$('board')?.classList.contains('has-cards')){
+    center.style.minWidth='';
+    center.style.maxWidth='none';
+  }
   const land=W>H;
   const base=land?50:(fl?36:40);
   center.style.top=base+'%';
@@ -1043,6 +1049,8 @@ function render(winners){
   prevBoardLen=state.board.length;
   const boardEl=$('board');
   if(boardEl) boardEl.classList.toggle('has-cards',state.board.length>0);
+  const caEl=$('centerArea');
+  if(caEl) caEl.classList.toggle('has-board',state.board.length>0);
   for(const p of state.players){
     const seat=$('seat'+p.i); if(!seat)continue;
     seat.classList.toggle('active', !state.handOver&&state.turnIdx===p.i&&!p.folded&&!p.out&&!p.allIn&&inHand().length>1);
