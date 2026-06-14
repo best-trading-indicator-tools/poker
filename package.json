@@ -4,6 +4,10 @@
   "scripts": {
     "rebuild": "node scripts/build.mjs multifile",
     "build:bundle": "node scripts/build.mjs bundle",
-    "build:extract": "node scripts/build.mjs extract"
+    "build:extract": "node scripts/build.mjs extract",
+    "test:landscape": "node scripts/test-landscape-mobile.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.1"
   }
 }

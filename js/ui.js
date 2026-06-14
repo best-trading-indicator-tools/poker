@@ -486,6 +486,44 @@ function nudgeLayoutOverlaps(overlapGap){
     if(!moved) break;
   }
 }
+function clampSeatLayout(s,W,H,pad){
+  const r=elementRectSeatLayout(s);
+  let dx=0,dy=0;
+  if(r.l<pad.l) dx=pad.l-r.l;
+  else if(r.r>W-pad.r) dx=W-pad.r-r.r;
+  if(r.t<pad.t) dy=pad.t-r.t;
+  else if(r.b>H-pad.b) dy=H-pad.b-r.b;
+  if(dx||dy){
+    s.style.left=((parseFloat(s.style.left)||0)+dx)+'px';
+    s.style.top=((parseFloat(s.style.top)||0)+dy)+'px';
+  }
+}
+/* Push seats out of the central pot/board zone, radially away from table center.
+   The top seat rises, the bottom drops, the sides spread — pot/board stay centered & clear. */
+function resolveCenterClearance(W,H,cx,cy,cBox,pad,overlapGap){
+  if(!cBox||!cBox.w)return;
+  const mX=10,mY=8;
+  const ezL=cBox.x-cBox.w/2-mX, ezR=cBox.x+cBox.w/2+mX;
+  const ezT=cBox.y-cBox.h/2-mY, ezB=cBox.y+cBox.h/2+mY;
+  for(const p of state.players){
+    if(p.isHuman) continue;            // hero is pinned bottom-center
+    const s=$('seat'+p.i); if(!s||!s.offsetHeight) continue;
+    for(let guard=0;guard<24;guard++){
+      const r=elementRectSeatLayout(s);
+      const ox=Math.min(r.r,ezR)-Math.max(r.l,ezL);
+      const oy=Math.min(r.b,ezB)-Math.max(r.t,ezT);
+      if(ox<=0||oy<=0) break;
+      let dx=r.cx-cx, dy=r.cy-cy;
+      if(Math.abs(dx)<1&&Math.abs(dy)<1) dy=-1;   // dead-center → push up
+      const L=Math.hypot(dx,dy)||1; dx/=L; dy/=L;
+      const step=Math.min(ox,oy)+3;
+      s.style.left=((parseFloat(s.style.left)||0)+dx*step)+'px';
+      s.style.top=((parseFloat(s.style.top)||0)+dy*step)+'px';
+    }
+    clampSeatLayout(s,W,H,pad);
+  }
+  nudgeLayoutOverlaps(overlapGap);
+}
 /* Uniform oval: equal arc-length spacing + angular overlap spread (no edge clamp stacking) */
 function layoutOvalSeats(felt,W,H,cx,cy){
   const fl=document.body.classList.contains('fl');
@@ -505,6 +543,11 @@ function layoutOvalSeats(felt,W,H,cx,cy){
   const maxRx=(W-sW)/2-pad.l, maxRy=(H-sH)/2-pad.t;
   let rx=Math.min(compact?W*0.42:W*0.41,Math.max(50,maxRx));
   let ry=Math.min(compact?H*0.42:H*0.40,Math.max(compact?32:50,maxRy));
+  /* phone landscape: flatter oval + lower center so the top seat clears the pot */
+  if(lls&&W>H&&n<=6){
+    ry=Math.min(ry,H*0.34);
+    cy=H*0.53;
+  }
   let angs=ovalArcAngles(rx,ry,n);
   placeOvalAngles(angs,rx,ry,cx,cy,lift);
   resolveOvalAngles(angs,rx,ry,cx,cy,lift,overlapGap);
@@ -529,6 +572,7 @@ function layoutOvalSeats(felt,W,H,cx,cy){
     nudgeLayoutOverlaps(overlapGap);
     if(!ovalSeatsInBounds(W,H,pad)){
       rx*=0.97; ry*=0.97;
+      if(lls&&W>H&&n<=6) ry=Math.min(ry,H*0.34);
       angs=ovalArcAngles(rx,ry,n);
       placeOvalAngles(angs,rx,ry,cx,cy,lift);
       resolveOvalAngles(angs,rx,ry,cx,cy,lift,overlapGap);
@@ -538,6 +582,14 @@ function layoutOvalSeats(felt,W,H,cx,cy){
     const chord=2*rx*Math.sin(Math.PI/n);
     const gap=chord/(n-1);
     felt.style.setProperty('--seatScale',String(Math.max(n<=6?0.92:0.75,Math.min(1,gap/(sW+6)))));
+  }
+  /* short landscape: drop hero slightly below the oval so the board can sit between */
+  if(lls&&W>H){
+    const hero=state.players.find(p=>p.isHuman);
+    if(hero){
+      const seat=$('seat'+hero.i);
+      if(seat) seat.style.top=(Math.min(H-pad.b,parseFloat(seat.style.top)+10))+'px';
+    }
   }
 }
 function layoutDesktopSeats(felt,W,H,cx,cy){
@@ -559,10 +611,10 @@ function layoutMobileSeats(felt){
     ? Math.max(120,(W-sW)/2-6)
     : Math.min(W*(0.40-shrink)*(fl?0.90:1),(W-sW)/2-8);
   const ry=land
-    ? Math.min(H*0.20,Math.max(20,H*0.5-sH))
+    ? Math.min(H*0.14,Math.max(12,H*0.22-sH*0.15))
     : Math.min(H*(fl?0.32:0.35)-shrink*H*0.25,H*0.36);
   const ocy=H*(fl?0.41:0.43);
-  const topY=sH*0.42;
+  const topY=land?(fl||document.body.classList.contains('lls')?8:sH*0.42):sH*0.42;
   const opponents=state.players.filter(p=>!p.isHuman);
   const m=opponents.length;
   /* landscape: if the even per-seat width is tighter than a plate, scale seats to fit */
@@ -617,11 +669,19 @@ function layoutSeats(){
   if(!HAS_DOM||!state||BENCH)return;
   const felt=$('felt');
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
-  /* mobile landscape: same uniform oval as desktop (not the portrait top-arc row) */
-  if(isMobile()&&W>H) layoutDesktopSeats(felt,W,H,cx,cy);
-  else if(isMobile()) layoutMobileSeats(felt);
-  else layoutDesktopSeats(felt,W,H,cx,cy);
+  /* mobile portrait: upper arc + hero bottom; mobile landscape + desktop: uniform oval */
+  let usedOval=false;
+  if(isMobile()){
+    if(W>H){ layoutOvalSeats(felt,W,H,cx,cy); usedOval=true; }
+    else layoutMobileSeats(felt);
+  }else{ layoutDesktopSeats(felt,W,H,cx,cy); usedOval=true; }
   positionCenterArea();
+  if(usedOval){
+    const compact=document.body.classList.contains('fl')||document.body.classList.contains('lls');
+    const pad={l:8,r:8,t:8,b:6};
+    if(document.body.classList.contains('act-panel-open')&&useLandscapePanel()) pad.r=56;
+    resolveCenterClearance(W,H,cx,cy,centerAreaBox(felt),pad,compact?1:2);
+  }
   const centerBox=centerAreaBox(felt);
   /* bet chips: anchored to the seat's FINAL position, pushed toward the table center,
      never on top of the seat box and never inside the board/pot zone */
@@ -694,6 +754,12 @@ function layoutSeats(){
     }
   }
   positionCenterArea();
+  if(usedOval){
+    const compact=document.body.classList.contains('fl')||document.body.classList.contains('lls');
+    const pad={l:8,r:8,t:8,b:6};
+    if(document.body.classList.contains('act-panel-open')&&useLandscapePanel()) pad.r=56;
+    resolveCenterClearance(W,H,cx,cy,centerAreaBox(felt),pad,compact?1:2);
+  }
   positionDealerBtn();
 }
 function elementRectFelt(el){
@@ -714,6 +780,12 @@ function elementRectSeatLayout(el){
       l=Math.min(l,hl); t=Math.min(t,ht);
       r=Math.max(r,hl+hole.offsetWidth); b=Math.max(b,ht+hole.offsetHeight);
     }
+  }
+  const act=el.querySelector('.lastact');
+  if(act&&act.offsetHeight&&act.textContent.trim()){
+    const al=el.offsetLeft+act.offsetLeft,at=el.offsetTop+act.offsetTop;
+    l=Math.min(l,al); r=Math.max(r,al+act.offsetWidth);
+    b=Math.max(b,at+act.offsetHeight);
   }
   return {l,t,r,b,w:r-l,h:b-t,cx:(l+r)/2,cy:(t+b)/2};
 }
@@ -787,17 +859,17 @@ function boardMinWidth(){
   return 5*cardW+4*gap+20;
 }
 function centerRectDOM(center){
-  const felt=$('felt');
-  const W=felt?.clientWidth||0,H=felt?.clientHeight||0;
-  let {l,t,w,h}=elementRectFelt(center);
-  let r=l+w,b=t+h,cx=l+w/2,cy=t+h/2;
-  const cs=getComputedStyle(center);
-  if(cs.transform&&cs.transform!=='none'&&center.style.left==='50%'){
-    cx=W/2;
-    const top=center.style.top;
-    if(top&&top.endsWith('%')) cy=H*(parseFloat(top)/100);
+  /* offsetLeft/Top ignore CSS transforms; #centerArea uses translate(-50%,-50%),
+     so add the transform translation to get the real visual box. */
+  const l0=center.offsetLeft,t0=center.offsetTop,w=center.offsetWidth,h=center.offsetHeight;
+  let tx=0,ty=0;
+  const cs=getComputedStyle(center).transform;
+  if(cs&&cs!=='none'){
+    try{const m=new DOMMatrixReadOnly(cs);tx=m.m41;ty=m.m42;}
+    catch(e){const mm=cs.match(/matrix\(([^)]+)\)/);if(mm){const a=mm[1].split(',');tx=parseFloat(a[4])||0;ty=parseFloat(a[5])||0;}}
   }
-  return {l,t,r,b,w,h,cx,cy};
+  const l=l0+tx,t=t0+ty,r=l+w,b=t+h;
+  return {l,t,r,b,w,h,cx:l+w/2,cy:t+h/2};
 }
 function centerAreaBox(felt){
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
@@ -805,6 +877,66 @@ function centerAreaBox(felt){
   if(!center||!center.offsetHeight)return {x:cx,y:cy,w:W*0.46,h:H*0.30,l:cx-W*0.23,t:cy-H*0.15,r:cx+W*0.23,b:cy+H*0.15};
   const r=centerRectDOM(center);
   return {x:r.cx,y:r.cy,w:r.w,h:r.h,l:r.l,t:r.t,r:r.r,b:r.b};
+}
+/* Hero overlap box for center lift (hole + plate on compact mobile). */
+function heroCenterClearRect(seat){
+  const compact=document.body.classList.contains('fl')||document.body.classList.contains('lls');
+  if(compact&&seat.classList.contains('human')) return elementRectSeatLayout(seat);
+  const plate=seat.querySelector('.plate');
+  if(plate&&plate.offsetHeight){
+    const l=seat.offsetLeft+plate.offsetLeft,t=seat.offsetTop+plate.offsetTop;
+    const r=l+plate.offsetWidth,b=t+plate.offsetHeight;
+    return {l,t,r,b,w:r-l,h:b-t,cx:(l+r)/2,cy:(t+b)/2};
+  }
+  return elementRectFelt(seat);
+}
+/* Find the lowest (max top%) center position that clears hero hole and top opponents. */
+function settleCenterVertical(center,felt,W,H,minPct,maxPct){
+  const hero=state.players.find(p=>p.isHuman);
+  const hSeat=hero?$('seat'+hero.i):null;
+  const gap=10;
+  let topB=0, topT=Infinity;
+  for(const p of state.players){
+    if(p.isHuman)continue;
+    const s=$('seat'+p.i); if(!s?.offsetHeight)continue;
+    const r=elementRectSeatLayout(s);
+    if(r.t<topT){ topT=r.t; topB=r.b; }
+    else if(r.t===topT) topB=Math.max(topB,r.b);
+  }
+  let best=minPct;
+  for(let pct=minPct;pct<=maxPct;pct++){
+    center.style.top=pct+'%';
+    void center.offsetHeight;
+    const c=centerRectDOM(center);
+    const heroOk=!hSeat||c.b+gap<=heroCenterClearRect(hSeat).t;
+    const topOk=!topT||topT===Infinity||c.t>=topB+gap;
+    if(heroOk&&topOk) best=pct;
+  }
+  center.style.top=best+'%';
+  void center.offsetHeight;
+  if(topT!==Infinity){
+    const c=centerRectDOM(center);
+    const need=c.t-(topB+gap);
+    if(need<0){
+      const pct=(parseFloat(center.style.top)||best)+((need/H)*100);
+      center.style.top=Math.max(minPct,pct)+'%';
+    }
+  }
+}
+/* lift the center zone above the hero seat when the board would land on the hero's cards */
+function liftCenterAboveHero(center,felt,W,H,minTopPct,maxTopPct){
+  void center.offsetHeight;
+  const hero=state.players.find(p=>p.isHuman);
+  const hSeat=hero?$('seat'+hero.i):null;
+  if(!hSeat||!hSeat.offsetHeight)return;
+  const cBox=centerRectDOM(center);
+  const heroBox=heroCenterClearRect(hSeat);
+  const gap=10;
+  if(cBox.b+gap>heroBox.t){
+    const lift=cBox.b+gap-heroBox.t;
+    const newTopPct=Math.max(minTopPct,Math.min(maxTopPct,((cBox.cy-lift)/H)*100));
+    center.style.top=newTopPct+'%';
+  }
 }
 function positionCenterArea(){
   if(!HAS_DOM||!state)return;
@@ -819,32 +951,21 @@ function positionCenterArea(){
     center.style.left='';
     center.style.minWidth='';
     center.style.maxWidth='';
+    /* desktop oval: keep CSS centering, but rescue short windows where the board
+       would otherwise drop onto the hero's cards */
+    liftCenterAboveHero(center,felt,W,H,30,46);
     return;
   }
   center.style.left='50%';
   center.style.width='auto';
   center.style.minWidth=boardMin+'px';
   center.style.maxWidth=maxW+'px';
-  /* mobile landscape + rotated portrait: full oval — pot/board at table center */
-  if(W>H){
-    center.style.top='50%';
-    return;
-  }
-  /* portrait arc layout: board between top arc and bottom hero */
   const fl=document.body.classList.contains('fl');
-  center.style.top=(fl?36:40)+'%';
-  void center.offsetHeight;
-  const hero=state.players.find(p=>p.isHuman);
-  const hSeat=hero?$('seat'+hero.i):null;
-  if(!hSeat||!hSeat.offsetHeight)return;
-  const cBox=centerRectDOM(center);
-  const heroBox=elementRectFelt(hSeat);
-  const gap=10;
-  if(cBox.b+gap>heroBox.t){
-    const lift=cBox.b+gap-heroBox.t;
-    const newTopPct=Math.max(fl?34:38,Math.min(46,((cBox.cy-lift)/H)*100));
-    center.style.top=newTopPct+'%';
-  }
+  const land=W>H;
+  const base=land?50:(fl?36:40);
+  center.style.top=base+'%';
+  if(land) settleCenterVertical(center,felt,W,H,28,base);
+  else liftCenterAboveHero(center,felt,W,H,fl?34:38,base);
 }
 function positionDealerBtn(){
   if(!HAS_DOM||!state)return;
@@ -919,6 +1040,8 @@ function render(winners){
   setHTML($('potChips'),chipStackHTML(potCollected,true));
   setHTML($('board'),state.board.map((c,i)=>cardHTML(c,false,i>=prevBoardLen)).join(''));
   prevBoardLen=state.board.length;
+  const boardEl=$('board');
+  if(boardEl) boardEl.classList.toggle('has-cards',state.board.length>0);
   for(const p of state.players){
     const seat=$('seat'+p.i); if(!seat)continue;
     seat.classList.toggle('active', !state.handOver&&state.turnIdx===p.i&&!p.folded&&!p.out&&!p.allIn&&inHand().length>1);
@@ -927,7 +1050,8 @@ function render(winners){
     seat.classList.toggle('winner', !!(winners&&winners.includes(p)));
     $('chips'+p.i).textContent= p.out?'OUT':money(p.chips)+(p.allIn?' · all-in':'');
     $('pos'+p.i).textContent= p.out?'':(p.pos||'');
-    $('act'+p.i).textContent=p.lastAct;
+    const lls=document.body.classList.contains('lls');
+    $('act'+p.i).textContent=(lls&&/^(SB|BB) /.test(p.lastAct))?'':p.lastAct;
     const hole=$('hole'+p.i);
     if(p.out||p.folded||p.hole.length===0) setHTML(hole,'');
     else if(p.isHuman) setHTML(hole,p.hole.map(c=>cardHTML(c,false,true)).join(''));
