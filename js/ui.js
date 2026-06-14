@@ -499,15 +499,16 @@ function layoutSeats(){
       }
     }
   }
+  positionCenterArea();
   positionDealerBtn();
 }
-function seatBoxes(inflate){
+function seatBoxes(gap){
   if(!HAS_DOM||!state)return [];
   const felt=$('felt');
   if(!felt)return [];
   const fr=felt.getBoundingClientRect();
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
-  const grow=inflate||0;
+  const grow=gap||0;
   const boxes=[];
   for(const p of state.players){
     const s=$('seat'+p.i);
@@ -518,17 +519,15 @@ function seatBoxes(inflate){
       const scx=(l+ri)/2,scy=(t+b)/2;
       const dx=cx-scx,dy=cy-scy;
       const L=Math.hypot(dx,dy)||1;
-      l-=grow+grow*Math.max(0,-dx/L);
-      ri+=grow+grow*Math.max(0,dx/L);
-      t-=grow+grow*Math.max(0,-dy/L);
-      b+=grow+grow*Math.max(0,dy/L);
+      l-=grow*0.25; t-=grow*0.25; ri+=grow*0.25; b+=grow*0.25;
+      l-=grow*0.75*Math.max(0,-dx/L);
+      ri+=grow*0.75*Math.max(0,dx/L);
+      t-=grow*0.75*Math.max(0,-dy/L);
+      b+=grow*0.75*Math.max(0,dy/L);
       l=Math.max(0,l); t=Math.max(0,t);
       ri=Math.min(W,ri); b=Math.min(H,b);
     }
-    boxes.push({
-      l,t,r:ri,b,
-      cx:(l+ri)/2,cy:(t+b)/2,
-    });
+    boxes.push({l,t,r:ri,b,cx:(l+ri)/2,cy:(t+b)/2});
   }
   return boxes;
 }
@@ -536,79 +535,79 @@ function boxOverlap(a,b,pad){
   pad=pad||0;
   return Math.min(a.r,b.r)-Math.max(a.l,b.l)>pad&&Math.min(a.b,b.b)-Math.max(a.t,b.t)>pad;
 }
+function centerRectDOM(felt,center){
+  const fr=felt.getBoundingClientRect();
+  const r=center.getBoundingClientRect();
+  const l=r.left-fr.left,t=r.top-fr.top,w=r.width,h=r.height;
+  return {l,t,r:l+w,b:t+h,w,h,cx:l+w/2,cy:t+h/2};
+}
+function centerOverlapsSeats(rect,boxes,gap){
+  const a={l:rect.l,t:rect.t,r:rect.r,b:rect.b};
+  return boxes.some(b=>boxOverlap(a,b,gap));
+}
+function fitCenterRect(felt,seed,boxes,gap){
+  const W=felt.clientWidth,H=felt.clientHeight,cx=W/2;
+  let {l,r,t,b}=seed;
+  for(let pass=0;pass<24;pass++){
+    let changed=false;
+    for(const box of boxes){
+      const ox=Math.min(r,box.r)-Math.max(l,box.l);
+      const oy=Math.min(b,box.b)-Math.max(t,box.t);
+      if(ox<=gap||oy<=gap)continue;
+      const midY=(t+b)/2,midX=(l+r)/2;
+      if(box.cy<midY) t=Math.max(t,box.b+gap);
+      else if(box.cy>midY) b=Math.min(b,box.t-gap);
+      if(box.cx<midX) l=Math.max(l,box.r+gap);
+      else if(box.cx>midX) r=Math.min(r,box.l-gap);
+      changed=true;
+    }
+    if(!changed)break;
+  }
+  l=clamp(l,gap,W-gap);
+  r=clamp(r,l+60,W-gap);
+  t=clamp(t,gap,H-gap);
+  b=clamp(b,t+40,H-gap);
+  const w=Math.max(60,r-l),h=Math.max(40,b-t);
+  return {l,t,r:l+w,b:t+h,w,h,cx:(l+w/2),cy:(t+h)/2};
+}
+function applyCenterRect(center,felt,rect){
+  center.style.width=rect.w+'px';
+  center.style.left=(rect.cx/felt.clientWidth*100)+'%';
+  center.style.top=(rect.cy/felt.clientHeight*100)+'%';
+}
 function centerAreaBox(felt){
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
   const center=$('centerArea');
-  if(!center||!isMobile())return {x:cx,y:cy,w:W*0.46,h:H*0.30,l:cx-W*0.23,t:cy-H*0.15,r:cx+W*0.23,b:cy+H*0.15};
-  const fr=felt.getBoundingClientRect(), r=center.getBoundingClientRect();
-  const l=r.left-fr.left,t=r.top-fr.top,w=r.width,h=r.height;
-  return {x:l+w/2,y:t+h/2,w,h,l,t,r:l+w,b:t+h};
+  if(!center||!center.offsetHeight)return {x:cx,y:cy,w:W*0.46,h:H*0.30,l:cx-W*0.23,t:cy-H*0.15,r:cx+W*0.23,b:cy+H*0.15};
+  const r=centerRectDOM(felt,center);
+  return {x:r.cx,y:r.cy,w:r.w,h:r.h,l:r.l,t:r.t,r:r.r,b:r.b};
 }
 function positionCenterArea(){
   if(!HAS_DOM||!state)return;
   const felt=$('felt'), center=$('centerArea');
   if(!felt||!center)return;
-  if(!isMobile()){
+  const W=felt.clientWidth,H=felt.clientHeight;
+  const cx=W/2,cy=H/2,n=state.players.length;
+  const mob=isMobile();
+  const gap=mob?16:12;
+  const boxes=seatBoxes(gap);
+  if(!mob){
     center.style.top='';
     center.style.width='';
     center.style.left='';
-    return;
   }
-  const W=felt.clientWidth,H=felt.clientHeight;
-  const cx=W/2,cy=H/2,n=state.players.length;
-  const pad=14;
-  const widthFrac=clamp(0.70-n*0.034,0.42,0.66);
-  const maxW=clamp(250-n*14,150,250);
-  let w=Math.min(W*widthFrac,maxW);
+  let w=mob?Math.min(W*clamp(0.66-n*0.034,0.38,0.62),clamp(230-n*14,130,230)):Math.min(480,W*0.44);
   let h=center.offsetHeight||100;
-  const boxes=seatBoxes(10);
-  let left=cx-w/2,right=cx+w/2,top=cy-h/2,bottom=cy+h/2;
-  for(let pass=0;pass<10;pass++){
-    let changed=false;
-    for(const b of boxes){
-      const ox=Math.min(right,b.r)-Math.max(left,b.l);
-      const oy=Math.min(bottom,b.b)-Math.max(top,b.t);
-      if(ox<=pad||oy<=pad)continue;
-      if(b.cy<(top+bottom)/2) top=Math.max(top,b.b+pad);
-      else bottom=Math.min(bottom,b.t-pad);
-      if(b.cx<cx) left=Math.max(left,b.r+pad);
-      else if(b.cx>cx) right=Math.min(right,b.l-pad);
-      changed=true;
-    }
-    if(!changed)break;
-  }
-  const minW=W*0.26,minH=56;
-  if(right-left<minW){
-    const mid=(left+right)/2;
-    left=mid-minW/2; right=mid+minW/2;
-  }
-  if(bottom-top<minH){
-    const mid=(top+bottom)/2;
-    top=mid-minH/2; bottom=mid+minH/2;
-  }
-  left=clamp(left,pad,W-pad);
-  right=clamp(right,left+minW,W-pad);
-  top=clamp(top,pad,H-pad);
-  bottom=clamp(bottom,top+minH,H-pad);
-  const finalW=right-left,finalH=bottom-top;
-  const finalCx=(left+right)/2,finalCy=(top+bottom)/2;
-  center.style.width=finalW+'px';
-  center.style.left=(finalCx/W*100)+'%';
-  center.style.top=(finalCy/H*100)+'%';
-  void center.offsetHeight;
-  const h2=center.offsetHeight;
-  if(h2>h){
-    const grow=(h2-h)/2;
-    top=Math.max(pad,top-grow);
-    bottom=Math.min(H-pad,bottom+grow);
-    for(const b of seatBoxes(10)){
-      const ox=Math.min(right,b.r)-Math.max(left,b.l);
-      const oy=Math.min(bottom,b.b)-Math.max(top,b.t);
-      if(ox<=pad||oy<=pad)continue;
-      if(b.cy<(top+bottom)/2) top=Math.max(top,b.b+pad);
-      else bottom=Math.min(bottom,b.t-pad);
-    }
-    center.style.top=(((top+bottom)/2)/H*100)+'%';
+  let seed={l:cx-w/2,r:cx+w/2,t:cy-h/2,b:cy+h/2};
+  let rect=fitCenterRect(felt,seed,boxes,gap);
+  applyCenterRect(center,felt,rect);
+  for(let i=0;i<10;i++){
+    void center.offsetHeight;
+    const actual=centerRectDOM(felt,center);
+    const obstacles=seatBoxes(gap);
+    if(!centerOverlapsSeats(actual,obstacles,gap))break;
+    rect=fitCenterRect(felt,actual,obstacles,gap);
+    applyCenterRect(center,felt,rect);
   }
 }
 function positionDealerBtn(){
@@ -631,9 +630,8 @@ function positionDealerBtn(){
     const dbW=d.offsetWidth||24, dbH=d.offsetHeight||24;
     const obstacles=[];
     if(center&&center.offsetHeight){
-      const zoneCx=center.offsetLeft+center.offsetWidth/2;
-      const zoneCy=center.offsetTop+center.offsetHeight/2;
-      obstacles.push({x:zoneCx,y:zoneCy,w:center.offsetWidth+dbW+16,h:center.offsetHeight+dbH+12});
+      const zone=centerRectDOM(felt,center);
+      obstacles.push({x:zone.cx,y:zone.cy,w:zone.w+dbW+16,h:zone.h+dbH+12});
     }
     for(const b of seatBoxes())obstacles.push({x:b.cx,y:b.cy,w:b.r-b.l+dbW+8,h:b.b-b.t+dbH+8});
     for(let pass=0;pass<8;pass++){
