@@ -351,7 +351,7 @@ function buildSeats(){
   felt.querySelectorAll('.seat,.betchip').forEach(e=>e.remove());
   for(const p of state.players){
     const seat=document.createElement('div');
-    seat.className='seat'; seat.id='seat'+p.i;
+    seat.className='seat'+(p.isHuman?' hero':''); seat.id='seat'+p.i;
     seat.innerHTML=`<div class="hole" id="hole${p.i}"></div>
       <div class="plate"><span class="avatar">${p.avatar}</span><div><div class="pname">${p.name}<span class="ppos" id="pos${p.i}"></span></div><div class="pchips" id="chips${p.i}"></div>${p.style?`<div class="pstyle">${p.style.label}</div>`:''}</div></div>
       <div class="lastact" id="act${p.i}"></div>
@@ -406,8 +406,9 @@ function layoutSeats(){
     let x,y;
     if(slots){
       if(p.isHuman){
-        x=W*slots[0][0];
-        y=H*Math.min(0.995,slots[0][1]+0.15);
+        const hf=heroMobileFrac(fl,n);
+        x=W*hf.x;
+        y=H*hf.y;
       }else{
         x=W*slots[p.i][0];
         y=H*slots[p.i][1];
@@ -441,12 +442,7 @@ function layoutSeats(){
   if(isMobile()){
     const hp=state.players.find(p=>p.isHuman);
     const hero=hp?$('seat'+hp.i):null;
-    if(hero&&hero.offsetHeight){
-      const fr=felt.getBoundingClientRect();
-      const hr=hero.getBoundingClientRect();
-      const gap=H-(hr.bottom-fr.top);
-      if(gap>1) hero.style.top=(parseFloat(hero.style.top)+gap-1)+'px';
-    }
+    if(hero) anchorMobileHero(felt,hero);
   }
   positionCenterArea();
   const centerBox=centerAreaBox(felt);
@@ -523,32 +519,52 @@ function layoutSeats(){
   positionCenterArea();
   positionDealerBtn();
 }
+function elementRectFelt(el){
+  const l=el.offsetLeft,t=el.offsetTop,w=el.offsetWidth,h=el.offsetHeight;
+  return {l,t,r:l+w,b:t+h,w,h,cx:l+w/2,cy:t+h/2};
+}
+function heroMobileFrac(fl,n){
+  const tuck=n<=6?0.20:0.26;
+  return fl?{x:tuck,y:0.999}:{x:0.50,y:0.999};
+}
+function anchorMobileHero(felt,hero){
+  if(!hero||!hero.offsetHeight)return;
+  const H=felt.clientHeight;
+  let top=parseFloat(hero.style.top)||hero.offsetTop;
+  const gap=H-(top+hero.offsetHeight);
+  if(gap>0) top+=gap;
+  hero.style.top=top+'px';
+}
 function seatBoxes(gap){
   if(!HAS_DOM||!state)return [];
   const felt=$('felt');
   if(!felt)return [];
-  const fr=felt.getBoundingClientRect();
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
   const grow=gap||0;
+  const fl=HAS_DOM&&document.body.classList.contains('fl');
   const boxes=[];
+  const hp=state.players.find(p=>p.isHuman);
   for(const p of state.players){
     const s=$('seat'+p.i);
     if(!s||!s.offsetHeight)continue;
-    const r=s.getBoundingClientRect();
-    let l=r.left-fr.left,t=r.top-fr.top,ri=r.right-fr.left,b=r.bottom-fr.top;
+    let {l,t,r,b}=elementRectFelt(s);
     if(grow>0){
-      const scx=(l+ri)/2,scy=(t+b)/2;
+      const scx=(l+r)/2,scy=(t+b)/2;
       const dx=cx-scx,dy=cy-scy;
       const L=Math.hypot(dx,dy)||1;
-      l-=grow*0.25; t-=grow*0.25; ri+=grow*0.25; b+=grow*0.25;
+      l-=grow*0.25; t-=grow*0.25; r+=grow*0.25; b+=grow*0.25;
       l-=grow*0.75*Math.max(0,-dx/L);
-      ri+=grow*0.75*Math.max(0,dx/L);
+      r+=grow*0.75*Math.max(0,dx/L);
       t-=grow*0.75*Math.max(0,-dy/L);
       b+=grow*0.75*Math.max(0,dy/L);
       l=Math.max(0,l); t=Math.max(0,t);
-      ri=Math.min(W,ri); b=Math.min(H,b);
+      r=Math.min(W,r); b=Math.min(H,b);
     }
-    boxes.push({l,t,r:ri,b,cx:(l+ri)/2,cy:(t+b)/2});
+    if(isMobile()&&hp&&p.i===hp.i){
+      const holeClear=fl?28:36;
+      t=Math.max(0,t-holeClear);
+    }
+    boxes.push({l,t,r,b,cx:(l+r)/2,cy:(t+b)/2});
   }
   return boxes;
 }
@@ -557,10 +573,8 @@ function boxOverlap(a,b,pad){
   return Math.min(a.r,b.r)-Math.max(a.l,b.l)>pad&&Math.min(a.b,b.b)-Math.max(a.t,b.t)>pad;
 }
 function centerRectDOM(felt,center){
-  const fr=felt.getBoundingClientRect();
-  const r=center.getBoundingClientRect();
-  const l=r.left-fr.left,t=r.top-fr.top,w=r.width,h=r.height;
-  return {l,t,r:l+w,b:t+h,w,h,cx:l+w/2,cy:t+h/2};
+  const {l,t,w,h,r,b,cx,cy}=elementRectFelt(center);
+  return {l,t,r,b,w,h,cx,cy};
 }
 function centerOverlapsSeats(rect,boxes,gap){
   const a={l:rect.l,t:rect.t,r:rect.r,b:rect.b};
@@ -649,6 +663,11 @@ function positionCenterArea(){
   const maxW=Math.max(boardMin,Math.min(W*clamp(0.82-n*0.024,0.58,0.84),widthCap));
   let halfW=Math.max(boardMin/2,symmetricHalfW(cx,seatBoxes(gap),gap,maxW/2));
   let centerY=cy;
+  if(isMobile()){
+    const hp=state.players.find(p=>p.isHuman);
+    const hero=hp?$('seat'+hp.i):null;
+    if(hero&&hero.offsetTop>H*0.68) centerY=cy-H*0.07;
+  }
   for(let i=0;i<24;i++){
     applyCenterPlacement(center,maxW,halfW*2,centerY/H*100);
     void center.offsetHeight;
