@@ -405,7 +405,9 @@ function layoutSeats(){
   for(const p of state.players){
     let x,y;
     if(slots){
-      x=W*slots[p.i][0]; y=H*slots[p.i][1];
+      x=W*slots[p.i][0];
+      y=H*slots[p.i][1];
+      if(p.i===0) y=H*Math.min(0.99,slots[0][1]+(fl?0.08:0.05));
     }else{
       const ang=(90+360*p.i/n)*Math.PI/180;
       x=cx+rx*Math.cos(ang); y=cy+ry*Math.sin(ang);
@@ -419,8 +421,9 @@ function layoutSeats(){
   for(const p of state.players){
     const seat=$('seat'+p.i); if(!seat||!seat.offsetHeight)continue;
     const l=seat.offsetLeft,t=seat.offsetTop,w=seat.offsetWidth,h=seat.offsetHeight;
+    const padB=(p.i===0&&isMobile())?0:pad.b;
     let dx=0,dy=0;
-    if(t+h>H-pad.b) dy=H-pad.b-(t+h);
+    if(t+h>H-padB) dy=H-padB-(t+h);
     if(t+dy<pad.t)  dy=pad.t-t;
     if(l<pad.l)     dx=pad.l-l;
     if(l+dx+w>W-pad.r) dx=W-pad.r-(l+w);
