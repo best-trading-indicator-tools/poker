@@ -177,7 +177,8 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 
 #centerArea{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);text-align:center;width:480px;z-index:6;}
 #pot{font-size:14px;color:#ffe9b0;font-weight:600;margin-bottom:8px;text-shadow:0 1px 3px rgba(0,0,0,.6);}
-#board{display:flex;gap:7px;justify-content:center;min-height:78px;}
+#board{display:flex;gap:7px;justify-content:center;align-items:center;flex-wrap:nowrap;min-height:78px;}
+#board .card{flex-shrink:0;}
 #banner{margin-top:10px;font-size:15px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.7);min-height:22px;}
 #nextHandBtn{margin-top:8px;background:var(--gold);color:#1a1408;border:none;border-radius:8px;padding:7px 18px;font-weight:700;cursor:pointer;font-size:13px;}
 
@@ -525,7 +526,7 @@ body.act-panel-mode #chipPreview{display:none!important;}
   .card.small .ix{font-size:9px;}
   .card.small .pip{font-size:15px;}
   #board{min-height:62px;gap:4px;}
-  #centerArea{width:min(72vw,300px);}
+  #centerArea{width:auto;max-width:min(88vw,320px);}
   #pot{font-size:13px;}
   #felt{inset:8px 6px 8px 6px;border-width:7px;}
   #dbtn{width:20px;height:20px;font-size:10px;}

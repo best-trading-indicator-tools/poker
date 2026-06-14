@@ -545,6 +545,15 @@ function centerOverlapsSeats(rect,boxes,gap){
   const a={l:rect.l,t:rect.t,r:rect.r,b:rect.b};
   return boxes.some(b=>boxOverlap(a,b,gap));
 }
+function boardMinWidth(){
+  if(!HAS_DOM)return 150;
+  const mob=isMobile();
+  const cardW=mob?42:54;
+  const gap=mob?4:7;
+  const n=Math.max(state&&state.board?state.board.length:0,3);
+  const cards=Math.min(5,n);
+  return cards*cardW+(cards-1)*gap+20;
+}
 function symmetricHalfW(cx,boxes,gap,initHalfW){
   let hw=initHalfW;
   for(const box of boxes){
@@ -569,10 +578,12 @@ function adjustCenterY(cx,cy,halfH,halfW,boxes,gap,H){
   }
   return clamp(y,halfH+gap,H-halfH-gap);
 }
-function applyCenterPlacement(center,felt,cx,cy,width){
+function applyCenterPlacement(center,maxWidth,minWidth){
   center.style.left='50%';
-  center.style.width=width+'px';
-  center.style.top=(cy/felt.clientHeight*100)+'%';
+  center.style.top='50%';
+  center.style.width='auto';
+  center.style.minWidth=minWidth+'px';
+  center.style.maxWidth=maxWidth+'px';
 }
 function centerAreaBox(felt){
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
@@ -591,22 +602,29 @@ function positionCenterArea(){
     center.style.top='';
     center.style.width='';
     center.style.left='';
+    center.style.minWidth='';
+    center.style.maxWidth='';
+    return;
   }
-  const maxW=mob?Math.min(W*clamp(0.66-n*0.034,0.38,0.62),clamp(230-n*14,130,230)):Math.min(480,W*0.44);
-  for(let i=0;i<12;i++){
-    const boxes=seatBoxes(gap);
-    const halfW=symmetricHalfW(cx,boxes,gap,maxW/2);
-    const width=halfW*2;
-    applyCenterPlacement(center,felt,cx,cy,width);
+  const boardMin=boardMinWidth();
+  const maxW=Math.min(W*clamp(0.82-n*0.024,0.58,0.84),clamp(300-n*6,boardMin,300));
+  let halfW=Math.max(boardMin/2,symmetricHalfW(cx,seatBoxes(gap),gap,maxW/2));
+  center.style.left='50%';
+  center.style.top='50%';
+  for(let i=0;i<16;i++){
+    applyCenterPlacement(center,maxW,halfW*2);
     void center.offsetHeight;
     const dom=centerRectDOM(felt,center);
-    const halfH=dom.h/2;
-    const y=adjustCenterY(cx,cy,halfH,halfW,boxes,gap,H);
-    applyCenterPlacement(center,felt,cx,y,width);
-    void center.offsetHeight;
-    const actual=centerRectDOM(felt,center);
     const obstacles=seatBoxes(gap);
-    if(!centerOverlapsSeats(actual,obstacles,gap)&&Math.abs(actual.cx-cx)<3)break;
+    if(!centerOverlapsSeats(dom,obstacles,gap)&&Math.abs(dom.cx-cx)<3&&Math.abs(dom.cy-cy)<8)break;
+    if(halfW*2>boardMin+8){
+      halfW-=4;
+      continue;
+    }
+    const y=adjustCenterY(cx,cy,dom.h/2,halfW,obstacles,gap,H);
+    center.style.top=(y/H*100)+'%';
+    void center.offsetHeight;
+    break;
   }
 }
 function positionDealerBtn(){
