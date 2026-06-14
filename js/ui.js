@@ -405,15 +405,23 @@ function layoutSeats(){
   for(const p of state.players){
     let x,y;
     if(slots){
-      x=W*slots[p.i][0];
-      y=H*slots[p.i][1];
-      if(p.i===0) y=H*Math.min(0.995,slots[0][1]+0.15);
+      if(p.isHuman){
+        x=W*slots[0][0];
+        y=H*Math.min(0.995,slots[0][1]+0.15);
+      }else{
+        x=W*slots[p.i][0];
+        y=H*slots[p.i][1];
+      }
     }else{
       const ang=(90+360*p.i/n)*Math.PI/180;
       x=cx+rx*Math.cos(ang); y=cy+ry*Math.sin(ang);
     }
     const seat=$('seat'+p.i);
-    if(seat){seat.style.left=x+'px'; seat.style.top=(y-28)+'px';}
+    if(seat){
+      const topOff=slots&&p.isHuman?0:28;
+      seat.style.left=x+'px';
+      seat.style.top=(y-topOff)+'px';
+    }
   }
   /* clamp pass: no seat may leave the felt (offset* geometry — safe under CSS transforms) */
   const actOpen=HAS_DOM&&document.body.classList.contains('act-panel-open')&&useLandscapePanel();
@@ -421,7 +429,7 @@ function layoutSeats(){
   for(const p of state.players){
     const seat=$('seat'+p.i); if(!seat||!seat.offsetHeight)continue;
     const l=seat.offsetLeft,t=seat.offsetTop,w=seat.offsetWidth,h=seat.offsetHeight;
-    const padB=(p.i===0&&isMobile())?0:pad.b;
+    const padB=(p.isHuman&&isMobile())?0:pad.b;
     let dx=0,dy=0;
     if(t+h>H-padB) dy=H-padB-(t+h);
     if(t+dy<pad.t)  dy=pad.t-t;
@@ -429,6 +437,16 @@ function layoutSeats(){
     if(l+dx+w>W-pad.r) dx=W-pad.r-(l+w);
     if(dx)seat.style.left=(parseFloat(seat.style.left)+dx)+'px';
     if(dy)seat.style.top=(parseFloat(seat.style.top)+dy)+'px';
+  }
+  if(isMobile()){
+    const hp=state.players.find(p=>p.isHuman);
+    const hero=hp?$('seat'+hp.i):null;
+    if(hero&&hero.offsetHeight){
+      const fr=felt.getBoundingClientRect();
+      const hr=hero.getBoundingClientRect();
+      const gap=H-(hr.bottom-fr.top);
+      if(gap>1) hero.style.top=(parseFloat(hero.style.top)+gap-1)+'px';
+    }
   }
   positionCenterArea();
   const centerBox=centerAreaBox(felt);
