@@ -787,7 +787,16 @@ function boardMinWidth(){
   return 5*cardW+4*gap+20;
 }
 function centerRectDOM(center){
-  const {l,t,w,h,r,b,cx,cy}=elementRectFelt(center);
+  const felt=$('felt');
+  const W=felt?.clientWidth||0,H=felt?.clientHeight||0;
+  let {l,t,w,h}=elementRectFelt(center);
+  let r=l+w,b=t+h,cx=l+w/2,cy=t+h/2;
+  const cs=getComputedStyle(center);
+  if(cs.transform&&cs.transform!=='none'&&center.style.left==='50%'){
+    cx=W/2;
+    const top=center.style.top;
+    if(top&&top.endsWith('%')) cy=H*(parseFloat(top)/100);
+  }
   return {l,t,r,b,w,h,cx,cy};
 }
 function centerAreaBox(felt){
@@ -801,6 +810,9 @@ function positionCenterArea(){
   if(!HAS_DOM||!state)return;
   const felt=$('felt'), center=$('centerArea');
   if(!felt||!center)return;
+  const W=felt.clientWidth,H=felt.clientHeight,n=state.players.length;
+  const boardMin=boardMinWidth();
+  const maxW=Math.max(boardMin,Math.min(W*0.88,300-n*8));
   if(!isMobile()){
     center.style.top='';
     center.style.width='';
@@ -809,14 +821,17 @@ function positionCenterArea(){
     center.style.maxWidth='';
     return;
   }
-  const W=felt.clientWidth,H=felt.clientHeight,n=state.players.length;
-  const fl=document.body.classList.contains('fl');
-  const boardMin=boardMinWidth();
-  const maxW=Math.max(boardMin,Math.min(W*0.88,300-n*8));
   center.style.left='50%';
   center.style.width='auto';
   center.style.minWidth=boardMin+'px';
   center.style.maxWidth=maxW+'px';
+  /* mobile landscape + rotated portrait: full oval — pot/board at table center */
+  if(W>H){
+    center.style.top='50%';
+    return;
+  }
+  /* portrait arc layout: board between top arc and bottom hero */
+  const fl=document.body.classList.contains('fl');
   center.style.top=(fl?36:40)+'%';
   void center.offsetHeight;
   const hero=state.players.find(p=>p.isHuman);
@@ -827,7 +842,8 @@ function positionCenterArea(){
   const gap=10;
   if(cBox.b+gap>heroBox.t){
     const lift=cBox.b+gap-heroBox.t;
-    center.style.top=(((cBox.cy-lift)/H)*100)+'%';
+    const newTopPct=Math.max(fl?34:38,Math.min(46,((cBox.cy-lift)/H)*100));
+    center.style.top=newTopPct+'%';
   }
 }
 function positionDealerBtn(){
