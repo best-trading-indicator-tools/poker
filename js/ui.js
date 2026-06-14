@@ -407,7 +407,7 @@ function layoutSeats(){
     if(slots){
       x=W*slots[p.i][0];
       y=H*slots[p.i][1];
-      if(p.i===0) y=H*Math.min(0.99,slots[0][1]+(fl?0.08:0.05));
+      if(p.i===0) y=H*Math.min(0.995,slots[0][1]+0.15);
     }else{
       const ang=(90+360*p.i/n)*Math.PI/180;
       x=cx+rx*Math.cos(ang); y=cy+ry*Math.sin(ang);
