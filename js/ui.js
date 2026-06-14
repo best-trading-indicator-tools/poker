@@ -351,7 +351,7 @@ function buildSeats(){
   felt.querySelectorAll('.seat,.betchip').forEach(e=>e.remove());
   for(const p of state.players){
     const seat=document.createElement('div');
-    seat.className='seat'+(p.isHuman?' hero':''); seat.id='seat'+p.i;
+    seat.className='seat'; seat.id='seat'+p.i;
     seat.innerHTML=`<div class="hole" id="hole${p.i}"></div>
       <div class="plate"><span class="avatar">${p.avatar}</span><div><div class="pname">${p.name}<span class="ppos" id="pos${p.i}"></span></div><div class="pchips" id="chips${p.i}"></div>${p.style?`<div class="pstyle">${p.style.label}</div>`:''}</div></div>
       <div class="lastact" id="act${p.i}"></div>
@@ -363,87 +363,93 @@ function buildSeats(){
   }
   layoutSeats();
 }
-/* edge slots per player count: [x,y] fractions of the felt, seat CENTERS.
-   index 0 = hero (bottom center), then counterclockwise (left first) like the ellipse order */
-const SEAT_SLOTS={
-2:[[.50,.92],[.50,.10]],
-3:[[.50,.92],[.12,.24],[.88,.24]],
-4:[[.50,.92],[.06,.52],[.50,.09],[.94,.52]],
-5:[[.50,.93],[.06,.66],[.22,.08],[.78,.08],[.94,.66]],
-6:[[.50,.92],[.06,.74],[.05,.10],[.50,.04],[.95,.10],[.94,.74]],
-7:[[.50,.92],[.18,.80],[.05,.40],[.28,.09],[.72,.09],[.95,.40],[.82,.80]],
-8:[[.50,.92],[.21,.82],[.05,.50],[.14,.13],[.50,.08],[.86,.13],[.95,.50],[.79,.82]],
-9:[[.50,.92],[.24,.84],[.05,.56],[.08,.20],[.33,.07],[.67,.07],[.92,.20],[.95,.56],[.76,.84]]};
-/* rotated-phone (body.fl): pull seats inward — topbar/action bar sit on the felt edges */
-const SEAT_SLOTS_FL={
-2:[[.50,.84],[.50,.16]],
-3:[[.50,.84],[.16,.28],[.84,.28]],
-4:[[.50,.84],[.12,.52],[.50,.16],[.88,.52]],
-5:[[.50,.85],[.10,.64],[.26,.12],[.74,.12],[.90,.64]],
-6:[[.50,.84],[.10,.72],[.08,.14],[.50,.08],[.92,.14],[.90,.72]],
-7:[[.50,.84],[.22,.74],[.12,.44],[.30,.16],[.70,.16],[.88,.44],[.78,.74]],
-8:[[.50,.84],[.24,.76],[.12,.50],[.18,.18],[.50,.14],[.82,.18],[.88,.50],[.76,.76]],
-9:[[.50,.84],[.26,.74],[.12,.54],[.14,.24],[.33,.14],[.67,.14],[.86,.24],[.88,.54],[.74,.74]]};
-function layoutSeats(){
-  if(!HAS_DOM||!state||BENCH)return;
-  const felt=$('felt');
-  const W=felt.clientWidth,H=felt.clientHeight;
-  /* size the ellipse to the REAL seat dimensions so full tables fit on narrow screens */
+function layoutDesktopSeats(felt,W,H,cx,cy){
   let sW=100,sH=96;
   for(const p of state.players){
     const s=$('seat'+p.i);
     if(s&&s.offsetHeight){sW=Math.max(sW,s.offsetWidth);sH=Math.max(sH,s.offsetHeight);}
   }
-  const cx=W/2,cy=H/2;
   const rx=Math.min(W*0.41,Math.max(60,(W-sW)/2-4));
   const ry=Math.min(H*0.40,Math.max(60,(H-sH)/2-8));
   const n=state.players.length;
-  /* on mobile, an ellipse bunches seats at its ends — use hand-tuned edge slots instead
-     (hero is always slot 0 at bottom center, others run counterclockwise like the ellipse) */
-  const fl=HAS_DOM&&document.body.classList.contains('fl');
-  const slots=isMobile()?(fl?SEAT_SLOTS_FL[n]:SEAT_SLOTS[n]):null;
   for(const p of state.players){
-    let x,y;
-    if(slots){
-      if(p.isHuman){
-        const hf=heroMobileFrac(fl,n);
-        x=W*hf.x;
-        y=H*hf.y;
-      }else{
-        x=W*slots[p.i][0];
-        y=H*slots[p.i][1];
-      }
-    }else{
-      const ang=(90+360*p.i/n)*Math.PI/180;
-      x=cx+rx*Math.cos(ang); y=cy+ry*Math.sin(ang);
-    }
+    const ang=(90+360*p.i/n)*Math.PI/180;
     const seat=$('seat'+p.i);
     if(seat){
-      const topOff=slots&&p.isHuman?0:28;
-      seat.style.left=x+'px';
-      seat.style.top=(y-topOff)+'px';
+      seat.style.left=(cx+rx*Math.cos(ang))+'px';
+      seat.style.top=(cy+ry*Math.sin(ang)-28)+'px';
     }
   }
-  /* clamp pass: no seat may leave the felt (offset* geometry — safe under CSS transforms) */
-  const actOpen=HAS_DOM&&document.body.classList.contains('act-panel-open')&&useLandscapePanel();
-  const pad=fl?{l:4,r:actOpen?20:6,t:8,b:4}:isMobile()?{l:2,r:actOpen?14:2,t:4,b:2}:{l:2,r:2,t:2,b:2};
+  const pad={l:2,r:2,t:2,b:2};
   for(const p of state.players){
     const seat=$('seat'+p.i); if(!seat||!seat.offsetHeight)continue;
     const l=seat.offsetLeft,t=seat.offsetTop,w=seat.offsetWidth,h=seat.offsetHeight;
-    const padB=(p.isHuman&&isMobile())?0:pad.b;
     let dx=0,dy=0;
-    if(t+h>H-padB) dy=H-padB-(t+h);
-    if(t+dy<pad.t)  dy=pad.t-t;
-    if(l<pad.l)     dx=pad.l-l;
+    if(t+h>H-pad.b) dy=H-pad.b-(t+h);
+    if(t+dy<pad.t) dy=pad.t-t;
+    if(l<pad.l) dx=pad.l-l;
     if(l+dx+w>W-pad.r) dx=W-pad.r-(l+w);
     if(dx)seat.style.left=(parseFloat(seat.style.left)+dx)+'px';
     if(dy)seat.style.top=(parseFloat(seat.style.top)+dy)+'px';
   }
-  if(isMobile()){
-    const hp=state.players.find(p=>p.isHuman);
-    const hero=hp?$('seat'+hp.i):null;
-    if(hero) anchorMobileHero(felt,hero);
+}
+/* Mobile: hero bottom-center; opponents on an upper arc. Board sits above hero. */
+function layoutMobileSeats(felt){
+  const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,n=state.players.length;
+  const fl=document.body.classList.contains('fl');
+  let sW=102,sH=100;
+  for(const p of state.players){
+    const s=$('seat'+p.i);
+    if(s&&s.offsetHeight){sW=Math.max(sW,s.offsetWidth);sH=Math.max(sH,s.offsetHeight);}
   }
+  const shrink=Math.max(0,n-4)*0.02;
+  const rx=Math.min(W*(0.40-shrink)*(fl?0.90:1),(W-sW)/2-8);
+  const ry=Math.min(H*(fl?0.32:0.35)-shrink*H*0.25,H*0.36);
+  const ocy=H*(fl?0.41:0.43);
+  const opponents=state.players.filter(p=>!p.isHuman);
+  const m=opponents.length;
+  const a0=205*Math.PI/180,a1=335*Math.PI/180;
+  for(const p of state.players){
+    const seat=$('seat'+p.i);
+    if(!seat)continue;
+    if(p.isHuman){
+      seat.style.left=cx+'px';
+      seat.style.top=(H-2)+'px';
+      continue;
+    }
+    const oi=opponents.indexOf(p);
+    const ang=m===1?-Math.PI/2:a0+(a1-a0)*oi/(m-1);
+    seat.style.left=(cx+rx*Math.cos(ang))+'px';
+    seat.style.top=(ocy+ry*Math.sin(ang)-24)+'px';
+  }
+  const actOpen=document.body.classList.contains('act-panel-open')&&useLandscapePanel();
+  const pad={l:4,r:actOpen?14:4,t:6,b:2};
+  for(const p of state.players){
+    const seat=$('seat'+p.i); if(!seat||!seat.offsetHeight)continue;
+    const l=seat.offsetLeft,t=seat.offsetTop,w=seat.offsetWidth,h=seat.offsetHeight;
+    let dx=0,dy=0;
+    if(l<pad.l) dx=pad.l-l;
+    if(l+dx+w>W-pad.r) dx=W-pad.r-w-l;
+    if(t<pad.t) dy=pad.t-t;
+    if(t+dy+h>H-pad.b) dy=H-pad.b-h-t;
+    if(dx)seat.style.left=(parseFloat(seat.style.left)+dx)+'px';
+    if(dy)seat.style.top=(parseFloat(seat.style.top)+dy)+'px';
+  }
+  const hero=state.players.find(p=>p.isHuman);
+  if(hero){
+    const seat=$('seat'+hero.i);
+    if(seat&&seat.offsetHeight){
+      seat.style.left=cx+'px';
+      seat.style.top=(H-seat.offsetHeight)+'px';
+    }
+  }
+}
+function layoutSeats(){
+  if(!HAS_DOM||!state||BENCH)return;
+  const felt=$('felt');
+  const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
+  if(isMobile()) layoutMobileSeats(felt);
+  else layoutDesktopSeats(felt,W,H,cx,cy);
   positionCenterArea();
   const centerBox=centerAreaBox(felt);
   /* bet chips: anchored to the seat's FINAL position, pushed toward the table center,
@@ -523,27 +529,13 @@ function elementRectFelt(el){
   const l=el.offsetLeft,t=el.offsetTop,w=el.offsetWidth,h=el.offsetHeight;
   return {l,t,r:l+w,b:t+h,w,h,cx:l+w/2,cy:t+h/2};
 }
-function heroMobileFrac(fl,n){
-  const tuck=n<=6?0.20:0.26;
-  return fl?{x:tuck,y:0.999}:{x:0.50,y:0.999};
-}
-function anchorMobileHero(felt,hero){
-  if(!hero||!hero.offsetHeight)return;
-  const H=felt.clientHeight;
-  let top=parseFloat(hero.style.top)||hero.offsetTop;
-  const gap=H-(top+hero.offsetHeight);
-  if(gap>0) top+=gap;
-  hero.style.top=top+'px';
-}
 function seatBoxes(gap){
   if(!HAS_DOM||!state)return [];
   const felt=$('felt');
   if(!felt)return [];
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
   const grow=gap||0;
-  const fl=HAS_DOM&&document.body.classList.contains('fl');
   const boxes=[];
-  const hp=state.players.find(p=>p.isHuman);
   for(const p of state.players){
     const s=$('seat'+p.i);
     if(!s||!s.offsetHeight)continue;
@@ -560,10 +552,6 @@ function seatBoxes(gap){
       l=Math.max(0,l); t=Math.max(0,t);
       r=Math.min(W,r); b=Math.min(H,b);
     }
-    if(isMobile()&&hp&&p.i===hp.i){
-      const holeClear=fl?28:36;
-      t=Math.max(0,t-holeClear);
-    }
     boxes.push({l,t,r,b,cx:(l+r)/2,cy:(t+b)/2});
   }
   return boxes;
@@ -571,14 +559,6 @@ function seatBoxes(gap){
 function boxOverlap(a,b,pad){
   pad=pad||0;
   return Math.min(a.r,b.r)-Math.max(a.l,b.l)>pad&&Math.min(a.b,b.b)-Math.max(a.t,b.t)>pad;
-}
-function centerRectDOM(felt,center){
-  const {l,t,w,h,r,b,cx,cy}=elementRectFelt(center);
-  return {l,t,r,b,w,h,cx,cy};
-}
-function centerOverlapsSeats(rect,boxes,gap){
-  const a={l:rect.l,t:rect.t,r:rect.r,b:rect.b};
-  return boxes.some(b=>boxOverlap(a,b,gap));
 }
 function boardCardMetrics(){
   if(!HAS_DOM)return {cardW:54,gap:7};
@@ -606,51 +586,22 @@ function boardMinWidth(){
   const {cardW,gap}=boardCardMetrics();
   return 5*cardW+4*gap+20;
 }
-function symmetricHalfW(cx,boxes,gap,initHalfW){
-  let hw=initHalfW;
-  for(const box of boxes){
-    if(box.cx<cx) hw=Math.min(hw,cx-box.r-gap);
-    if(box.cx>cx) hw=Math.min(hw,box.l-cx-gap);
-  }
-  return Math.max(28,hw);
-}
-function adjustCenterY(cx,cy,halfH,halfW,boxes,gap,H){
-  let y=cy;
-  for(let pass=0;pass<20;pass++){
-    let changed=false;
-    for(const box of boxes){
-      const l=cx-halfW,r=cx+halfW,t=y-halfH,b=y+halfH;
-      const ox=Math.min(r,box.r)-Math.max(l,box.l);
-      const oy=Math.min(b,box.b)-Math.max(t,box.t);
-      if(ox<=gap||oy<=gap)continue;
-      if(box.cy<y){const ny=box.b+gap+halfH;if(ny>y){y=ny;changed=true;}}
-      else{const ny=box.t-gap-halfH;if(ny<y){y=ny;changed=true;}}
-    }
-    if(!changed)break;
-  }
-  return clamp(y,halfH+gap,H-halfH-gap);
-}
-function applyCenterPlacement(center,maxWidth,minWidth,topPct){
-  center.style.left='50%';
-  center.style.top=(topPct??50)+'%';
-  center.style.width='auto';
-  center.style.minWidth=minWidth+'px';
-  center.style.maxWidth=maxWidth+'px';
+function centerRectDOM(center){
+  const {l,t,w,h,r,b,cx,cy}=elementRectFelt(center);
+  return {l,t,r,b,w,h,cx,cy};
 }
 function centerAreaBox(felt){
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
   const center=$('centerArea');
   if(!center||!center.offsetHeight)return {x:cx,y:cy,w:W*0.46,h:H*0.30,l:cx-W*0.23,t:cy-H*0.15,r:cx+W*0.23,b:cy+H*0.15};
-  const r=centerRectDOM(felt,center);
+  const r=centerRectDOM(center);
   return {x:r.cx,y:r.cy,w:r.w,h:r.h,l:r.l,t:r.t,r:r.r,b:r.b};
 }
 function positionCenterArea(){
   if(!HAS_DOM||!state)return;
   const felt=$('felt'), center=$('centerArea');
   if(!felt||!center)return;
-  const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
-  const n=state.players.length,compact=useDynamicCenter(),gap=compact?16:12;
-  if(!compact){
+  if(!isMobile()){
     center.style.top='';
     center.style.width='';
     center.style.left='';
@@ -658,31 +609,25 @@ function positionCenterArea(){
     center.style.maxWidth='';
     return;
   }
+  const W=felt.clientWidth,H=felt.clientHeight,n=state.players.length;
+  const fl=document.body.classList.contains('fl');
   const boardMin=boardMinWidth();
-  const widthCap=compact&&!isMobile()?Math.min(380,300-n*4):300-n*6;
-  const maxW=Math.max(boardMin,Math.min(W*clamp(0.82-n*0.024,0.58,0.84),widthCap));
-  let halfW=Math.max(boardMin/2,symmetricHalfW(cx,seatBoxes(gap),gap,maxW/2));
-  let centerY=cy;
-  if(isMobile()){
-    const hp=state.players.find(p=>p.isHuman);
-    const hero=hp?$('seat'+hp.i):null;
-    if(hero&&hero.offsetTop>H*0.68) centerY=cy-H*0.07;
-  }
-  for(let i=0;i<24;i++){
-    applyCenterPlacement(center,maxW,halfW*2,centerY/H*100);
-    void center.offsetHeight;
-    const dom=centerRectDOM(felt,center);
-    const obstacles=seatBoxes(gap);
-    if(!centerOverlapsSeats(dom,obstacles,gap)&&Math.abs(dom.cx-cx)<3&&Math.abs(dom.cy-centerY)<8)break;
-    if(halfW>boardMin/2+4){
-      halfW=Math.max(boardMin/2,halfW-4);
-      centerY=cy;
-      continue;
-    }
-    centerY=adjustCenterY(cx,cy,dom.h/2,halfW,obstacles,gap,H);
-    void center.offsetHeight;
-    const dom2=centerRectDOM(felt,center);
-    if(!centerOverlapsSeats(dom2,obstacles,gap))break;
+  const maxW=Math.max(boardMin,Math.min(W*0.88,300-n*8));
+  center.style.left='50%';
+  center.style.width='auto';
+  center.style.minWidth=boardMin+'px';
+  center.style.maxWidth=maxW+'px';
+  center.style.top=(fl?36:40)+'%';
+  void center.offsetHeight;
+  const hero=state.players.find(p=>p.isHuman);
+  const hSeat=hero?$('seat'+hero.i):null;
+  if(!hSeat||!hSeat.offsetHeight)return;
+  const cBox=centerRectDOM(center);
+  const heroBox=elementRectFelt(hSeat);
+  const gap=10;
+  if(cBox.b+gap>heroBox.t){
+    const lift=cBox.b+gap-heroBox.t;
+    center.style.top=(((cBox.cy-lift)/H)*100)+'%';
   }
 }
 function positionDealerBtn(){
@@ -705,7 +650,7 @@ function positionDealerBtn(){
     const dbW=d.offsetWidth||24, dbH=d.offsetHeight||24;
     const obstacles=[];
     if(center&&center.offsetHeight){
-      const zone=centerRectDOM(felt,center);
+      const zone=centerRectDOM(center);
       obstacles.push({x:zone.cx,y:zone.cy,w:zone.w+dbW+16,h:zone.h+dbH+12});
     }
     for(const b of seatBoxes())obstacles.push({x:b.cx,y:b.cy,w:b.r-b.l+dbW+8,h:b.b-b.t+dbH+8});
@@ -793,12 +738,6 @@ function render(winners){
 /* ---------- live coach ---------- */
 const pct=e=>Math.round(e*100)+'%';
 function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:1024px) and (orientation:portrait)').matches; }
-function useDynamicCenter(){
-  if(!HAS_DOM)return false;
-  if(isMobile())return true;
-  const felt=$('felt');
-  return !!(felt&&felt.clientWidth>0&&felt.clientWidth<920);
-}
 function useLandscapePanel(){
   if(!HAS_DOM||!isMobile())return false;
   const g=$('game');
