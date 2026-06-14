@@ -371,24 +371,60 @@ body.fl #topbar .tb-touch input{width:18px;height:18px;}
 body.fl #quitBtn{flex-shrink:0;margin-left:4px;padding:5px 10px;}
 body.fl #sndBtn,body.fl #langTop{flex-shrink:0;padding:3px 7px;font-size:11px;}
 body.fl #waitMsg{display:none;}
-body.fl #tableWrap,body.lls #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}
-body.fl #felt,body.lls #felt{inset:10px 14px 10px 14px;border-width:5px;}
-body.fl .seat,body.lls .seat{width:86px;margin-left:-43px;margin-top:-26px;transform:scale(var(--seatScale,1));transform-origin:center top;}
-body.fl .seat .plate,body.lls .seat .plate{gap:4px;padding:4px 7px 4px 5px;border-radius:8px;min-width:0;}
-body.fl .seat .avatar,body.lls .seat .avatar{font-size:16px;}
-body.fl .seat .pname,body.lls .seat .pname{font-size:10.5px;}
-body.fl .seat .pchips,body.lls .seat .pchips{font-size:9.5px;}
-body.fl .seat .pstyle,body.lls .seat .pstyle{font-size:8.5px;}
-body.fl .seat .ppos,body.lls .seat .ppos{font-size:8px;}
-body.fl .seat .lastact,body.lls .seat .lastact{font-size:10px;}
-body.fl .seat .hole,body.lls .seat .hole{min-height:38px;gap:2px;}
-body.fl .card,body.lls .card{width:34px;height:48px;border-radius:5px;}
-body.fl .card .pip,body.lls .card .pip{font-size:17px;}
-body.fl .card.small,body.lls .card.small{width:24px;height:34px;}
-body.fl .card.small .pip,body.lls .card.small .pip{font-size:13px;}
-body.fl #centerArea,body.lls #centerArea{top:50%;width:auto;max-width:min(94vw,420px);}
-body.fl #board,body.lls #board{min-height:52px;gap:3px;min-width:calc(5*34px + 4*3px);}
-body.fl #pot,body.lls #pot{font-size:12px;}
+body.fl #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}
+body.fl #felt{inset:10px 14px 10px 14px;border-width:5px;}
+body.fl .seat{width:86px;margin-left:-43px;margin-top:-26px;transform:scale(var(--seatScale,1));transform-origin:center top;}
+body.fl .seat .plate{gap:4px;padding:4px 7px 4px 5px;border-radius:8px;min-width:0;}
+body.fl .seat .avatar{font-size:16px;}
+body.fl .seat .pname{font-size:10.5px;}
+body.fl .seat .pchips{font-size:9.5px;}
+body.fl .seat .pstyle{font-size:8.5px;}
+body.fl .seat .ppos{font-size:8px;}
+body.fl .seat .lastact{font-size:10px;}
+body.fl .seat .hole{min-height:38px;gap:2px;}
+body.fl .card{width:34px;height:48px;border-radius:5px;}
+body.fl .card .pip{font-size:17px;}
+body.fl .card.small{width:24px;height:34px;}
+body.fl .card.small .pip{font-size:13px;}
+body.fl #centerArea{top:50%;width:auto;max-width:min(94vw,420px);}
+body.fl #board{min-height:52px;gap:3px;min-width:calc(5*34px + 4*3px);}
+body.fl #pot{font-size:12px;}
+/* native phone landscape (lls): oval like desktop, readable mobile sizes — no transform scale */
+body.lls #tableWrap{padding:2px 6px;flex:1;min-height:0;overflow:hidden;}
+body.lls #felt{inset:8px 10px 4px 10px;border-width:6px;}
+body.lls .seat{width:96px;margin-left:-48px;margin-top:-16px;}
+body.lls .seat.human,
+body.lls .seat.active{margin-top:-30px;}
+body.lls .seat .plate{gap:5px;padding:5px 8px 5px 6px;border-radius:10px;min-width:0;}
+body.lls .seat .avatar{font-size:18px;}
+body.lls .seat .pname{font-size:11.5px;}
+body.lls .seat .pchips{font-size:10.5px;}
+body.lls .seat .pstyle{display:none;}
+body.lls .seat .ppos{font-size:9px;}
+body.lls .seat .lastact{font-size:10.5px;}
+/* landscape: hide opponent card backs — plates only; hero + active seat keep cards */
+body.lls .seat .hole{display:none;min-height:0;margin:0;}
+body.lls .seat.human .hole,
+body.lls .seat.active .hole{display:flex;min-height:44px;gap:3px;margin-bottom:3px;}
+body.lls .card{width:42px;height:60px;border-radius:6px;}
+body.lls .card .pip{font-size:22px;}
+body.lls .card.small{width:30px;height:43px;}
+body.lls .card.small .pip{font-size:15px;}
+body.lls #centerArea{top:48%;width:auto;max-width:min(88vw,360px);}
+body.lls #board{min-height:60px;gap:4px;min-width:calc(5*42px + 4*4px);}
+body.lls #pot{font-size:13px;}
+@media(max-width:720px) and (orientation:landscape) and (max-height:500px){
+  body.lls .seat{width:88px;margin-left:-44px;margin-top:-14px;}
+  body.lls .seat.human,
+  body.lls .seat.active{margin-top:-26px;}
+  body.lls .seat .pname{font-size:11px;}
+  body.lls .seat .pchips{font-size:10px;}
+  body.lls .seat .hole{min-height:40px;}
+  body.lls .card{width:38px;height:54px;}
+  body.lls .card .pip{font-size:20px;}
+  body.lls .card .pip{font-size:20px;}
+  body.lls #board{min-height:56px;min-width:calc(5*38px + 4*4px);}
+}
 
 /* mobile landscape only: scrollable right panel inside #game (rotates with the table) */
 body.act-panel-mode #actFab{

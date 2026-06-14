@@ -351,7 +351,7 @@ function buildSeats(){
   felt.querySelectorAll('.seat,.betchip').forEach(e=>e.remove());
   for(const p of state.players){
     const seat=document.createElement('div');
-    seat.className='seat'; seat.id='seat'+p.i;
+    seat.className='seat'+(p.isHuman?' human':''); seat.id='seat'+p.i;
     seat.innerHTML=`<div class="hole" id="hole${p.i}"></div>
       <div class="plate"><span class="avatar">${p.avatar}</span><div><div class="pname">${p.name}<span class="ppos" id="pos${p.i}"></span></div><div class="pchips" id="chips${p.i}"></div>${p.style?`<div class="pstyle">${p.style.label}</div>`:''}</div></div>
       <div class="lastact" id="act${p.i}"></div>
@@ -363,45 +363,185 @@ function buildSeats(){
   }
   layoutSeats();
 }
-function layoutDesktopSeats(felt,W,H,cx,cy){
-  const compact=document.body.classList.contains('fl')||document.body.classList.contains('lls');
-  let sW=100,sH=96;
+function countSeatOverlaps(gap){
+  gap=gap??2;
+  const rects=[];
+  for(const p of state.players){
+    const s=$('seat'+p.i);
+    if(s&&s.offsetHeight) rects.push(elementRectFelt(s));
+  }
+  let n=0;
+  for(let i=0;i<rects.length;i++)for(let j=i+1;j<rects.length;j++)
+    if(boxOverlap(rects[i],rects[j],gap)) n++;
+  return n;
+}
+/* Equal arc-length samples on an ellipse (hero at bottom = π/2) */
+function ovalArcAngles(rx,ry,n){
+  const steps=720,dt=2*Math.PI/steps;
+  const cum=new Float64Array(steps+1);
+  let total=0;
+  for(let k=1;k<=steps;k++){
+    const t=k*dt;
+    total+=Math.hypot(rx*Math.sin(t),ry*Math.cos(t))*dt;
+    cum[k]=total;
+  }
+  const findT=(s)=>{
+    s=((s%total)+total)%total;
+    let lo=0,hi=steps;
+    while(lo<hi-1){
+      const m=(lo+hi)>>1;
+      if(cum[m]<s) lo=m; else hi=m;
+    }
+    const seg=cum[lo+1]-cum[lo]||1;
+    return (lo+(s-cum[lo])/seg)*dt;
+  };
+  const startS=cum[Math.round((Math.PI/2)/dt)];
+  const heroIdx=state.players.findIndex(p=>p.isHuman);
+  const pinAt=heroIdx>=0?heroIdx:0;
+  const angs=new Array(n);
+  for(let i=0;i<n;i++){
+    const playerIdx=(pinAt+i)%n;
+    angs[playerIdx]=findT(startS+total*i/n);
+  }
+  return angs;
+}
+function placeOvalAngles(angs,rx,ry,cx,cy,lift){
+  for(let k=0;k<angs.length;k++){
+    const p=state.players[k], seat=$('seat'+p.i);
+    if(seat){
+      seat.style.left=(cx+rx*Math.cos(angs[k]))+'px';
+      seat.style.top=(cy+ry*Math.sin(angs[k])-lift)+'px';
+    }
+  }
+}
+function ovalSeatsFit(W,H,pad,overlapGap){
+  if(countLayoutOverlaps(overlapGap)>0) return false;
+  return ovalSeatsInBounds(W,H,pad);
+}
+function ovalSeatsInBounds(W,H,pad){
+  for(const p of state.players){
+    const s=$('seat'+p.i);
+    if(!s||!s.offsetHeight) continue;
+    const r=elementRectSeatLayout(s);
+    if(r.l<pad.l||r.t<pad.t||r.r>W-pad.r||r.b>H-pad.b) return false;
+  }
+  return true;
+}
+function resolveOvalAngles(angs,rx,ry,cx,cy,lift,overlapGap){
+  const n=angs.length;
+  const heroIdx=state.players.findIndex(p=>p.isHuman);
+  const pinAt=heroIdx>=0?heroIdx:-1;
+  const minHalf=Math.PI/n*0.52;
+  for(let iter=0;iter<80;iter++){
+    let moved=false;
+    for(let i=0;i<n;i++) for(let j=i+1;j<n;j++){
+      const si=$('seat'+state.players[i].i), sj=$('seat'+state.players[j].i);
+      if(!si||!sj||!si.offsetHeight) continue;
+      if(!boxOverlap(elementRectSeatLayout(si),elementRectSeatLayout(sj),overlapGap)) continue;
+      const half=Math.max(minHalf,Math.abs(angs[i]-angs[j])/2+0.04);
+      if(pinAt>=0&&(i===pinAt||j===pinAt)){
+        const other=i===pinAt?j:i;
+        const d=angs[other]-angs[pinAt];
+        angs[other]=angs[pinAt]+(d>=0?1:-1)*half*2;
+        moved=true;
+        continue;
+      }
+      const mid=(angs[i]+angs[j])/2;
+      angs[i]=mid-half; angs[j]=mid+half;
+      moved=true;
+    }
+    if(!moved) break;
+    placeOvalAngles(angs,rx,ry,cx,cy,lift);
+  }
+}
+function nudgeLayoutOverlaps(overlapGap){
+  const n=state.players.length;
+  const pinAt=state.players.findIndex(p=>p.isHuman);
+  for(let iter=0;iter<24;iter++){
+    let moved=false;
+    for(let i=0;i<n;i++) for(let j=i+1;j<n;j++){
+      const si=$('seat'+state.players[i].i), sj=$('seat'+state.players[j].i);
+      if(!si||!sj||!si.offsetHeight) continue;
+      const a=elementRectSeatLayout(si), b=elementRectSeatLayout(sj);
+      if(!boxOverlap(a,b,overlapGap)) continue;
+      const ox=Math.min(a.r,b.r)-Math.max(a.l,b.l);
+      const oy=Math.min(a.b,b.b)-Math.max(a.t,b.t);
+      if(ox<=0||oy<=0) continue;
+      let ax=0,ay=0;
+      if(ox<=oy){const dir=a.cx<b.cx?-1:1;ax=dir*(ox/2+2);}
+      else{const dir=a.cy<b.cy?-1:1;ay=dir*(oy/2+2);}
+      if(pinAt>=0&&(i===pinAt||j===pinAt)){
+        const other=i===pinAt?sj:si;
+        const lo=parseFloat(other.style.left)||0,to=parseFloat(other.style.top)||0;
+        other.style.left=(lo+ax)+'px'; other.style.top=(to+ay)+'px';
+        moved=true;
+        continue;
+      }
+      const li=parseFloat(si.style.left)||0,ti=parseFloat(si.style.top)||0;
+      const lj=parseFloat(sj.style.left)||0,tj=parseFloat(sj.style.top)||0;
+      si.style.left=(li-ax)+'px'; si.style.top=(ti-ay)+'px';
+      sj.style.left=(lj+ax)+'px'; sj.style.top=(tj+ay)+'px';
+      moved=true;
+    }
+    if(!moved) break;
+  }
+}
+/* Uniform oval: equal arc-length spacing + angular overlap spread (no edge clamp stacking) */
+function layoutOvalSeats(felt,W,H,cx,cy){
+  const fl=document.body.classList.contains('fl');
+  const lls=document.body.classList.contains('lls');
+  const compact=fl||lls;
+  const n=state.players.length;
+  const pad={l:8,r:8,t:8,b:6};
+  if(document.body.classList.contains('act-panel-open')&&useLandscapePanel()) pad.r=56;
+  const overlapGap=compact?1:2;
+  felt.style.setProperty('--seatScale','1');
+  let sW=96,sH=48;
   for(const p of state.players){
     const s=$('seat'+p.i);
     if(s&&s.offsetHeight){sW=Math.max(sW,s.offsetWidth);sH=Math.max(sH,s.offsetHeight);}
   }
-  const land=W>H;
-  const rx=Math.min(W*(compact&&land?0.44:0.41),Math.max(60,(W-sW)/2-4));
-  const ry=Math.min(H*(compact&&land?0.44:0.40),Math.max(land?36:60,(H-sH)/2-8));
-  const n=state.players.length;
-  const lift=compact&&land?18:28;
-  /* compact landscape: scale seats down if the oval is tighter than plate width */
-  if(compact&&land&&n>1){
-    const chord=2*rx*Math.sin(Math.PI/n);
-    const gap=chord/(n-1);
-    const seatScale=Math.max(0.44,Math.min(1,gap/(sW+10)));
-    felt.style.setProperty('--seatScale',seatScale);
-  }else felt.style.setProperty('--seatScale','1');
-  for(const p of state.players){
-    const ang=(90+360*p.i/n)*Math.PI/180;
-    const seat=$('seat'+p.i);
-    if(seat){
-      seat.style.left=(cx+rx*Math.cos(ang))+'px';
-      seat.style.top=(cy+ry*Math.sin(ang)-lift)+'px';
+  const lift=compact?14:28;
+  const maxRx=(W-sW)/2-pad.l, maxRy=(H-sH)/2-pad.t;
+  let rx=Math.min(compact?W*0.42:W*0.41,Math.max(50,maxRx));
+  let ry=Math.min(compact?H*0.42:H*0.40,Math.max(compact?32:50,maxRy));
+  let angs=ovalArcAngles(rx,ry,n);
+  placeOvalAngles(angs,rx,ry,cx,cy,lift);
+  resolveOvalAngles(angs,rx,ry,cx,cy,lift,overlapGap);
+  for(let i=0;i<14&&!ovalSeatsFit(W,H,pad,overlapGap);i++){
+    resolveOvalAngles(angs,rx,ry,cx,cy,lift,overlapGap);
+    if(ovalSeatsFit(W,H,pad,overlapGap)) break;
+    rx=Math.min(maxRx,rx*1.035);
+    ry=Math.min(maxRy,ry*1.035);
+    angs=ovalArcAngles(rx,ry,n);
+    placeOvalAngles(angs,rx,ry,cx,cy,lift);
+    resolveOvalAngles(angs,rx,ry,cx,cy,lift,overlapGap);
+  }
+  for(let i=0;i<16&&!ovalSeatsInBounds(W,H,pad);i++){
+    rx*=0.97; ry*=0.97;
+    angs=ovalArcAngles(rx,ry,n);
+    placeOvalAngles(angs,rx,ry,cx,cy,lift);
+    resolveOvalAngles(angs,rx,ry,cx,cy,lift,overlapGap);
+  }
+  placeOvalAngles(angs,rx,ry,cx,cy,lift);
+  for(let pass=0;pass<6;pass++){
+    if(countLayoutOverlaps(overlapGap)===0) break;
+    nudgeLayoutOverlaps(overlapGap);
+    if(!ovalSeatsInBounds(W,H,pad)){
+      rx*=0.97; ry*=0.97;
+      angs=ovalArcAngles(rx,ry,n);
+      placeOvalAngles(angs,rx,ry,cx,cy,lift);
+      resolveOvalAngles(angs,rx,ry,cx,cy,lift,overlapGap);
     }
   }
-  const pad={l:2,r:2,t:2,b:2};
-  for(const p of state.players){
-    const seat=$('seat'+p.i); if(!seat||!seat.offsetHeight)continue;
-    const l=seat.offsetLeft,t=seat.offsetTop,w=seat.offsetWidth,h=seat.offsetHeight;
-    let dx=0,dy=0;
-    if(t+h>H-pad.b) dy=H-pad.b-(t+h);
-    if(t+dy<pad.t) dy=pad.t-t;
-    if(l<pad.l) dx=pad.l-l;
-    if(l+dx+w>W-pad.r) dx=W-pad.r-(l+w);
-    if(dx)seat.style.left=(parseFloat(seat.style.left)+dx)+'px';
-    if(dy)seat.style.top=(parseFloat(seat.style.top)+dy)+'px';
+  if(fl&&W>H&&n>1){
+    const chord=2*rx*Math.sin(Math.PI/n);
+    const gap=chord/(n-1);
+    felt.style.setProperty('--seatScale',String(Math.max(0.58,Math.min(1,gap/(sW+6)))));
   }
+}
+function layoutDesktopSeats(felt,W,H,cx,cy){
+  layoutOvalSeats(felt,W,H,cx,cy);
 }
 /* Mobile: hero bottom-center; opponents on an upper arc. Board sits above hero. */
 function layoutMobileSeats(felt){
@@ -559,6 +699,35 @@ function layoutSeats(){
 function elementRectFelt(el){
   const l=el.offsetLeft,t=el.offsetTop,w=el.offsetWidth,h=el.offsetHeight;
   return {l,t,r:l+w,b:t+h,w,h,cx:l+w/2,cy:t+h/2};
+}
+/* Layout overlap box: plate (+ hero hole on compact) — avoids false stacks from hole cards */
+function elementRectSeatLayout(el){
+  const plate=el.querySelector('.plate');
+  if(!plate||!plate.offsetHeight) return elementRectFelt(el);
+  let l=el.offsetLeft+plate.offsetLeft,t=el.offsetTop+plate.offsetTop;
+  let r=l+plate.offsetWidth,b=t+plate.offsetHeight;
+  const compact=document.body.classList.contains('fl')||document.body.classList.contains('lls');
+  if(compact&&el.classList.contains('human')){
+    const hole=el.querySelector('.hole');
+    if(hole&&hole.offsetHeight){
+      const hl=el.offsetLeft+hole.offsetLeft,ht=el.offsetTop+hole.offsetTop;
+      l=Math.min(l,hl); t=Math.min(t,ht);
+      r=Math.max(r,hl+hole.offsetWidth); b=Math.max(b,ht+hole.offsetHeight);
+    }
+  }
+  return {l,t,r,b,w:r-l,h:b-t,cx:(l+r)/2,cy:(t+b)/2};
+}
+function countLayoutOverlaps(gap){
+  gap=gap??1;
+  const rects=[];
+  for(const p of state.players){
+    const s=$('seat'+p.i);
+    if(s&&s.offsetHeight) rects.push(elementRectSeatLayout(s));
+  }
+  let n=0;
+  for(let i=0;i<rects.length;i++)for(let j=i+1;j<rects.length;j++)
+    if(boxOverlap(rects[i],rects[j],gap)) n++;
+  return n;
 }
 function seatBoxes(gap){
   if(!HAS_DOM||!state)return [];
@@ -769,6 +938,7 @@ function render(winners){
 /* ---------- live coach ---------- */
 const pct=e=>Math.round(e*100)+'%';
 function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:1024px) and (orientation:portrait),(max-width:1024px) and (orientation:landscape) and (max-height:500px)').matches; }
+function maxSetupPlayers(){ return isMobile()?6:9; }
 function useLandscapePanel(){
   if(!HAS_DOM||!isMobile())return false;
   const g=$('game');
@@ -1501,13 +1671,21 @@ function wireCoachInfoTips(){
 /* ================= INIT / WIRING ================= */
 let setupGameType='sng';
 function initUI(){
-  let numPlayers=9, difficulty='medium';
+  let numPlayers=maxSetupPlayers(), difficulty='medium';
+  $('pCount').textContent=numPlayers;
+  const syncSetupPlayerCap=()=>{
+    const max=maxSetupPlayers();
+    if(numPlayers>max) numPlayers=max;
+    $('pCount').textContent=numPlayers;
+  };
   $('modeSeg').querySelectorAll('button').forEach(b=>{
     b.onclick=()=>{setupGameType=b.dataset.m; updateSetupMode(setupGameType); refreshResume();};
   });
   updateSetupMode(setupGameType);
   $('pMinus').onclick=()=>{numPlayers=Math.max(2,numPlayers-1);$('pCount').textContent=numPlayers;};
-  $('pPlus').onclick =()=>{numPlayers=Math.min(9,numPlayers+1);$('pCount').textContent=numPlayers;};
+  $('pPlus').onclick =()=>{numPlayers=Math.min(maxSetupPlayers(),numPlayers+1);$('pCount').textContent=numPlayers;};
+  window.addEventListener('resize',syncSetupPlayerCap);
+  window.addEventListener('orientationchange',syncSetupPlayerCap);
   $('diffSeg').querySelectorAll('button').forEach(b=>{
     b.onclick=()=>{
       $('diffSeg').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
@@ -1515,6 +1693,8 @@ function initUI(){
     };
   });
   $('startBtn').onclick=()=>{
+    numPlayers=Math.min(numPlayers,maxSetupPlayers());
+    $('pCount').textContent=numPlayers;
     const cfg={
       gameType:setupGameType,
       numPlayers,

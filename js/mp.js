@@ -4,6 +4,7 @@
    Free signaling via the public PeerJS cloud; game data flows directly P2P. */
 let MP=null;
 const MP_V='mp3';   // protocol version — both sides must match
+function mpMaxPlayers(){ return typeof maxSetupPlayers==='function'?maxSetupPlayers():9; }
 /* STUN + free TURN relays: lets phones on cellular/strict NATs reach the host */
 const MP_ICE={config:{iceServers:[
   {urls:['stun:stun.l.google.com:19302','stun:global.stun.twilio.com:3478']},
@@ -102,7 +103,7 @@ function mpHostData(conn,d){
         return;
       }
       /* game running: queue the player — they get dealt in at the next hand */
-      if(state&&!state.gameOver&&state.players.length+(MP.pending?MP.pending.length:0)<9){
+      if(state&&!state.gameOver&&state.players.length+(MP.pending?MP.pending.length:0)<mpMaxPlayers()){
         (MP.pending=MP.pending||[]).push({conn,name:(''+d.n).slice(0,14)});
         try{conn.send({t:'wait'});}catch(e){}
         mpChatAll('🛜',C2('mpKnock',d.n));
@@ -112,7 +113,7 @@ function mpHostData(conn,d){
       }
       return;
     }
-    if(MP.conns.length>=8){try{conn.send({t:'full'});}catch(e){}setTimeout(()=>{try{conn.close();}catch(e){}},400);return;}
+    if(MP.conns.length>=mpMaxPlayers()-1){try{conn.send({t:'full'});}catch(e){}setTimeout(()=>{try{conn.close();}catch(e){}},400);return;}
     MP.conns.push({conn,name:(''+d.n).slice(0,14),seat:null});
     mpRoster(); mpChatLocal('· '+C2('mpJoined',d.n));
   }else if(d.t==='act'){
@@ -150,7 +151,7 @@ function mpClientData(d){
   else if(d.t==='st'){mpApplySnapshot(d.s);}
   else if(d.t==='ck'){MP.lastCK=d.d;}
   else if(d.t==='emo'){
-    const N=state&&state.players?state.players.length:9;
+    const N=state&&state.players?state.players.length:mpMaxPlayers();
     const my=MP.seat||0;
     showEmote(((+d.seat-my)%N+N)%N,+d.e||0);
   }
@@ -328,8 +329,9 @@ function mpStartGame(){
   const fill=$('mpFill').checked;
   MP.started=true;   // solo + no bots = open table: sit and wait, dealing starts when a friend arrives
   MP.conns.forEach((c,k)=>{c.seat=k+1;});
-  const want=+($('pCount').textContent)||9;
-  const total=fill?Math.max(humans,Math.min(9,Math.max(want,humans))):humans;
+  const cap=mpMaxPlayers();
+  const want=+($('pCount').textContent)||cap;
+  const total=fill?Math.max(humans,Math.min(cap,Math.max(want,humans))):humans;
   const cfg={
     numPlayers:total,
     gameType:'sng',
@@ -423,7 +425,7 @@ function mpSeatPending(){
       ai.name=q.name; ai.avatar='🙂'; ai.remote=true; ai.isHuman=false; ai.style=null;
       ai.chips=state.cfg.startBB*(state.cfg.startBlind||100);
       ai.rangeCap=1; ai.rangeFloor=0; ai.aggStreets=[]; ai.checkStreets=[]; ai.lineRead=''; ai.bank=TT_BANK;
-    }else if(state.players.length<9){
+    }else if(state.players.length<mpMaxPlayers()){
       i=state.players.length;
       state.players.push({i,name:q.name,avatar:'🙂',isHuman:false,remote:true,
         chips:state.cfg.startBB*(state.cfg.startBlind||100),hole:[],folded:false,out:false,allIn:false,
