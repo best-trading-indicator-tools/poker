@@ -364,20 +364,30 @@ function buildSeats(){
   layoutSeats();
 }
 function layoutDesktopSeats(felt,W,H,cx,cy){
+  const compact=document.body.classList.contains('fl')||document.body.classList.contains('lls');
   let sW=100,sH=96;
   for(const p of state.players){
     const s=$('seat'+p.i);
     if(s&&s.offsetHeight){sW=Math.max(sW,s.offsetWidth);sH=Math.max(sH,s.offsetHeight);}
   }
-  const rx=Math.min(W*0.41,Math.max(60,(W-sW)/2-4));
-  const ry=Math.min(H*0.40,Math.max(60,(H-sH)/2-8));
+  const land=W>H;
+  const rx=Math.min(W*(compact&&land?0.44:0.41),Math.max(60,(W-sW)/2-4));
+  const ry=Math.min(H*(compact&&land?0.44:0.40),Math.max(land?36:60,(H-sH)/2-8));
   const n=state.players.length;
+  const lift=compact&&land?18:28;
+  /* compact landscape: scale seats down if the oval is tighter than plate width */
+  if(compact&&land&&n>1){
+    const chord=2*rx*Math.sin(Math.PI/n);
+    const gap=chord/(n-1);
+    const seatScale=Math.max(0.44,Math.min(1,gap/(sW+10)));
+    felt.style.setProperty('--seatScale',seatScale);
+  }else felt.style.setProperty('--seatScale','1');
   for(const p of state.players){
     const ang=(90+360*p.i/n)*Math.PI/180;
     const seat=$('seat'+p.i);
     if(seat){
       seat.style.left=(cx+rx*Math.cos(ang))+'px';
-      seat.style.top=(cy+ry*Math.sin(ang)-28)+'px';
+      seat.style.top=(cy+ry*Math.sin(ang)-lift)+'px';
     }
   }
   const pad={l:2,r:2,t:2,b:2};
@@ -467,7 +477,9 @@ function layoutSeats(){
   if(!HAS_DOM||!state||BENCH)return;
   const felt=$('felt');
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
-  if(isMobile()) layoutMobileSeats(felt);
+  /* mobile landscape: same uniform oval as desktop (not the portrait top-arc row) */
+  if(isMobile()&&W>H) layoutDesktopSeats(felt,W,H,cx,cy);
+  else if(isMobile()) layoutMobileSeats(felt);
   else layoutDesktopSeats(felt,W,H,cx,cy);
   positionCenterArea();
   const centerBox=centerAreaBox(felt);
