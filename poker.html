@@ -373,58 +373,46 @@ body.fl #sndBtn,body.fl #langTop{flex-shrink:0;padding:3px 7px;font-size:11px;}
 body.fl #waitMsg{display:none;}
 body.fl #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}
 body.fl #felt{inset:10px 14px 10px 14px;border-width:5px;}
-body.fl .seat{width:86px;margin-left:-43px;margin-top:-26px;transform:scale(var(--seatScale,1));transform-origin:center top;}
-body.fl .seat .plate{gap:4px;padding:4px 7px 4px 5px;border-radius:8px;min-width:0;}
-body.fl .seat .avatar{font-size:16px;}
-body.fl .seat .pname{font-size:10.5px;}
-body.fl .seat .pchips{font-size:9.5px;}
-body.fl .seat .pstyle{font-size:8.5px;}
-body.fl .seat .ppos{font-size:8px;}
-body.fl .seat .lastact{font-size:10px;}
-body.fl .seat .hole{min-height:38px;gap:2px;}
-body.fl .card{width:34px;height:48px;border-radius:5px;}
-body.fl .card .pip{font-size:17px;}
-body.fl .card.small{width:24px;height:34px;}
-body.fl .card.small .pip{font-size:13px;}
+body.fl .seat{width:118px;margin-left:-59px;margin-top:-32px;transform:scale(var(--seatScale,1));transform-origin:center top;}
+body.fl .seat .plate{gap:6px;padding:6px 10px 6px 7px;border-radius:10px;min-width:0;}
+body.fl .seat .avatar{font-size:22px;}
+body.fl .seat .pname{font-size:14px;}
+body.fl .seat .pchips{font-size:12px;}
+body.fl .seat .pstyle{font-size:10px;}
+body.fl .seat .ppos{font-size:10px;}
+body.fl .seat .lastact{font-size:12px;}
+body.fl .seat .hole{min-height:52px;gap:4px;}
+body.fl .card{width:50px;height:72px;border-radius:6px;}
+body.fl .card .pip{font-size:26px;}
+body.fl .card.small{width:36px;height:52px;}
+body.fl .card.small .pip{font-size:18px;}
 body.fl #centerArea{top:50%;width:auto;max-width:min(94vw,420px);}
-body.fl #board{min-height:52px;gap:3px;min-width:calc(5*34px + 4*3px);}
-body.fl #pot{font-size:12px;}
+body.fl #board{min-height:72px;gap:5px;min-width:calc(5*50px + 4*5px);}
+body.fl #pot{font-size:15px;}
 /* native phone landscape (lls): oval like desktop, readable mobile sizes — no transform scale */
 body.lls #tableWrap{padding:2px 6px;flex:1;min-height:0;overflow:hidden;}
 body.lls #felt{inset:8px 10px 4px 10px;border-width:6px;}
-body.lls .seat{width:96px;margin-left:-48px;margin-top:-16px;}
+body.lls .seat{width:118px;margin-left:-59px;margin-top:-20px;}
 body.lls .seat.human,
-body.lls .seat.active{margin-top:-30px;}
-body.lls .seat .plate{gap:5px;padding:5px 8px 5px 6px;border-radius:10px;min-width:0;}
-body.lls .seat .avatar{font-size:18px;}
-body.lls .seat .pname{font-size:11.5px;}
-body.lls .seat .pchips{font-size:10.5px;}
+body.lls .seat.active{margin-top:-36px;}
+body.lls .seat .plate{gap:6px;padding:6px 10px 6px 7px;border-radius:11px;min-width:0;}
+body.lls .seat .avatar{font-size:22px;}
+body.lls .seat .pname{font-size:14px;}
+body.lls .seat .pchips{font-size:12px;}
 body.lls .seat .pstyle{display:none;}
-body.lls .seat .ppos{font-size:9px;}
-body.lls .seat .lastact{font-size:10.5px;}
+body.lls .seat .ppos{font-size:10px;}
+body.lls .seat .lastact{font-size:12px;}
 /* landscape: hide opponent card backs — plates only; hero + active seat keep cards */
 body.lls .seat .hole{display:none;min-height:0;margin:0;}
 body.lls .seat.human .hole,
-body.lls .seat.active .hole{display:flex;min-height:44px;gap:3px;margin-bottom:3px;}
-body.lls .card{width:42px;height:60px;border-radius:6px;}
-body.lls .card .pip{font-size:22px;}
-body.lls .card.small{width:30px;height:43px;}
-body.lls .card.small .pip{font-size:15px;}
+body.lls .seat.active .hole{display:flex;min-height:52px;gap:4px;margin-bottom:4px;}
+body.lls .card{width:50px;height:72px;border-radius:6px;}
+body.lls .card .pip{font-size:26px;}
+body.lls .card.small{width:36px;height:52px;}
+body.lls .card.small .pip{font-size:18px;}
 body.lls #centerArea{top:48%;width:auto;max-width:min(88vw,360px);}
-body.lls #board{min-height:60px;gap:4px;min-width:calc(5*42px + 4*4px);}
-body.lls #pot{font-size:13px;}
-@media(max-width:720px) and (orientation:landscape) and (max-height:500px){
-  body.lls .seat{width:88px;margin-left:-44px;margin-top:-14px;}
-  body.lls .seat.human,
-  body.lls .seat.active{margin-top:-26px;}
-  body.lls .seat .pname{font-size:11px;}
-  body.lls .seat .pchips{font-size:10px;}
-  body.lls .seat .hole{min-height:40px;}
-  body.lls .card{width:38px;height:54px;}
-  body.lls .card .pip{font-size:20px;}
-  body.lls .card .pip{font-size:20px;}
-  body.lls #board{min-height:56px;min-width:calc(5*38px + 4*4px);}
-}
+body.lls #board{min-height:72px;gap:5px;min-width:calc(5*50px + 4*5px);}
+body.lls #pot{font-size:15px;}
 
 /* mobile landscape only: scrollable right panel inside #game (rotates with the table) */
 body.act-panel-mode #actFab{
@@ -528,42 +516,40 @@ body.act-panel-mode #chipPreview{display:none!important;}
   #coachClose:active{background:rgba(255,255,255,.08);}
   #coachResize{display:none;}
 
-  /* smaller seats so 9 fit on a phone — but keep the text legible */
-  .seat{width:102px;margin-left:-51px;margin-top:-32px;}
-  .seat .plate{min-width:0;gap:5px;padding:5px 8px 5px 6px;border-radius:10px;}
-  .seat .avatar{font-size:18px;}
-  .seat .pname{font-size:11.5px;}
-  .seat .pchips{font-size:10px;}
-  .seat .pstyle{font-size:9.5px;}
-  .seat .ppos{font-size:9px;padding:1px 4px;}
-  .seat .lastact{font-size:11px;margin-top:2px;font-weight:600;}
-  .seat .hole{min-height:46px;gap:3px;}
+  /* mobile seats sized for ≤6 players — legible cards and labels */
+  .seat{width:118px;margin-left:-59px;margin-top:-36px;}
+  .seat .plate{min-width:0;gap:6px;padding:6px 10px 6px 7px;border-radius:11px;}
+  .seat .avatar{font-size:22px;}
+  .seat .pname{font-size:14px;}
+  .seat .pchips{font-size:12px;}
+  .seat .pstyle{font-size:10px;}
+  .seat .ppos{font-size:10px;padding:1px 5px;}
+  .seat .lastact{font-size:12px;margin-top:2px;font-weight:600;}
+  .seat .hole{min-height:52px;gap:4px;}
   /* full-table bet chips crowd small screens — show hero + current actor only */
   .betchip{visibility:hidden;}
   .betchip.mobile-show{visibility:visible;}
   .betchip.mobile-show .chipstack{display:none;}
-  .betchip.mobile-show .amt{font-size:10px;padding:2px 6px;}
-  /* short-handed tables (≤6 players): slightly larger seats but keep center clear */
-  body.few .seat{width:112px;margin-left:-56px;}
-  body.few .seat .avatar{font-size:20px;}
-  body.few .seat .pname{font-size:12.5px;}
-  body.few .seat .pchips{font-size:11px;}
-  body.few .seat .pstyle{font-size:10px;}
-  body.few .seat .ppos{font-size:9.5px;}
-  body.few .seat .lastact{font-size:11.5px;}
+  .betchip.mobile-show .amt{font-size:11px;padding:3px 7px;}
+  body.few .seat{width:124px;margin-left:-62px;}
+  body.few .seat .avatar{font-size:24px;}
+  body.few .seat .pname{font-size:15px;}
+  body.few .seat .pchips{font-size:13px;}
+  body.few .seat .pstyle{font-size:10.5px;}
+  body.few .seat .ppos{font-size:10.5px;}
+  body.few .seat .lastact{font-size:13px;}
 
-  /* tighter cards */
-  .card{width:42px;height:60px;border-radius:6px;}
-  .card .ix{font-size:12px;top:3px;left:4px;}
-  .card .ix .si{font-size:9px;}
+  .card{width:50px;height:72px;border-radius:6px;}
+  .card .ix{font-size:13px;top:4px;left:5px;}
+  .card .ix .si{font-size:10px;}
   .card .ix.flip{display:none;}
-  .card .pip{font-size:22px;}
-  .card.small{width:30px;height:43px;}
-  .card.small .ix{font-size:9px;}
-  .card.small .pip{font-size:15px;}
-  #board{min-height:62px;gap:4px;min-width:calc(5*42px + 4*4px);}
+  .card .pip{font-size:26px;}
+  .card.small{width:36px;height:52px;}
+  .card.small .ix{font-size:10px;}
+  .card.small .pip{font-size:18px;}
+  #board{min-height:72px;gap:5px;min-width:calc(5*50px + 4*5px);}
   #centerArea{top:50%;width:auto;max-width:min(88vw,320px);}
-  #pot{font-size:13px;}
+  #pot{font-size:15px;}
   #felt{inset:8px 6px 0 6px;border-width:7px;}
   #dbtn{width:20px;height:20px;font-size:10px;}
 
@@ -588,18 +574,9 @@ body.act-panel-mode #chipPreview{display:none!important;}
   #board{min-width:calc(5*48px + 4*5px);}
   #centerArea{width:auto;max-width:min(72vw,380px);}
 }
-/* very narrow phones: shrink seats and cards further so 9 seats never collide */
+/* narrow phones: same readable sizes (max 6 players on mobile) */
 @media(max-width:390px){
-  .seat{width:88px;margin-left:-44px;margin-top:-28px;}
-  .seat .avatar{font-size:15px;}
-  .seat .pname{font-size:10.5px;}
-  .seat .pchips{font-size:9.5px;}
-  .seat .hole{min-height:40px;}
-  .card{width:36px;height:52px;}
-  .card .pip{font-size:18px;}
-  .card.small{width:26px;height:38px;}
-  #board{min-height:54px;gap:3px;min-width:calc(5*36px + 4*3px);}
-  #pot{font-size:11.5px;}
+  #pot{font-size:14px;}
 }
 </style>
 </head>

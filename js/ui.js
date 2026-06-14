@@ -496,7 +496,7 @@ function layoutOvalSeats(felt,W,H,cx,cy){
   if(document.body.classList.contains('act-panel-open')&&useLandscapePanel()) pad.r=56;
   const overlapGap=compact?1:2;
   felt.style.setProperty('--seatScale','1');
-  let sW=96,sH=48;
+  let sW=118,sH=48;
   for(const p of state.players){
     const s=$('seat'+p.i);
     if(s&&s.offsetHeight){sW=Math.max(sW,s.offsetWidth);sH=Math.max(sH,s.offsetHeight);}
@@ -537,7 +537,7 @@ function layoutOvalSeats(felt,W,H,cx,cy){
   if(fl&&W>H&&n>1){
     const chord=2*rx*Math.sin(Math.PI/n);
     const gap=chord/(n-1);
-    felt.style.setProperty('--seatScale',String(Math.max(0.58,Math.min(1,gap/(sW+6)))));
+    felt.style.setProperty('--seatScale',String(Math.max(n<=6?0.92:0.75,Math.min(1,gap/(sW+6)))));
   }
 }
 function layoutDesktopSeats(felt,W,H,cx,cy){
@@ -567,7 +567,7 @@ function layoutMobileSeats(felt){
   const m=opponents.length;
   /* landscape: if the even per-seat width is tighter than a plate, scale seats to fit */
   const gap=m>1?(2*rx)/(m-1):sW;
-  const seatScale=land?Math.max(0.62,Math.min(1,gap/(sW+6))):1;
+  const seatScale=land?Math.max(n<=6?0.92:0.72,Math.min(1,gap/(sW+6))):1;
   felt.style.setProperty('--seatScale',seatScale);
   const a0=205*Math.PI/180,a1=335*Math.PI/180;
   for(const p of state.players){
@@ -771,8 +771,8 @@ function boardCardMetrics(){
     if(!isNaN(g))gap=g;
   }
   if(!cardW){
-    if(document.body.classList.contains('fl'))cardW=34;
-    else if(isMobile())cardW=42;
+    if(document.body.classList.contains('fl'))cardW=50;
+    else if(isMobile())cardW=50;
     else cardW=54;
   }
   if(!gap){
