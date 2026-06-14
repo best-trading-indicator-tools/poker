@@ -108,7 +108,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #chatRow{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line);}
 #chatIn{flex:1;background:#10141b;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px;font-size:13px;min-width:0;}
 #chatSend{background:var(--gold);border:none;border-radius:8px;color:#1a1408;font-weight:700;padding:0 13px;cursor:pointer;}
-@media(max-width:680px),(max-width:1024px) and (orientation:portrait){
+@media(max-width:680px),(max-width:1024px) and (orientation:portrait),(max-width:1024px) and (orientation:landscape) and (max-height:500px){
   #chat{left:8px;right:8px;width:auto;bottom:80px;height:42vh;}
 }
 body.fl #chat{right:8px;bottom:64px;height:60%;}
@@ -124,7 +124,7 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #chartLegend{font-size:11.5px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
 #chartLegend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;}
 .chart-link{display:block;width:100%;margin:8px 0 2px;background:none;border:1px dashed var(--gold);color:var(--gold);border-radius:8px;padding:7px;font-size:12px;cursor:pointer;}
-@media(max-width:680px),(max-width:1024px) and (orientation:portrait){
+@media(max-width:680px),(max-width:1024px) and (orientation:portrait),(max-width:1024px) and (orientation:landscape) and (max-height:500px){
   #chartGrid .cc{width:22px;height:20px;font-size:7.5px;}
 }
 .rp-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
@@ -371,24 +371,24 @@ body.fl #topbar .tb-touch input{width:18px;height:18px;}
 body.fl #quitBtn{flex-shrink:0;margin-left:4px;padding:5px 10px;}
 body.fl #sndBtn,body.fl #langTop{flex-shrink:0;padding:3px 7px;font-size:11px;}
 body.fl #waitMsg{display:none;}
-body.fl #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}
-body.fl #felt{inset:10px 14px 10px 14px;border-width:5px;}
-body.fl .seat{width:86px;margin-left:-43px;margin-top:-26px;}
-body.fl .seat .plate{gap:4px;padding:4px 7px 4px 5px;border-radius:8px;min-width:0;}
-body.fl .seat .avatar{font-size:16px;}
-body.fl .seat .pname{font-size:10.5px;}
-body.fl .seat .pchips{font-size:9.5px;}
-body.fl .seat .pstyle{font-size:8.5px;}
-body.fl .seat .ppos{font-size:8px;}
-body.fl .seat .lastact{font-size:10px;}
-body.fl .seat .hole{min-height:38px;gap:2px;}
-body.fl .card{width:34px;height:48px;border-radius:5px;}
-body.fl .card .pip{font-size:17px;}
-body.fl .card.small{width:24px;height:34px;}
-body.fl .card.small .pip{font-size:13px;}
-body.fl #centerArea{top:50%;width:auto;max-width:min(94vw,420px);}
-body.fl #board{min-height:52px;gap:3px;min-width:calc(5*34px + 4*3px);}
-body.fl #pot{font-size:12px;}
+body.fl #tableWrap,body.lls #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}
+body.fl #felt,body.lls #felt{inset:10px 14px 10px 14px;border-width:5px;}
+body.fl .seat,body.lls .seat{width:86px;margin-left:-43px;margin-top:-26px;transform:scale(var(--seatScale,1));transform-origin:center top;}
+body.fl .seat .plate,body.lls .seat .plate{gap:4px;padding:4px 7px 4px 5px;border-radius:8px;min-width:0;}
+body.fl .seat .avatar,body.lls .seat .avatar{font-size:16px;}
+body.fl .seat .pname,body.lls .seat .pname{font-size:10.5px;}
+body.fl .seat .pchips,body.lls .seat .pchips{font-size:9.5px;}
+body.fl .seat .pstyle,body.lls .seat .pstyle{font-size:8.5px;}
+body.fl .seat .ppos,body.lls .seat .ppos{font-size:8px;}
+body.fl .seat .lastact,body.lls .seat .lastact{font-size:10px;}
+body.fl .seat .hole,body.lls .seat .hole{min-height:38px;gap:2px;}
+body.fl .card,body.lls .card{width:34px;height:48px;border-radius:5px;}
+body.fl .card .pip,body.lls .card .pip{font-size:17px;}
+body.fl .card.small,body.lls .card.small{width:24px;height:34px;}
+body.fl .card.small .pip,body.lls .card.small .pip{font-size:13px;}
+body.fl #centerArea,body.lls #centerArea{top:50%;width:auto;max-width:min(94vw,420px);}
+body.fl #board,body.lls #board{min-height:52px;gap:3px;min-width:calc(5*34px + 4*3px);}
+body.fl #pot,body.lls #pot{font-size:12px;}
 
 /* mobile landscape only: scrollable right panel inside #game (rotates with the table) */
 body.act-panel-mode #actFab{
@@ -461,7 +461,7 @@ body.act-panel-mode #chipPreview{display:none!important;}
 /* ================= MOBILE / TOUCH =================
    applies to phones AND any portrait screen up to 1024px (large phones, iPad,
    narrow browser windows) — desktop-sized seats never fit a portrait table */
-@media(max-width:680px),(max-width:1024px) and (orientation:portrait){
+@media(max-width:680px),(max-width:1024px) and (orientation:portrait),(max-width:1024px) and (orientation:landscape) and (max-height:500px){
   body{overflow:hidden;}
   /* the start menu is taller than small screens: let it scroll instead of clipping */
   #setup{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;}

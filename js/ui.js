@@ -396,18 +396,29 @@ function layoutDesktopSeats(felt,W,H,cx,cy){
 /* Mobile: hero bottom-center; opponents on an upper arc. Board sits above hero. */
 function layoutMobileSeats(felt){
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,n=state.players.length;
-  const fl=document.body.classList.contains('fl');
+  const fl=document.body.classList.contains('fl')||document.body.classList.contains('lls');
   let sW=102,sH=100;
   for(const p of state.players){
     const s=$('seat'+p.i);
     if(s&&s.offsetHeight){sW=Math.max(sW,s.offsetWidth);sH=Math.max(sH,s.offsetHeight);}
   }
   const shrink=Math.max(0,n-4)*0.02;
-  const rx=Math.min(W*(0.40-shrink)*(fl?0.90:1),(W-sW)/2-8);
-  const ry=Math.min(H*(fl?0.32:0.35)-shrink*H*0.25,H*0.36);
+  /* wide-short landscape: spread opponents across the full width on a flat top arc */
+  const land=W>H;
+  const rx=land
+    ? Math.max(120,(W-sW)/2-6)
+    : Math.min(W*(0.40-shrink)*(fl?0.90:1),(W-sW)/2-8);
+  const ry=land
+    ? Math.min(H*0.20,Math.max(20,H*0.5-sH))
+    : Math.min(H*(fl?0.32:0.35)-shrink*H*0.25,H*0.36);
   const ocy=H*(fl?0.41:0.43);
+  const topY=sH*0.42;
   const opponents=state.players.filter(p=>!p.isHuman);
   const m=opponents.length;
+  /* landscape: if the even per-seat width is tighter than a plate, scale seats to fit */
+  const gap=m>1?(2*rx)/(m-1):sW;
+  const seatScale=land?Math.max(0.62,Math.min(1,gap/(sW+6))):1;
+  felt.style.setProperty('--seatScale',seatScale);
   const a0=205*Math.PI/180,a1=335*Math.PI/180;
   for(const p of state.players){
     const seat=$('seat'+p.i);
@@ -418,9 +429,17 @@ function layoutMobileSeats(felt){
       continue;
     }
     const oi=opponents.indexOf(p);
-    const ang=m===1?-Math.PI/2:a0+(a1-a0)*oi/(m-1);
-    seat.style.left=(cx+rx*Math.cos(ang))+'px';
-    seat.style.top=(ocy+ry*Math.sin(ang)-24)+'px';
+    if(land){
+      /* even horizontal spread; gentle parabolic drop so the ends sit lower than center */
+      const t=m===1?0.5:oi/(m-1);
+      const u=2*t-1;
+      seat.style.left=(cx-rx+2*rx*t)+'px';
+      seat.style.top=(topY+ry*u*u-24)+'px';
+    }else{
+      const ang=m===1?-Math.PI/2:a0+(a1-a0)*oi/(m-1);
+      seat.style.left=(cx+rx*Math.cos(ang))+'px';
+      seat.style.top=(ocy+ry*Math.sin(ang)-24)+'px';
+    }
   }
   const actOpen=document.body.classList.contains('act-panel-open')&&useLandscapePanel();
   const pad={l:4,r:actOpen?14:4,t:6,b:2};
@@ -737,7 +756,7 @@ function render(winners){
 
 /* ---------- live coach ---------- */
 const pct=e=>Math.round(e*100)+'%';
-function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:1024px) and (orientation:portrait)').matches; }
+function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:1024px) and (orientation:portrait),(max-width:1024px) and (orientation:landscape) and (max-height:500px)').matches; }
 function useLandscapePanel(){
   if(!HAS_DOM||!isMobile())return false;
   const g=$('game');
@@ -791,6 +810,10 @@ function updateOrient(){
   const phone=Math.min(window.innerWidth,window.innerHeight)<=620;
   const on=portrait&&phone&&!g.classList.contains('hidden');
   document.body.classList.toggle('fl',on);
+  /* genuine phone landscape (short, wide): use the same compact seats/cards as the rotated
+     frame, but without the 90° rotation since the device is already landscape */
+  const landShort=!on&&!g.classList.contains('hidden')&&window.innerWidth>window.innerHeight&&Math.min(window.innerWidth,window.innerHeight)<=500;
+  document.body.classList.toggle('lls',landShort);
   if(on){
     g.style.width=window.innerHeight+'px';
     g.style.height=window.innerWidth+'px';
