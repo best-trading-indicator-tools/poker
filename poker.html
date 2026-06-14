@@ -378,10 +378,14 @@ body.fl .seat .plate{gap:6px;padding:6px 10px 6px 7px;border-radius:10px;min-wid
 body.fl .seat .avatar{font-size:22px;}
 body.fl .seat .pname{font-size:14px;}
 body.fl .seat .pchips{font-size:12px;}
-body.fl .seat .pstyle{font-size:10px;}
+body.fl .seat .pstyle{display:none;}
 body.fl .seat .ppos{font-size:10px;}
 body.fl .seat .lastact{font-size:12px;}
-body.fl .seat .hole{min-height:52px;gap:4px;}
+/* rotated landscape: hide opponent card backs — plates only; hero + active seat keep cards
+   (same as native lls) so the top seats don't overhang toward the screen edge */
+body.fl .seat .hole{display:none;min-height:0;margin:0;}
+body.fl .seat.human .hole,
+body.fl .seat.active .hole{display:flex;min-height:52px;gap:4px;margin-bottom:4px;}
 body.fl .card{width:50px;height:72px;border-radius:6px;}
 body.fl .card .pip{font-size:26px;}
 body.fl .card.small{width:36px;height:52px;}

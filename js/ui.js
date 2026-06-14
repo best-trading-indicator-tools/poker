@@ -543,8 +543,9 @@ function layoutOvalSeats(felt,W,H,cx,cy){
   const maxRx=(W-sW)/2-pad.l, maxRy=(H-sH)/2-pad.t;
   let rx=Math.min(compact?W*0.42:W*0.41,Math.max(50,maxRx));
   let ry=Math.min(compact?H*0.42:H*0.40,Math.max(compact?32:50,maxRy));
-  /* phone landscape: flatter oval + lower center so the top seat clears the pot */
-  if(lls&&W>H&&n<=6){
+  /* phone landscape (native lls + rotated-portrait fl): flatter oval + lower center
+     so the top seats clear the edge instead of crowding it */
+  if(compact&&W>H&&n<=6){
     ry=Math.min(ry,H*0.34);
     cy=H*0.53;
   }
@@ -572,7 +573,7 @@ function layoutOvalSeats(felt,W,H,cx,cy){
     nudgeLayoutOverlaps(overlapGap);
     if(!ovalSeatsInBounds(W,H,pad)){
       rx*=0.97; ry*=0.97;
-      if(lls&&W>H&&n<=6) ry=Math.min(ry,H*0.34);
+      if(compact&&W>H&&n<=6) ry=Math.min(ry,H*0.34);
       angs=ovalArcAngles(rx,ry,n);
       placeOvalAngles(angs,rx,ry,cx,cy,lift);
       resolveOvalAngles(angs,rx,ry,cx,cy,lift,overlapGap);
