@@ -568,9 +568,25 @@ function centerOverlapsSeats(rect,boxes,gap){
 }
 function boardCardMetrics(){
   if(!HAS_DOM)return {cardW:54,gap:7};
-  if(document.body.classList.contains('fl'))return {cardW:34,gap:3};
-  if(isMobile())return {cardW:42,gap:4};
-  return {cardW:54,gap:7};
+  const board=$('board');
+  let cardW=0,gap=0;
+  const sample=board?.querySelector('.card')||document.querySelector('#felt .card:not(.small)');
+  if(sample&&sample.offsetWidth)cardW=sample.offsetWidth;
+  if(board){
+    const g=parseFloat(getComputedStyle(board).columnGap||getComputedStyle(board).gap);
+    if(!isNaN(g))gap=g;
+  }
+  if(!cardW){
+    if(document.body.classList.contains('fl'))cardW=34;
+    else if(isMobile())cardW=42;
+    else cardW=54;
+  }
+  if(!gap){
+    if(document.body.classList.contains('fl'))gap=3;
+    else if(isMobile())gap=4;
+    else gap=7;
+  }
+  return {cardW,gap};
 }
 function boardMinWidth(){
   const {cardW,gap}=boardCardMetrics();
@@ -600,9 +616,9 @@ function adjustCenterY(cx,cy,halfH,halfW,boxes,gap,H){
   }
   return clamp(y,halfH+gap,H-halfH-gap);
 }
-function applyCenterPlacement(center,maxWidth,minWidth){
+function applyCenterPlacement(center,maxWidth,minWidth,topPct){
   center.style.left='50%';
-  center.style.top='50%';
+  center.style.top=(topPct??50)+'%';
   center.style.width='auto';
   center.style.minWidth=minWidth+'px';
   center.style.maxWidth=maxWidth+'px';
@@ -619,8 +635,8 @@ function positionCenterArea(){
   const felt=$('felt'), center=$('centerArea');
   if(!felt||!center)return;
   const W=felt.clientWidth,H=felt.clientHeight,cx=W/2,cy=H/2;
-  const n=state.players.length,mob=isMobile(),gap=mob?16:12;
-  if(!mob){
+  const n=state.players.length,compact=useDynamicCenter(),gap=compact?16:12;
+  if(!compact){
     center.style.top='';
     center.style.width='';
     center.style.left='';
@@ -629,24 +645,25 @@ function positionCenterArea(){
     return;
   }
   const boardMin=boardMinWidth();
-  const maxW=Math.max(boardMin,Math.min(W*clamp(0.82-n*0.024,0.58,0.84),300-n*6));
+  const widthCap=compact&&!isMobile()?Math.min(380,300-n*4):300-n*6;
+  const maxW=Math.max(boardMin,Math.min(W*clamp(0.82-n*0.024,0.58,0.84),widthCap));
   let halfW=Math.max(boardMin/2,symmetricHalfW(cx,seatBoxes(gap),gap,maxW/2));
-  center.style.left='50%';
-  center.style.top='50%';
-  for(let i=0;i<16;i++){
-    applyCenterPlacement(center,maxW,halfW*2);
+  let centerY=cy;
+  for(let i=0;i<24;i++){
+    applyCenterPlacement(center,maxW,halfW*2,centerY/H*100);
     void center.offsetHeight;
     const dom=centerRectDOM(felt,center);
     const obstacles=seatBoxes(gap);
-    if(!centerOverlapsSeats(dom,obstacles,gap)&&Math.abs(dom.cx-cx)<3&&Math.abs(dom.cy-cy)<8)break;
+    if(!centerOverlapsSeats(dom,obstacles,gap)&&Math.abs(dom.cx-cx)<3&&Math.abs(dom.cy-centerY)<8)break;
     if(halfW>boardMin/2+4){
       halfW=Math.max(boardMin/2,halfW-4);
+      centerY=cy;
       continue;
     }
-    const y=adjustCenterY(cx,cy,dom.h/2,halfW,obstacles,gap,H);
-    if(Math.abs(y-cy)>10) center.style.top=(y/H*100)+'%';
+    centerY=adjustCenterY(cx,cy,dom.h/2,halfW,obstacles,gap,H);
     void center.offsetHeight;
-    break;
+    const dom2=centerRectDOM(felt,center);
+    if(!centerOverlapsSeats(dom2,obstacles,gap))break;
   }
 }
 function positionDealerBtn(){
@@ -756,7 +773,13 @@ function render(winners){
 
 /* ---------- live coach ---------- */
 const pct=e=>Math.round(e*100)+'%';
-function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:980px) and (orientation:portrait)').matches; }
+function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:1024px) and (orientation:portrait)').matches; }
+function useDynamicCenter(){
+  if(!HAS_DOM)return false;
+  if(isMobile())return true;
+  const felt=$('felt');
+  return !!(felt&&felt.clientWidth>0&&felt.clientWidth<920);
+}
 function useLandscapePanel(){
   if(!HAS_DOM||!isMobile())return false;
   const g=$('game');

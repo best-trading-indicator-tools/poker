@@ -108,7 +108,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #chatRow{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line);}
 #chatIn{flex:1;background:#10141b;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px;font-size:13px;min-width:0;}
 #chatSend{background:var(--gold);border:none;border-radius:8px;color:#1a1408;font-weight:700;padding:0 13px;cursor:pointer;}
-@media(max-width:680px),(max-width:980px) and (orientation:portrait){
+@media(max-width:680px),(max-width:1024px) and (orientation:portrait){
   #chat{left:8px;right:8px;width:auto;bottom:80px;height:42vh;}
 }
 body.fl #chat{right:8px;bottom:64px;height:60%;}
@@ -124,7 +124,7 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #chartLegend{font-size:11.5px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
 #chartLegend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;}
 .chart-link{display:block;width:100%;margin:8px 0 2px;background:none;border:1px dashed var(--gold);color:var(--gold);border-radius:8px;padding:7px;font-size:12px;cursor:pointer;}
-@media(max-width:680px),(max-width:980px) and (orientation:portrait){
+@media(max-width:680px),(max-width:1024px) and (orientation:portrait){
   #chartGrid .cc{width:22px;height:20px;font-size:7.5px;}
 }
 .rp-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
@@ -168,7 +168,7 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #gtoBox .grow span:first-child{flex:1;}
 #gtoBox .grow.top{color:var(--gold);font-weight:700;}
 #gtoBox .gnote{margin-top:8px;font-size:10.5px;color:var(--dim);line-height:1.45;}
-@media(max-width:980px){
+@media(max-width:1024px){
   #coach{display:none;position:absolute;left:14px;top:14px;bottom:14px;z-index:40;box-shadow:0 14px 50px rgba(0,0,0,.65);}
   #coach.open{display:block;}
 }
@@ -459,9 +459,9 @@ body.act-panel-mode #waitMsg{font-size:11px;width:100%;text-align:center;}
 body.act-panel-mode #chipPreview{display:none!important;}
 
 /* ================= MOBILE / TOUCH =================
-   applies to phones AND any portrait screen up to 980px (large phones, small tablets,
+   applies to phones AND any portrait screen up to 1024px (large phones, iPad,
    narrow browser windows) — desktop-sized seats never fit a portrait table */
-@media(max-width:680px),(max-width:980px) and (orientation:portrait){
+@media(max-width:680px),(max-width:1024px) and (orientation:portrait){
   body{overflow:hidden;}
   /* the start menu is taller than small screens: let it scroll instead of clipping */
   #setup{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;}
@@ -544,9 +544,13 @@ body.act-panel-mode #chipPreview{display:none!important;}
   #chipPreview{display:none!important;}
   #log{left:6px;right:6px;width:auto;bottom:6px;max-height:40vh;}
 }
-@media(max-width:980px) and (orientation:landscape) and (max-height:500px){
+@media(max-width:1024px) and (orientation:landscape) and (max-height:500px){
   #coach{max-height:90vh;}
-  #centerArea{top:40%;}
+}
+/* tablet / iPad landscape: keep board in one row, let JS place the center zone */
+@media(min-width:681px) and (max-width:1024px) and (orientation:landscape){
+  #board{min-width:calc(5*48px + 4*5px);}
+  #centerArea{width:auto;max-width:min(72vw,380px);}
 }
 /* very narrow phones: shrink seats and cards further so 9 seats never collide */
 @media(max-width:390px){
