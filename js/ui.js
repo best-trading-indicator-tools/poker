@@ -1169,7 +1169,8 @@ function useLandscapePanel(){
 }
 function syncActPanelMode(){
   if(!HAS_DOM)return;
-  const on=useLandscapePanel();
+  /* fl (rotated portrait) uses the always-visible bottom bar, not the slide-out panel */
+  const on=useLandscapePanel()&&!document.body.classList.contains('fl');
   document.body.classList.toggle('act-panel-mode',on);
   if(!on){
     document.body.classList.remove('act-panel-open','act-panel-collapsed');
@@ -1195,6 +1196,7 @@ function setActBar(open){
 function syncActFab(){
   if(!HAS_DOM||!isMobile())return;
   const fab=$('actFab'),g=$('game');
+  if(document.body.classList.contains('fl')){ if(fab)fab.classList.add('hidden'); return; }
   if(!fab||!g||g.classList.contains('hidden')||!useLandscapePanel()){
     if(fab)fab.classList.add('hidden');
     return;
@@ -1217,11 +1219,16 @@ function updateOrient(){
      frame, but without the 90° rotation since the device is already landscape */
   const landShort=!on&&!g.classList.contains('hidden')&&window.innerWidth>window.innerHeight&&Math.min(window.innerWidth,window.innerHeight)<=500;
   document.body.classList.toggle('lls',landShort);
+  const FL_BAR_H=132;   // reserved screen-bottom action bar (rotated mode)
+  const bar=$('actionbar');
   if(on){
-    g.style.width=window.innerHeight+'px';
+    /* action bar lives OUTSIDE the rotated frame so its text stays upright */
+    if(bar&&bar.parentNode!==document.body) document.body.appendChild(bar);
+    g.style.width=Math.max(240,window.innerHeight-FL_BAR_H)+'px';
     g.style.height=window.innerWidth+'px';
     g.style.transform=`translateX(${window.innerWidth}px) rotate(90deg)`;
   }else{
+    if(bar&&bar.parentNode!==g) g.appendChild(bar);
     g.style.width=''; g.style.height=''; g.style.transform='';
   }
   layoutSeats();
