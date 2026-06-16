@@ -1128,6 +1128,7 @@ function render(winners){
     seat.classList.toggle('folded', p.folded&&!p.out);
     seat.classList.toggle('busted', p.out);
     seat.classList.toggle('winner', !!(winners&&winners.includes(p)));
+    seat.classList.toggle('revealed', !!p.revealed&&!p.isHuman&&!p.folded&&!p.out&&p.hole.length>0);
     $('chips'+p.i).textContent= p.out?'OUT':money(p.chips)+(p.allIn?' · all-in':'');
     $('pos'+p.i).textContent= p.out?'':(p.pos||'');
     const lls=document.body.classList.contains('lls');
