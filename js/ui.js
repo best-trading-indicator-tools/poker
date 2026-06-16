@@ -1221,16 +1221,15 @@ function updateOrient(){
   document.body.classList.toggle('lls',landShort);
   const bar=$('actionbar');
   const tb=$('topbar');
+  /* everything stays INSIDE the rotated frame so the menu (top) and action bar (bottom)
+     read in the same landscape orientation as the table */
+  if(tb&&tb.parentNode!==g) g.insertBefore(tb,g.firstChild);
+  if(bar&&bar.parentNode!==g) g.appendChild(bar);
   if(on){
-    const FL_ACT_H=132;
-    if(bar&&bar.parentNode!==document.body) document.body.appendChild(bar);
-    if(tb&&tb.parentNode!==g) g.insertBefore(tb,g.firstChild);
-    g.style.width=Math.max(240,window.innerHeight-FL_ACT_H)+'px';
+    g.style.width=window.innerHeight+'px';
     g.style.height=window.innerWidth+'px';
     g.style.transform=`translateX(${window.innerWidth}px) rotate(90deg)`;
   }else{
-    if(tb&&tb.parentNode!==g) g.insertBefore(tb,g.firstChild);
-    if(bar&&bar.parentNode!==g) g.appendChild(bar);
     g.style.width=''; g.style.height=''; g.style.transform='';
   }
   layoutSeats();

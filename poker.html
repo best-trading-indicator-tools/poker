@@ -376,7 +376,11 @@ html body.fl #topbar{
 }
 body.fl #waitMsg{display:none;}
 body.fl #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}
-body.fl #felt{inset:10px 14px 10px 14px;border-width:5px;}
+body.fl #felt{inset:10px 14px 60px 14px;border-width:5px;}
+/* showdown: opponents' revealed cards use compact size so the taller seats still fit */
+body.fl .seat.revealed .card{width:34px;height:48px;border-radius:5px;}
+body.fl .seat.revealed .card .pip{font-size:17px;}
+body.fl .seat.revealed .hole{min-height:48px;}
 body.fl .seat{width:118px;margin-left:-59px;margin-top:0;transform:scale(var(--seatScale,1));transform-origin:center top;}
 body.fl .seat .plate{gap:6px;padding:6px 10px 6px 7px;border-radius:10px;min-width:0;}
 body.fl .seat .avatar{font-size:22px;}
@@ -535,28 +539,29 @@ body.act-panel-mode #chipPreview{display:none!important;}
    pinned to the screen bottom — OUTSIDE the rotated #game so the text stays upright.
    #actionbar is reparented to <body> by JS when fl is active. */
 body.fl #actFab,body.fl #actBackdrop{display:none!important;}
+/* action bar pinned to the BOTTOM of the rotated frame (it rotates with the table, so it
+   reads in the same landscape orientation), spanning the full width as one slim row */
 html body.fl #actionbar{
-  position:fixed;left:0;right:0;bottom:0;
-  min-height:116px;max-height:132px;overflow-y:auto;z-index:200;
-  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
-  gap:7px;padding:7px 10px calc(7px + env(safe-area-inset-bottom));
+  position:absolute;left:0;right:0;bottom:0;top:auto;
+  height:54px;min-height:0;max-height:54px;overflow:hidden;z-index:60;
+  display:flex;flex-wrap:nowrap;align-items:center;justify-content:center;
+  gap:8px;padding:5px 10px;
   background:var(--panel);border-top:1px solid var(--line);
   box-shadow:0 -6px 22px rgba(0,0,0,.5);
-  transform:none!important;visibility:visible!important;pointer-events:auto!important;
-  writing-mode:horizontal-tb;overflow:visible;
+  visibility:visible!important;pointer-events:auto!important;
 }
 /* keep the bar focused on actions: hide secondary buttons (still available on desktop
    / via the side panel: Coach, Log, history, reactions) */
 body.fl #actionbar>#logToggle,body.fl #actionbar>#replayBtn,
 body.fl #actionbar>#exportBtn,body.fl #actionbar>#emoBtn,
 body.fl #actionbar>#chatBtn,body.fl #humanCtls #coachToggle{display:none!important;}
-body.fl #waitMsg{flex-basis:100%;text-align:center;font-size:12px;color:var(--dim);margin:0;}
-body.fl #humanCtls{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;width:100%;flex:none;}
+body.fl #waitMsg{text-align:center;font-size:12px;color:var(--dim);margin:0 6px;flex:0 0 auto;}
+body.fl #humanCtls{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:center;gap:6px;width:100%;flex:1 1 auto;min-width:0;}
 body.fl #humanCtls.hidden{display:none;}
-body.fl #humanCtls #foldBtn,body.fl #humanCtls #callBtn,body.fl #raiseBtn{flex:1 1 auto;min-width:88px;max-width:150px;padding:13px 10px;font-size:15px;}
-body.fl #raiseCtl{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;flex-basis:100%;}
-body.fl #raiseCtl .preset{flex:none;padding:8px 11px;font-size:12px;}
-body.fl #raiseSlider{flex:1 1 140px;min-width:120px;height:26px;}
+body.fl #humanCtls #foldBtn,body.fl #humanCtls #callBtn,body.fl #raiseBtn{flex:0 1 auto;min-width:62px;padding:9px 10px;font-size:14px;white-space:nowrap;}
+body.fl #raiseCtl{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:5px;flex:1 1 auto;min-width:0;}
+body.fl #raiseCtl .preset{flex:0 0 auto;padding:7px 8px;font-size:11px;}
+body.fl #raiseSlider{flex:1 1 56px;min-width:46px;height:22px;}
 body.fl #chipPreview{display:none!important;}
 
 /* ================= MOBILE / TOUCH =================
