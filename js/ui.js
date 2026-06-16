@@ -1161,11 +1161,8 @@ const pct=e=>Math.round(e*100)+'%';
 function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:1024px) and (orientation:portrait),(max-width:1024px) and (orientation:landscape) and (max-height:500px)').matches; }
 function maxSetupPlayers(){ return isMobile()?6:9; }
 function useLandscapePanel(){
-  if(!HAS_DOM||!isMobile())return false;
-  const g=$('game');
-  if(!g||g.classList.contains('hidden'))return false;
-  return document.body.classList.contains('fl')||
-    window.matchMedia('(orientation:landscape)').matches;
+  /* mobile always uses a bottom action bar — never the right slide-out panel */
+  return false;
 }
 function syncActPanelMode(){
   if(!HAS_DOM)return;

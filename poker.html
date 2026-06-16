@@ -427,6 +427,25 @@ body.lls #board{min-height:0;gap:5px;min-width:calc(5*50px + 4*5px);}
 body.lls #board.has-cards{min-height:72px;}
 body.lls #pot{font-size:15px;white-space:nowrap;}
 
+/* native phone landscape: slim bottom action bar (same layout as rotated-portrait fl) */
+body.lls #actFab,body.lls #actBackdrop{display:none!important;}
+body.lls #actionbar{
+  flex-shrink:0;padding:7px 10px max(7px,env(safe-area-inset-bottom));gap:7px;
+  min-height:0;max-height:132px;overflow-y:auto;
+  flex-wrap:wrap;align-items:center;justify-content:center;
+}
+body.lls #actionbar>#logToggle,body.lls #actionbar>#replayBtn,
+body.lls #actionbar>#exportBtn,body.lls #actionbar>#emoBtn,
+body.lls #actionbar>#chatBtn,body.lls #humanCtls #coachToggle{display:none!important;}
+body.lls #waitMsg{flex-basis:100%;text-align:center;font-size:12px;color:var(--dim);margin:0;}
+body.lls #humanCtls{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;width:100%;flex:none;}
+body.lls #humanCtls.hidden{display:none;}
+body.lls #humanCtls #foldBtn,body.lls #humanCtls #callBtn,body.lls #raiseBtn{flex:1 1 auto;min-width:88px;max-width:150px;padding:13px 10px;font-size:15px;}
+body.lls #raiseCtl{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;flex-basis:100%;}
+body.lls #raiseCtl .preset{flex:none;padding:8px 11px;font-size:12px;}
+body.lls #raiseSlider{flex:1 1 140px;min-width:120px;height:26px;}
+body.lls #chipPreview{display:none!important;}
+
 /* mobile landscape only: scrollable right panel inside #game (rotates with the table) */
 body.act-panel-mode #actFab{
   display:block;
