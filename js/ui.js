@@ -666,6 +666,76 @@ function layoutMobileSeats(felt){
     }
   }
 }
+/* Deterministic rotated-portrait (fl) layout: hero pinned bottom-center, opponents
+   on a top arc (one or two rows) evenly spread across the width, with a single
+   computed scale so any player count fits any viewport without overlap. The center
+   pot/board is placed in the middle band by positionCenterArea(). */
+function layoutCompactRows(felt,W,H){
+  const cx=W/2;
+  const sideL=8,sideR=(document.body.classList.contains('act-panel-open')&&useLandscapePanel())?56:8;
+  const topPad=6,botPad=2,gapV=12,gapH=5,rowGap=6,boardH=72;
+  /* measure unscaled sizes */
+  felt.style.setProperty('--seatScale','1');
+  const hero=state.players.find(p=>p.isHuman);
+  let pw=70,oppH=40,heroH=60;
+  for(const p of state.players){
+    const s=$('seat'+p.i); if(!s||!s.offsetHeight)continue;
+    const plate=s.querySelector('.plate');
+    const w=plate?plate.offsetWidth:s.offsetWidth;
+    if(p.isHuman){ heroH=Math.max(heroH,s.offsetHeight); }
+    else { pw=Math.max(pw,w); oppH=Math.max(oppH,s.offsetHeight); }
+  }
+  const m=state.players.length-1;            // opponents
+  const usableW=W-sideL-sideR;
+  const sSingle=m>1?(usableW-(m-1)*gapH)/(m*pw):1;
+  const twoRow=m>=4&&sSingle<0.6;
+  let s,rows;
+  if(!twoRow){
+    const sV=(H-topPad-botPad-2*gapV-boardH)/(oppH+14+heroH);
+    s=Math.max(0.5,Math.min(1,sSingle,sV));
+    rows=[m];
+  }else{
+    const back=Math.ceil(m/2),front=m-back,per=Math.max(back,front);
+    const sH=(usableW-(per-1)*gapH)/(per*pw);
+    const sV=(H-topPad-botPad-rowGap-2*gapV-boardH)/(2*oppH+heroH);
+    s=Math.max(0.45,Math.min(1,sH,sV));
+    rows=[back,front];
+  }
+  felt.style.setProperty('--seatScale',String(s));
+  const seatW=pw*s, oH=oppH*s, hH=heroH*s;
+  const xL=sideL+seatW/2, xR=W-sideR-seatW/2;
+  /* hero bottom-center */
+  if(hero){
+    const hs=$('seat'+hero.i);
+    if(hs){ hs.style.left=cx+'px'; hs.style.top=Math.max(topPad,H-botPad-hH)+'px'; }
+  }
+  /* opponents */
+  const opps=state.players.filter(p=>!p.isHuman);
+  const place=(list,topY)=>{
+    const c=list.length;
+    list.forEach((p,i)=>{
+      const seat=$('seat'+p.i); if(!seat)return;
+      const t=c>1?i/(c-1):0.5;
+      const x=(c>1)?(xL+(xR-xL)*t):cx;
+      seat.style.left=x+'px';
+      seat.style.top=topY+'px';
+    });
+  };
+  if(rows.length===1){
+    const dip=14*s, c=opps.length;
+    opps.forEach((p,i)=>{
+      const seat=$('seat'+p.i); if(!seat)return;
+      const t=c>1?i/(c-1):0.5, u=2*t-1;
+      const x=(c>1)?(xL+(xR-xL)*t):cx;
+      seat.style.left=x+'px';
+      seat.style.top=(topPad+dip*u*u)+'px';
+    });
+  }else{
+    const back=rows[0];
+    place(opps.slice(0,back),topPad);
+    place(opps.slice(back),topPad+oH+rowGap);
+  }
+}
 function layoutSeats(){
   if(!HAS_DOM||!state||BENCH)return;
   const felt=$('felt');
@@ -673,7 +743,8 @@ function layoutSeats(){
   /* mobile portrait: upper arc + hero bottom; mobile landscape + desktop: uniform oval */
   let usedOval=false;
   if(isMobile()){
-    if(W>H){ layoutOvalSeats(felt,W,H,cx,cy); usedOval=true; }
+    if(document.body.classList.contains('fl')){ layoutCompactRows(felt,W,H); }
+    else if(W>H){ layoutOvalSeats(felt,W,H,cx,cy); usedOval=true; }
     else layoutMobileSeats(felt);
   }else{ layoutDesktopSeats(felt,W,H,cx,cy); usedOval=true; }
   positionCenterArea();

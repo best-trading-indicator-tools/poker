@@ -373,7 +373,7 @@ body.fl #sndBtn,body.fl #langTop{flex-shrink:0;padding:3px 7px;font-size:11px;}
 body.fl #waitMsg{display:none;}
 body.fl #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}
 body.fl #felt{inset:10px 14px 10px 14px;border-width:5px;}
-body.fl .seat{width:118px;margin-left:-59px;margin-top:-32px;transform:scale(var(--seatScale,1));transform-origin:center top;}
+body.fl .seat{width:118px;margin-left:-59px;margin-top:0;transform:scale(var(--seatScale,1));transform-origin:center top;}
 body.fl .seat .plate{gap:6px;padding:6px 10px 6px 7px;border-radius:10px;min-width:0;}
 body.fl .seat .avatar{font-size:22px;}
 body.fl .seat .pname{font-size:14px;}
@@ -384,8 +384,7 @@ body.fl .seat .lastact{font-size:12px;}
 /* rotated landscape: hide opponent card backs — plates only; hero + active seat keep cards
    (same as native lls) so the top seats don't overhang toward the screen edge */
 body.fl .seat .hole{display:none;min-height:0;margin:0;}
-body.fl .seat.human .hole,
-body.fl .seat.active .hole{display:flex;min-height:52px;gap:4px;margin-bottom:4px;}
+body.fl .seat.human .hole{display:flex;min-height:52px;gap:4px;margin-bottom:4px;}
 body.fl .card{width:50px;height:72px;border-radius:6px;}
 body.fl .card .pip{font-size:26px;}
 body.fl .card.small{width:36px;height:52px;}
