@@ -370,11 +370,9 @@ body.fl #topbar .tb-touch{min-height:32px;padding:2px 6px;margin:0;gap:6px;}
 body.fl #topbar .tb-touch input{width:18px;height:18px;}
 body.fl #quitBtn{flex-shrink:0;margin-left:4px;padding:5px 10px;}
 body.fl #sndBtn,body.fl #langTop{flex-shrink:0;padding:3px 7px;font-size:11px;}
-/* topbar lives in the bottom dock (outside rotated #game) so it stays upright */
+/* forced-landscape phone view keeps only the betting controls at the bottom */
 html body.fl #topbar{
-  position:fixed;left:0;right:0;bottom:132px;z-index:200;
-  background:var(--panel);border-top:1px solid var(--line);border-bottom:none;
-  padding:4px 10px;padding-bottom:6px;
+  display:none!important;
 }
 body.fl #waitMsg{display:none;}
 body.fl #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}

@@ -1042,7 +1042,10 @@ function positionCenterArea(){
   const land=W>H;
   const base=land?50:(fl?36:40);
   center.style.top=base+'%';
-  if(land) settleCenterVertical(center,felt,W,H,28,base);
+  if(land){
+    settleCenterVertical(center,felt,W,H,28,base);
+    liftCenterAboveHero(center,felt,W,H,24,parseFloat(center.style.top)||base);
+  }
   else liftCenterAboveHero(center,felt,W,H,fl?34:38,base);
 }
 function positionDealerBtn(){
@@ -1166,8 +1169,9 @@ function useLandscapePanel(){
 }
 function syncActPanelMode(){
   if(!HAS_DOM)return;
-  /* fl (rotated portrait) uses the always-visible bottom bar, not the slide-out panel */
-  const on=useLandscapePanel()&&!document.body.classList.contains('fl');
+  /* fl (rotated portrait) and lls (native landscape) both use the always-visible bottom
+     action dock, not the slide-out right-side panel */
+  const on=useLandscapePanel()&&!document.body.classList.contains('fl')&&!document.body.classList.contains('lls');
   document.body.classList.toggle('act-panel-mode',on);
   if(!on){
     document.body.classList.remove('act-panel-open','act-panel-collapsed');
@@ -1208,20 +1212,20 @@ function syncActFab(){
 function updateOrient(){
   if(!HAS_DOM)return;
   const g=$('game'); if(!g)return;
-  /* Portrait uses normal mobile layout (menu top, actions bottom). Forced rotation
-     stacked both bars at the bottom and ate ~half the screen. */
-  const on=false;
+  const portrait=window.innerHeight>window.innerWidth;
+  const phone=Math.min(window.innerWidth,window.innerHeight)<=620;
+  const on=portrait&&phone&&!g.classList.contains('hidden');
   document.body.classList.toggle('fl',on);
   /* genuine phone landscape (short, wide): compact oval + bottom control dock */
-  const landShort=!g.classList.contains('hidden')&&window.innerWidth>window.innerHeight&&Math.min(window.innerWidth,window.innerHeight)<=500;
+  const landShort=!on&&!g.classList.contains('hidden')&&window.innerWidth>window.innerHeight&&Math.min(window.innerWidth,window.innerHeight)<=500;
   document.body.classList.toggle('lls',landShort);
   const bar=$('actionbar');
   const tb=$('topbar');
   if(on){
-    const FL_ACT_H=132,FL_TOP_H=38,FL_DOCK_H=FL_ACT_H+FL_TOP_H;
-    if(tb&&tb.parentNode!==document.body) document.body.appendChild(tb);
+    const FL_ACT_H=132;
     if(bar&&bar.parentNode!==document.body) document.body.appendChild(bar);
-    g.style.width=Math.max(240,window.innerHeight-FL_DOCK_H)+'px';
+    if(tb&&tb.parentNode!==g) g.insertBefore(tb,g.firstChild);
+    g.style.width=Math.max(240,window.innerHeight-FL_ACT_H)+'px';
     g.style.height=window.innerWidth+'px';
     g.style.transform=`translateX(${window.innerWidth}px) rotate(90deg)`;
   }else{
