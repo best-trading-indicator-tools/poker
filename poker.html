@@ -370,6 +370,12 @@ body.fl #topbar .tb-touch{min-height:32px;padding:2px 6px;margin:0;gap:6px;}
 body.fl #topbar .tb-touch input{width:18px;height:18px;}
 body.fl #quitBtn{flex-shrink:0;margin-left:4px;padding:5px 10px;}
 body.fl #sndBtn,body.fl #langTop{flex-shrink:0;padding:3px 7px;font-size:11px;}
+/* topbar lives in the bottom dock (outside rotated #game) so it stays upright */
+html body.fl #topbar{
+  position:fixed;left:0;right:0;bottom:132px;z-index:200;
+  background:var(--panel);border-top:1px solid var(--line);border-bottom:none;
+  padding:4px 10px;padding-bottom:6px;
+}
 body.fl #waitMsg{display:none;}
 body.fl #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}
 body.fl #felt{inset:10px 14px 10px 14px;border-width:5px;}
@@ -445,6 +451,19 @@ body.lls #raiseCtl{display:flex;flex-direction:row;flex-wrap:wrap;align-items:ce
 body.lls #raiseCtl .preset{flex:none;padding:8px 11px;font-size:12px;}
 body.lls #raiseSlider{flex:1 1 140px;min-width:120px;height:26px;}
 body.lls #chipPreview{display:none!important;}
+
+/* native landscape: menu + actions stacked at the bottom, table fills the rest */
+body.lls #game{display:flex;flex-direction:column;}
+body.lls #tableWrap{order:0;}
+body.lls #topbar{
+  order:2;flex-shrink:0;
+  border-bottom:none;border-top:1px solid var(--line);
+  padding:6px 10px;padding-top:6px;
+  overflow-x:auto;flex-wrap:nowrap;white-space:nowrap;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+body.lls #topbar::-webkit-scrollbar{display:none;}
+body.lls #actionbar{order:3;}
 
 /* mobile landscape only: scrollable right panel inside #game (rotates with the table) */
 body.act-panel-mode #actFab{

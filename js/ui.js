@@ -1216,15 +1216,20 @@ function updateOrient(){
      frame, but without the 90° rotation since the device is already landscape */
   const landShort=!on&&!g.classList.contains('hidden')&&window.innerWidth>window.innerHeight&&Math.min(window.innerWidth,window.innerHeight)<=500;
   document.body.classList.toggle('lls',landShort);
-  const FL_BAR_H=132;   // reserved screen-bottom action bar (rotated mode)
+  const FL_ACT_H=132;
+  const FL_TOP_H=38;
+  const FL_DOCK_H=FL_ACT_H+FL_TOP_H;
   const bar=$('actionbar');
+  const tb=$('topbar');
   if(on){
-    /* action bar lives OUTSIDE the rotated frame so its text stays upright */
+    /* menu + action bar live OUTSIDE the rotated frame so text stays upright */
+    if(tb&&tb.parentNode!==document.body) document.body.appendChild(tb);
     if(bar&&bar.parentNode!==document.body) document.body.appendChild(bar);
-    g.style.width=Math.max(240,window.innerHeight-FL_BAR_H)+'px';
+    g.style.width=Math.max(240,window.innerHeight-FL_DOCK_H)+'px';
     g.style.height=window.innerWidth+'px';
     g.style.transform=`translateX(${window.innerWidth}px) rotate(90deg)`;
   }else{
+    if(tb&&tb.parentNode!==g) g.insertBefore(tb,g.firstChild);
     if(bar&&bar.parentNode!==g) g.appendChild(bar);
     g.style.width=''; g.style.height=''; g.style.transform='';
   }
