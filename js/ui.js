@@ -1208,21 +1208,17 @@ function syncActFab(){
 function updateOrient(){
   if(!HAS_DOM)return;
   const g=$('game'); if(!g)return;
-  const portrait=window.innerHeight>window.innerWidth;
-  const phone=Math.min(window.innerWidth,window.innerHeight)<=620;
-  const on=portrait&&phone&&!g.classList.contains('hidden');
+  /* Portrait uses normal mobile layout (menu top, actions bottom). Forced rotation
+     stacked both bars at the bottom and ate ~half the screen. */
+  const on=false;
   document.body.classList.toggle('fl',on);
-  /* genuine phone landscape (short, wide): use the same compact seats/cards as the rotated
-     frame, but without the 90° rotation since the device is already landscape */
-  const landShort=!on&&!g.classList.contains('hidden')&&window.innerWidth>window.innerHeight&&Math.min(window.innerWidth,window.innerHeight)<=500;
+  /* genuine phone landscape (short, wide): compact oval + bottom control dock */
+  const landShort=!g.classList.contains('hidden')&&window.innerWidth>window.innerHeight&&Math.min(window.innerWidth,window.innerHeight)<=500;
   document.body.classList.toggle('lls',landShort);
-  const FL_ACT_H=132;
-  const FL_TOP_H=38;
-  const FL_DOCK_H=FL_ACT_H+FL_TOP_H;
   const bar=$('actionbar');
   const tb=$('topbar');
   if(on){
-    /* menu + action bar live OUTSIDE the rotated frame so text stays upright */
+    const FL_ACT_H=132,FL_TOP_H=38,FL_DOCK_H=FL_ACT_H+FL_TOP_H;
     if(tb&&tb.parentNode!==document.body) document.body.appendChild(tb);
     if(bar&&bar.parentNode!==document.body) document.body.appendChild(bar);
     g.style.width=Math.max(240,window.innerHeight-FL_DOCK_H)+'px';
