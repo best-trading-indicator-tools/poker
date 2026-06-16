@@ -239,6 +239,8 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #raiseCtl{display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap;}
 #raiseSlider{flex:1;min-width:90px;accent-color:var(--gold);}
 #raiseBtn{font-variant-numeric:tabular-nums;}
+#raiseBtn .act-label,#raiseBtn .act-amount{display:inline;}
+#raiseBtn .act-label{margin-right:.25em;}
 .preset{background:var(--panel2);border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;font-weight:600;flex-shrink:0;white-space:nowrap;}
 .preset:hover{color:var(--text);}
 #waitMsg{color:var(--dim);font-size:14px;}
@@ -376,12 +378,12 @@ html body.fl #topbar{
 }
 body.fl #waitMsg{display:none;}
 body.fl #tableWrap{padding:2px 4px;flex:1;min-height:0;overflow:hidden;}
-body.fl #felt{inset:10px 14px 60px 14px;border-width:5px;}
+body.fl #felt{inset:6px 8px 8px 8px;border-width:6px;}
 /* showdown: opponents' revealed cards use compact size so the taller seats still fit */
 body.fl .seat.revealed .card{width:34px;height:48px;border-radius:5px;}
 body.fl .seat.revealed .card .pip{font-size:17px;}
 body.fl .seat.revealed .hole{min-height:48px;}
-body.fl .seat{width:118px;margin-left:-59px;margin-top:0;transform:scale(var(--seatScale,1));transform-origin:center top;}
+body.fl .seat{width:124px;margin-left:-62px;margin-top:0;transform:scale(var(--seatScale,1));transform-origin:center top;}
 body.fl .seat .plate{gap:6px;padding:6px 10px 6px 7px;border-radius:10px;min-width:0;}
 body.fl .seat .avatar{font-size:22px;}
 body.fl .seat .pname{font-size:14px;}
@@ -389,13 +391,17 @@ body.fl .seat .pchips{font-size:12px;}
 body.fl .seat .pstyle{display:none;}
 body.fl .seat .ppos{font-size:10px;}
 body.fl .seat .lastact{font-size:12px;}
+body.fl .seat .lastact:empty,
+body.fl .tmr:empty{min-height:0;margin-top:0;}
 /* rotated landscape: hide opponent card backs — plates only; hero + active seat keep cards
    (same as native lls) so the top seats don't overhang toward the screen edge */
 body.fl .seat .hole{display:none;min-height:0;margin:0;}
-body.fl .seat.human .hole,
-body.fl .seat.revealed .hole{display:flex;min-height:52px;gap:4px;margin-bottom:4px;}
-body.fl .card{width:50px;height:72px;border-radius:6px;}
-body.fl .card .pip{font-size:26px;}
+body.fl .seat.human .hole{display:flex;min-height:60px;gap:4px;margin-bottom:4px;}
+body.fl .seat.revealed .hole{display:flex;min-height:48px;gap:4px;margin-bottom:4px;}
+body.fl .card{width:56px;height:80px;border-radius:7px;}
+body.fl .card .ix{font-size:14px;}
+body.fl .card .ix .si{font-size:10px;}
+body.fl .card .pip{font-size:29px;}
 body.fl .card.small{width:36px;height:52px;}
 body.fl .card.small .pip{font-size:18px;}
 body.fl #centerArea{top:50%;width:auto;max-width:min(94vw,420px);}
@@ -405,12 +411,12 @@ body.fl #centerArea{top:50%;width:auto;max-width:min(94vw,420px);}
 body.fl #centerArea.has-board{display:flex;flex-direction:row-reverse;align-items:center;justify-content:center;gap:8px;width:auto;max-width:none;}
 body.fl #centerArea.has-board #pot{margin:0;}
 body.fl #centerArea.has-board #board{margin:0;}
-body.fl #board{min-height:0;gap:5px;min-width:calc(5*50px + 4*5px);}
-body.fl #board.has-cards{min-height:72px;}
+body.fl #board{min-height:0;gap:6px;min-width:calc(5*56px + 4*6px);}
+body.fl #board.has-cards{min-height:80px;}
 body.fl #pot{font-size:15px;white-space:nowrap;}
 /* native phone landscape (lls): oval like desktop, readable mobile sizes — no transform scale */
 body.lls #tableWrap{padding:2px 6px;flex:1;min-height:0;overflow:hidden;}
-body.lls #felt{inset:8px 10px 4px 10px;border-width:6px;}
+body.lls #felt{inset:6px 8px 2px 8px;border-width:6px;}
 body.lls .seat{width:118px;margin-left:-59px;margin-top:-20px;}
 body.lls .seat.human,
 body.lls .seat.active{margin-top:-36px;}
@@ -421,18 +427,22 @@ body.lls .seat .pchips{font-size:12px;}
 body.lls .seat .pstyle{display:none;}
 body.lls .seat .ppos{font-size:10px;}
 body.lls .seat .lastact{font-size:12px;}
+body.lls .seat .lastact:empty,
+body.lls .tmr:empty{min-height:0;margin-top:0;}
 /* landscape: hide opponent card backs — plates only; hero + active seat keep cards */
 body.lls .seat .hole{display:none;min-height:0;margin:0;}
 body.lls .seat.human .hole,
 body.lls .seat.active .hole,
-body.lls .seat.revealed .hole{display:flex;min-height:52px;gap:4px;margin-bottom:4px;}
-body.lls .card{width:50px;height:72px;border-radius:6px;}
-body.lls .card .pip{font-size:26px;}
+body.lls .seat.revealed .hole{display:flex;min-height:58px;gap:4px;margin-bottom:4px;}
+body.lls .card{width:54px;height:78px;border-radius:7px;}
+body.lls .card .ix{font-size:14px;}
+body.lls .card .ix .si{font-size:10px;}
+body.lls .card .pip{font-size:28px;}
 body.lls .card.small{width:36px;height:52px;}
 body.lls .card.small .pip{font-size:18px;}
 body.lls #centerArea{top:50%;width:auto;max-width:min(88vw,360px);}
-body.lls #board{min-height:0;gap:5px;min-width:calc(5*50px + 4*5px);}
-body.lls #board.has-cards{min-height:72px;}
+body.lls #board{min-height:0;gap:6px;min-width:calc(5*54px + 4*6px);}
+body.lls #board.has-cards{min-height:78px;}
 body.lls #pot{font-size:15px;white-space:nowrap;}
 
 /* native phone landscape: slim bottom action bar (same layout as rotated-portrait fl) */
@@ -449,6 +459,9 @@ body.lls #waitMsg{flex-basis:100%;text-align:center;font-size:12px;color:var(--d
 body.lls #humanCtls{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;width:100%;flex:none;}
 body.lls #humanCtls.hidden{display:none;}
 body.lls #humanCtls #foldBtn,body.lls #humanCtls #callBtn,body.lls #raiseBtn{flex:1 1 auto;min-width:88px;max-width:150px;padding:13px 10px;font-size:15px;}
+body.lls #raiseBtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;white-space:normal;line-height:1.08;}
+body.lls #raiseBtn .act-label{font-size:12px;margin-right:0;}
+body.lls #raiseBtn .act-amount{font-size:13px;}
 body.lls #raiseCtl{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;flex-basis:100%;}
 body.lls #raiseCtl .preset{flex:none;padding:8px 11px;font-size:12px;}
 body.lls #raiseSlider{flex:1 1 140px;min-width:120px;height:26px;}
@@ -544,9 +557,9 @@ body.fl #actFab,body.fl #actBackdrop{display:none!important;}
 html body.fl #actionbar{
   position:relative;left:auto;right:auto;bottom:auto;top:auto;
   flex-shrink:0;width:100%;
-  height:112px;min-height:0;max-height:112px;overflow:hidden;z-index:60;
+  height:88px;min-height:0;max-height:88px;overflow:hidden;z-index:60;
   display:flex;flex-wrap:nowrap;align-items:center;justify-content:center;
-  gap:8px;padding:5px 10px;
+  gap:5px;padding:4px 8px;
   background:var(--panel);border-top:1px solid var(--line);
   box-shadow:0 -6px 22px rgba(0,0,0,.5);
   visibility:visible!important;pointer-events:auto!important;
@@ -557,12 +570,15 @@ body.fl #actionbar>#logToggle,body.fl #actionbar>#replayBtn,
 body.fl #actionbar>#exportBtn,body.fl #actionbar>#emoBtn,
 body.fl #actionbar>#chatBtn,body.fl #humanCtls #coachToggle{display:none!important;}
 body.fl #waitMsg{text-align:center;font-size:12px;color:var(--dim);margin:0 6px;flex:0 0 auto;}
-body.fl #humanCtls{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:center;gap:6px;width:100%;flex:1 1 auto;min-width:0;}
+body.fl #humanCtls{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:center;gap:5px;width:100%;flex:1 1 auto;min-width:0;}
 body.fl #humanCtls.hidden{display:none;}
-body.fl #humanCtls #foldBtn,body.fl #humanCtls #callBtn,body.fl #raiseBtn{flex:0 1 auto;min-width:62px;padding:9px 10px;font-size:14px;white-space:nowrap;}
-body.fl #raiseCtl{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:5px;flex:1 1 auto;min-width:0;}
-body.fl #raiseCtl .preset{flex:0 0 auto;padding:7px 8px;font-size:11px;}
-body.fl #raiseSlider{flex:1 1 56px;min-width:46px;height:22px;}
+body.fl #humanCtls #foldBtn,body.fl #humanCtls #callBtn,body.fl #humanCtls #raiseBtn{flex:0 1 auto;min-width:56px;padding:8px 7px;font-size:13px;white-space:normal;line-height:1.08;}
+body.fl #raiseCtl{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;flex:1 1 auto;min-width:0;}
+body.fl #raiseCtl .preset{flex:0 0 auto;padding:6px 6px;font-size:10.5px;}
+body.fl #raiseSlider{flex:1 1 64px;min-width:54px;height:24px;}
+body.fl #raiseBtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:92px;max-width:112px;overflow-wrap:anywhere;}
+body.fl #raiseBtn .act-label{font-size:11.5px;margin-right:0;}
+body.fl #raiseBtn .act-amount{font-size:12.5px;}
 body.fl #chipPreview{display:none!important;}
 
 /* ================= MOBILE / TOUCH =================
@@ -637,15 +653,18 @@ body.fl #chipPreview{display:none!important;}
   #dbtn{width:20px;height:20px;font-size:10px;}
 
   /* portrait mobile (no forced landscape): classic bottom action bar */
-  body:not(.act-panel-mode) #actionbar{padding:8px 8px max(8px,env(safe-area-inset-bottom));gap:7px;min-height:0;}
-  body:not(.act-panel-mode) #actionbar>#logToggle,body:not(.act-panel-mode) #actionbar>#replayBtn,body:not(.act-panel-mode) #actionbar>#exportBtn{padding:8px 10px;font-size:11px;flex:1;}
-  body:not(.act-panel-mode) #humanCtls{width:100%;flex-wrap:wrap;gap:8px;}
-  body:not(.act-panel-mode) #humanCtls #foldBtn,body:not(.act-panel-mode) #humanCtls #callBtn{flex:1;padding:15px 8px;font-size:15px;}
-  body:not(.act-panel-mode) #raiseCtl{flex-basis:100%;gap:7px;}
-  body:not(.act-panel-mode) #raiseCtl .preset{flex:1;padding:9px 4px;font-size:11.5px;}
-  body:not(.act-panel-mode) #raiseSlider{flex-basis:100%;min-width:0;height:30px;}
-  body:not(.act-panel-mode) #raiseBtn{flex:1;padding:14px 8px;}
-  body:not(.act-panel-mode) #waitMsg{font-size:12px;flex-basis:100%;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #actionbar{padding:8px 8px max(8px,env(safe-area-inset-bottom));gap:7px;min-height:0;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #actionbar>#logToggle,
+  body:not(.act-panel-mode):not(.fl):not(.lls) #actionbar>#replayBtn,
+  body:not(.act-panel-mode):not(.fl):not(.lls) #actionbar>#exportBtn{padding:8px 10px;font-size:11px;flex:1;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #humanCtls{width:100%;flex-wrap:wrap;gap:8px;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #humanCtls #foldBtn,
+  body:not(.act-panel-mode):not(.fl):not(.lls) #humanCtls #callBtn{flex:1;padding:15px 8px;font-size:15px;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #raiseCtl{flex-basis:100%;gap:7px;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #raiseCtl .preset{flex:1;padding:9px 4px;font-size:11.5px;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #raiseSlider{flex-basis:100%;min-width:0;height:30px;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #raiseBtn{flex:1;padding:14px 8px;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #waitMsg{font-size:12px;flex-basis:100%;}
   #chipPreview{display:none!important;}
   #log{left:6px;right:6px;width:auto;bottom:6px;max-height:40vh;}
 }

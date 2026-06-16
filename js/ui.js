@@ -673,7 +673,8 @@ function layoutMobileSeats(felt){
 function layoutCompactRows(felt,W,H){
   const cx=W/2;
   const sideL=8,sideR=(document.body.classList.contains('act-panel-open')&&useLandscapePanel())?56:8;
-  const topPad=6,botPad=2,gapV=12,gapH=5,rowGap=6,boardH=72;
+  const hasBoard=$('board')?.classList.contains('has-cards');
+  const topPad=6,botPad=2,gapV=10,gapH=5,rowGap=6,boardH=hasBoard?84:24;
   /* measure unscaled sizes */
   felt.style.setProperty('--seatScale','1');
   const hero=state.players.find(p=>p.isHuman);
@@ -688,7 +689,7 @@ function layoutCompactRows(felt,W,H){
   const m=state.players.length-1;            // opponents
   const usableW=W-sideL-sideR;
   const sSingle=m>1?(usableW-(m-1)*gapH)/(m*pw):1;
-  const twoRow=m>=4&&sSingle<0.6;
+  const twoRow=m>=4&&sSingle<0.9;
   let s,rows;
   if(!twoRow){
     const sV=(H-topPad-botPad-2*gapV-boardH)/(oppH+14+heroH);
@@ -1474,6 +1475,21 @@ function setRaiseExact(amt){
   sl.value=Math.min(+sl.max, amt);
   updateRaiseLabel();
 }
+function setActionAmountButton(btn,label,amount){
+  if(!btn)return;
+  const text=(label.trim()+' '+amount).trim();
+  if(btn.dataset.actionText===text)return;
+  btn.dataset.actionText=text;
+  btn.textContent='';
+  const lab=document.createElement('span');
+  lab.className='act-label';
+  lab.textContent=label.trim();
+  const amt=document.createElement('span');
+  amt.className='act-amount';
+  amt.textContent=amount;
+  btn.append(lab,amt);
+  btn.setAttribute('aria-label',text);
+}
 
 /* ---------- human actions ---------- */
 function showActions(p){
@@ -1509,8 +1525,11 @@ function updateRaiseLabel(){
   const v=getRaiseSliderAmt();
   const p=state.players[0];
   const allin=raiseAllInAmt();
-  $('raiseBtn').textContent = (v>=allin ? T('allin')+' ' : (state.currentBet>0?T('raiseTo'):T('betW')))
-    + `${usd(v)} (${bbs(v)})`;
+  setActionAmountButton(
+    $('raiseBtn'),
+    v>=allin ? T('allin') : (state.currentBet>0?T('raiseTo'):T('betW')),
+    `${usd(v)} (${bbs(v)})`
+  );
   $('chipPreview').innerHTML=chipStackHTML(v,true);
 }
 function humanAct(type,amount){
