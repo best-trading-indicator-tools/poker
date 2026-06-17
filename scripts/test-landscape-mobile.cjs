@@ -56,7 +56,7 @@ const VIEWPORT = { width: 844, height: 390 };
     return {
       W, H, n, overlaps, centerOverlaps, cardW, namePx, seatScale, lls, mobile,
       pass:
-        mobile && lls && n === 6 && overlaps === 0 && centerOverlaps.length === 0 &&
+        mobile && lls && n === 9 && overlaps === 0 && centerOverlaps.length === 0 &&
         cardW >= 48 && namePx >= 13,
     };
   });

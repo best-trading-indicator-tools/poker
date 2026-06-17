@@ -737,6 +737,52 @@ function layoutCompactRows(felt,W,H){
     place(opps.slice(back),topPad+oH+rowGap);
   }
 }
+function mobileLandscapeAnchors(m){
+  const sets={
+    1:[{x:.50,y:.05}],
+    2:[{x:.22,y:.20},{x:.78,y:.20}],
+    3:[{x:.12,y:.40},{x:.50,y:.05},{x:.88,y:.40}],
+    4:[{x:.10,y:.42},{x:.34,y:.04},{x:.66,y:.04},{x:.90,y:.42}],
+    5:[{x:.08,y:.52},{x:.20,y:.20},{x:.50,y:.04},{x:.80,y:.20},{x:.92,y:.52}],
+    6:[{x:.08,y:.56},{x:.12,y:.26},{x:.36,y:.04},{x:.64,y:.04},{x:.88,y:.26},{x:.92,y:.56}],
+    7:[{x:.08,y:.58},{x:.10,y:.28},{x:.34,y:.04},{x:.58,y:.04},{x:.86,y:.24},{x:.94,y:.52},{x:.82,y:.82}],
+    8:[{x:.10,y:.62},{x:.08,y:.30},{x:.32,y:.04},{x:.58,y:.04},{x:.88,y:.26},{x:.94,y:.54},{x:.84,y:.82},{x:.34,y:.86}]
+  };
+  return sets[Math.max(1,Math.min(8,m))]||sets[8];
+}
+function layoutMobileLandscapeSeats(felt){
+  const W=felt.clientWidth,H=felt.clientHeight;
+  const hero=state.players.find(p=>p.isHuman);
+  const opps=state.players.filter(p=>!p.isHuman);
+  const anchors=mobileLandscapeAnchors(opps.length);
+  felt.style.setProperty('--seatScale','1');
+  if(hero){
+    const hs=$('seat'+hero.i);
+    if(hs){
+      const h=hs.offsetHeight||134;
+      const heroX=opps.length>=7?W*.56:W*.50;
+      hs.style.left=heroX+'px';
+      hs.style.top=Math.max(4,H-h-2)+'px';
+    }
+  }
+  opps.forEach((p,i)=>{
+    const seat=$('seat'+p.i); if(!seat)return;
+    const a=anchors[i]||anchors[anchors.length-1];
+    seat.style.left=(W*a.x)+'px';
+    seat.style.top=(H*a.y)+'px';
+  });
+  /* If the real badge copy is wider/taller than expected, scale just enough to
+     preserve the fixed anchor map without losing the large hero cards. */
+  const boxes=opps.map(p=>$('seat'+p.i)).filter(Boolean);
+  let worst=1;
+  for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){
+    const a=elementRectSeatLayout(boxes[i]),b=elementRectSeatLayout(boxes[j]);
+    const ox=Math.min(a.r,b.r)-Math.max(a.l,b.l);
+    const oy=Math.min(a.b,b.b)-Math.max(a.t,b.t);
+    if(ox>0&&oy>0) worst=Math.min(worst,Math.max(.78,1-Math.min(ox/(a.w+b.w),oy/(a.h+b.h))-.04));
+  }
+  felt.style.setProperty('--seatScale',String(worst));
+}
 function layoutSeats(){
   if(!HAS_DOM||!state||BENCH)return;
   const felt=$('felt');
@@ -744,8 +790,8 @@ function layoutSeats(){
   /* mobile portrait: upper arc + hero bottom; mobile landscape + desktop: uniform oval */
   let usedOval=false;
   if(isMobile()){
-    if(document.body.classList.contains('fl')){ layoutCompactRows(felt,W,H); }
-    else if(W>H){ layoutOvalSeats(felt,W,H,cx,cy); usedOval=true; }
+    if(document.body.classList.contains('fl')||document.body.classList.contains('lls')){ layoutMobileLandscapeSeats(felt); }
+    else if(W>H){ layoutMobileLandscapeSeats(felt); }
     else layoutMobileSeats(felt);
   }else{ layoutDesktopSeats(felt,W,H,cx,cy); usedOval=true; }
   positionCenterArea();
@@ -991,8 +1037,8 @@ function settleCenterVertical(center,felt,W,H,minPct,maxPct){
     const c=centerRectDOM(center);
     const need=c.t-(topB+gap);
     if(need<0){
-      const pct=(parseFloat(center.style.top)||best)+((need/H)*100);
-      center.style.top=Math.max(minPct,pct)+'%';
+      const pct=(parseFloat(center.style.top)||best)+((-need/H)*100);
+      center.style.top=Math.min(maxPct,pct)+'%';
     }
   }
 }
@@ -1044,7 +1090,8 @@ function positionCenterArea(){
   const base=land?50:(fl?36:40);
   center.style.top=base+'%';
   if(land){
-    settleCenterVertical(center,felt,W,H,28,base);
+    const maxLand=document.body.classList.contains('lls')?58:base;
+    settleCenterVertical(center,felt,W,H,28,maxLand);
     liftCenterAboveHero(center,felt,W,H,24,parseFloat(center.style.top)||base);
   }
   else liftCenterAboveHero(center,felt,W,H,fl?34:38,base);
@@ -1163,7 +1210,7 @@ function render(winners){
 /* ---------- live coach ---------- */
 const pct=e=>Math.round(e*100)+'%';
 function isMobile(){ return HAS_DOM && typeof window.matchMedia==='function' && window.matchMedia('(max-width:680px),(max-width:1024px) and (orientation:portrait),(max-width:1024px) and (orientation:landscape) and (max-height:500px)').matches; }
-function maxSetupPlayers(){ return isMobile()?6:9; }
+function maxSetupPlayers(){ return 9; }
 function useLandscapePanel(){
   /* mobile always uses a bottom action bar — never the right slide-out panel */
   return false;
@@ -1209,13 +1256,17 @@ function syncActFab(){
   fab.textContent=onTurn?T('actTurn'):T('actMenu');
   fab.classList.toggle('pulse',onTurn&&!open);
 }
-/* force landscape on phones: rotate the whole game 90° when held portrait */
+/* force landscape on mobile portrait: rotate the whole game 90° when held portrait */
 function updateOrient(){
   if(!HAS_DOM)return;
   const g=$('game'); if(!g)return;
   const portrait=window.innerHeight>window.innerWidth;
   const phone=Math.min(window.innerWidth,window.innerHeight)<=620;
-  const on=portrait&&phone&&!g.classList.contains('hidden');
+  const touchLike=(navigator.maxTouchPoints||0)>0 ||
+    (typeof window.matchMedia==='function'&&window.matchMedia('(hover:none) and (pointer:coarse)').matches);
+  const mobilePortrait=typeof window.matchMedia==='function' &&
+    window.matchMedia('(max-width:1024px) and (orientation:portrait)').matches;
+  const on=portrait&&(phone||(mobilePortrait&&touchLike))&&!g.classList.contains('hidden');
   document.body.classList.toggle('fl',on);
   /* genuine phone landscape (short, wide): compact oval + bottom control dock */
   const landShort=!on&&!g.classList.contains('hidden')&&window.innerWidth>window.innerHeight&&Math.min(window.innerWidth,window.innerHeight)<=500;
