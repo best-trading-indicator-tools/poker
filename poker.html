@@ -383,17 +383,14 @@ body.fl #felt{inset:6px 8px 8px 8px;border-width:6px;}
 body.fl .seat.revealed .card{width:34px;height:48px;border-radius:5px;}
 body.fl .seat.revealed .card .pip{font-size:17px;}
 body.fl .seat.revealed .hole{min-height:48px;}
-body.fl .seat{width:132px;margin-left:-66px;margin-top:-26px;transform:scale(var(--seatScale,1));transform-origin:center center;}
-body.fl .seat.human{width:152px;margin-left:-76px;margin-top:0;transform:scale(1);transform-origin:center top;}
-body.fl .seat .plate{gap:5px;padding:6px 9px;border-radius:10px;min-width:118px;max-width:132px;justify-content:center;}
-body.fl .seat.human .plate{min-width:136px;max-width:152px;}
-body.fl .seat:not(.human) .avatar{display:none;}
-body.fl .seat .pname{font-size:13px;text-align:center;}
-body.fl .seat .pchips{font-size:11.5px;text-align:center;}
+body.fl .seat{width:124px;margin-left:-62px;margin-top:0;transform:scale(var(--seatScale,1));transform-origin:center top;}
+body.fl .seat .plate{gap:6px;padding:6px 10px 6px 7px;border-radius:10px;min-width:0;}
+body.fl .seat .avatar{font-size:22px;}
+body.fl .seat .pname{font-size:14px;}
+body.fl .seat .pchips{font-size:12px;}
 body.fl .seat .pstyle{display:none;}
 body.fl .seat .ppos{font-size:10px;}
 body.fl .seat .lastact{font-size:12px;}
-body.fl .seat:not(.human) .lastact{display:none;}
 body.fl .seat .lastact:empty,
 body.fl .tmr:empty{min-height:0;margin-top:0;}
 /* rotated landscape: hide opponent card backs — plates only; hero + active seat keep cards
@@ -420,22 +417,22 @@ body.fl #pot{font-size:15px;white-space:nowrap;}
 /* native phone landscape (lls): oval like desktop, readable mobile sizes — no transform scale */
 body.lls #tableWrap{padding:2px 6px;flex:1;min-height:0;overflow:hidden;}
 body.lls #felt{inset:6px 8px 2px 8px;border-width:6px;}
-body.lls .seat{width:132px;margin-left:-66px;margin-top:-26px;transform:scale(var(--seatScale,1));transform-origin:center center;}
-body.lls .seat.human{width:152px;margin-left:-76px;margin-top:0;transform:scale(1);transform-origin:center top;}
-body.lls .seat .plate{gap:5px;padding:6px 9px;border-radius:11px;min-width:118px;max-width:132px;justify-content:center;}
-body.lls .seat.human .plate{min-width:136px;max-width:152px;}
-body.lls .seat:not(.human) .avatar{display:none;}
-body.lls .seat .pname{font-size:13px;text-align:center;}
-body.lls .seat .pchips{font-size:11.5px;text-align:center;}
+body.lls .seat{width:118px;margin-left:-59px;margin-top:-20px;}
+body.lls .seat.human,
+body.lls .seat.active{margin-top:-36px;}
+body.lls .seat .plate{gap:6px;padding:6px 10px 6px 7px;border-radius:11px;min-width:0;}
+body.lls .seat .avatar{font-size:22px;}
+body.lls .seat .pname{font-size:14px;}
+body.lls .seat .pchips{font-size:12px;}
 body.lls .seat .pstyle{display:none;}
 body.lls .seat .ppos{font-size:10px;}
 body.lls .seat .lastact{font-size:12px;}
-body.lls .seat:not(.human) .lastact{display:none;}
 body.lls .seat .lastact:empty,
 body.lls .tmr:empty{min-height:0;margin-top:0;}
 /* landscape: hide opponent card backs — plates only; hero + active seat keep cards */
 body.lls .seat .hole{display:none;min-height:0;margin:0;}
 body.lls .seat.human .hole,
+body.lls .seat.active .hole,
 body.lls .seat.revealed .hole{display:flex;min-height:58px;gap:4px;margin-bottom:4px;}
 body.lls .card{width:54px;height:78px;border-radius:7px;}
 body.lls .card .ix{font-size:14px;}
@@ -450,7 +447,6 @@ body.lls #pot{font-size:15px;white-space:nowrap;}
 
 /* native phone landscape: slim bottom action bar (same layout as rotated-portrait fl) */
 body.lls #actFab,body.lls #actBackdrop{display:none!important;}
-html body.lls #topbar{display:none!important;}
 body.lls #actionbar{
   flex-shrink:0;padding:7px 10px max(7px,env(safe-area-inset-bottom));gap:7px;
   min-height:0;max-height:132px;overflow-y:auto;
