@@ -185,7 +185,8 @@ function mpHostDrop(conn){
     /* keep the seat — they auto-fold until they reconnect (same name = same seat & chips) */
     const p=state.players[rec.seat];
     if(p&&!p.out&&state.turnIdx===p.i&&!state.handOver&&!p.folded){
-      applyAction(p,'fold');
+      const ca=Math.min(state.currentBet-p.bet,p.chips);
+      applyAction(p,ca>0?'fold':'call');
       state.turnIdx=(p.i+1)%state.players.length;
       promptNext();
     }

@@ -203,7 +203,8 @@ function promptNext(){
       later(()=>{
         if(state.gameOver||state.handOver||state.turnIdx!==p.i)return;
         if(mpConnAlive(p.i)){promptNext();return;}   // they came back just in time
-        applyAction(p,'fold');
+        const ca=Math.min(state.currentBet-p.bet,p.chips);
+        applyAction(p,ca>0?'fold':'call');
         state.turnIdx=(p.i+1)%state.players.length;
         promptNext();
       },2500);

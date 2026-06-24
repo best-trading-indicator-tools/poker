@@ -71,6 +71,7 @@ chartBb3bet:(c,v)=>`${c} is in the BB defense chart (${v}) — 3-bet for value o
 chartBbCall:(c,v,e,o)=>`${c} is in the BB calling range vs ${v} — defend wide enough that steals can't print money. Your equity (${e}) covers the price (${o}).`,
 chartBbFold:(c,v)=>`${c} is outside the BB defense chart vs ${v} — folding saves chips; calling trash from the BB is a classic cash-game leak.`,
 widenNote:(b,e,d)=>` Rising blinds and dead money change the math: your normal ~${b}% opening range here is adjusted to ~${e}%${d===1?' — and the players left to act fold too much, so attack them':d===-1?' — tempered, because the players left to act defend wide, so steal less into them':''}.`,
+tableSizeNote:(n,b,e)=>` Only ${n} players remain, so preflop ranges are not full-ring ranges anymore: this seat's baseline range moves from about ${b}% to about ${e}% before the other live adjustments.`,
 stackDomNote:(r,c,n)=>` You have ~${r}× the largest stack and cover ${c} of ${n} opponents still in — shorter stacks fold more often, so the coach widens steal/iso ranges slightly. Calling marginal hands is still a leak; raise or fold.`,
 stackDomIso:(c,p,r)=>`${c} is outside the standard ${p} chart, but with ~${r}× the table's biggest stack you can iso-raise as a pressure play — shorter stacks can't gamble back easily. Raise, don't call.`,
 stackDomFoldHint:` Your stack edge makes an iso-raise possible here, but this hand is still too weak even for that line. Fold — patience preserves your advantage.`,
@@ -190,6 +191,7 @@ chartBb3bet:(c,v)=>`${c} figure dans la charte de défense BB (${v}) — 3-bet p
 chartBbCall:(c,v,e,o)=>`${c} est dans la range de call BB vs ${v} — défendez assez large pour que les steals ne soient pas gratuits. Votre équité (${e}) couvre le prix (${o}).`,
 chartBbFold:(c,v)=>`${c} est hors de la charte BB vs ${v} — couchez et économisez ; suivre du trash en BB est une fuite classique.`,
 widenNote:(b,e,d)=>` Les blinds qui montent et l'argent mort changent le calcul : votre range d'ouverture normale (~${b}%) est ajustée à ~${e}%${d===1?' — et les joueurs restants se couchent trop : attaquez-les':d===-1?' — tempérée, car les joueurs restants défendent large : volez moins contre eux':''}.`,
+tableSizeNote:(n,b,e)=>` Il ne reste que ${n} joueurs : les ranges préflop ne sont plus celles d'une table pleine. La base de ce siège passe d'environ ${b}% à environ ${e}% avant les autres ajustements live.`,
 stackDomNote:(r,c,n)=>` Vous avez ~${r}× le plus gros tapis et couvrez ${c} sur ${n} adversaires encore en jeu — les tapis courts se couchent plus souvent : le coach élargit légèrement les ranges de vol/iso. Suivre des mains marginales reste une fuite ; relancez ou couchez.`,
 stackDomIso:(c,p,r)=>`${c} n'est pas dans la charte ${p} standard, mais avec ~${r}× le plus gros tapis vous pouvez iso-relancer pour faire pression — les courts ne peuvent pas vous contrer facilement. Relancez, ne suivez pas.`,
 stackDomFoldHint:` Votre avantage de tapis rend une iso possible, mais cette main reste trop faible même pour ça. Couchez — la patience préserve votre avantage.`,
@@ -309,6 +311,7 @@ chartBb3bet:(c,v)=>`${c} está en la tabla de defensa BB (${v}) — 3-bet por va
 chartBbCall:(c,v,e,o)=>`${c} está en el rango de call BB vs ${v} — defiende lo bastante ancho para que los steals no sean gratis. Tu equity (${e}) cubre el precio (${o}).`,
 chartBbFold:(c,v)=>`${c} está fuera de la tabla BB vs ${v} — retírate y ahorra; pagar basura desde BB es una fuga clásica en cash.`,
 widenNote:(b,e,d)=>` Las ciegas crecientes y el dinero muerto cambian el cálculo: tu rango de apertura normal (~${b}%) se ajusta a ~${e}%${d===1?' — y los jugadores por hablar se retiran demasiado: atácalos':d===-1?' — moderado, porque los que quedan defienden mucho: roba menos contra ellos':''}.`,
+tableSizeNote:(n,b,e)=>` Solo quedan ${n} jugadores, así que los rangos preflop ya no son de mesa completa: el rango base de este asiento pasa de aprox. ${b}% a aprox. ${e}% antes de los demás ajustes en vivo.`,
 stackDomNote:(r,c,n)=>` Tienes ~${r}× el stack más grande y cubres a ${c} de ${n} rivales en juego — los stacks cortos se retiran más: el coach amplía un poco los rangos de robo/iso. Pagar manos marginales sigue siendo fuga; sube o retírate.`,
 stackDomIso:(c,p,r)=>`${c} no está en la tabla ${p} estándar, pero con ~${r}× el mayor stack puedes iso-subir como presión — los cortos no pueden devolverte la apuesta fácilmente. Sube, no pagues.`,
 stackDomFoldHint:` Tu ventaja de stack hace posible un iso, pero esta mano sigue siendo demasiado débil incluso para eso. Retírate — la paciencia conserva tu ventaja.`,
@@ -385,6 +388,31 @@ function posBucket(pos){
   if(pos==='BB')return 'BB';
   if(pos==='SB')return 'SB';
   return 'BTN'; // BTN and heads-up SB/BTN
+}
+function tableSizeOpenFactor(pos,n){
+  const late=/(BTN|CO|HJ|SB\/BTN|SB)/.test(pos);
+  const early=/^(UTG|MP)/.test(pos);
+  if(n<=2) return late?1.65:1.30;
+  if(n===3) return late?1.38:1.18;
+  if(n===4) return late?1.24:1.12;
+  if(n===5) return early?1.08:1.14;
+  if(n===6) return early?1.03:1.06;
+  return 1;
+}
+function tableSizeOpenCap(n){
+  if(n<=2) return 0.82;
+  if(n===3) return 0.72;
+  if(n===4) return 0.68;
+  if(n===5) return 0.65;
+  return 0.62;
+}
+function tableSizeFacingFactor(n,pos){
+  const late=/(BTN|CO|HJ|SB\/BTN|SB|BB)/.test(pos);
+  if(n<=2) return late?1.45:1.25;
+  if(n===3) return late?1.25:1.12;
+  if(n===4) return late?1.14:1.08;
+  if(n===5) return 1.06;
+  return 1;
 }
 /* equity vs RANGES: each opponent sampled from their top-X% range (rejection sampling) */
 function mcEquityR(hole,board,caps,sims){
@@ -1096,6 +1124,10 @@ function coachDecide(p){
       const thr=OPEN_THR[bucket];
       /* tournament: blind pressure widens steals as stacks shrink; cash: depth widens IP, short only when actually short */
       const lateSteal=/(BTN|CO|HJ|SB)/.test(pos);
+      const openCap=tableSizeOpenCap(aliveN);
+      const fTable=tableSizeOpenFactor(pos,aliveN);
+      const thrTable=Math.min(openCap,thr*fTable);
+      if(fTable>1.01) extra.push(C('tableSizeNote',aliveN,Math.round(thr*100),Math.round(thrTable*100)));
       let press,fStack;
       if(flags.deepStack){
         const deep=clamp((stackBB-40)/60,0,1);
@@ -1116,19 +1148,19 @@ function coachDecide(p){
           profDir=fProf>1.08?1:fProf<0.92?-1:0;
         }
       }
-      let thrEff=Math.min(0.62,thr*fStack*fAnte*fProf);
+      let thrEff=Math.min(openCap,thrTable*fStack*fAnte*fProf);
       const dom=stackDominance(p);
       if(lateSteal&&dom.tier>0){
-        thrEff=Math.min(0.62,thrEff*dom.factor);
+        thrEff=Math.min(openCap,thrEff*dom.factor);
         extra.push(C('stackDomNote',Math.round(dom.ratio*10)/10,dom.covers,dom.oppN));
       }
       /* always explain when profiles behind shift the steal math, even slightly */
-      if(Math.abs(thrEff-thr)/thr>0.12||profDir!==0) extra.push(C('widenNote',Math.round(thr*100),Math.round(thrEff*100),profDir));
+      if(Math.abs(thrEff-thrTable)/thrTable>0.12||profDir!==0) extra.push(C('widenNote',Math.round(thrTable*100),Math.round(thrEff*100),profDir));
       const nLimps=limperCount(p);
       const limpPot=nLimps>0&&state.currentBet<=state.bb;
       if(limpPot){
         extra.push(C('limpPotNote',nLimps));
-        thrEff=Math.min(0.65,thrEff*(1+0.04*Math.min(nLimps,3)));
+        thrEff=Math.min(Math.max(openCap,0.65),thrEff*(1+0.04*Math.min(nLimps,3)));
       }
       /* solver chart: iso over limpers, else raise-first-in */
       const isoList=limpPot?chartFor('iso',pos):null;
@@ -1158,6 +1190,9 @@ function coachDecide(p){
     }else{
       /* facing a raise: BB defense vs steals, then per-raiser-position chart, then EP/LP bucket */
       const raiser=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+      const shortCtBase=clamp(0.13+(late?0.05:0)+(early?-0.03:0),0.06,0.25);
+      const shortCt=clamp(shortCtBase*tableSizeFacingFactor(aliveN,pos),0.06,aliveN<=2?0.45:aliveN===3?0.36:aliveN===4?0.30:0.25);
+      if(aliveN<=4&&shortCt>shortCtBase*1.08) extra.push(C('tableSizeNote',aliveN,Math.round(shortCtBase*100),Math.round(shortCt*100)));
       let facing=pos==='BB'?bbDefendChartFor(raiser,pos):null;
       if(!facing) facing=facingChartFor(raiser);
       if(facing){
@@ -1173,6 +1208,9 @@ function coachDecide(p){
           }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
             rec='CALL';
             why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
+          }else if(aliveN<=4&&pr<=shortCt&&eq>=odds+icmPrem){
+            rec='CALL';
+            why.push(C('pfCallRange',pos,Math.round(shortCt*100),code,prTxt,pct(eq),pct(odds)));
           }else if(fc.call.includes(code)){
             rec='FOLD';
             why.push(C('chartIcmFold',code,pct(eq),pct(odds)));
@@ -1191,6 +1229,9 @@ function coachDecide(p){
         }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
           rec='CALL';
           why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
+        }else if(aliveN<=4&&pr<=shortCt&&eq>=odds+icmPrem){
+          rec='CALL';
+          why.push(C('pfCallRange',pos,Math.round(shortCt*100),code,prTxt,pct(eq),pct(odds)));
         }else if(fc.call.includes(code)){
           rec='FOLD';
           why.push(C('chartIcmFold',code,pct(eq),pct(odds)));
@@ -1200,7 +1241,7 @@ function coachDecide(p){
         }
         }
       }else{
-        const ct=clamp(0.13+(late?0.05:0)+(early?-0.03:0),0.06,0.25);
+        const ct=shortCt;
         if(pr<=0.05){
           rec='RAISE';
           why.push(C('pf3bet',code));
