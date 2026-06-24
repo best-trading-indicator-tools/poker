@@ -41,6 +41,7 @@ bigBet:r=>` This bet is ≈${r}% of the pot — bets that large are usually made
 gutWarn:' Chasing a 4-out gutshot into big bets is a long-term money leak — even when you hit, you may not get paid enough to cover all the misses (poor implied odds).',
 airWarn:' You have no made hand and no real draw — players who bet usually have at least a pair, and "pot-odds correct" calls with high cards are one of the biggest leaks in poker. The coach heavily discounts your raw win chance here.',
 raiseVal:e=>`~${e} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`,
+postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Suggested postflop raise size: ${amt} (${bb}). The opponent's bet is about ${ratio}% pot, so use roughly ${x}x that bet: small bets can be raised much larger, while big bets and overbets usually only need about 2-3x.`,
 callOk:(amt,pt,o,e,disc,ea)=>`The call costs ${amt} to win a ${pt} pot, so you need ${o} equity to break even. You have ~${e}${disc?` (counted as ~${ea} after discounts)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`,
 foldAdv:(o,amt,pt,ea,resp)=>`You need ${o} equity to call (${amt} into ${pt}) but only have ~${ea}${resp?' once the size of this bet is respected':''}. Every chip you put in here loses value — fold and wait for a better spot.`,
 chart3bet:(c,e)=>`${c} is in the re-raise (3-bet) chart against ${e?'an early-position raiser':'a late-position raiser'} — solver ranges re-raise these hands instead of just calling: the big pairs for value, and hands like A5s as "blocker bluffs" (your ace makes his monster hands less likely). Flat-calling would let players behind you in cheaply.`,
@@ -51,6 +52,7 @@ chartOpen:(c,p)=>`${c} is in the ${p} opening chart — a hand list taken from s
 chartIso:(c,p,n)=>`${c} is in the ${p} iso chart — solver-style ranges for raising over ${n} limper${n>1?'s':''}. Isolate with a raise; calling behind limpers bleeds chips.`,
 chartNotInIso:(c,p)=>`${c} is not in the ${p} iso chart — even over limpers, this hand loses money as a raise long-term. Fold, or make a very tight exception only with a huge stack edge.`,
 limpPotNote:n=>` ${n} limper${n>1?'s':''} — dead money widens iso-raise ranges slightly; still raise or fold, don't call behind with marginal hands.`,
+pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Suggested preflop size: ${amt} (${bb}). Start around ${pos==='IP'?'3x in position':'4x out of position'}; add about +1x for each flat caller or limper${callers?` (${callers} here)`:''}${ante?' and size up when antes add dead money':''}${depth>0?' and when stacks are deep enough that callers can realize implied odds':depth<0?' while keeping it controlled because stacks are shallower':''}.`,
 chartNotIn:(c,p)=>`${c} is not in the ${p} opening chart — solver-computed ranges say this hand loses money when raised from this seat over the long run. Folding now saves chips for a better spot.`,
 chartShove:(c,bb,p)=>`At ${bb} BB, ${c} is in the ${p} all-in chart (solver-computed shove ranges for short stacks). Going all-in maximizes your chance of winning the blinds and antes uncontested.`,
 chartNotInShove:(c,p)=>`${c} is not in the ${p} all-in chart for this stack depth — shoving it loses money long-term. Fold and wait: even one round of patience usually offers a better hand.`,
@@ -158,6 +160,7 @@ bigBet:r=>` Cette mise fait ≈${r}% du pot — des mises aussi grosses sont gé
 gutWarn:' Payer de grosses mises pour chasser un ventral à 4 outs est une fuite d’argent à long terme — même touché, vous ne serez pas assez payé pour couvrir tous les échecs (cotes implicites médiocres).',
 airWarn:' Vous n’avez ni main faite ni vrai tirage — celui qui mise a généralement au moins une paire, et les calls « corrects en cotes » avec hauteur sont l’une des plus grosses fuites du poker. Le coach décote fortement votre chance de gain ici.',
 raiseVal:e=>`~${e} de chances de gain : vous êtes grand favori. Relancez pour la valeur et pour faire payer les tirages — caller laisse de l’argent sur la table.`,
+postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Taille de relance postflop suggérée : ${amt} (${bb}). La mise adverse fait environ ${ratio}% du pot, donc utilisez environ ${x}x cette mise : les petites mises peuvent être relancées beaucoup plus cher, tandis que les grosses mises et overbets demandent souvent seulement 2-3x.`,
 callOk:(amt,pt,o,e,disc,ea)=>`Le call coûte ${amt} pour gagner un pot de ${pt} : il vous faut ${o} d’équité pour être à l’équilibre. Vous avez ~${e}${disc?` (compté ~${ea} après décotes)`:''} — caller est rentable à long terme, mais relancer risquerait trop avec une main non premium.`,
 foldAdv:(o,amt,pt,ea,resp)=>`Il vous faut ${o} d’équité pour payer (${amt} dans ${pt}) mais vous n’avez que ~${ea}${resp?' une fois la taille de cette mise respectée':''}. Chaque jeton investi ici perd de la valeur — couchez-vous et attendez un meilleur spot.`,
 chart3bet:(c,e)=>`${c} figure dans la charte de sur-relance (3-bet) contre ${e?'un relanceur en début de parole':'un relanceur en fin de parole'} — les ranges solveur sur-relancent ces mains au lieu de suivre : les grosses paires pour la valeur, et des mains comme A5s en « bluff à blocker » (votre as rend ses monstres moins probables). Suivre laisserait entrer les joueurs derrière à bas prix.`,
@@ -168,6 +171,7 @@ chartOpen:(c,p)=>`${c} figure dans la charte d'ouverture ${p} — une liste de m
 chartIso:(c,p,n)=>`${c} figure dans la charte iso ${p} — ranges pour relancer sur ${n} limpeur${n>1?'s':''}. Isolez en relançant ; suivre derrière des limps perd des jetons.`,
 chartNotInIso:(c,p)=>`${c} n'est pas dans la charte iso ${p} — même sur des limps, cette main perd de l'argent en relance. Couchez-vous.`,
 limpPotNote:n=>` ${n} limpeur${n>1?'s':''} — argent mort : les ranges d'iso s'élargissent un peu ; relancez ou couchez, ne suivez pas en marginal.`,
+pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Taille préflop suggérée : ${amt} (${bb}). Basez-vous sur environ ${pos==='IP'?'3x en position':'4x hors position'} ; ajoutez environ +1x par caller/limpeur${callers?` (${callers} ici)`:''}${ante?' et augmentez quand les antes ajoutent de l\'argent mort':''}${depth>0?' et quand les tapis profonds donnent des cotes implicites aux callers':depth<0?' tout en contrôlant la taille avec des tapis plus courts':''}.`,
 chartNotIn:(c,p)=>`${c} ne figure pas dans la charte d'ouverture ${p} — les ranges calculées par solveur indiquent que cette main perd de l'argent relancée depuis ce siège. Se coucher maintenant garde des jetons pour un meilleur spot.`,
 chartShove:(c,bb,p)=>`À ${bb} BB, ${c} figure dans la charte de tapis ${p} (ranges de shove calculées par solveur pour tapis courts). Partir à tapis maximise vos chances de gagner blinds et antes sans bagarre.`,
 chartNotInShove:(c,p)=>`${c} ne figure pas dans la charte de tapis ${p} à cette profondeur — la jouer à tapis perd de l'argent à long terme. Couchez-vous : un tour de patience offre souvent une meilleure main.`,
@@ -275,6 +279,7 @@ bigBet:r=>` Esta apuesta es ≈${r}% del bote — apuestas tan grandes suelen se
 gutWarn:' Perseguir una escalera interna de 4 outs contra apuestas grandes es una fuga de dinero a largo plazo — incluso cuando ligas, no te pagan lo suficiente para cubrir todos los fallos (odds implícitas pobres).',
 airWarn:' No tienes mano hecha ni proyecto real — quien apuesta suele tener al menos una pareja, y las llamadas "correctas por odds" con carta alta son una de las mayores fugas del póker. El coach descuenta mucho tu probabilidad bruta aquí.',
 raiseVal:e=>`~${e} de probabilidad: eres gran favorito. Sube por valor y para cobrar a los proyectos — solo igualar deja dinero sobre la mesa.`,
+postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Tamaño de subida postflop sugerido: ${amt} (${bb}). La apuesta rival es aprox. ${ratio}% del bote, así que usa cerca de ${x}x esa apuesta: las apuestas pequeñas se pueden subir mucho más, mientras que apuestas grandes y overbets suelen necesitar solo 2-3x.`,
 callOk:(amt,pt,o,e,disc,ea)=>`La llamada cuesta ${amt} para ganar un bote de ${pt}: necesitas ${o} de equidad para no perder. Tienes ~${e}${disc?` (contado como ~${ea} tras descuentos)`:''} — igualar es rentable a largo plazo, pero subir arriesgaría demasiado con una mano no premium.`,
 foldAdv:(o,amt,pt,ea,resp)=>`Necesitas ${o} de equidad para igualar (${amt} en ${pt}) pero solo tienes ~${ea}${resp?' una vez respetado el tamaño de esta apuesta':''}. Cada ficha que pongas aquí pierde valor — retírate y espera un mejor momento.`,
 chart3bet:(c,e)=>`${c} está en la tabla de resubida (3-bet) contra ${e?'quien sube desde posición temprana':'quien sube desde posición tardía'} — los rangos de solver resuben estas manos en vez de solo igualar: las parejas grandes por valor, y manos como A5s como "farol con blocker" (tu as hace menos probables sus monstruos). Solo igualar dejaría entrar barato a los de detrás.`,
@@ -285,6 +290,7 @@ chartOpen:(c,p)=>`${c} está en la tabla de apertura de ${p} — una lista de ma
 chartIso:(c,p,n)=>`${c} está en la tabla iso de ${p} — rangos para subir sobre ${n} limper${n>1?'s':''}. Aísla con subida; pagar detrás de limps pierde fichas.`,
 chartNotInIso:(c,p)=>`${c} no está en la tabla iso de ${p} — incluso sobre limps, subir pierde dinero a largo plazo. Retírate.`,
 limpPotNote:n=>` ${n} limper${n>1?'s':''} — dinero muerto: los rangos iso se amplían un poco; sube o retírate, no pagues marginal.`,
+pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Tamaño preflop sugerido: ${amt} (${bb}). Empieza cerca de ${pos==='IP'?'3x en posición':'4x fuera de posición'}; añade alrededor de +1x por cada caller o limper${callers?` (${callers} aquí)`:''}${ante?' y sube el tamaño cuando los antes añaden dinero muerto':''}${depth>0?' y cuando los stacks profundos dan odds implícitas a los callers':depth<0?' manteniéndolo controlado con stacks más cortos':''}.`,
 chartNotIn:(c,p)=>`${c} no está en la tabla de apertura de ${p} — los rangos calculados por solver dicen que esta mano pierde dinero subida desde este asiento. Retirarse ahora guarda fichas para un momento mejor.`,
 chartShove:(c,bb,p)=>`Con ${bb} BB, ${c} está en la tabla de all-in de ${p} (rangos de shove calculados por solver para stacks cortos). Ir all-in maximiza tus opciones de llevarte ciegas y antes sin pelea.`,
 chartNotInShove:(c,p)=>`${c} no está en la tabla de all-in de ${p} a esta profundidad — jugarla all-in pierde dinero a largo plazo. Retírate: una ronda de paciencia suele traer una mano mejor.`,
@@ -664,6 +670,47 @@ function limperCount(p){
   if(state.stage!=='preflop'||state.currentBet>state.bb)return 0;
   /* voluntary limps only — BB posting the blind is not a limp */
   return inHand().filter(q=>q!==p&&q.bet>=state.bb&&(q.pos||'')!=='BB').length;
+}
+function flatCallerCount(p){
+  if(state.stage!=='preflop'||state.currentBet<=state.bb)return 0;
+  const raiserIdx=state.lastAggIdx;
+  return inHand().filter(q=>q!==p&&q.i!==raiserIdx&&q.bet>=state.currentBet).length;
+}
+function coachPreflopRaiseSizing(p,actsLast){
+  const facingRaise=state.currentBet>state.bb;
+  const unit=facingRaise?state.currentBet:state.bb;
+  const callers=facingRaise?flatCallerCount(p):limperCount(p);
+  const stackBB=(p.chips+p.bet)/state.bb;
+  const anteBB=state.ante*alive().length/Math.max(state.bb,1);
+  const posKey=actsLast?'IP':'OOP';
+  let mult=actsLast?3:4;
+  mult+=callers;
+  if(anteBB>=1) mult+=0.5;
+  else if(anteBB>0) mult+=0.25;
+  let depthAdj=0;
+  if(stackBB>=120) depthAdj=0.5;
+  else if(stackBB>=80) depthAdj=0.25;
+  else if(stackBB<=20) depthAdj=-0.25;
+  mult+=depthAdj;
+  mult=Math.max(3,mult);
+  return {
+    target:unit*mult,
+    mult,
+    posKey,
+    callers,
+    anteAdj:anteBB>0,
+    depthAdj
+  };
+}
+function coachPostflopRaiseSizing(p,pot,callAmt){
+  const potBeforeBet=Math.max(pot-callAmt,state.bb);
+  const betRatio=callAmt/potBeforeBet;
+  const mult=clamp(2.4/Math.max(betRatio,0.12),2.5,20);
+  return {
+    target:callAmt*mult,
+    mult,
+    betRatio
+  };
 }
 function boardTexture(board){
   if(!board.length) return {paired:false,monotone:false,wet:false,flushDraw:false,dry:true};
@@ -1247,18 +1294,30 @@ function coachDecide(p){
       why.push(C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),!!bigBetPen));
     }
   }
-  let coachT=0;
+  let coachT=0, sizePlan=null, postSizePlan=null;
   if(rec==='RAISE'||rec==='ALLIN'){
-    let t = rec==='ALLIN' ? p.bet+p.chips
-      : state.stage==='preflop'
-      ? Math.max(state.bb*3, state.currentBet*2.6)
-      : state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*0.66));
+    let t;
+    if(rec==='ALLIN') t=p.bet+p.chips;
+    else if(state.stage==='preflop'){
+      sizePlan=coachPreflopRaiseSizing(p,actsLast);
+      t=sizePlan.target;
+    }else if(callAmt>0){
+      postSizePlan=coachPostflopRaiseSizing(p,pot,callAmt);
+      t=postSizePlan.target;
+    }else{
+      t=state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*0.66));
+    }
     coachT=clamp(Math.round(t/state.sb)*state.sb, state.currentBet+state.lastRaiseSize, p.bet+p.chips);
+    if(sizePlan) extra.push(C('pfRaiseSize',usd(coachT),bbs(coachT),sizePlan.posKey,sizePlan.callers,sizePlan.anteAdj,sizePlan.depthAdj));
+    if(postSizePlan) extra.push(C('postflopRaiseSize',usd(coachT),bbs(coachT),Math.round(postSizePlan.mult*10)/10,usd(callAmt),Math.round(postSizePlan.betRatio*100)));
   }
   /* rough chip-EV per available action (for blunder tracking) */
-  const tEv=clamp(Math.round((state.stage==='preflop'
-      ? Math.max(state.bb*3,state.currentBet*2.6)
-      : state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*0.66)))/state.sb)*state.sb,
+  const evRaiseTarget=state.stage==='preflop'
+      ? coachPreflopRaiseSizing(p,actsLast).target
+      : callAmt>0
+      ? coachPostflopRaiseSizing(p,pot,callAmt).target
+      : state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*0.66));
+  const tEv=clamp(Math.round(evRaiseTarget/state.sb)*state.sb,
     state.currentBet+state.lastRaiseSize, p.bet+p.chips);
   const FE=clamp(0.42-0.09*(opps-1),0.08,0.45);            // fold equity vs # of opponents
   const evR=A=>FE*pot+(1-FE)*(eq*(pot+2*A)-A);             // raise A more chips
