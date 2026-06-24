@@ -920,7 +920,7 @@ function stackDominance(p){
   const coverPct=covers/oppStacks.length;
   let tier=0,factor=1,iso=false;
   if(ratio>=1.6&&coverPct>=0.5){tier=2;factor=1.12;iso=true;}
-  else if(ratio>=1.35||avgRatio>=1.55){tier=1;factor=1.07;iso=true;}
+  else if((ratio>=1.35&&coverPct>=0.5)||(avgRatio>=1.55&&coverPct>=0.67)){tier=1;factor=1.07;iso=true;}
   return {factor,ratio,avgRatio,covers,coverPct,iso,tier,oppN:oppStacks.length};
 }
 /* the coach BRAIN: pure decision logic, runs headless (also powers the benchmark bot) */
