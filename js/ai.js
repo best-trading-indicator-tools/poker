@@ -163,8 +163,7 @@ function aiDecide(p){
     const sid=p.style?.id;
     if(callAmt===0){
       if(pr<=pushThr) return {type:'raise',amount:p.bet+p.chips};
-      if(sid==='station') return {type:'call'};
-      return {type:'fold'};
+      return {type:'call'}; // free option in the BB: check, never fold
     }
     if(pr<=pushThr && (callAmt>state.bb*2||stackBB<8))
       return {type:'raise',amount:p.bet+p.chips};
