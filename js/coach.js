@@ -22,6 +22,10 @@ pfShove:(bb,c,pr,t,p)=>`At ${bb} BB you're in push/fold territory. ${c} (${pr}) 
 pfShortCheck:(c,p)=>`${c} is below the shoving range for ${p}, but checking is free.`,
 pfShortCall:(c,e,o)=>`${c} is below a standard shoving range, but your simulated equity (${e}) comfortably beats the price (${o}).`,
 pfShortFold:(bb,c,pr,t,p)=>`At ${bb} BB, ${c} (${pr}) is outside the ~${t}% Nash range for ${p}. Fold and wait — even short, patience beats spew.`,
+huPush:(bb,c,pr,t,p)=>`Heads-up at ${bb} BB effective, there is no ladder left to wait for. ${c} (${pr}) is inside the ~${t}% heads-up shove range from ${p} — all-in maximizes fold equity and denies the big blind a cheap flop.`,
+huOpen:(bb,c,p)=>`Heads-up at ${bb} BB effective is deep enough to play postflop. ${c} is playable from ${p}, but it is not a pure shove spot — open small and keep weaker hands in.`,
+huCall:(bb,c,e,o)=>`Heads-up at ${bb} BB effective, calling ranges widen because there is no ladder pressure left. ${c} has about ${e} equity versus the price ${o}, so continue.`,
+huFold:(bb,c,pr,t,p)=>`Heads-up at ${bb} BB effective, ${c} (${pr}) is below the ~${t}% shove/continue range for ${p}. Let this one go rather than gambling the match with pure trash.`,
 pfOpen:(c,pr,t,p,pair)=>`No one has raised yet, and ${c} (${pr}) is inside the chart-based ~${t}% opening range for ${p}${pair?' once its set-mining value is counted — pocket pairs play above their raw ranking when stacks are deep, because flopping a set (~12%) is disguised and wins big pots':''}. Come in raising, not limping — it takes the initiative and can win the blinds outright.`,
 pfBBfree:c=>`${c} isn't strong enough to raise from the big blind, but you see the flop for free.`,
 pfOpenFold:(c,pr,t,p)=>`${c} (${pr}) is below the ~${t}% opening range for ${p}. Open-folding here is the textbook play — limping weak hands leaks chips long-term.`,
@@ -143,6 +147,10 @@ pfShove:(bb,c,pr,t,p)=>`À ${bb} BB vous êtes en zone push/fold. ${c} (${pr}) e
 pfShortCheck:(c,p)=>`${c} est sous la range de shove pour ${p}, mais le check est gratuit.`,
 pfShortCall:(c,e,o)=>`${c} est sous une range de shove standard, mais votre équité simulée (${e}) bat largement le prix (${o}).`,
 pfShortFold:(bb,c,pr,t,p)=>`À ${bb} BB, ${c} (${pr}) est hors de la range Nash (~${t}%) pour ${p}. Couchez-vous et attendez — même court, la patience bat le spew.`,
+huPush:(bb,c,pr,t,p)=>`Heads-up à ${bb} BB effectives : il n'y a plus de palier à attendre. ${c} (${pr}) est dans la range de shove heads-up (~${t}%) depuis ${p} — tapis maximise la fold equity et empêche la BB de voir un flop gratuit.`,
+huOpen:(bb,c,p)=>`Heads-up à ${bb} BB effectives : c'est assez deep pour jouer postflop. ${c} est jouable depuis ${p}, mais ce n'est pas un shove pur — ouvrez petit et gardez les mains faibles dedans.`,
+huCall:(bb,c,e,o)=>`Heads-up à ${bb} BB effectives, les ranges de call s'élargissent car il n'y a plus de pression de palier. ${c} a environ ${e} d'équité pour un prix de ${o}, donc continuez.`,
+huFold:(bb,c,pr,t,p)=>`Heads-up à ${bb} BB effectives, ${c} (${pr}) est sous la range shove/continue (~${t}%) pour ${p}. Couchez plutôt que de jouer le match avec une main poubelle.`,
 pfOpen:(c,pr,t,p,pair)=>`Personne n’a relancé, et ${c} (${pr}) est dans la range d’ouverture (~${t}%) pour ${p}${pair?' une fois sa valeur de set-mining comptée — les paires servies valent plus que leur classement brut quand les tapis sont profonds : flopper un brelan (~12%) est caché et gagne de gros pots':''}. Entrez en relançant, pas en limpant — vous prenez l’initiative et pouvez gagner les blinds directement.`,
 pfBBfree:c=>`${c} n’est pas assez fort pour relancer depuis la grosse blind, mais vous voyez le flop gratuitement.`,
 pfOpenFold:(c,pr,t,p)=>`${c} (${pr}) est sous la range d’ouverture (~${t}%) pour ${p}. Se coucher ici est le jeu correct — limper des mains faibles fait fuir des jetons à long terme.`,
@@ -264,6 +272,10 @@ pfShove:(bb,c,pr,t,p)=>`Con ${bb} BB estás en territorio push/fold. ${c} (${pr}
 pfShortCheck:(c,p)=>`${c} está por debajo del rango de all-in para ${p}, pero pasar es gratis.`,
 pfShortCall:(c,e,o)=>`${c} está por debajo de un rango estándar de all-in, pero tu equidad simulada (${e}) supera con holgura el precio (${o}).`,
 pfShortFold:(bb,c,pr,t,p)=>`Con ${bb} BB, ${c} (${pr}) queda fuera del rango Nash (~${t}%) para ${p}. Retírate y espera — incluso corto de fichas, la paciencia gana al despilfarro.`,
+huPush:(bb,c,pr,t,p)=>`Heads-up con ${bb} BB efectivas: ya no hay salto de premios que esperar. ${c} (${pr}) está dentro del rango de all-in heads-up (~${t}%) desde ${p} — all-in maximiza fold equity y evita que la BB vea un flop barato.`,
+huOpen:(bb,c,p)=>`Heads-up con ${bb} BB efectivas hay suficiente profundidad para jugar postflop. ${c} es jugable desde ${p}, pero no es un shove puro — abre pequeño y mantén manos peores dentro.`,
+huCall:(bb,c,e,o)=>`Heads-up con ${bb} BB efectivas, los rangos de call se amplían porque ya no hay presión de saltos de premio. ${c} tiene aprox. ${e} equity contra el precio ${o}, así que continúa.`,
+huFold:(bb,c,pr,t,p)=>`Heads-up con ${bb} BB efectivas, ${c} (${pr}) está por debajo del rango de shove/continuación (~${t}%) para ${p}. Retírate en vez de jugarte el match con basura pura.`,
 pfOpen:(c,pr,t,p,pair)=>`Nadie ha subido aún, y ${c} (${pr}) está dentro del rango de apertura (~${t}%) para ${p}${pair?' contando su valor de set-mining — las parejas de mano valen más que su ranking bruto con stacks profundos: ligar un trío (~12%) va disfrazado y gana botes grandes':''}. Entra subiendo, no de limp — tomas la iniciativa y puedes llevarte las ciegas directamente.`,
 pfBBfree:c=>`${c} no es lo bastante fuerte para subir desde la ciega grande, pero ves el flop gratis.`,
 pfOpenFold:(c,pr,t,p)=>`${c} (${pr}) está por debajo del rango de apertura (~${t}%) para ${p}. Retirarse aquí es el juego de libro — entrar de limp con manos débiles pierde fichas a largo plazo.`,
@@ -391,6 +403,46 @@ function posBucket(pos){
   if(pos==='BB')return 'BB';
   if(pos==='SB')return 'SB';
   return 'BTN'; // BTN and heads-up SB/BTN
+}
+function effectiveStackBB(p){
+  const villains=alive().filter(q=>q!==p&&!q.out);
+  if(!villains.length)return (p.chips+p.bet)/Math.max(state.bb,1);
+  const hero=p.chips+p.bet;
+  const eff=Math.min(hero,...villains.map(q=>q.chips+q.bet));
+  return eff/Math.max(state.bb,1);
+}
+function headsUpStackBoost(p){
+  const live=alive();
+  if(live.length!==2)return 0;
+  const opp=live.find(q=>q!==p);
+  if(!opp)return 0;
+  const hero=p.chips+p.bet, villain=opp.chips+opp.bet;
+  const ratio=hero/Math.max(villain,1);
+  if(ratio>=3)return 0.10;
+  if(ratio>=2)return 0.07;
+  if(ratio>=1.4)return 0.04;
+  if(ratio<=0.5)return 0.04;
+  return 0;
+}
+function headsUpShoveThreshold(pos,effBB,callAmt){
+  const sbBtn=/^(SB\/BTN|BTN|SB)$/.test(pos||'');
+  const facing=callAmt>0;
+  let base;
+  if(sbBtn){
+    base=effBB<=5?1.00:effBB<=7?0.92:effBB<=9?0.82:effBB<=12?0.68:effBB<=15?0.54:effBB<=20?0.36:0;
+  }else{
+    base=effBB<=5?0.78:effBB<=7?0.66:effBB<=9?0.56:effBB<=12?0.44:effBB<=15?0.33:effBB<=20?0.24:0;
+  }
+  if(facing&&!sbBtn)base*=0.92;
+  return clamp(base,0,0.96);
+}
+function headsUpOpenThreshold(pos,effBB){
+  if(effBB<=12)return 0;
+  if(/^(SB\/BTN|BTN|SB)$/.test(pos||''))return effBB<=15?0.72:0.82;
+  return effBB<=15?0.32:0.42;
+}
+function handsThroughPct(thr){
+  return HAND_ORDER.filter(h=>(handPct[h]||1)<=thr);
 }
 function tableSizeOpenFactor(pos,n){
   const late=/(BTN|CO|HJ|SB\/BTN|SB)/.test(pos);
@@ -965,6 +1017,27 @@ function stackDominance(p){
   else if((ratio>=1.35&&coverPct>=0.5)||(avgRatio>=1.55&&coverPct>=0.67)){tier=1;factor=1.07;iso=true;}
   return {factor,ratio,avgRatio,covers,coverPct,iso,tier,oppN:oppStacks.length};
 }
+function headsUpFinalProfile(p){
+  const players=inHand();
+  if(alive().length!==2||players.length!==2)return null;
+  const opp=players.find(q=>q!==p);
+  if(!opp)return null;
+  const heroStack=p.chips+p.bet, oppStack=opp.chips+opp.bet;
+  const effBB=effectiveStackBB(p);
+  const coverRatio=heroStack/Math.max(oppStack,1);
+  const chartBucket=(p.pos||'')==='BB'?'BB':'SB';
+  const pos=p.pos||chartBucket;
+  const button=chartBucket!=='BB';
+  const callAmt=Math.max(0,Math.min(state.currentBet-p.bet,p.chips));
+  const shoveThr=headsUpShoveThreshold(pos,effBB,callAmt)+headsUpStackBoost(p);
+  return {
+    effBB,chartBucket,coverRatio,button,
+    covers:coverRatio>=1.4,
+    active:effBB<=20,
+    shoveThr:clamp(shoveThr,0,0.96),
+    openThr:headsUpOpenThreshold(pos,effBB)
+  };
+}
 /* the coach BRAIN: pure decision logic, runs headless (also powers the benchmark bot) */
 function coachDecide(p){
   const sims=BENCH?180:500;
@@ -1079,7 +1152,7 @@ function coachDecide(p){
   const mZone=zoneOf(M);
 
   /* ICM prize pressure: extra win-chance this call needs because busting costs prize equity */
-  const icmPrem=flags.icm&&callAmt>0?icmPremium(p,callAmt,pot):0;
+  const icmPrem=flags.icm&&callAmt>0&&aliveN>2?icmPremium(p,callAmt,pot):0;
   if(flags.icm&&icmPrem>=0.01) extra.push(C('icmNote',Math.round(icmPrem*100),aliveN,Math.min(PAYOUTS(state.cfg.numPlayers).length,aliveN)));
   if(flags.cashNote) extra.push(C('cashModeNote'));
 
@@ -1108,31 +1181,44 @@ function coachDecide(p){
     }
     /* always teach what M means — jargon is useless unexplained */
     if(flags.mRatio) extra.push(C('mExplain',Math.round(M)));
-    if(stackBB<=10){
-      /* push/fold territory: prefer the external solver chart, fall back to Nash threshold */
-      const thr=PUSH_THR[bucket];
-      const shoveCharts=chartFor('shove',shoveChartKey(stackBB));
-      const sChart=shoveCharts?shoveCharts[bucket]:null;
-      if(sChart) chartInfo={kind:'shove',pos:pos||bucket,list:sChart};
-      const shoveYes=sChart?sChart.includes(code):pr<=thr;
+    const hu=headsUpFinalProfile(p);
+    const pushBB=hu?hu.effBB:stackBB;
+    const pushBucket=hu?hu.chartBucket:bucket;
+    const pushMode=stackBB<=10||(hu&&hu.active);
+    if(hu&&hu.active&&hu.covers) extra.push(C('stackDomNote',Math.round(hu.coverRatio*10)/10,1,1));
+    if(pushMode){
+      /* push/fold territory: heads-up uses effective stack; larger tables use solver charts first */
+      const baseThr=PUSH_THR[pushBucket]||PUSH_THR[bucket];
+      const thr=hu?hu.shoveThr:baseThr;
+      const shoveCharts=chartFor('shove',shoveChartKey(pushBB));
+      const sChart=shoveCharts?shoveCharts[pushBucket]:null;
+      const shoveYes=hu?prEff<=thr:(sChart&&sChart.includes(code))||prEff<=thr;
+      const huOpenSmall=hu&&unopened&&callAmt>0&&pushBB>12&&prEff<=hu.openThr;
+      if(hu) chartInfo={kind:huOpenSmall?'rfi':'shove',pos:`HU ${pos||pushBucket} ${Math.max(1,Math.round(pushBB))}BB`,list:handsThroughPct(huOpenSmall?hu.openThr:thr)};
+      else if(sChart) chartInfo={kind:'shove',pos:pos||pushBucket,list:sChart};
+      const callPad=hu?0.02:0.07;
       if(shoveYes&&state.currentBet<=state.bb){
         rec='ALLIN';
-        why.push(sChart?C('chartShove',code,Math.round(stackBB),pos||bucket):C('pfShove',Math.round(stackBB),code,prTxt,Math.round(thr*100),pos||'—'));
-      }else if(!shoveYes&&sChart&&callAmt>0&&!(eq>=odds+0.07+icmPrem)){
+        why.push(hu?C('huPush',Math.max(1,Math.round(pushBB)),code,prTxt,Math.round(thr*100),pos||pushBucket)
+          :sChart?C('chartShove',code,Math.round(pushBB),pos||pushBucket):C('pfShove',Math.round(pushBB),code,prTxt,Math.round(thr*100),pos||'—'));
+      }else if(huOpenSmall){
+        rec='RAISE';
+        why.push(C('huOpen',Math.max(1,Math.round(pushBB)),code,pos||pushBucket));
+      }else if(!shoveYes&&sChart&&callAmt>0&&!(eq>=odds+callPad+icmPrem)){
         rec='FOLD';
-        why.push(C('chartNotInShove',code,pos||bucket));
-      }else if(pr<=thr&&state.currentBet>state.bb&&eq>=odds+icmPrem){
+        why.push(hu?C('huFold',Math.max(1,Math.round(pushBB)),code,prTxt,Math.round(thr*100),pos||pushBucket):C('chartNotInShove',code,pos||pushBucket));
+      }else if(shoveYes&&state.currentBet>state.bb&&eq>=odds+icmPrem){
         rec='ALLIN';
-        why.push(C('pfShove',Math.round(stackBB),code,prTxt,Math.round(thr*100),pos||'—'));
+        why.push(hu?C('huPush',Math.max(1,Math.round(pushBB)),code,prTxt,Math.round(thr*100),pos||pushBucket):C('pfShove',Math.round(pushBB),code,prTxt,Math.round(thr*100),pos||'—'));
       }else if(callAmt===0){
         rec='CHECK';
         why.push(C('pfShortCheck',code,pos));
-      }else if(eq>=odds+0.07+icmPrem){
+      }else if((!hu||!hu.button)&&eq>=odds+callPad+icmPrem){
         rec='CALL';
-        why.push(C('pfShortCall',code,pct(eq),pct(odds)));
+        why.push(hu?C('huCall',Math.max(1,Math.round(pushBB)),code,pct(eq),pct(odds)):C('pfShortCall',code,pct(eq),pct(odds)));
       }else{
         rec='FOLD';
-        why.push(C('pfShortFold',Math.round(stackBB),code,prTxt,Math.round(thr*100),pos));
+        why.push(hu?C('huFold',Math.max(1,Math.round(pushBB)),code,prTxt,Math.round(thr*100),pos||pushBucket):C('pfShortFold',Math.round(pushBB),code,prTxt,Math.round(thr*100),pos));
       }
     }else if(unopened){
       const thr=OPEN_THR[bucket];
