@@ -235,8 +235,8 @@ function applyAction(p,type,amt){
     if(callAmt>0){
       narrowRange(p, state.stage==='preflop'?0.35:0.50);
       p.rangeFloor=(p.rangeFloor||0)*0.5;   // calling after checking: medium strength, weakness read fades
-    }else if(state.stage!=='preflop'){
-      weakenRange(p);                        // a check usually means no strong hand
+    }else{
+      if(state.stage!=='preflop') weakenRange(p); // a check usually means no strong hand postflop
       p.checkedStreet=true;
       if(!p.checkStreets)p.checkStreets=[];
       if(!p.checkStreets.includes(state.stage))p.checkStreets.push(state.stage);
