@@ -37,6 +37,7 @@ valRiver:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're li
 valBet:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're likely ahead. Bet for value — checking gives weaker hands and draws a free card to outdraw you.`,
 stab:e=>`Everyone has checked to you, and checks usually mean weakness — their ranges look capped. With ~${e} plus all that fold equity, a stab takes this pot down often. If anyone calls or check-raises, slow down: that's real strength.`,
 checkedDownStab:(e,n)=>`${n===1?'Villain has':'Opponents have'} checked the free preflop option and then kept checking down. That line is heavily capped, so with ~${e} and a hand that is not pure trash, make a small stab — you do not need a big bet to pressure nothing.`,
+probeStab:(e,n,o)=>`${n===1?'Villain has':'Opponents have'} checked multiple streets, so the line is capped. Even ${o?'out of position, ':''}with ~${e} and no bet to call, a small bluff/probe bet can fold air and weak showdown hands — keep it small, then shut down if raised.`,
 midRiver:e=>`A decent but unspectacular ~${e}. The board is complete — betting mostly gets called by better hands. Check and try to get to showdown cheaply.`,
 midCheck:e=>`A decent but unspectacular ~${e}. Not strong enough to build a big pot; check and keep the pot small while you see what develops.`,
 weakRiverLast:e=>`Only ~${e} to win and no cards left to come — your hand is final. Everyone has checked to you: check behind and take the free showdown.`,
@@ -162,6 +163,7 @@ valRiver:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':'
 valBet:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':''}, vous êtes probablement devant. Misez pour la valeur — checker offre une carte gratuite aux mains plus faibles et aux tirages.`,
 stab:e=>`Tout le monde a checké jusqu’à vous, et les checks trahissent souvent la faiblesse — leurs ranges semblent plafonnées. Avec ~${e} plus toute cette fold equity, une mise ramasse souvent ce pot. Si quelqu’un paie ou check-relance, ralentissez : c’est de la vraie force.`,
 checkedDownStab:(e,n)=>`${n===1?'Vilain a':'Les adversaires ont'} checké l'option gratuite préflop puis continué à checker. Cette ligne est très capée : avec ~${e} et une main pas totalement poubelle, faites une petite mise — inutile de miser gros pour faire pression sur rien.`,
+probeStab:(e,n,o)=>`${n===1?'Vilain a':'Les adversaires ont'} checké plusieurs streets, donc la ligne est capée. Même ${o?'hors de position, ':''}avec ~${e} et aucune mise à payer, une petite mise bluff/probe peut faire folder l'air et les mains faibles de showdown — gardez-la petite, puis abandonnez si ça relance.`,
 midRiver:e=>`Un score correct mais quelconque : ~${e}. Le board est complet — miser ne se fait payer que par mieux. Checkez et essayez d’atteindre l’abattage à bas prix.`,
 midCheck:e=>`Un score correct mais quelconque : ~${e}. Pas assez fort pour gonfler le pot ; checkez et gardez le pot petit en attendant la suite.`,
 weakRiverLast:e=>`Seulement ~${e} de chances de gain et plus aucune carte à venir — votre main est figée. Tout le monde a checké : checkez derrière et prenez l’abattage gratuit.`,
@@ -287,6 +289,7 @@ valRiver:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, prob
 valBet:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, probablemente vas por delante. Apuesta por valor — pasar regala una carta gratis a manos peores y proyectos.`,
 stab:e=>`Todos han pasado hasta ti, y pasar suele significar debilidad — sus rangos parecen limitados. Con ~${e} más toda esa fold equity, una apuesta se lleva este bote a menudo. Si alguien iguala o sube tras pasar, frena: eso es fuerza de verdad.`,
 checkedDownStab:(e,n)=>`${n===1?'El rival ha':'Los rivales han'} pasado la opción gratis preflop y luego siguieron pasando. Esa línea está muy limitada, así que con ~${e} y una mano que no es basura pura, haz una apuesta pequeña: no necesitas apostar grande para presionar aire.`,
+probeStab:(e,n,o)=>`${n===1?'El rival ha':'Los rivales han'} pasado varias calles, así que su línea está limitada. Incluso ${o?'fuera de posición, ':''}con ~${e} y sin apuesta que pagar, una apuesta pequeña de bluff/probe puede tirar aire y manos débiles de showdown — mantenla pequeña y abandona si resuben.`,
 midRiver:e=>`Un ~${e} decente pero sin más. La mesa está completa — apostar solo lo pagan manos mejores. Pasa e intenta llegar barato al showdown.`,
 midCheck:e=>`Un ~${e} decente pero sin más. No da para inflar el bote; pasa y mantén el bote pequeño mientras ves qué pasa.`,
 weakRiverLast:e=>`Solo ~${e} de probabilidad y no quedan cartas — tu mano es definitiva. Todos han pasado: pasa también y llévate el showdown gratis.`,
@@ -987,6 +990,10 @@ function checkedDownVillains(p){
     return needed.every(st=>s.has(st));
   });
 }
+function passiveStreetVillains(p,minLen=2){
+  if(state.stage==='preflop')return [];
+  return inHand().filter(q=>q!==p&&!q.allIn&&passiveLineLen(q.checkStreets)>=minLen);
+}
 function coachPassiveLines(p,extra){
   if(state.stage==='preflop')return;
   const villains=inHand().filter(q=>q!==p&&!q.allIn);
@@ -1361,6 +1368,8 @@ function coachDecide(p){
     const river=state.stage==='river';
     const checkedToMe=actsLast&&inHand().filter(q=>q!==p&&!q.allIn).some(q=>q.checkedStreet);
     const checkedDown=actsLast?checkedDownVillains(p):[];
+    const passiveStabbers=opps===1?passiveStreetVillains(p,2):[];
+    const probeStab=passiveStabbers.length&&eq>=0.30&&eq<=0.58&&(actsLast||river||boardTexture(state.board).dry);
     if(eq>0.62){
       rec='RAISE';
       why.push(river?C('valRiver',pct(eq),opps):C('valBet',pct(eq),opps));
@@ -1370,7 +1379,12 @@ function coachDecide(p){
       why.push(C('checkedDownStab',pct(eq),checkedDown.length));
     }else if(!river&&checkedToMe&&eq>0.38){
       rec='RAISE';
+      smallStab=true;
       why.push(C('stab',pct(eq)));
+    }else if(probeStab){
+      rec='RAISE';
+      smallStab=true;
+      why.push(C('probeStab',pct(eq),passiveStabbers.length,actsFirst));
     }else if(eq>0.42){
       rec='CHECK';
       why.push(river?C('midRiver',pct(eq)):C('midCheck',pct(eq)));
