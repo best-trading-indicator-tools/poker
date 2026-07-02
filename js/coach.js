@@ -1368,8 +1368,9 @@ function coachDecide(p){
     const river=state.stage==='river';
     const checkedToMe=actsLast&&inHand().filter(q=>q!==p&&!q.allIn).some(q=>q.checkedStreet);
     const checkedDown=actsLast?checkedDownVillains(p):[];
-    const passiveStabbers=opps===1?passiveStreetVillains(p,2):[];
-    const probeStab=passiveStabbers.length&&eq>=0.30&&eq<=0.58&&(actsLast||river||boardTexture(state.board).dry);
+    const passiveStabbers=opps<=2?passiveStreetVillains(p,2):[];
+    const passiveMajority=passiveStabbers.length>=Math.max(1,Math.ceil(opps*0.75));
+    const probeStab=passiveMajority&&eq>=0.30&&eq<=0.62&&(actsLast||river||boardTexture(state.board).dry);
     if(eq>0.62){
       rec='RAISE';
       why.push(river?C('valRiver',pct(eq),opps):C('valBet',pct(eq),opps));
@@ -1384,7 +1385,7 @@ function coachDecide(p){
     }else if(probeStab){
       rec='RAISE';
       smallStab=true;
-      why.push(C('probeStab',pct(eq),passiveStabbers.length,actsFirst));
+      why.push(C('probeStab',pct(eq),passiveStabbers.length,!actsLast));
     }else if(eq>0.42){
       rec='CHECK';
       why.push(river?C('midRiver',pct(eq)):C('midCheck',pct(eq)));
