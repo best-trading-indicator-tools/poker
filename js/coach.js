@@ -82,6 +82,7 @@ widenNote:(b,e,d)=>` Rising blinds and dead money change the math: your normal ~
 tableSizeNote:(n,b,e)=>` Only ${n} players remain, so preflop ranges are not full-ring ranges anymore: this seat's baseline range moves from about ${b}% to about ${e}% before the other live adjustments.`,
 stackDomNote:(r,c,n)=>` You have ~${r}× the largest stack and cover ${c} of ${n} opponents still in — shorter stacks fold more often, so the coach widens steal/iso ranges slightly. Calling marginal hands is still a leak; raise or fold.`,
 stackDomIso:(c,p,r)=>`${c} is outside the standard ${p} chart, but with ~${r}× the table's biggest stack you can iso-raise as a pressure play — shorter stacks can't gamble back easily. Raise, don't call.`,
+stackDomCall:(c,r,e,o)=>`${c} is a chart defend and you are the clear chip leader (~${r}× the next stack). The raw sim is close (${e} vs ${o} price), and the call is small relative to your stack, so continue instead of over-folding to short-stack pressure.`,
 stackDomFoldHint:` Your stack edge makes an iso-raise possible here, but this hand is still too weak even for that line. Fold — patience preserves your advantage.`,
 icmNote:(x,left,paid)=>` 💰 Prize pressure: ${paid} place${paid>1?'s':''} get paid and ${left} player${left>1?'s are':' is'} left. In a tournament, chips you might LOSE are worth more than chips you might WIN — going broke costs you your shot at the prizes. So this call needs an extra ~${x}% win chance on top of the normal pot math. Near the bubble, when in doubt: fold and let the others bust each other.`,
 lineCbet:` His flop bet is a routine "continuation bet" — players who raised before the flop bet again on almost any flop, good or bad. It tells us very little, so his range is barely narrowed for it.`,
@@ -210,6 +211,7 @@ widenNote:(b,e,d)=>` Les blinds qui montent et l'argent mort changent le calcul 
 tableSizeNote:(n,b,e)=>` Il ne reste que ${n} joueurs : les ranges préflop ne sont plus celles d'une table pleine. La base de ce siège passe d'environ ${b}% à environ ${e}% avant les autres ajustements live.`,
 stackDomNote:(r,c,n)=>` Vous avez ~${r}× le plus gros tapis et couvrez ${c} sur ${n} adversaires encore en jeu — les tapis courts se couchent plus souvent : le coach élargit légèrement les ranges de vol/iso. Suivre des mains marginales reste une fuite ; relancez ou couchez.`,
 stackDomIso:(c,p,r)=>`${c} n'est pas dans la charte ${p} standard, mais avec ~${r}× le plus gros tapis vous pouvez iso-relancer pour faire pression — les courts ne peuvent pas vous contrer facilement. Relancez, ne suivez pas.`,
+stackDomCall:(c,r,e,o)=>`${c} est une défense de charte et vous êtes énorme chip leader (~${r}× le tapis suivant). La simulation brute est proche (${e} vs prix ${o}) et le call coûte peu par rapport à votre stack : continuez plutôt que de trop folder face à la pression des short stacks.`,
 stackDomFoldHint:` Votre avantage de tapis rend une iso possible, mais cette main reste trop faible même pour ça. Couchez — la patience préserve votre avantage.`,
 icmNote:(x,left,paid)=>` 💰 Pression des prix : ${paid} place${paid>1?'s sont payées':' est payée'} et il reste ${left} joueur${left>1?'s':''}. En tournoi, les jetons que vous risquez de PERDRE valent plus que ceux que vous pouvez GAGNER — sauter vous coûte votre chance de prix. Ce call demande donc ~${x}% de chances de gain EN PLUS du calcul normal du pot. Près de la bulle, dans le doute : couchez-vous et laissez les autres s'éliminer.`,
 lineCbet:` Sa mise au flop est un « continuation bet » de routine — celui qui a relancé avant le flop remise sur presque n'importe quel flop, bon ou mauvais. Cela ne nous apprend presque rien : sa range n'est guère resserrée.`,
@@ -338,6 +340,7 @@ widenNote:(b,e,d)=>` Las ciegas crecientes y el dinero muerto cambian el cálcul
 tableSizeNote:(n,b,e)=>` Solo quedan ${n} jugadores, así que los rangos preflop ya no son de mesa completa: el rango base de este asiento pasa de aprox. ${b}% a aprox. ${e}% antes de los demás ajustes en vivo.`,
 stackDomNote:(r,c,n)=>` Tienes ~${r}× el stack más grande y cubres a ${c} de ${n} rivales en juego — los stacks cortos se retiran más: el coach amplía un poco los rangos de robo/iso. Pagar manos marginales sigue siendo fuga; sube o retírate.`,
 stackDomIso:(c,p,r)=>`${c} no está en la tabla ${p} estándar, pero con ~${r}× el mayor stack puedes iso-subir como presión — los cortos no pueden devolverte la apuesta fácilmente. Sube, no pagues.`,
+stackDomCall:(c,r,e,o)=>`${c} es una defensa de tabla y eres claro chip leader (~${r}× el siguiente stack). La simulación bruta está cerca (${e} vs precio ${o}) y el call es pequeño frente a tu stack, así que continúa en vez de foldear demasiado ante presión de short stacks.`,
 stackDomFoldHint:` Tu ventaja de stack hace posible un iso, pero esta mano sigue siendo demasiado débil incluso para eso. Retírate — la paciencia conserva tu ventaja.`,
 icmNote:(x,left,paid)=>` 💰 Presión de premios: se paga${paid>1?'n':''} ${paid} puesto${paid>1?'s':''} y quedan ${left} jugador${left>1?'es':''}. En un torneo, las fichas que puedes PERDER valen más que las que puedes GANAR — quedarte sin fichas te cuesta tu opción a premio. Esta llamada necesita ~${x}% extra de probabilidad además del cálculo normal del bote. Cerca de la burbuja, ante la duda: retírate y deja que los demás se eliminen.`,
 lineCbet:` Su apuesta en el flop es una "apuesta de continuación" rutinaria — quien subió antes del flop vuelve a apostar en casi cualquier flop, bueno o malo. Dice muy poco, así que su rango apenas se estrecha.`,
@@ -961,7 +964,8 @@ function icmPremium(p,callAmt,pot){
   try{
     if(callAmt<=0||!state)return 0;
     const pay=PAYOUTS(state.cfg.numPlayers);
-    if(alive().length<=1)return 0;
+    const live=alive();
+    if(live.length<=1||pay.length<=1)return 0;
     const base=state.players.map(q=>q.out?0:Math.max(q.chips,0));
     const i=p.i;
     const W=base.slice(); W[i]+=pot;
@@ -972,7 +976,16 @@ function icmPremium(p,callAmt,pot){
     if(eW-eL<1e-9)return 0;
     const need=(eF-eL)/(eW-eL);
     const chipNeed=callAmt/(pot+callAmt);
-    return clamp(need-chipNeed,0,0.25);
+    const raw=clamp(need-chipNeed,0,0.25);
+    const paid=pay.length;
+    const distance=Math.max(0,live.length-paid);
+    const bubbleFactor=distance<=1?1:distance<=paid?0.55:0.20;
+    const riskFrac=callAmt/Math.max(p.chips+p.bet,1);
+    const riskFactor=clamp(riskFrac/0.25,0.15,1);
+    const heroStack=p.chips+p.bet;
+    const oppStacks=live.filter(q=>q!==p).map(q=>q.chips+q.bet);
+    const coverFactor=oppStacks.length&&oppStacks.every(s=>heroStack>s)?0.55:1;
+    return clamp(raw*bubbleFactor*riskFactor*coverFactor,0,0.25);
   }catch(e){return 0;}
 }
 
@@ -1319,6 +1332,8 @@ function coachDecide(p){
       if(aliveN<=4&&shortCt>shortCtBase*1.08) extra.push(C('tableSizeNote',aliveN,Math.round(shortCtBase*100),Math.round(shortCt*100)));
       let facing=pos==='BB'?bbDefendChartFor(raiser,pos):null;
       if(!facing) facing=facingChartFor(raiser);
+      const domCall=stackDominance(p);
+      const stackCallOk=list=>isPair&&domCall.tier===2&&list.includes(code)&&callAmt>0&&eq>=odds+icmPrem-0.05;
       if(facing){
         const {fc,label,perPos,bbDefend}=facing;
         chartInfo={kind:bbDefend?'bbDefend':'facing',pos:bbDefend?`BB vs ${label}`:(perPos?`vs ${label}`:label),list:fc.raise,list2:fc.call};
@@ -1329,6 +1344,9 @@ function coachDecide(p){
           }else if(fc.call.includes(code)&&eq>=odds+icmPrem){
             rec='CALL';
             why.push(C('chartBbCall',code,label,pct(eq),pct(odds)));
+          }else if(stackCallOk(fc.call)){
+            rec='CALL';
+            why.push(C('stackDomCall',code,Math.round(domCall.ratio*10)/10,pct(eq),pct(odds)));
           }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
             rec='CALL';
             why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
@@ -1350,6 +1368,9 @@ function coachDecide(p){
         }else if(fc.call.includes(code)&&eq>=odds+icmPrem){
           rec='CALL';
           why.push(C('chartCallRaise',code,pct(eq),pct(odds)));
+        }else if(stackCallOk(fc.call)){
+          rec='CALL';
+          why.push(C('stackDomCall',code,Math.round(domCall.ratio*10)/10,pct(eq),pct(odds)));
         }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
           rec='CALL';
           why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
