@@ -70,6 +70,8 @@ mentalMath:(c,s,o)=>` 🧮 Live mental math: price = call ÷ (pot + call) = ${c}
 mWarn:(n,m,z)=>` Blinds go up in ${n} hand${n>1?'s':''} — your M drops to ~${m} (${z}). Look for spots now rather than being forced to gamble later.`,
 mExplain:m=>` What "M = ${m}" means: your stack divided by the cost of one full round of blinds and antes — i.e. you could survive ${m} more rounds folding everything. Above 20 🟢 play your normal game; 10–20 🟡 start fighting for pots; 5–10 🟠 favor shoving over small raises; under 5 🔴 it's all-in or fold.`,
 cashModeNote:` Fixed blinds in cash — chip EV equals real money EV here (no ICM or prize pressure).`,
+diffEasy:` AI difficulty: Easy opponents are noisier and call too wide, but their big aggression is usually less balanced. The coach trusts exact range reads less, value-bets thinner, and bluffs less.`,
+diffHard:` AI difficulty: Hard opponents are more position-aware and balanced. Their aggression can include more bluffs, so the coach gives c-bets and late-position pressure less automatic credit.`,
 cashDeepNote:bb=>` At ${bb} BB deep in cash, implied odds matter: pocket pairs and suited connectors play bigger than their rank suggests, and you can widen steals in position — but blinds never rise, so play for value and avoid bloating pots out of position without equity.`,
 cashDeepIp:bb=>` In position at ${bb} BB, you can open wider and stab after checks — deep stacks let callers continue with medium hands, so pressure capped ranges; still fold trash to big raises.`,
 sprDeep:s=>` SPR ~${s} (deep) — implied odds are live: sets and draws can win big pots; one pair alone is rarely worth stacking off unless the board is dry.`,
@@ -199,6 +201,8 @@ mentalMath:(c,s,o)=>` 🧮 Calcul mental en live : prix = mise à payer ÷ (pot 
 mWarn:(n,m,z)=>` Les blinds montent dans ${n} main${n>1?'s':''} — votre M tombera à ~${m} (${z}). Cherchez des spots maintenant plutôt que d'être forcé de jouer à pile ou face plus tard.`,
 mExplain:m=>` Ce que signifie « M = ${m} » : votre tapis divisé par le coût d'un tour complet de blinds et d'antes — vous pourriez survivre ${m} tours en jetant tout. Au-dessus de 20 🟢, jouez votre jeu normal ; 10–20 🟡, commencez à vous battre pour les pots ; 5–10 🟠, préférez le tapis aux petites relances ; sous 5 🔴, c'est tapis ou couché.`,
 cashModeNote:` Blinds fixes en cash — l'EV en jetons = l'argent réel (pas d'ICM ni de pression des prix).`,
+diffEasy:` Niveau IA : les adversaires faciles sont plus imprécis et paient trop large, mais leurs grosses agressions sont rarement équilibrées. Le coach fait moins confiance aux lectures exactes, value plus finement, et bluffe moins.`,
+diffHard:` Niveau IA : les adversaires difficiles sont plus conscients de la position et plus équilibrés. Leur agressivité contient plus de bluffs, donc le coach respecte moins automatiquement les c-bets et la pression en position tardive.`,
 cashDeepNote:bb=>` À ${bb} BB en cash, les cotes implicites comptent : paires et connecteurs assortis jouent plus fort que leur rang, et vous pouvez élargir les steals en position — mais les blinds ne montent jamais : jouez pour la valeur, évitez de gonfler les pots hors position sans équité.`,
 cashDeepIp:bb=>` En position à ${bb} BB, ouvrez plus large et stabe après checks — les tapis profonds laissent suivre avec des mains moyennes ; couchez quand même le trash face aux grosses relances.`,
 sprDeep:s=>` SPR ~${s} (profond) — les cotes implicites comptent : sets et tirages peuvent gagner gros ; une paire seule ne suffit souvent pas pour tout miser.`,
@@ -328,6 +332,8 @@ mentalMath:(c,s,o)=>` 🧮 Cálculo mental en vivo: precio = llamada ÷ (bote + 
 mWarn:(n,m,z)=>` Las ciegas suben en ${n} mano${n>1?'s':''} — tu M caerá a ~${m} (${z}). Busca jugadas ahora antes de verte forzado a jugártela.`,
 mExplain:m=>` Qué significa «M = ${m}»: tu stack dividido por el coste de una ronda completa de ciegas y antes — sobrevivirías ${m} rondas tirándolo todo. Por encima de 20 🟢, juega tu juego normal; 10–20 🟡, empieza a pelear por los botes; 5–10 🟠, prefiere el all-in a subidas pequeñas; bajo 5 🔴, all-in o retirarse.`,
 cashModeNote:` Ciegas fijas en cash — el EV en fichas = dinero real (sin ICM ni presión de premios).`,
+diffEasy:` Dificultad IA: los rivales fáciles son más ruidosos y pagan demasiado amplio, pero su gran agresión suele estar menos equilibrada. El coach confía menos en lecturas exactas, apuesta por valor más fino y farolea menos.`,
+diffHard:` Dificultad IA: los rivales difíciles entienden mejor la posición y son más equilibrados. Su agresión incluye más faroles, así que el coach da menos crédito automático a c-bets y presión desde posición tardía.`,
 cashDeepNote:bb=>` Con ${bb} BB en cash, las odds implícitas importan: parejas y conectores suited juegan mejor que su ranking; puedes ampliar robos en posición — pero las ciegas no suben: juega por valor y no hinches botes fuera de posición sin equity.`,
 cashDeepIp:bb=>` En posición con ${bb} BB, abre más ancho y apuesta tras checks — stacks profundos permiten calls con manos medias; retírate igual ante subidas grandes con basura.`,
 sprDeep:s=>` SPR ~${s} (profundo) — las odds implícitas importan: sets y proyectos pueden ganar botes grandes; un par solo rara vez basta para apilar.`,
@@ -1052,6 +1058,54 @@ function stackDominance(p){
   else if((ratio>=1.35&&coverPct>=0.5)||(avgRatio>=1.55&&coverPct>=0.67)){tier=1;factor=1.07;iso=true;}
   return {factor,ratio,avgRatio,covers,coverPct,iso,tier,oppN:oppStacks.length};
 }
+function coachDifficulty(){
+  return state&&state.cfg&&state.cfg.difficulty?state.cfg.difficulty:'medium';
+}
+function coachDifficultyApplies(p,diff){
+  return diff!=='medium'&&inHand().some(q=>q!==p&&q.style);
+}
+function coachDifficultyRange(q,cap,floor,diff){
+  if(diff==='easy'){
+    const loose=q.style&&(q.style.id==='station'||q.style.id==='maniac');
+    return {
+      cap:clamp(cap*(loose?1.35:1.25)+0.03,0.03,1),
+      floor:clamp(floor*0.65,0,0.20)
+    };
+  }
+  if(diff==='hard'){
+    const late=/^(CO|BTN|SB|SB\/BTN)$/.test(q.pos||'');
+    const balanced=state.stage!=='preflop'&&(q.lineRead==='cbet'||late||q.style?.id==='shark'||q.style?.id==='maniac');
+    const checked=q.checkedStreet||(q.checkStreets||[]).includes(state.stage);
+    return {
+      cap:clamp(cap*(balanced?1.18:1.06),0.03,1),
+      floor:clamp(floor*(checked?0.75:0.90),0,0.25)
+    };
+  }
+  return {cap,floor};
+}
+function coachDifficultyAggAdj(agg,betRatio,diff){
+  if(!agg)return 0;
+  if(diff==='hard'){
+    let adj=0.015;
+    if(/^(CO|BTN|SB|SB\/BTN)$/.test(agg.pos||''))adj+=0.01;
+    if(agg.lineRead==='cbet')adj+=0.02;
+    else if(agg.lineRead==='barrel2')adj+=0.01;
+    else if(agg.lineRead==='barrel3'||agg.lineRead==='checkraise'||agg.lineRead==='donk')adj*=0.45;
+    if(betRatio>=1)adj*=0.5;
+    return adj;
+  }
+  if(diff==='easy'){
+    let adj=-0.01;
+    if(betRatio>=0.6)adj-=0.015;
+    if(agg.lineRead==='cbet')adj+=0.005;
+    if(agg.style?.id==='maniac')adj+=0.01;
+    return adj;
+  }
+  return 0;
+}
+function coachDifficultyCallPad(diff){
+  return diff==='hard'?-0.02:diff==='easy'?0.02:0;
+}
 function headsUpFinalProfile(p){
   const players=inHand();
   if(alive().length!==2||players.length!==2)return null;
@@ -1080,6 +1134,8 @@ function coachDecide(p){
   const pot=state.players.reduce((s,q)=>s+q.totalBet,0);
   const opps=inHand().length-1;
   const stackBB=(p.chips+p.bet)/state.bb;
+  const difficulty=coachDifficulty();
+  const difficultyApplies=coachDifficultyApplies(p,difficulty);
 
   /* order of action on postflop streets (current or upcoming) */
   const ord=postflopOrder().filter(q=>q===p||!q.allIn);
@@ -1088,7 +1144,11 @@ function coachDecide(p){
 
   /* equity vs realistic RANGES (not random cards): caps from bets, floors from checks */
   const oppCaps=inHand().filter(q=>q!==p)
-    .map(q=>({cap:clamp(q.rangeCap||1,0.03,1),floor:clamp(q.rangeFloor||0,0,0.25)}))
+    .map(q=>{
+      let cap=clamp(q.rangeCap||1,0.03,1), floor=clamp(q.rangeFloor||0,0,0.25);
+      if(difficultyApplies){const d=coachDifficultyRange(q,cap,floor,difficulty);cap=d.cap;floor=d.floor;}
+      return {cap,floor};
+    })
     .sort((a,b)=>a.cap-b.cap).slice(0,4);
   const code=holeCode(p.hole), pr=handPct[code]||1;
   let eq,handDesc,drawRow='',extra=[];
@@ -1100,6 +1160,7 @@ function coachDecide(p){
   if(weakOpps>0) extra.push(C('checksNote',weakOpps));
   coachPassiveLines(p,extra);
   const flags=getMode().coachFlags||{};
+  if(difficultyApplies) extra.push(C(difficulty==='hard'?'diffHard':'diffEasy'));
   if(state.stage==='preflop'){
     eq=mcEquityR(p.hole,[],oppCaps,sims);
     handDesc=`${RANK_CH[p.hole[0].r]}${SUIT_CH[p.hole[0].s]} ${RANK_CH[p.hole[1].r]}${SUIT_CH[p.hole[1].s]} — ${code}, top ~${Math.round(pr*100)}%`;
@@ -1285,6 +1346,10 @@ function coachDecide(p){
           profDir=fProf>1.08?1:fProf<0.92?-1:0;
         }
       }
+      if(lateSteal&&difficultyApplies){
+        if(difficulty==='easy'){fProf*=0.92;if(profDir===0)profDir=-1;}
+        else if(difficulty==='hard'){fProf*=0.96;if(profDir===0)profDir=-1;}
+      }
       let thrEff=Math.min(openCap,thrTable*fStack*fAnte*fProf);
       const dom=stackDominance(p);
       if(lateSteal&&dom.tier>0){
@@ -1333,7 +1398,8 @@ function coachDecide(p){
       let facing=pos==='BB'?bbDefendChartFor(raiser,pos):null;
       if(!facing) facing=facingChartFor(raiser);
       const domCall=stackDominance(p);
-      const stackCallOk=list=>isPair&&domCall.tier===2&&list.includes(code)&&callAmt>0&&eq>=odds+icmPrem-0.05;
+      const diffCallPad=difficultyApplies?coachDifficultyCallPad(difficulty):0;
+      const stackCallOk=list=>isPair&&domCall.tier===2&&list.includes(code)&&callAmt>0&&eq>=odds+icmPrem+diffCallPad-0.05;
       if(facing){
         const {fc,label,perPos,bbDefend}=facing;
         chartInfo={kind:bbDefend?'bbDefend':'facing',pos:bbDefend?`BB vs ${label}`:(perPos?`vs ${label}`:label),list:fc.raise,list2:fc.call};
@@ -1341,7 +1407,7 @@ function coachDecide(p){
           if(fc.raise.includes(code)){
             rec='RAISE';
             why.push(C('chartBb3bet',code,label));
-          }else if(fc.call.includes(code)&&eq>=odds+icmPrem){
+          }else if(fc.call.includes(code)&&eq>=odds+icmPrem+diffCallPad){
             rec='CALL';
             why.push(C('chartBbCall',code,label,pct(eq),pct(odds)));
           }else if(stackCallOk(fc.call)){
@@ -1350,7 +1416,7 @@ function coachDecide(p){
           }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
             rec='CALL';
             why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
-          }else if(aliveN<=4&&pr<=shortCt&&eq>=odds+icmPrem){
+          }else if(aliveN<=4&&pr<=shortCt&&eq>=odds+icmPrem+diffCallPad){
             rec='CALL';
             why.push(C('pfCallRange',pos,Math.round(shortCt*100),code,prTxt,pct(eq),pct(odds)));
           }else if(fc.call.includes(code)){
@@ -1365,7 +1431,7 @@ function coachDecide(p){
         if(fc.raise.includes(code)){
           rec='RAISE';
           why.push(C('chart3bet',code,vsEarlyR));
-        }else if(fc.call.includes(code)&&eq>=odds+icmPrem){
+        }else if(fc.call.includes(code)&&eq>=odds+icmPrem+diffCallPad){
           rec='CALL';
           why.push(C('chartCallRaise',code,pct(eq),pct(odds)));
         }else if(stackCallOk(fc.call)){
@@ -1374,7 +1440,7 @@ function coachDecide(p){
         }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
           rec='CALL';
           why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
-        }else if(aliveN<=4&&pr<=shortCt&&eq>=odds+icmPrem){
+        }else if(aliveN<=4&&pr<=shortCt&&eq>=odds+icmPrem+diffCallPad){
           rec='CALL';
           why.push(C('pfCallRange',pos,Math.round(shortCt*100),code,prTxt,pct(eq),pct(odds)));
         }else if(fc.call.includes(code)){
@@ -1390,7 +1456,7 @@ function coachDecide(p){
         if(pr<=0.05){
           rec='RAISE';
           why.push(C('pf3bet',code));
-        }else if(pr<=ct&&eq>=odds+icmPrem){
+        }else if(pr<=ct&&eq>=odds+icmPrem+diffCallPad){
           rec='CALL';
           why.push(C('pfCallRange',pos,Math.round(ct*100),code,prTxt,pct(eq),pct(odds)));
         }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
@@ -1409,19 +1475,23 @@ function coachDecide(p){
     const checkedDown=actsLast?checkedDownVillains(p):[];
     const passiveStabbers=opps<=2?passiveStreetVillains(p,2):[];
     const passiveMajority=passiveStabbers.length>=Math.max(1,Math.ceil(opps*0.75));
-    const probeStab=passiveMajority&&eq>=0.30&&eq<=0.62&&(actsLast||river||boardTexture(state.board).dry);
+    const valueThresh=difficultyApplies&&difficulty==='easy'?0.58:0.62;
+    const stabMin=difficultyApplies&&difficulty==='easy'?0.44:difficultyApplies&&difficulty==='hard'?0.34:0.38;
+    const probeMin=difficultyApplies&&difficulty==='easy'?0.38:difficultyApplies&&difficulty==='hard'?0.26:0.30;
+    const probeMax=difficultyApplies&&difficulty==='hard'?0.65:0.62;
+    const probeStab=passiveMajority&&eq>=probeMin&&eq<=probeMax&&(actsLast||river||boardTexture(state.board).dry);
     const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&realTwoPairOrBetter(madeScore,p.hole);
-    if(eq>0.62){
+    if(eq>valueThresh){
       rec='RAISE';
       why.push(river?C('valRiver',pct(eq),opps):C('valBet',pct(eq),opps));
     }else if(protectMade){
       rec='RAISE';
       why.push(C('protectBet',handDesc,pct(eq),opps));
-    }else if(checkedDown.length&&eq>0.30){
+    }else if(checkedDown.length&&eq>probeMin){
       rec='RAISE';
       smallStab=true;
       why.push(C('checkedDownStab',pct(eq),checkedDown.length));
-    }else if(!river&&checkedToMe&&eq>0.38){
+    }else if(!river&&checkedToMe&&eq>stabMin){
       rec='RAISE';
       smallStab=true;
       why.push(C('stab',pct(eq)));
@@ -1449,7 +1519,9 @@ function coachDecide(p){
     const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
     /* postflop "matrix": show the hands the bettor is currently modeled on */
     if(agg){
-      const capA=clamp(agg.rangeCap||1,0.03,1), floorA=Math.min(clamp(agg.rangeFloor||0,0,0.25),capA*0.5);
+      let capA=clamp(agg.rangeCap||1,0.03,1), floorA=clamp(agg.rangeFloor||0,0,0.25);
+      if(difficultyApplies){const dA=coachDifficultyRange(agg,capA,floorA,difficulty);capA=dA.cap;floorA=dA.floor;}
+      floorA=Math.min(floorA,capA*0.5);
       const lst=[];
       for(const h of HAND_ORDER){const ph=handPct[h];if(ph<=capA&&ph>floorA)lst.push(h);}
       chartInfo={kind:'range',pos:`${agg.name}${agg.pos?' ('+agg.pos+')':''}`,list:lst};
@@ -1460,6 +1532,7 @@ function coachDecide(p){
       else if(agg.style.id==='maniac'){exploitAdj=+0.05;extra.push(C('profManiac'));}
       else if(agg.style.id==='station'){exploitAdj=-0.03;extra.push(C('profStation'));}
     }
+    const diffAggAdj=difficultyApplies?coachDifficultyAggAdj(agg,betRatio,difficulty):0;
     if(agg&&agg.lineRead){
       if(agg.lineRead==='cbet')extra.push(C('lineCbet'));
       else if(agg.lineRead==='donk')extra.push(C('lineDonk'));
@@ -1481,7 +1554,7 @@ function coachDecide(p){
     const noMade=myScore[0]===0||(myScore[0]<=2&&!usesHole);
     const goodDraw=d&&(d.flush||d.oesd);
     airPen=(noMade&&!goodDraw)?0.15:0;
-    eqAdj=eq-bigBetPen-airPen+exploitAdj+blockAdj;
+    eqAdj=eq-bigBetPen-airPen+exploitAdj+blockAdj+diffAggAdj;
     const edge=eqAdj-odds-posAdj-icmPrem;
     if(bigBetPen>=0.05) extra.push(C('bigBet',Math.round(betRatio*100)));
     if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
