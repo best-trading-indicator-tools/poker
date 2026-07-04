@@ -1628,6 +1628,37 @@ function saveGameRecord(won,place){
 function loadGames(){
   try{return JSON.parse(localStorage.getItem('sg_poker_games')||'[]');}catch(e){return [];}
 }
+function loadHandHistory(){
+  try{
+    const hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');
+    return Array.isArray(hist)?hist:[];
+  }catch(e){return [];}
+}
+function replayHandTime(h){
+  const t=h&&h.t;
+  if(!t)return 0;
+  const ms=typeof t==='number'?t:Date.parse(t);
+  return Number.isFinite(ms)?ms:0;
+}
+function replayHandsForGame(g){
+  const hist=loadHandHistory();
+  if(!g||!hist.length)return [];
+  const gid=g.gameId==null?'':String(g.gameId);
+  let hands=gid?hist.filter(h=>String(h.gameId??'')===gid):[];
+  if(!hands.length&&g.t){
+    const end=Number(g.t)+120000;
+    const nHands=Math.max(0,Number(g.hands)||0);
+    if(Number.isFinite(end)){
+      hands=hist.filter(h=>{
+        const ms=replayHandTime(h);
+        return !ms||ms<=end;
+      }).slice(nHands?-nHands:undefined);
+    }
+  }
+  return hands.slice().sort((a,b)=>
+    (Number(a.hand)||0)-(Number(b.hand)||0)||replayHandTime(a)-replayHandTime(b)
+  );
+}
 function paidPlaces(n){ return PAYOUTS(n||9).length; }
 function evSparklineSVG(games){
   if(!games||games.length<2)return '';
@@ -1693,7 +1724,7 @@ function showSessionReview(){
     $('revList').innerHTML=`<p style="color:var(--dim);font-size:13px;">${T(revFilter==='cash'?'revNoGamesCash':'revNoGames')}</p>`;
   }else{
     $('revList').innerHTML=`<p style="color:var(--dim);font-size:12px;margin-bottom:8px;">${T('revReplay')}</p>`+
-      games.map(g=>{
+      games.map((g,i)=>{
         const when=new Date(g.t).toLocaleDateString();
         const net=g.net||0;
         const isCash=g.gameType==='cash';
@@ -1701,22 +1732,23 @@ function showSessionReview(){
         const place=isCash?badge:(g.place===1?T('youWin'):g.place?T('ord')(g.place):'—');
         const rebuyTxt=isCash&&g.rebuys?` · ${g.rebuys} rebuy${g.rebuys!==1?'s':''}`:'';
         const bbTxt=isCash&&g.hands>0?` · ${(g.bbPer100!=null?g.bbPer100:0)>=0?'+':''}${Math.round((g.bbPer100||0)*10)/10} BB/100`:'';
-        return `<div class="rev-game" data-gid="${g.gameId||''}"><div class="rg-main">`+
+        return `<div class="rev-game" data-idx="${i}" data-gid="${g.gameId||''}" role="button" tabindex="0"><div class="rg-main">`+
           `<div class="rg-title">${place} · ${g.n}p ${g.diff||''} · ${g.hands} hands</div>`+
           `<div class="rg-sub">${when}${rebuyTxt}${bbTxt}${g.evLost?` · EV −${usd(g.evLost)}`:''}</div></div>`+
           `<span class="rg-net ${net>=0?'pos':'neg'}">${net>=0?'+':'−'}${usd(Math.abs(net))}</span></div>`;
       }).join('');
     $('revList').querySelectorAll('.rev-game').forEach(el=>{
-      el.onclick=()=>{
-        const gid=el.dataset.gid;
-        if(!gid)return;
-        let hist=[]; try{hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');}catch(e){}
-        rpAll=hist.filter(h=>h.gameId===gid);
-        if(!rpAll.length)return;
+      const openGame=()=>{
+        const g=games[Number(el.dataset.idx)];
+        rpAll=replayHandsForGame(g);
         rpHandIdx=0; rpStreet=99;
         closeDialog($('reviewOv'));
         rpRender();
         openDialog($('replayOv'),'rpTitle');
+      };
+      el.onclick=openGame;
+      el.onkeydown=e=>{
+        if(e.key==='Enter'||e.key===' '){e.preventDefault();openGame();}
       };
     });
   }
