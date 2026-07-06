@@ -353,7 +353,7 @@ function buildSeats(){
     const seat=document.createElement('div');
     seat.className='seat'+(p.isHuman?' human':''); seat.id='seat'+p.i;
     seat.innerHTML=`<div class="hole" id="hole${p.i}"></div>
-      <div class="plate"><span class="avatar">${p.avatar}</span><div><div class="pname">${p.name}<span class="ppos" id="pos${p.i}"></span></div><div class="pchips" id="chips${p.i}"></div>${p.style?`<div class="pstyle">${p.style.label}</div>`:''}</div></div>
+      <div class="plate"><span class="avatar">${p.avatar}</span><div><div class="pname">${p.name}<span class="ppos" id="pos${p.i}"></span></div><div class="pchips" id="chips${p.i}"></div>${p.style?`<div class="pstyle">${profileLabel(p.style)}</div>`:''}</div></div>
       <div class="lastact" id="act${p.i}"></div>
       <div class="tmr" id="tmr${p.i}"></div>`;
     felt.appendChild(seat);

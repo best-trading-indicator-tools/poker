@@ -7,11 +7,15 @@ const AI_NAMES   = ['Viktor','Mia','Doyle','Selma','Ivan','Nora','Phil','Daria']
    foldRaise = extra fold bias when facing raises */
 /* adapt = how strongly this profile reacts to tournament/blind pressure (0=ignores it, 1=fully adjusts) */
 const STYLES=[
-  {id:'rock',   label:'🪨 tight',      margin:+0.07, raiseT:+0.06, raiseF:-0.15, bluff:-0.04, size:0.70, adapt:0.20, openMult:0.50, raiseCap:0.08, foldRaise:+0.10},
-  {id:'station',label:'📞 loose',      margin:-0.10, raiseT:+0.08, raiseF:-0.20, bluff:0,      size:0.85, adapt:0.35, openMult:1.35, raiseCap:0.15, foldRaise:0},
-  {id:'shark',  label:'🦈 aggressive', margin:+0.02, raiseT:-0.03, raiseF:+0.15, bluff:+0.05, size:1.15, adapt:1.00, openMult:1.00, raiseCap:0.22, foldRaise:0},
-  {id:'maniac', label:'🔥 wild',       margin:-0.06, raiseT:-0.08, raiseF:+0.30, bluff:+0.10, size:1.40, adapt:0.70, openMult:1.45, raiseCap:0.35, foldRaise:-0.05},
+  {id:'rock',   label:'🪨 Tight',      margin:+0.07, raiseT:+0.06, raiseF:-0.15, bluff:-0.04, size:0.70, adapt:0.20, openMult:0.50, raiseCap:0.08, foldRaise:+0.10},
+  {id:'station',label:'📞 Loose',      margin:-0.14, raiseT:+0.04, raiseF:-0.10, bluff:0,      size:0.85, adapt:0.35, openMult:1.65, raiseCap:0.20, foldRaise:-0.07},
+  {id:'shark',  label:'🦈 Aggressive', margin:+0.02, raiseT:-0.03, raiseF:+0.15, bluff:+0.05, size:1.15, adapt:1.00, openMult:1.00, raiseCap:0.22, foldRaise:0},
+  {id:'maniac', label:'🔥 Wild',       margin:-0.10, raiseT:-0.14, raiseF:+0.45, bluff:+0.18, size:1.40, adapt:0.70, openMult:1.85, raiseCap:0.48, foldRaise:-0.12},
 ];
+function profileLabel(style){
+  const label=style&&style.label?String(style.label):'';
+  return label.replace(/[A-Za-zÀ-ÖØ-öø-ÿ]/,c=>c.toUpperCase());
+}
 /* tournament pressure 0..1 from effective stack depth in BB (deep=0, short=1) */
 function tourneyPressure(stackBB){
   if(stackBB>=60) return 0;
