@@ -158,6 +158,7 @@ function startHand(){
   state.humanHandStats={vpip:false,pfr:false,aBets:0,aCalls:0,sd:false,sdWon:false};
   state.noActionHand=false;
   state.pfAggIdx=-1; state.lastAggIdx=-1;
+  state.lastPotAwards=[];
   state.humanStart=state.players[0].chips+state.players[0].totalBet;
   state.humanPlayed=!state.players[0].out;
   prevBoardLen=0; coachRecNow=null;
@@ -373,6 +374,10 @@ function endHandFold(){
   const w=inHand()[0];
   const pot=state.players.reduce((s,p)=>s+p.totalBet,0);
   w.chips+=pot;
+  state.lastPotAwards=[{
+    winnerIds:[w.i],
+    contributorIds:state.players.filter(p=>p.totalBet>0).map(p=>p.i)
+  }];
   for(const p of state.players){ p.totalBet=0; p.bet=0; }
   state.resultText=`${w.name} ${w.isHuman?'win':'wins'} ${money(pot)} (everyone folded)`;
   if(w.isHuman){state.humanWonAmt=pot;sfx('win');haptic([14,40,14]);}
@@ -393,10 +398,15 @@ function showdown(){
   const lvls=[...new Set(state.players.filter(p=>p.totalBet>0).map(p=>p.totalBet))].sort((a,b)=>a-b);
   let prev=0;
   const winnings=new Map();
+  state.lastPotAwards=[];
   let mainWinners=[];
   for(const lvl of lvls){
     let amt=0;
+    const contributorIds=[];
     for(const p of state.players) amt+=Math.max(0,Math.min(p.totalBet,lvl)-prev);
+    for(const p of state.players){
+      if(Math.max(0,Math.min(p.totalBet,lvl)-prev)>0) contributorIds.push(p.i);
+    }
     let elig=live.filter(p=>p.totalBet>=lvl);
     if(elig.length===0) elig=live; // safety (shouldn't occur after refunds)
     let best=null,winners=[];
@@ -415,6 +425,7 @@ function showdown(){
       w.chips+=add;
       winnings.set(w,(winnings.get(w)||0)+add);
     }
+    state.lastPotAwards.push({winnerIds:winners.map(w=>w.i),contributorIds});
     mainWinners=winners;
     prev=lvl;
   }
@@ -436,6 +447,7 @@ function showdown(){
 
 function finishHand(pause){
   if(fastFwd()) pause=Math.min(pause,1300);
+  if(typeof getMode().beforeStats==='function') getMode().beforeStats(state);
   /* snapshot for replay */
   lastHand={
     num:state.handNum,

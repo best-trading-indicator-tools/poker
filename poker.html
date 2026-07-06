@@ -48,8 +48,8 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #resetBtn{flex:1;background:none;border:1px solid var(--line);color:var(--dim);font-size:12.5px;border-radius:9px;padding:8px;cursor:pointer;}
 #resetBtn:hover{color:#e2574c;border-color:#e2574c;}
 #resetInfoBtn{background:none;border:1px solid var(--line);color:var(--dim);border-radius:9px;padding:0 11px;cursor:pointer;font-size:13px;}
-#timerInfo{margin:0 0 10px;font-size:11.5px;line-height:1.5;color:var(--dim);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:9px 11px;}
-#timerInfo.hidden{display:none;}
+#timerInfo,#koBonusInfo{margin:0 0 10px;font-size:11.5px;line-height:1.5;color:var(--dim);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:9px 11px;}
+#timerInfo.hidden,#koBonusInfo.hidden{display:none;}
 #resetInfo{margin-top:8px;font-size:11.5px;line-height:1.5;color:var(--dim);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:9px 11px;}
 #resumeBtn,#reviewBtn,#benchBtn{width:100%;margin-top:8px;background:none;border:1px solid var(--gold);color:var(--gold);font-size:15px;font-weight:700;border-radius:10px;padding:11px;cursor:pointer;}
 #benchBtn{border-color:var(--line);color:var(--text);font-weight:600;font-size:13px;}
@@ -737,6 +737,14 @@ body.fl #chipPreview{display:none!important;}
         <label><input type="radio" name="speed" value="slow"> Slow</label>
       </div>
     </div>
+    <div class="row setup-touch sng-only">
+      <label class="main" id="koBonusLbl">🎯 KO bonus</label>
+      <span style="display:flex;gap:8px;align-items:center;">
+        <button id="koBonusInfoBtn" aria-label="What does this do?" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;min-height:44px;">&#8505;&#65039;</button>
+        <input type="checkbox" id="koBonusChk" aria-labelledby="koBonusLbl">
+      </span>
+    </div>
+    <p id="koBonusInfo" class="hidden sng-only"></p>
     <div class="row setup-touch">
       <label class="main" id="timerLbl">⏱ Turn timer</label>
       <span style="display:flex;gap:8px;align-items:center;">

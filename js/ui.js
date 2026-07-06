@@ -2,7 +2,7 @@
 const TR={
 en:{sub:"No-Limit Texas Hold'em tournament vs AI",subCash:"No-Limit Texas Hold'em cash game vs AI",modeLbl:"Game mode",modeSng:"Sit & Go",modeCash:"Cash Game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
 players:"Players",blinds:"Blinds",buyin:"Buy-in",stackDepth:"Starting stack",ante:"Ante",noAnte:"no ante",
-speed:"Blinds Change Speed",turbo:"Turbo",standard:"Standard",slow:"Slow",diff:"AI Difficulty",easy:"Easy",medium:"Medium",hard:"Hard",language:"Language",
+speed:"Blinds Change Speed",turbo:"Turbo",standard:"Standard",slow:"Slow",koBonusOpt:"🎯 KO bonus",koBonusInfo:"Bounty-style Sit & Go option: when you personally eliminate an opponent, you instantly gain a chip bonus equal to 10% of the starting stack. It rewards knockouts and makes big-stack pressure stronger. Only the player who wins chips from the busted opponent gets the bonus.",koBonusAward:(n,b)=>`🎯 KO bonus: +${b} for eliminating ${n} player${n>1?'s':''}`,diff:"AI Difficulty",easy:"Easy",medium:"Medium",hard:"Hard",language:"Language",
 deal:"Deal me in",startCash:"Sit down",resume:"▶ Resume tournament",resumeMid:"▶ Resume mid-hand",resumeCash:"▶ Resume cash session",review:"📊 Session review",
 sessionPnL:"Session",cashSessionEnd:"Session complete",cashSessionSub:(h,r,pnl)=>`${h} hands · ${r} rebuy${r!==1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} net`,
 cashRebuy:b=>`Rebuy for ${b}`,
@@ -67,7 +67,7 @@ won:"won",foldedTag:"folded",showdown:"showdown",fullHand:"Full hand",preflop:"P
 ord:n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}},
 fr:{sub:"Tournoi de Texas Hold'em No-Limit contre l'IA",subCash:"Cash game Texas Hold'em No-Limit contre l'IA",modeLbl:"Mode de jeu",modeSng:"Sit & Go",modeCash:"Cash game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
 players:"Joueurs",blinds:"Blinds",buyin:"Cave (buy-in)",stackDepth:"Tapis de départ",ante:"Ante",noAnte:"sans ante",
-speed:"Vitesse des blinds",turbo:"Turbo",standard:"Standard",slow:"Lente",diff:"Niveau de l'IA",easy:"Facile",medium:"Moyen",hard:"Difficile",language:"Langue",
+speed:"Vitesse des blinds",turbo:"Turbo",standard:"Standard",slow:"Lente",koBonusOpt:"🎯 Bonus KO",koBonusInfo:"Option Sit & Go façon bounty : quand vous éliminez personnellement un adversaire, vous gagnez tout de suite un bonus en jetons égal à 10% du tapis de départ. Cela récompense les éliminations et renforce la pression du gros tapis. Seul le joueur qui gagne les jetons de l'adversaire éliminé reçoit le bonus.",koBonusAward:(n,b)=>`🎯 Bonus KO : +${b} pour ${n} élimination${n>1?'s':''}`,diff:"Niveau de l'IA",easy:"Facile",medium:"Moyen",hard:"Difficile",language:"Langue",
 deal:"Distribuez !",startCash:"S'asseoir",resume:"▶ Reprendre le tournoi",resumeMid:"▶ Reprendre la main en cours",resumeCash:"▶ Reprendre la session cash",review:"📊 Bilan des sessions",
 sessionPnL:"Session",cashSessionEnd:"Session terminée",cashSessionSub:(h,r,pnl)=>`${h} mains · ${r} rebuy${r>1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} net`,
 cashRebuy:b=>`Rebuy pour ${b}`,
@@ -132,7 +132,7 @@ won:"gagné",foldedTag:"couché",showdown:"abattage",fullHand:"Main complète",p
 ord:n=>n===1?'1re':n+'e'},
 es:{sub:"Torneo de Texas Hold'em No-Limit contra la IA",subCash:"Cash game Texas Hold'em No-Limit contra la IA",modeLbl:"Modo de juego",modeSng:"Sit & Go",modeCash:"Cash game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
 players:"Jugadores",blinds:"Ciegas",buyin:"Entrada (buy-in)",stackDepth:"Stack inicial",ante:"Ante",noAnte:"sin ante",
-speed:"Velocidad de ciegas",turbo:"Turbo",standard:"Estándar",slow:"Lenta",diff:"Nivel de la IA",easy:"Fácil",medium:"Medio",hard:"Difícil",language:"Idioma",
+speed:"Velocidad de ciegas",turbo:"Turbo",standard:"Estándar",slow:"Lenta",koBonusOpt:"🎯 Bono KO",koBonusInfo:"Opción Sit & Go estilo bounty: cuando eliminas personalmente a un rival, ganas al instante un bono en fichas igual al 10% del stack inicial. Premia las eliminaciones y hace más fuerte la presión del stack grande. Solo recibe el bono quien gana fichas del rival eliminado.",koBonusAward:(n,b)=>`🎯 Bono KO: +${b} por eliminar ${n} jugador${n>1?'es':''}`,diff:"Nivel de la IA",easy:"Fácil",medium:"Medio",hard:"Difícil",language:"Idioma",
 deal:"¡Reparte!",startCash:"Sentarse",resume:"▶ Reanudar torneo",resumeMid:"▶ Reanudar mano en curso",resumeCash:"▶ Reanudar sesión cash",review:"📊 Resumen de sesiones",
 sessionPnL:"Sesión",cashSessionEnd:"Sesión terminada",cashSessionSub:(h,r,pnl)=>`${h} manos · ${r} rebuy${r!==1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} neto`,
 cashRebuy:b=>`Rebuy por ${b}`,
@@ -1831,7 +1831,7 @@ function applyLang(){
   if(!HAS_DOM)return;
   const set=(id,k)=>{const el=$(id);if(el)el.textContent=T(k);};
   updateSetupMode(setupGameType);
-  const rowKeys=['modeLbl','players','blinds','buyin','ante','speed','timerOpt','language','diff'];
+  const rowKeys=['modeLbl','players','blinds','buyin','ante','speed','koBonusOpt','timerOpt','language','diff'];
   document.querySelectorAll('#setup .row label.main').forEach((el,i)=>{if(rowKeys[i])el.textContent=T(rowKeys[i]);});
   const buyLbl=document.querySelectorAll('#setup .row label.main')[3];
   if(buyLbl) buyLbl.textContent=T(setupGameType==='cash'?'stackDepth':'buyin');
@@ -1849,7 +1849,7 @@ function applyLang(){
   set('mpTitle','mpTitle'); set('mpSub','mpSub'); set('mpCreate','mpCreate'); set('mpJoinBtn','mpJoinB');
   set('mpLobbyTitle','mpLobbyTitle'); set('mpCopy','mpCopy'); set('mpFillLbl','mpFillLbl');
   set('mpStartBtn','mpStart'); set('mpLeave','mpLeave');
-  set('mpAutoLbl1','mpAutoA'); set('mpAutoLbl2','mpAutoB'); set('emoLbl','react'); set('emoHint','reactHint'); set('timerInfo','timerInfo');
+  set('mpAutoLbl1','mpAutoA'); set('mpAutoLbl2','mpAutoB'); set('emoLbl','react'); set('emoHint','reactHint'); set('timerInfo','timerInfo'); set('koBonusInfo','koBonusInfo');
   const mpn=$('mpName'); if(mpn)mpn.placeholder=T('mpNamePh');
   const mpc=$('mpCode'); if(mpc)mpc.placeholder=T('mpCodePh');
   const ci=$('chatIn'); if(ci)ci.placeholder=T('chatPh');
@@ -1986,6 +1986,7 @@ function initUI(){
     if(setupGameType==='sng'){
       cfg.ante=+$('anteSel').value;
       cfg.speed=document.querySelector('input[name=speed]:checked').value;
+      cfg.koBonus=$('koBonusChk').checked;
     }
     logLines=[];
     $('setup').classList.add('hidden');
@@ -2058,6 +2059,7 @@ function initUI(){
   /* --- clear saved data (human name for localStorage wipe) --- */
   $('resetInfoBtn').onclick=()=>$('resetInfo').classList.toggle('hidden');
   $('timerInfoBtn').onclick=()=>$('timerInfo').classList.toggle('hidden');
+  $('koBonusInfoBtn').onclick=()=>$('koBonusInfo').classList.toggle('hidden');
   wireCoachInfoTips();
   $('resetBtn').onclick=()=>{
     if(!confirm(T('resetConfirm')))return;
