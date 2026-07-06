@@ -897,6 +897,13 @@ function realTwoPairOrBetter(score,hole){
   if(score[0]>=3)return true;
   return score[0]===2&&hole.some(c=>c.r===score[1]||c.r===score[2]);
 }
+function hasTopPairOrBetter(score,hole,board){
+  if(!score||!board.length)return false;
+  if(realTwoPairOrBetter(score,hole))return true;
+  if(score[0]!==1)return false;
+  const boardMax=Math.max(...board.map(c=>c.r));
+  return score[1]===boardMax&&hole.some(c=>c.r===score[1]);
+}
 /* external GTO chart lookup (charts.js) — returns null when unavailable, callers fall back */
 function chartFor(kind,key){
   try{
@@ -1481,10 +1488,11 @@ function coachDecide(p){
     const probeMax=difficultyApplies&&difficulty==='hard'?0.65:0.62;
     const probeStab=passiveMajority&&eq>=probeMin&&eq<=probeMax&&(actsLast||river||boardTexture(state.board).dry);
     const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&realTwoPairOrBetter(madeScore,p.hole);
+    const protectTopPair=!river&&checkedInFront>0&&opps<=3&&eq>=0.48&&hasTopPairOrBetter(madeScore,p.hole,state.board);
     if(eq>valueThresh){
       rec='RAISE';
       why.push(river?C('valRiver',pct(eq),opps):C('valBet',pct(eq),opps));
-    }else if(protectMade){
+    }else if(protectMade||protectTopPair){
       rec='RAISE';
       why.push(C('protectBet',handDesc,pct(eq),opps));
     }else if(checkedDown.length&&eq>probeMin){
