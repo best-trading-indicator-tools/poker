@@ -36,7 +36,7 @@ pfSetMine:(c,amt,x)=>`${c} doesn't qualify on raw strength, but this is a textbo
 pfFoldRange:(ct,p,c,pr,e,o)=>`Against a raise, the ~top ${ct}% continues from ${p}; ${c} (${pr}) doesn't make it. Your equity vs a raiser's range is ~${e} needing ${o} — let it go.`,
 valRiver:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're likely best at showdown. Bet for value — a check wins you nothing extra, and worse hands may still pay you off.`,
 valBet:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're likely ahead. Bet for value — checking gives weaker hands and draws a free card to outdraw you.`,
-protectBet:(h,e,n)=>`${h} is strong but vulnerable multiway. After checks in front, bet for value/protection: worse pairs, pair+draws, and straight/flush draws can pay, and checking gives them a free card. Raw equity is only ~${e} vs ${n} opponents because they share many outs, but betting is still better than giving a free card.`,
+protectBet:(h,e,n)=>`${h} is strong but vulnerable. Bet for value/protection: worse pairs, pair+draws, and straight/flush draws can pay, and checking gives them a free card. Raw equity is only ~${e} vs ${n} opponent${n>1?'s':''} because they share many outs, but betting is still better than giving a free card.`,
 stab:e=>`Everyone has checked to you, and checks usually mean weakness — their ranges look capped. With ~${e} plus all that fold equity, a stab takes this pot down often. If anyone calls or check-raises, slow down: that's real strength.`,
 checkedDownStab:(e,n)=>`${n===1?'Villain has':'Opponents have'} checked the free preflop option and then kept checking down. That line is heavily capped, so with ~${e} and a hand that is not pure trash, make a small stab — you do not need a big bet to pressure nothing.`,
 probeStab:(e,n,o)=>`${n===1?'Villain has':'Opponents have'} checked multiple streets, so the line is capped. Even ${o?'out of position, ':''}with ~${e} and no bet to call, a small bluff/probe bet can fold air and weak showdown hands — keep it small, then shut down if raised.`,
@@ -167,7 +167,7 @@ pfSetMine:(c,amt,x)=>`${c} ne se qualifie pas sur sa force brute, mais c’est u
 pfFoldRange:(ct,p,c,pr,e,o)=>`Face à une relance, seul le top ~${ct}% continue depuis ${p} ; ${c} (${pr}) n’en fait pas partie. Votre équité contre la range d’un relanceur est ~${e} pour ${o} requis — laissez tomber.`,
 valRiver:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':''}, vous êtes probablement devant à l’abattage. Misez pour la valeur — un check ne rapporte rien de plus, et des mains moins bonnes peuvent encore payer.`,
 valBet:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':''}, vous êtes probablement devant. Misez pour la valeur — checker offre une carte gratuite aux mains plus faibles et aux tirages.`,
-protectBet:(h,e,n)=>`${h} est forte mais vulnérable en multiway. Après les checks devant vous, misez pour value/protection : des paires moins bonnes, paire+tirage et tirages quinte/couleur peuvent payer, et checker leur donne une carte gratuite. L’équité brute n’est que ~${e} contre ${n} adversaires car ils partagent beaucoup d’outs, mais miser reste mieux que donner une carte gratuite.`,
+protectBet:(h,e,n)=>`${h} est forte mais vulnérable. Misez pour value/protection : des paires moins bonnes, paire+tirage et tirages quinte/couleur peuvent payer, et checker leur donne une carte gratuite. L’équité brute n’est que ~${e} contre ${n} adversaire${n>1?'s':''} car ils partagent beaucoup d’outs, mais miser reste mieux que donner une carte gratuite.`,
 stab:e=>`Tout le monde a checké jusqu’à vous, et les checks trahissent souvent la faiblesse — leurs ranges semblent plafonnées. Avec ~${e} plus toute cette fold equity, une mise ramasse souvent ce pot. Si quelqu’un paie ou check-relance, ralentissez : c’est de la vraie force.`,
 checkedDownStab:(e,n)=>`${n===1?'Vilain a':'Les adversaires ont'} checké l'option gratuite préflop puis continué à checker. Cette ligne est très capée : avec ~${e} et une main pas totalement poubelle, faites une petite mise — inutile de miser gros pour faire pression sur rien.`,
 probeStab:(e,n,o)=>`${n===1?'Vilain a':'Les adversaires ont'} checké plusieurs streets, donc la ligne est capée. Même ${o?'hors de position, ':''}avec ~${e} et aucune mise à payer, une petite mise bluff/probe peut faire folder l'air et les mains faibles de showdown — gardez-la petite, puis abandonnez si ça relance.`,
@@ -298,7 +298,7 @@ pfSetMine:(c,amt,x)=>`${c} no califica por fuerza bruta, pero es un set-mine de 
 pfFoldRange:(ct,p,c,pr,e,o)=>`Contra una subida, solo continúa el ~top ${ct}% desde ${p}; ${c} (${pr}) no llega. Tu equidad contra el rango de quien sube es ~${e} necesitando ${o} — déjala ir.`,
 valRiver:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, probablemente eres el mejor en el showdown. Apuesta por valor — pasar no te gana nada extra, y manos peores aún pueden pagarte.`,
 valBet:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, probablemente vas por delante. Apuesta por valor — pasar regala una carta gratis a manos peores y proyectos.`,
-protectBet:(h,e,n)=>`${h} es fuerte pero vulnerable en multiway. Tras checks delante, apuesta por valor/protección: parejas peores, pareja+proyecto y proyectos de escalera/color pueden pagar, y pasar les regala una carta. La equity bruta es solo ~${e} contra ${n} rivales porque comparten muchos outs, pero apostar sigue siendo mejor que dar carta gratis.`,
+protectBet:(h,e,n)=>`${h} es fuerte pero vulnerable. Apuesta por valor/protección: parejas peores, pareja+proyecto y proyectos de escalera/color pueden pagar, y pasar les regala una carta. La equity bruta es solo ~${e} contra ${n} rival${n>1?'es':''} porque comparten muchos outs, pero apostar sigue siendo mejor que dar carta gratis.`,
 stab:e=>`Todos han pasado hasta ti, y pasar suele significar debilidad — sus rangos parecen limitados. Con ~${e} más toda esa fold equity, una apuesta se lleva este bote a menudo. Si alguien iguala o sube tras pasar, frena: eso es fuerza de verdad.`,
 checkedDownStab:(e,n)=>`${n===1?'El rival ha':'Los rivales han'} pasado la opción gratis preflop y luego siguieron pasando. Esa línea está muy limitada, así que con ~${e} y una mano que no es basura pura, haz una apuesta pequeña: no necesitas apostar grande para presionar aire.`,
 probeStab:(e,n,o)=>`${n===1?'El rival ha':'Los rivales han'} pasado varias calles, así que su línea está limitada. Incluso ${o?'fuera de posición, ':''}con ~${e} y sin apuesta que pagar, una apuesta pequeña de bluff/probe puede tirar aire y manos débiles de showdown — mantenla pequeña y abandona si resuben.`,
@@ -1487,12 +1487,14 @@ function coachDecide(p){
     const probeMin=difficultyApplies&&difficulty==='easy'?0.38:difficultyApplies&&difficulty==='hard'?0.26:0.30;
     const probeMax=difficultyApplies&&difficulty==='hard'?0.65:0.62;
     const probeStab=passiveMajority&&eq>=probeMin&&eq<=probeMax&&(actsLast||river||boardTexture(state.board).dry);
-    const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&realTwoPairOrBetter(madeScore,p.hole);
+    const strongMade=realTwoPairOrBetter(madeScore,p.hole);
+    const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&strongMade;
+    const leadStrongMade=!river&&checkedInFront===0&&opps<=2&&eq>=0.45&&strongMade;
     const protectTopPair=!river&&checkedInFront>0&&opps<=3&&eq>=0.48&&hasTopPairOrBetter(madeScore,p.hole,state.board);
     if(eq>valueThresh){
       rec='RAISE';
       why.push(river?C('valRiver',pct(eq),opps):C('valBet',pct(eq),opps));
-    }else if(protectMade||protectTopPair){
+    }else if(protectMade||leadStrongMade||protectTopPair){
       rec='RAISE';
       why.push(C('protectBet',handDesc,pct(eq),opps));
     }else if(checkedDown.length&&eq>probeMin){
