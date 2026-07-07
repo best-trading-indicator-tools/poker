@@ -165,6 +165,105 @@ function aiPostflopAdj(p, callAmt, pot){
   return {margin, bluffMult, betBoost, giveUp};
 }
 
+function aiTextureForFE(){
+  if(typeof boardTexture==='function') return boardTexture(state.board||[]);
+  if(!state.board||!state.board.length) return {dry:true,wet:false,paired:false,monotone:false,flushDraw:false};
+  const suits=[0,0,0,0], ranks=state.board.map(c=>c.r).sort((a,b)=>a-b);
+  for(const c of state.board)suits[c.s]++;
+  const paired=ranks.some((r,i,a)=>i&&a[i-1]===r);
+  const monotone=Math.max(...suits)>=3;
+  const twoTone=suits.some(v=>v>=2)&&!monotone;
+  const connected=ranks.length>=3&&ranks[ranks.length-1]-ranks[0]<=4;
+  const wet=paired||monotone||connected;
+  return {dry:!wet,wet,paired,monotone,flushDraw:monotone||twoTone};
+}
+function aiStyleFoldBias(q){
+  const sid=q.style?.id;
+  if(sid==='rock') return 0.13;
+  if(sid==='station') return -0.20;
+  if(sid==='shark') return -0.03;
+  if(sid==='maniac') return -0.12;
+  return 0;
+}
+function aiActorPressureBias(p, eq){
+  const sid=p.style?.id;
+  const value=eq>=0.50;
+  if(sid==='rock') return value?0.55:0.12;
+  if(sid==='station') return value?0.62:0.06;
+  if(sid==='shark') return value?1.05:0.95;
+  if(sid==='maniac') return value?1.05:1.35;
+  return value?0.85:0.75;
+}
+function aiVillainFoldChance(actor,q,betSize,potBefore,d,tex){
+  if(q.allIn||q.out||q.folded) return 0;
+  const pot=Math.max(potBefore,state.bb||1);
+  const ratio=betSize/pot;
+  let f=0.26;
+  f+=aiStyleFoldBias(q);
+  if(q.checkedStreet||(q.checkStreets||[]).includes(state.stage)) f+=0.12;
+  if((q.checkStreets||[]).length>=2) f+=0.08;
+  f+=clamp(q.rangeFloor||0,0,0.25)*0.75;       // capped top range = easier to push off
+  f-=clamp(0.35-(q.rangeCap||1),0,0.30)*0.75; // recently strong range = sticky
+  if(q.lineRead==='cbet') f+=0.04;
+  else if(q.lineRead==='barrel2'||q.lineRead==='barrel3'||q.lineRead==='checkraise'||q.lineRead==='donk') f-=0.12;
+  if(tex.dry) f+=0.06;
+  if(tex.wet) f-=0.06;
+  if(tex.flushDraw) f-=0.03;
+  if(tex.paired&&tex.dry) f+=0.03;
+  if(ratio>=1.0) f+=0.12;
+  else if(ratio>=0.65) f+=0.07;
+  else if(ratio>=0.38) f+=0.02;
+  else f-=0.05;
+  if(state.stage==='turn') f+=0.03;
+  else if(state.stage==='river') f+=0.05;
+  const stack=q.chips+q.bet;
+  if(!isCashGame()&&stack>0){
+    const pressure=betSize/Math.max(stack,1);
+    if(pressure>=0.75) f+=0.08;
+    else if(pressure>=0.45) f+=0.05;
+  }
+  const actorStack=actor.chips+actor.bet, villainStack=q.chips+q.bet;
+  if(!isCashGame()&&actorStack>villainStack*1.5) f+=0.04;
+  if(d==='easy') f+=0.04;
+  else if(d==='hard') f-=0.02;
+  return clamp(f,0.04,0.78);
+}
+function aiEstimateFoldEquity(actor,betSize,potBefore,d){
+  if(state.stage==='preflop') return 0;
+  const targets=inHand().filter(q=>q!==actor&&!q.allIn);
+  if(!targets.length) return 0;
+  const tex=aiTextureForFE();
+  let allFold=1;
+  for(const q of targets) allFold*=aiVillainFoldChance(actor,q,betSize,potBefore,d,tex);
+  if(targets.length>1) allFold*=Math.pow(0.86,targets.length-1);
+  return clamp(allFold,0.01,0.82);
+}
+function aiBetEV(eq,pot,betSize,foldEq){
+  return foldEq*pot+(1-foldEq)*(eq*(pot+2*betSize)-betSize);
+}
+function aiPressureRaise(p,eq,pot,d,st,pfAdj,callAmt=0){
+  if(state.stage==='preflop') return null;
+  if(p.style?.id==='rock'&&eq<0.46) return null;
+  if(p.style?.id==='station'&&eq<0.50) return null;
+  const target=betTarget(p,pot,Math.max(eq,0.45),d);
+  const betSize=Math.max(0,Math.min(target-p.bet,p.chips));
+  if(betSize<=0) return null;
+  const fe=aiEstimateFoldEquity(p,betSize,pot,d);
+  const continueEV=callAmt>0 ? Math.max(0,eq*(pot+callAmt)-callAmt) : (eq*pot);
+  const pressureEV=aiBetEV(eq,pot,betSize,fe);
+  const edge=pressureEV-continueEV;
+  const minEdge=Math.max((state.bb||1)*0.15,pot*0.025);
+  if(edge<minEdge) return null;
+  let freq=(d==='easy'?0.52:d==='medium'?0.74:0.88)*aiActorPressureBias(p,eq);
+  freq+=clamp((fe-0.25)*0.7,-0.10,0.22);
+  freq+=clamp(edge/Math.max(pot,state.bb||1),0,0.18);
+  freq+=st.raiseF*0.18+pfAdj.betBoost*0.4;
+  if(eq<0.45) freq*=pfAdj.bluffMult;
+  if(callAmt>0) freq*=0.72;
+  if(Math.random()>clamp(freq,0.02,0.96)) return null;
+  return {type:'raise',amount:target,foldEq:fe,edge};
+}
+
 function aiDecide(p){
   const callAmt=Math.min(state.currentBet-p.bet, p.chips);
   const pot=state.players.reduce((s,q)=>s+q.totalBet,0);
@@ -238,6 +337,8 @@ function aiDecide(p){
     if(openRange&&Math.random()<aiOpenRaiseProb(p,d))
       return {type:'raise',amount:betTarget(p,pot,Math.max(eq,0.62),d)};
     if(p.style?.id==='maniac'&&state.stage!=='preflop'&&Math.random()<0.12) return {type:'call'};
+    const pressure=aiPressureRaise(p,eq,pot,d,st,pfAdj,0);
+    if(pressure) return {type:'raise',amount:pressure.amount};
     let betProb=0,bluffProb=0;
     if(d==='easy'){  betProb=eq>0.62?0.35:0; bluffProb=0.03; }
     if(d==='medium'){betProb=eq>0.55?0.65:0; bluffProb=0.06; }
@@ -258,8 +359,9 @@ function aiDecide(p){
     bluffProb=Math.max(0,bluffProb+st.bluff);
     if(p.style?.id==='rock'||p.style?.id==='station') bluffProb=0;
     else if(state.stage!=='preflop') bluffProb*=pfAdj.bluffMult;
-    if(!aiCanValueRaise(p) && eq>=0.52) betProb=0;
-    if(Math.random()<betProb || (eq<0.40&&Math.random()<bluffProb))
+    if(state.stage==='preflop'&&!aiCanValueRaise(p) && eq>=0.52) betProb=0;
+    const fallbackFE=state.stage==='preflop'?0:aiEstimateFoldEquity(p,Math.max(state.bb,pot*0.45),pot,d);
+    if(Math.random()<betProb || (eq<0.40&&fallbackFE>0.22&&Math.random()<bluffProb))
       return {type:'raise',amount:betTarget(p,pot,eq,d)};
     return {type:'call'};
   }
@@ -272,10 +374,13 @@ function aiDecide(p){
     return {type:'raise',amount:betTarget(p,pot,Math.max(eq,0.62),d)};
   if(eq>raiseThresh && aiCanValueRaise(p) && Math.random()<raiseFreq)
     return {type:'raise',amount:betTarget(p,pot,eq,d)};
+  const pressure=aiPressureRaise(p,eq,pot,d,st,pfAdj,callAmt);
+  if(pressure) return {type:'raise',amount:pressure.amount};
   if(eq>=odds+margin) return {type:'call'};
   const bluffRaise=(p.style?.id==='rock'||p.style?.id==='station')?0
     :((d==='hard'?0.05:0.02)+st.bluff)*pfAdj.bluffMult;
-  if(bluffRaise>0 && Math.random()<bluffRaise && callAmt<pot*0.4 && state.stage!=='preflop')
+  const raiseFE=state.stage==='preflop'?0:aiEstimateFoldEquity(p,Math.max(state.bb,pot*0.55),pot,d);
+  if(bluffRaise>0 && raiseFE>0.30 && Math.random()<bluffRaise && callAmt<pot*0.4 && state.stage!=='preflop')
     return {type:'raise',amount:betTarget(p,pot,0.7,d)};
   return {type:'fold'};
 }
