@@ -89,6 +89,7 @@
   ];
   const emptySummary=()=>({
     xp:0,levelBefore:1,levelAfter:1,toasts:[],missions:[],records:[],unlocks:[],trophies:[],
+    koCount:0,koBonus:0,koNames:[],
     winTier:'',duplicate:false
   });
   function todayKey(){
@@ -306,8 +307,13 @@
       }
     }else if(type==='ko'){
       const count=Math.max(1,Number(payload.count)||1);
+      const bonus=Math.max(0,Number(payload.bonus)||0);
+      summary.koCount=count;
+      summary.koBonus=bonus;
+      summary.koNames=Array.isArray(payload.names)?payload.names.filter(Boolean).slice(0,4):[];
       progressMission(s,summary,'eliminate1',count);
       addXp(s,summary,60*count,`KO x${count}`);
+      if(bonus>0)addToast(summary,'KO bonus collected');
       const gameKo=Math.max(count,Number(payload.gameKoCount)||0);
       if(gameKo>(s.records.maxKosInGame||0))s.records.maxKosInGame=gameKo;
       if(gameKo>=3)awardTrophy(s,summary,'threeKosOneGame');
@@ -392,6 +398,9 @@
     out.records=out.records.concat(b.records||[]);
     out.unlocks=out.unlocks.concat(b.unlocks||[]);
     out.trophies=out.trophies.concat(b.trophies||[]);
+    out.koCount+=(b.koCount||0);
+    out.koBonus+=(b.koBonus||0);
+    out.koNames=[...new Set(out.koNames.concat(b.koNames||[]))].slice(0,4);
     if(b.winTier==='monster'||(b.winTier==='big'&&out.winTier!=='monster')||(!out.winTier&&b.winTier))out.winTier=b.winTier;
     return out;
   }

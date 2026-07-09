@@ -646,6 +646,12 @@ function sfx(kind){
       else if(p==='casino'){tone(220,0,0.08,0.08,'square');tone(880,0.12,0.05,0.07,'triangle');tone(1760,0.2,0.12,0.055,'triangle');}
       else{tone(220,0,0.08,0.08,'square');tone(440,0.1,0.08,0.07,'square');tone(880,0.22,0.16,0.06,'triangle');}
     }
+    else if(kind==='bounty'){
+      const p=rewardPack();
+      if(p==='retro'){tone(330,0,0.05,0.08,'square');tone(660,0.07,0.05,0.075,'square');tone(990,0.14,0.08,0.06,'square');tone(1320,0.26,0.14,0.05,'square');}
+      else if(p==='casino'){tone(1760,0,0.035,0.055,'triangle');tone(2093,0.05,0.04,0.055,'triangle');tone(2637,0.11,0.06,0.05,'triangle');tone(1760,0.24,0.16,0.045,'triangle');}
+      else{tone(330,0,0.07,0.08,'square');tone(659,0.09,0.07,0.075,'square');tone(988,0.2,0.1,0.065,'triangle');tone(1568,0.35,0.16,0.055,'triangle');}
+    }
   }catch(e){}
 }
 

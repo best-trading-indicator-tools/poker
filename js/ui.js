@@ -377,8 +377,9 @@ function renderRewardTop(){
   el.title=next?`Next level ${next.level}: ${next.label}`:'All unlocks claimed';
 }
 function rewardSummaryLine(summary){
-  if(!summary||summary.duplicate||(!summary.xp&&!summary.missions?.length&&!summary.records?.length&&!summary.unlocks?.length&&!summary.trophies?.length))return '';
+  if(!summary||summary.duplicate||(!summary.xp&&!summary.missions?.length&&!summary.records?.length&&!summary.unlocks?.length&&!summary.trophies?.length&&!summary.koBonus))return '';
   const bits=[];
+  if(summary.koBonus)bits.push(`<b>KO bonus +${usd(summary.koBonus)}</b>`);
   if(summary.xp)bits.push(`<b>+${summary.xp} XP</b>`);
   if(summary.missions&&summary.missions.length)bits.push(`${summary.missions.length} mission${summary.missions.length>1?'s':''}`);
   if(summary.records&&summary.records.length)bits.push(`${summary.records.length} record${summary.records.length>1?'s':''}`);
@@ -402,6 +403,7 @@ function renderRewardReview(){
 function renderRewardEndSummary(summary){
   const rs=rewardStateSafe(); if(!rs)return '';
   const parts=[];
+  if(summary&&summary.koBonus)parts.push(`KO bonus +${usd(summary.koBonus)}`);
   if(summary&&summary.xp)parts.push(`+${summary.xp} XP`);
   if(summary&&summary.missions&&summary.missions.length)parts.push(`${summary.missions.length} mission${summary.missions.length>1?'s':''}`);
   if(summary&&summary.trophies&&summary.trophies.length)parts.push(`${summary.trophies.length} troph${summary.trophies.length>1?'ies':'y'}`);
@@ -481,31 +483,38 @@ function rewardBurst(summary){
   const rs=rewardStateSafe();
   const fx=rs&&rs.equippedCosmetics?rs.equippedCosmetics.winFx:'classic';
   const mult=fx==='goldRush'?1.7:fx==='fireworks'?1.35:1;
-  const base=summary.winTier==='monster'?16:summary.winTier==='big'?10:summary.type==='ko'?12:summary.levelAfter>summary.levelBefore?14:0;
+  const base=summary.koBonus?22:summary.winTier==='monster'?16:summary.winTier==='big'?10:summary.koCount?12:summary.levelAfter>summary.levelBefore?14:0;
   const count=Math.round(base*mult);
   if(count) flyChips(c.x,c.y+4,tx,ty,count,0);
 }
 function showRewardToast(summary){
   if(!HAS_DOM||!summary||summary.duplicate)return;
   const el=$('rewardToast');
-  if(!el||(!summary.xp&&!summary.toasts?.length&&!summary.unlocks?.length&&!summary.records?.length&&!summary.trophies?.length))return;
-  const title=summary.levelAfter>summary.levelBefore?`Level ${summary.levelAfter}`:
+  if(!el||(!summary.xp&&!summary.toasts?.length&&!summary.unlocks?.length&&!summary.records?.length&&!summary.trophies?.length&&!summary.koBonus))return;
+  const koBonus=Math.max(0,Number(summary.koBonus)||0);
+  const koNames=(summary.koNames||[]).filter(Boolean).join(', ');
+  const title=koBonus?'KO bonus collected':
+    summary.levelAfter>summary.levelBefore?`Level ${summary.levelAfter}`:
     summary.winTier==='monster'?'Monster pot':
     summary.winTier==='big'?'Big pot':
-    summary.type==='ko'?'Knockout':
+    summary.koCount?'Knockout':
     summary.trophies?.length?'Trophy unlocked':
     summary.unlocks?.length?'New unlock':
     summary.missions?.length?'Mission complete':'Arcade rewards';
-  const sub=(summary.toasts||[]).filter(Boolean).slice(0,2).join(' · ');
-  el.innerHTML=`<div class="rt-title">${title}</div>${sub?`<div class="rt-sub">${sub}</div>`:''}${summary.xp?`<div class="rt-xp">+${summary.xp} XP</div>`:''}`;
+  const sub=koBonus
+    ? `${summary.koCount||1} elimination${(summary.koCount||1)>1?'s':''}${koNames?` · ${koNames}`:''}`
+    : (summary.toasts||[]).filter(Boolean).slice(0,2).join(' · ');
+  el.classList.toggle('ko-bonus',!!koBonus);
+  el.innerHTML=`<div class="rt-title">${title}</div>${sub?`<div class="rt-sub">${sub}</div>`:''}${koBonus?`<div class="rt-bonus">+${usd(koBonus)}</div>`:''}${summary.xp?`<div class="rt-xp">+${summary.xp} XP</div>`:''}`;
   el.classList.remove('hidden','show');
   void el.offsetWidth;
   el.classList.add('show');
   clearTimeout(rewardToastTimer);
   rewardToastTimer=setTimeout(()=>el.classList.add('hidden'),3200);
-  if(summary.levelAfter>summary.levelBefore){sfx('levelup');haptic([18,40,18,40,18]);setTimeout(()=>showBanner(`LEVEL ${summary.levelAfter}`),180);}
+  if(koBonus){sfx('bounty');haptic([20,30,20,45,20]);setTimeout(()=>showBanner(`KO BONUS +${usd(koBonus)}`),180);}
+  else if(summary.levelAfter>summary.levelBefore){sfx('levelup');haptic([18,40,18,40,18]);setTimeout(()=>showBanner(`LEVEL ${summary.levelAfter}`),180);}
   else if(summary.winTier==='monster'||summary.winTier==='big'){sfx('bigwin');haptic([16,28,16]);setTimeout(()=>showBanner(summary.winTier==='monster'?'MONSTER POT':'BIG POT'),180);}
-  else if(summary.type==='ko'){sfx('ko');haptic([20,35,20]);setTimeout(()=>showBanner('KNOCKOUT'),180);}
+  else if(summary.koCount){sfx('ko');haptic([20,35,20]);setTimeout(()=>showBanner('KNOCKOUT'),180);}
   else if(summary.xp>0){sfx('xp');haptic(10);}
   rewardBurst(summary);
 }
