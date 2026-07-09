@@ -15,7 +15,7 @@
   --text:#e8ebf0; --dim:#8d99ab; --gold:#e8b64c; --red:#e2574c; --blue:#4c8fe2; --green:#2e7d4f;
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
-.btn:focus-visible,.preset:focus-visible,#actionbar button:focus-visible,.seg button:focus-visible,.rp-nav button:focus-visible,#revClose:focus-visible,#revAllHands:focus-visible,#rewardClose:focus-visible,.reward-equip:focus-visible,#tRewards:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.btn:focus-visible,.preset:focus-visible,#actionbar button:focus-visible,.seg button:focus-visible,.rp-nav button:focus-visible,#revClose:focus-visible,#revAllHands:focus-visible,#rewardClose:focus-visible,#rewardCloseTop:focus-visible,.reward-equip:focus-visible,#tRewards:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
 .tb-touch{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:44px;padding:4px 8px;margin:-4px -8px;}
 .tb-touch input{width:22px;height:22px;accent-color:var(--gold);cursor:pointer;}
 .setup-touch{display:flex;align-items:center;gap:10px;cursor:pointer;min-height:44px;}
@@ -373,8 +373,10 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
 
 /* ---------- REWARDS ROOM ---------- */
 #rewardOv{position:fixed;inset:0;background:rgba(8,10,14,.85);display:flex;align-items:center;justify-content:center;z-index:65;}
-.reward-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 28px;width:760px;max-width:94vw;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);}
+.reward-card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 28px;width:760px;max-width:94vw;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);}
 .reward-card h2{font-size:18px;margin-bottom:12px;color:var(--gold);}
+#rewardCloseTop{position:absolute;top:14px;right:16px;width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);font-size:22px;line-height:1;cursor:pointer;}
+#rewardCloseTop:hover{border-color:var(--gold);color:var(--gold);}
 .reward-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .reward-panel{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025);padding:12px;}
 .reward-panel.wide{grid-column:1 / -1;}
@@ -963,6 +965,7 @@ body.fl #chipPreview{display:none!important;}
 
 <div id="rewardOv" class="hidden" aria-hidden="true">
   <div class="reward-card" role="document">
+    <button id="rewardCloseTop" type="button" aria-label="Close">×</button>
     <h2 id="rewardTitle">Rewards room</h2>
     <div id="rewardBody"></div>
     <button id="rewardClose" type="button">Close</button>

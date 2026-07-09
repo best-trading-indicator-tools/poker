@@ -2291,6 +2291,7 @@ function initUI(){
   $('reviewOv').onclick=e=>{if(e.target.id==='reviewOv')closeDialog($('reviewOv'));};
   $('tRewards').onclick=showRewardsRoom;
   $('rewardClose').onclick=()=>closeDialog($('rewardOv'));
+  $('rewardCloseTop').onclick=()=>closeDialog($('rewardOv'));
   $('rewardOv').onclick=e=>{if(e.target.id==='rewardOv')closeDialog($('rewardOv'));};
   ['revFilterAll','revFilterCash','revFilterSng'].forEach(id=>{
     const el=$(id);
