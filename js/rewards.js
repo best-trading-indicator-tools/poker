@@ -185,7 +185,6 @@
       return summary;
     }
     if(type==='handEnd'){
-      addXp(s,summary,5,'Hand played');
       if(payload.won){
         s.streaks.win=(s.streaks.win||0)+1;
         if(s.streaks.win>s.streaks.bestWin){
