@@ -16,7 +16,7 @@ statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Leak finder (by spot)",revLeaksNone:"No classified leaks yet — deviate from the coach and finish games to populate this.",
 leakPfOpen:"Preflop opens",leakPfFace:"Facing raises",leakCbet:"C-bet defense",leakMultiway:"Multiway pots",leakRiver:"River calls",leakRiverAir:n=>`${n} river call${n>1?'s':''} with high card / no hand`,
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
-resetData:"Clear saved data",resetInfo:"Deletes everything this game keeps in your browser: lifetime stats, hand history and any unfinished tournament you could resume. Your language choice stays. This can't be undone.",resetConfirm:"Delete all saved stats, hand history and any unfinished tournament?",resetDone:"✓ Cleared",
+resetData:"Clear saved data",resetInfo:"Deletes everything this game keeps in your browser: lifetime stats, hand history, arcade rewards and any unfinished tournament you could resume. Your language choice stays. This can't be undone.",resetConfirm:"Delete all saved stats, hand history, arcade rewards and any unfinished tournament?",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Quit this tournament?",quitCash:"Leave the table?",
 fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ Your turn",
@@ -81,7 +81,7 @@ statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Fuites par type de spot",revLeaksNone:"Pas encore de fuites classées — écartez-vous du coach et terminez des parties.",
 leakPfOpen:"Ouvertures préflop",leakPfFace:"Face aux relances",leakCbet:"Défense c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls rivière",leakRiverAir:n=>`${n} call${n>1?'s':''} rivière sans main`,
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
-resetData:"Effacer les données sauvegardées",resetInfo:"Supprime tout ce que le jeu garde dans votre navigateur : statistiques globales, historique des mains et tout tournoi en cours à reprendre. Votre choix de langue est conservé. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l'historique des mains et tout tournoi en cours ?",resetDone:"✓ Effacé",
+resetData:"Effacer les données sauvegardées",resetInfo:"Supprime tout ce que le jeu garde dans votre navigateur : statistiques globales, historique des mains, récompenses arcade et tout tournoi en cours à reprendre. Votre choix de langue est conservé. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l'historique des mains, les récompenses arcade et tout tournoi en cours ?",resetDone:"✓ Effacé",
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter ce tournoi ?",quitCash:"Quitter la table ?",
 fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ À vous",
@@ -146,7 +146,7 @@ statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Fugas por tipo de spot",revLeaksNone:"Sin fugas clasificadas aún — desvíate del coach y termina partidas.",
 leakPfOpen:"Aperturas preflop",leakPfFace:"Frente a subidas",leakCbet:"Defensa c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls en river",leakRiverAir:n=>`${n} call${n>1?'s':''} en river sin mano`,
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
-resetData:"Borrar datos guardados",resetInfo:"Elimina todo lo que el juego guarda en tu navegador: estadísticas globales, historial de manos y cualquier torneo sin terminar. Tu idioma se mantiene. No se puede deshacer.",resetConfirm:"¿Borrar todas las estadísticas, el historial de manos y cualquier torneo sin terminar?",resetDone:"✓ Borrado",
+resetData:"Borrar datos guardados",resetInfo:"Elimina todo lo que el juego guarda en tu navegador: estadísticas globales, historial de manos, recompensas arcade y cualquier torneo sin terminar. Tu idioma se mantiene. No se puede deshacer.",resetConfirm:"¿Borrar todas las estadísticas, el historial de manos, las recompensas arcade y cualquier torneo sin terminar?",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Salir de este torneo?",quitCash:"¿Dejar la mesa?",
 fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
 actMenu:"◀ Menú",actTurn:"◀ Tu turno",
@@ -343,6 +343,153 @@ function cardHTML(c,small,anim){
 function backHTML(small,anim){ return `<div class="card back${small?' small':''}${anim?' deal':''}"></div>`; }
 /* set innerHTML only when content actually changed (so CSS animations fire once) */
 function setHTML(el,html){ if(el&&el.dataset.h!==html){el.innerHTML=html;el.dataset.h=html;} }
+
+/* ---------- arcade reward UI ---------- */
+let rewardToastTimer=0;
+function rewardsEnabled(){return typeof getRewardState==='function';}
+function rewardStateSafe(){try{return rewardsEnabled()?getRewardState():null;}catch(e){return null;}}
+function rewardLevelProgress(rs){
+  const cur=typeof rewardXpForLevel==='function'?rewardXpForLevel(rs.level):0;
+  const next=typeof rewardXpForLevel==='function'?rewardXpForLevel(rs.level+1):cur+500;
+  const pct=clamp((rs.xp-cur)/Math.max(1,next-cur)*100,0,100);
+  return {cur,next,pct};
+}
+function rewardKindLabel(kind){
+  return kind==='cardBack'?'Cards':kind==='avatarFrame'?'Frame':kind==='emotePack'?'Emotes':'Felt';
+}
+function renderRewardMissions(rs,limit){
+  const defs=globalThis.REWARD_MISSIONS||[];
+  const rows=defs.map(def=>{
+    const m=rs.missions&&rs.missions[def.id]||{progress:0,goal:def.goal,complete:false,claimed:false};
+    const done=m.complete||m.progress>=m.goal;
+    return `<div class="reward-mission${done?' done':''}">`+
+      `<div><b>${def.label}</b><span>${Math.min(m.progress,m.goal)} / ${m.goal}${m.claimed?' · claimed':done?' · complete':''}</span></div>`+
+      `<span>${done?'+'+def.xp+' XP':Math.round(m.progress/m.goal*100)+'%'}</span></div>`;
+  });
+  return rows.slice(0,limit||rows.length).join('');
+}
+function renderRewardCosmetics(rs){
+  const catalog=globalThis.REWARD_COSMETICS||{};
+  return Object.keys(catalog).map(kind=>{
+    const unlocked=rs.unlockedCosmetics&&rs.unlockedCosmetics[kind]||[];
+    const equipped=rs.equippedCosmetics&&rs.equippedCosmetics[kind];
+    const opts=(catalog[kind]||[]).filter(c=>unlocked.includes(c.id));
+    if(!opts.length)return '';
+    return opts.map(c=>`<button type="button" class="reward-btn${equipped===c.id?' on':''}" data-reward-kind="${kind}" data-reward-id="${c.id}">${rewardKindLabel(kind)}: ${c.label}</button>`).join('');
+  }).join('');
+}
+function renderRewardHub(){
+  if(!HAS_DOM)return;
+  const el=$('rewardHub');
+  if(!el||!rewardsEnabled())return;
+  const rs=rewardStateSafe(); if(!rs)return;
+  const p=rewardLevelProgress(rs);
+  el.innerHTML=
+    `<div class="reward-head"><b>Arcade rewards</b><span>Level ${rs.level}</span></div>`+
+    `<div class="reward-bar"><i style="width:${p.pct}%"></i></div>`+
+    `<div class="reward-mini">${rs.xp} XP · ${Math.max(0,p.next-rs.xp)} XP to next level</div>`+
+    `<div class="reward-missions">${renderRewardMissions(rs,3)}</div>`+
+    `<div class="reward-cosmetics">${renderRewardCosmetics(rs)}</div>`;
+  el.querySelectorAll('[data-reward-kind]').forEach(btn=>{
+    btn.onclick=()=>{
+      if(typeof equipCosmetic==='function'&&equipCosmetic(btn.dataset.rewardKind,btn.dataset.rewardId)){
+        applyRewardCosmetics();
+        renderRewardHub();
+        renderRewardTop();
+      }
+    };
+  });
+}
+function renderRewardTop(){
+  if(!HAS_DOM)return;
+  const el=$('tRewards'); if(!el||!rewardsEnabled())return;
+  const rs=rewardStateSafe(); if(!rs){el.textContent='';return;}
+  const p=rewardLevelProgress(rs);
+  el.innerHTML=`Rewards <b>Lv ${rs.level}</b> <span style="color:var(--dim);">${Math.round(p.pct)}%</span>`;
+}
+function rewardSummaryLine(summary){
+  if(!summary||summary.duplicate||(!summary.xp&&!summary.missions?.length&&!summary.records?.length&&!summary.unlocks?.length))return '';
+  const bits=[];
+  if(summary.xp)bits.push(`<b>+${summary.xp} XP</b>`);
+  if(summary.missions&&summary.missions.length)bits.push(`${summary.missions.length} mission${summary.missions.length>1?'s':''}`);
+  if(summary.records&&summary.records.length)bits.push(`${summary.records.length} record${summary.records.length>1?'s':''}`);
+  if(summary.unlocks&&summary.unlocks.length)bits.push(`${summary.unlocks.length} unlock${summary.unlocks.length>1?'s':''}`);
+  return `<div class="reward-line">Arcade rewards: ${bits.join(' · ')}</div>`;
+}
+function renderRewardReview(){
+  const rs=rewardStateSafe(); if(!rs)return '';
+  const p=rewardLevelProgress(rs);
+  const active=(globalThis.REWARD_MISSIONS||[]).map(def=>{
+    const m=rs.missions[def.id]||{progress:0,goal:def.goal};
+    return `${def.label}: ${Math.min(m.progress,m.goal)}/${m.goal}`;
+  }).slice(0,2).join(' · ');
+  return `<div class="reward-review"><b>Arcade rewards</b>`+
+    `<div class="rr-row"><span>Level ${rs.level}</span><span>${rs.xp} XP</span></div>`+
+    `<div class="reward-bar" style="margin:8px 0 6px;"><i style="width:${p.pct}%"></i></div>`+
+    `<div>${active}</div></div>`;
+}
+function renderRewardEndSummary(summary){
+  const rs=rewardStateSafe(); if(!rs)return '';
+  const parts=[];
+  if(summary&&summary.xp)parts.push(`+${summary.xp} XP`);
+  if(summary&&summary.missions&&summary.missions.length)parts.push(`${summary.missions.length} mission${summary.missions.length>1?'s':''}`);
+  if(summary&&summary.unlocks&&summary.unlocks.length)parts.push(`Unlocked ${summary.unlocks.map(u=>u.label).join(', ')}`);
+  if(summary&&summary.records&&summary.records.length)parts.push(`${summary.records.length} record${summary.records.length>1?'s':''}`);
+  return `<div class="reward-review"><b>Arcade reward payout</b>`+
+    `<div class="rr-row"><span>Level ${rs.level}</span><span>${rs.xp} XP</span></div>`+
+    `<div style="margin-top:7px;color:var(--text);">${parts.length?parts.join(' · '):'Progress saved'}</div></div>`;
+}
+function rewardReducedMotion(){
+  return !!(HAS_DOM&&window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+function rewardBurst(summary){
+  if(!HAS_DOM||rewardReducedMotion()||typeof flyChips!=='function'||!state)return;
+  const seat=$('seat0'), felt=$('felt'); if(!seat||!felt)return;
+  const c=feltCenter();
+  const tx=seat.offsetLeft+seat.offsetWidth/2, ty=seat.offsetTop+seat.offsetHeight/2;
+  const count=summary.winTier==='monster'?16:summary.winTier==='big'?10:summary.type==='ko'?12:summary.levelAfter>summary.levelBefore?14:0;
+  if(count) flyChips(c.x,c.y+4,tx,ty,count,0);
+}
+function showRewardToast(summary){
+  if(!HAS_DOM||!summary||summary.duplicate)return;
+  const el=$('rewardToast');
+  if(!el||(!summary.xp&&!summary.toasts?.length&&!summary.unlocks?.length&&!summary.records?.length))return;
+  const title=summary.levelAfter>summary.levelBefore?`Level ${summary.levelAfter}`:
+    summary.winTier==='monster'?'Monster pot':
+    summary.winTier==='big'?'Big pot':
+    summary.type==='ko'?'Knockout':
+    summary.unlocks?.length?'New unlock':
+    summary.missions?.length?'Mission complete':'Arcade rewards';
+  const sub=(summary.toasts||[]).filter(Boolean).slice(0,2).join(' · ');
+  el.innerHTML=`<div class="rt-title">${title}</div>${sub?`<div class="rt-sub">${sub}</div>`:''}${summary.xp?`<div class="rt-xp">+${summary.xp} XP</div>`:''}`;
+  el.classList.remove('hidden','show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(rewardToastTimer);
+  rewardToastTimer=setTimeout(()=>el.classList.add('hidden'),3200);
+  if(summary.levelAfter>summary.levelBefore){sfx('levelup');haptic([18,40,18,40,18]);setTimeout(()=>showBanner(`LEVEL ${summary.levelAfter}`),180);}
+  else if(summary.winTier==='monster'||summary.winTier==='big'){sfx('bigwin');haptic([16,28,16]);setTimeout(()=>showBanner(summary.winTier==='monster'?'MONSTER POT':'BIG POT'),180);}
+  else if(summary.type==='ko'){sfx('ko');haptic([20,35,20]);setTimeout(()=>showBanner('KNOCKOUT'),180);}
+  rewardBurst(summary);
+}
+function applyRewardCosmetics(){
+  if(!HAS_DOM)return;
+  const rs=rewardStateSafe(); if(!rs)return;
+  const cls=['felt-midnight','felt-royal','cardback-gold','cardback-red','frame-neon'];
+  document.body.classList.remove(...cls);
+  const eq=rs.equippedCosmetics||{};
+  if(eq.felt&&eq.felt!=='classic')document.body.classList.add('felt-'+eq.felt);
+  if(eq.cardBack&&eq.cardBack!=='blue')document.body.classList.add('cardback-'+eq.cardBack);
+  if(eq.avatarFrame&&eq.avatarFrame!=='plain')document.body.classList.add('frame-'+eq.avatarFrame);
+  renderEmoteButtons();
+}
+function handleRewardEvent(summary){
+  applyRewardCosmetics();
+  renderRewardHub();
+  renderRewardTop();
+  showRewardToast(summary);
+}
+if(HAS_DOM) globalThis.__onRewardEvent=handleRewardEvent;
 
 function buildSeats(){
   if(!HAS_DOM)return;
@@ -1116,6 +1263,7 @@ function render(winners){
     const per=SPEED_HANDS[state.cfg.speed];
     $('tNext').textContent= state.level>=state.levels.length-1 ? '—' : (per-((state.handNum-1)%per+1)+1);
   }
+  renderRewardTop();
   const potCollected=state.players.reduce((s,p)=>s+p.totalBet-p.bet,0);
   const totalPot=state.players.reduce((s,p)=>s+p.totalBet,0);
   $('pot').textContent= totalPot>0?`Pot: ${money(totalPot)}`:'';
@@ -1360,6 +1508,7 @@ function renderFeedback(net){
     for(const d of state.humanDecisions.filter(x=>!x.followed))
       html+=`<div class="dev">${d.stage}: ${T('coachSaid')} ${recWord(d.rec)}, ${T('youChose')} ${actWord(d.action)}${d.evLoss>0?` <span class="neg">(−${usd(d.evLoss)} EV)</span>`:''}</div>`;
   }
+  html+=rewardSummaryLine(state.lastRewardSummary);
   el.innerHTML=html;
 }
 function renderStats(){
@@ -1391,6 +1540,7 @@ function renderStats(){
     `<div class="srow"><span>${T('handsPW')}</span><b>${l.hands} / ${l.won}</b></div>`+
     `<div class="srow"><span>${T('net')}</span><b>${l.net>=0?'+':'−'}${usd(Math.abs(l.net))}</b></div>`+
     `<div class="srow"><span>${T('coachFollowed')}</span><b>${fp(l)}</b></div>`;
+  renderRewardTop();
 }
 /* ---------- hand replayer: browse hands (this game or saved history), step through streets ---------- */
 let rpHandIdx=0, rpStreet=99, rpAll=null;
@@ -1719,6 +1869,7 @@ function showSessionReview(){
   }
   $('revSummary').innerHTML=summary;
   $('revSpark').innerHTML=n>=2?evSparklineSVG(games.slice().reverse()):'';
+  $('revRewards').innerHTML=renderRewardReview();
   $('revLeaks').innerHTML=renderRevLeaks(games.slice().reverse());
   if(!n){
     $('revList').innerHTML=`<p style="color:var(--dim);font-size:13px;">${T(revFilter==='cash'?'revNoGamesCash':'revNoGames')}</p>`;
@@ -1765,11 +1916,19 @@ function showGameOver(won,place){
   if(!HAS_DOM)return;
   clearResume();
   saveGameRecord(won,place);
+  state.lastGameRewardSummary=null;
+  if(!BENCH&&typeof recordRewardEvent==='function'&&!(state.cfg.mpRemotes||state.cfg.mpClient)){
+    const comeback=Math.max(0,(state.rewardStartStack||0)-(state.rewardMinHeroChips||state.players[0].chips||0));
+    state.lastGameRewardSummary=recordRewardEvent('gameEnd',{
+      key:`game:${state.gameId}:end`,mode:'sng',won,place,hands:state.handNum,comeback
+    });
+  }
   render();
   $('ovEmoji').textContent=won?'🏆':'💀';
   $('ovTitle').textContent=won?T('youWin'):T('bustedTitle')(T('ord')(place));
   $('ovSub').textContent=won?T('youWinSub')(state.cfg.numPlayers-1,state.handNum):T('bustedSub')(state.handNum);
   $('ovSpark').innerHTML=sparklineSVG(gameSeries);
+  $('ovRewards').innerHTML=renderRewardEndSummary(state.lastGameRewardSummary);
   /* blunder report: biggest EV leaks vs the coach this game */
   const gd=(state.gameDecisions||[]).slice().sort((a,b)=>b.evLoss-a.evLoss);
   const tot=gd.reduce((s,d)=>s+d.evLoss,0);
@@ -1790,11 +1949,18 @@ function showCashSessionEnd(){
   clearResume();
   const pnl=getMode().sessionPnL(state);
   saveGameRecord(false,0);
+  state.lastGameRewardSummary=null;
+  if(!BENCH&&typeof recordRewardEvent==='function'&&!(state.cfg.mpRemotes||state.cfg.mpClient)){
+    state.lastGameRewardSummary=recordRewardEvent('gameEnd',{
+      key:`cash:${state.gameId}:end`,mode:'cash',hands:state.handNum,pnl
+    });
+  }
   render();
   $('ovEmoji').textContent='💵';
   $('ovTitle').textContent=T('cashSessionEnd');
   $('ovSub').textContent=T('cashSessionSub')(state.handNum,state.cashRebuys||0,pnl);
   $('ovSpark').innerHTML=sparklineSVG(gameSeries);
+  $('ovRewards').innerHTML=renderRewardEndSummary(state.lastGameRewardSummary);
   const gd=(state.gameDecisions||[]).slice().sort((a,b)=>b.evLoss-a.evLoss);
   const tot=gd.reduce((s,d)=>s+d.evLoss,0);
   const nDec=state.sessStats?state.sessStats.decisions:0;
@@ -1895,12 +2061,28 @@ function showEmoteBtn(){
     }
   }catch(e){}
 }
-const EMOJIS=['👍','😂','😱','🔥','🐔','🤝'];
+const EMOJI_PACKS={
+  classic:['👍','😂','😱','🔥','🐔','🤝'],
+  hype:['💥','🤑','⚡','🏆','😎','🚀']
+};
+function currentEmojis(){
+  const rs=rewardStateSafe();
+  const pack=rs&&rs.equippedCosmetics?rs.equippedCosmetics.emotePack:'classic';
+  return EMOJI_PACKS[pack]||EMOJI_PACKS.classic;
+}
+function renderEmoteButtons(){
+  if(!HAS_DOM)return;
+  const row=$('emoRow'); if(!row)return;
+  const emojis=currentEmojis();
+  row.innerHTML=emojis.map(e=>`<button>${e}</button>`).join('');
+  row.querySelectorAll('button').forEach((bt,i)=>{bt.onclick=()=>{mpEmote(i);$('emoBar').classList.add('hidden');};});
+}
 function showEmote(localSeat,e){
   if(!HAS_DOM)return;
   const seat=$('seat'+localSeat); if(!seat)return;
   const d=document.createElement('div');
-  d.className='emoPop'; d.textContent=EMOJIS[e]||'👍';
+  const emojis=currentEmojis();
+  d.className='emoPop'; d.textContent=emojis[e]||emojis[0]||'👍';
   d.style.left=(seat.offsetLeft)+'px';
   d.style.top=(seat.offsetTop+14)+'px';
   $('felt').appendChild(d);
@@ -1998,6 +2180,8 @@ function initUI(){
     hideActions();
     lastHand=null;
     $('coachFeed').classList.add('hidden');
+    applyRewardCosmetics();
+    renderRewardTop();
     renderStats();
     updateOrient();
     showEmoteBtn();
@@ -2028,6 +2212,9 @@ function initUI(){
   $('langSel').onchange=e=>setLang(e.target.value);
   $('langTop').onchange=e=>setLang(e.target.value);
   applyLang();
+  applyRewardCosmetics();
+  renderRewardHub();
+  renderRewardTop();
   /* --- resume saved tournament --- */
   const refreshResume=()=>{
     let sv=null; try{sv=JSON.parse(localStorage.getItem('sg_poker_resume'));}catch(e){}
@@ -2068,8 +2255,12 @@ function initUI(){
       localStorage.removeItem('sg_poker_history');
       localStorage.removeItem('sg_poker_resume');
       localStorage.removeItem('sg_poker_games');
+      if(typeof resetRewards==='function') resetRewards();
     }catch(e){}
     Object.assign(lifeStats,{hands:0,won:0,net:0,biggest:0,decisions:0,followed:0});
+    applyRewardCosmetics();
+    renderRewardHub();
+    renderRewardTop();
     refreshResume();
     if(state&&state.sessStats) renderStats();
     const lbl=$('resetLbl'),old=T('resetData');
@@ -2081,6 +2272,8 @@ function initUI(){
     setupGameType=sv.cfg?.gameType||'sng';
     updateSetupMode(setupGameType);
     applyResumeSnapshot(sv);
+    applyRewardCosmetics();
+    renderRewardTop();
   };
   /* --- keyboard shortcuts: F fold · C check/call · R raise · 1-4 sizes · N next hand --- */
   $('foldBtn').title='Fold (F)'; $('callBtn').title='Check / Call (C)'; $('raiseBtn').title='Raise (R)';
@@ -2189,7 +2382,7 @@ function initUI(){
   };
   $('chatBtn').onclick=()=>{$('chat').classList.toggle('hidden');$('chatBtn').textContent='💬';};
   $('emoBtn').onclick=()=>$('emoBar').classList.toggle('hidden');
-  $('emoBar').querySelectorAll('button').forEach((bt,i)=>{bt.onclick=()=>{mpEmote(i);$('emoBar').classList.add('hidden');};});
+  renderEmoteButtons();
   $('chatSend').onclick=mpChatSend;
   $('chatIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();mpChatSend();}});
   $('quitBtn').onclick=()=>{

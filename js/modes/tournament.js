@@ -7,14 +7,17 @@ function koBonusAmount(state){
   const unit=Math.max(1,state.sb||1);
   return Math.max(startBlind,Math.round((startStack*0.10)/unit)*unit);
 }
-function humanKoVictims(state){
-  if(!state.cfg.koBonus) return [];
+function humanEliminationVictims(state){
   const awards=state.lastPotAwards||[];
   return state.players.filter(p=>
     p.i!==0&&!p.out&&p.chips===0&&awards.some(a=>
       (a.winnerIds||[]).includes(0)&&(a.contributorIds||[]).includes(p.i)
     )
   );
+}
+function humanKoVictims(state){
+  if(!state.cfg.koBonus) return [];
+  return humanEliminationVictims(state);
 }
 
 registerMode('sng',{
@@ -43,11 +46,15 @@ registerMode('sng',{
   beforeStats(state){
     const human=state.players[0];
     if(!human||state.cfg.allAI) return;
-    const victims=humanKoVictims(state);
+    const allVictims=humanEliminationVictims(state);
+    state.lastHumanKos=allVictims.map(p=>({i:p.i,name:p.name}));
+    state.lastKoBonusAward=0;
+    const victims=state.cfg.koBonus?allVictims:[];
     if(!victims.length) return;
     const bonus=koBonusAmount(state)*victims.length;
     human.chips+=bonus;
     state.koBonusWon=(state.koBonusWon||0)+bonus;
+    state.lastKoBonusAward=bonus;
     const msg=T('koBonusAward')(victims.length,usd(bonus));
     log(msg);
     state.resultText=state.resultText?`${state.resultText} · ${msg}`:msg;

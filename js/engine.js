@@ -69,6 +69,8 @@ function newGame(cfg){
   state.sessStats={hands:0,won:0,net:0,biggest:0,decisions:0,followed:0,
     vpipH:0,pfrH:0,aBets:0,aCalls:0,sdSeen:0,sdWon:0,evLost:0};
   state.gameId=Date.now();
+  state.rewardStartStack=stack;
+  state.rewardMinHeroChips=stack;
   state.gameDecisions=[];   // EV blunders this game
   state.gameHands=[];       // replayable hands this game
   gameSeries=[];            // hero stack per hand (history graph)
@@ -159,6 +161,10 @@ function startHand(){
   state.noActionHand=false;
   state.pfAggIdx=-1; state.lastAggIdx=-1;
   state.lastPotAwards=[];
+  state.lastHumanKos=[];
+  state.lastKoBonusAward=0;
+  state.lastAllInSweat=false;
+  state.lastRewardSummary=null;
   state.humanStart=state.players[0].chips+state.players[0].totalBet;
   state.humanPlayed=!state.players[0].out;
   prevBoardLen=0; coachRecNow=null;
@@ -355,9 +361,12 @@ function dealNext(){
 }
 
 function runout(){
-  for(const p of inHand()) p.revealed=true;
+  const live=inHand();
+  state.lastAllInSweat=live.some(p=>p.isHuman&&!p.folded)&&live.some(p=>p.allIn);
+  for(const p of live) p.revealed=true;
+  if(state.lastAllInSweat&&!fastFwd()) showBanner('ALL-IN SWEAT');
   render();
-  const d=fastFwd()?Math.min(RUNOUT_DELAY,320):RUNOUT_DELAY;
+  const d=fastFwd()?Math.min(RUNOUT_DELAY,320):(state.lastAllInSweat?Math.round(RUNOUT_DELAY*1.35):RUNOUT_DELAY);
   const step=()=>{
     if(state.gameOver) return;
     if(state.stage==='river'){ later(showdown,d*0.8); return; }
@@ -391,6 +400,9 @@ function endHandFold(){
 function showdown(){
   state.handOver=true;
   const live=inHand();
+  state.lastAllInSweat=state.lastAllInSweat||(
+    live.some(p=>p.isHuman&&!p.folded)&&live.some(p=>p.allIn)
+  );
   for(const p of live) p.revealed=true;
   const scores=new Map();
   for(const p of live) scores.set(p,evalSeven(p.hole.concat(state.board)));
@@ -479,6 +491,33 @@ function finishHand(pause){
       if(state.humanWonAmt>0){S.won++;S.biggest=Math.max(S.biggest,state.humanWonAmt);}
       for(const dd of state.humanDecisions){S.decisions++;if(dd.followed)S.followed++;}
     }
+    if(state.rewardMinHeroChips!=null) state.rewardMinHeroChips=Math.min(state.rewardMinHeroChips,state.players[0].chips);
+    let rewardSummary=null;
+    const n=state.humanDecisions.length, f=state.humanDecisions.filter(d=>d.followed).length;
+    const rewardsOk=!BENCH&&typeof recordRewardEvent==='function'&&!(state.cfg.mpRemotes||state.cfg.mpClient);
+    const addReward=(type,payload)=>{
+      if(!rewardsOk)return null;
+      payload=Object.assign({silent:true},payload||{});
+      const r=recordRewardEvent(type,payload);
+      rewardSummary=typeof combineRewardSummaries==='function'?combineRewardSummaries(rewardSummary,r):(r||rewardSummary);
+      return r;
+    };
+    if(rewardsOk){
+      const keyBase=`${state.gameId}:${state.handNum}`;
+      const wonAmt=state.humanWonAmt||0;
+      addReward('handEnd',{key:`hand:${keyBase}`,won:wonAmt>0,pot:wonAmt,net,bb:state.bb});
+      if(wonAmt>0) addReward('potWin',{key:`pot:${keyBase}`,pot:wonAmt,bb:state.bb});
+      if(hs.sdWon) addReward('showdownWin',{key:`showdown:${keyBase}`});
+      if(state.lastAllInSweat) addReward('allInShowdown',{key:`allin:${keyBase}`,won:wonAmt>0,pot:wonAmt});
+      if(f>0) addReward('coachFollowed',{key:`coach:${keyBase}`,count:f});
+      if(n>f) addReward('coachMissed',{key:`coach-missed:${keyBase}`});
+      const kos=state.lastHumanKos||[];
+      if(kos.length) addReward('ko',{key:`ko:${keyBase}`,count:kos.length,bonus:state.lastKoBonusAward||0,names:kos.map(x=>x.name)});
+    }
+    state.lastRewardSummary=rewardSummary;
+    if(rewardSummary&&typeof globalThis.__onRewardEvent==='function'){
+      try{globalThis.__onRewardEvent(rewardSummary);}catch(e){}
+    }
     saveStats();
     renderFeedback(net);
     renderStats();
@@ -543,6 +582,9 @@ function sfx(kind){
     else if(kind==='tick'){tone(1150,0,0.03,0.09,'square');tone(750,0.05,0.025,0.05,'square');}
     else if(kind==='alert'){tone(660,0,0.11,0.06);tone(880,0.12,0.11,0.05);}
     else if(kind==='win'){tone(523,0,0.12,0.07);tone(659,0.12,0.12,0.07);tone(784,0.24,0.22,0.07);}
+    else if(kind==='bigwin'){tone(523,0,0.09,0.08);tone(659,0.09,0.09,0.08);tone(784,0.18,0.12,0.08);tone(1046,0.32,0.18,0.07);}
+    else if(kind==='levelup'){tone(659,0,0.08,0.07);tone(784,0.08,0.08,0.07);tone(988,0.16,0.08,0.07);tone(1318,0.28,0.2,0.06);}
+    else if(kind==='ko'){tone(220,0,0.08,0.08,'square');tone(440,0.1,0.08,0.07,'square');tone(880,0.22,0.16,0.06,'triangle');}
   }catch(e){}
 }
 
@@ -610,6 +652,7 @@ function saveResume(){
       v:2, t:Date.now(), cfg:state.cfg, gameId:state.gameId,
       handNum:state.handNum, dealerIdx:state.dealerIdx,
       sessStats:state.sessStats, gameDecisions:state.gameDecisions||[],
+      rewardStartStack:state.rewardStartStack, rewardMinHeroChips:state.rewardMinHeroChips,
       gameSeries:(gameSeries||[]).slice(),
       players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,style:q.style?q.style.id:null})),
       ...getMode().resumeFields(state)
@@ -683,6 +726,8 @@ function applyResumeSnapshot(sv){
   newGame(sv.cfg);
   state.gameId=sv.gameId||state.gameId;
   state.handNum=sv.handNum; state.dealerIdx=sv.dealerIdx;
+  state.rewardStartStack=sv.rewardStartStack??state.rewardStartStack;
+  state.rewardMinHeroChips=sv.rewardMinHeroChips??state.rewardMinHeroChips;
   if(sv.sessStats) state.sessStats=Object.assign(state.sessStats,sv.sessStats);
   state.gameDecisions=sv.gameDecisions||[];
   gameSeries=sv.gameSeries||[];
