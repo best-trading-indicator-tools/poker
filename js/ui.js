@@ -362,6 +362,61 @@ function rewardKindLabel(kind){
     :kind==='soundPack'?'Sound packs'
     :'Table felt';
 }
+function rewardKindDescription(kind){
+  return kind==='cardBack'?'Changes the design shown on face-down cards around the table.'
+    :kind==='avatarFrame'?'Changes the border/glow around your player plate.'
+    :kind==='emotePack'?'Changes the quick reactions available from the React button.'
+    :kind==='winFx'?'Changes the visual punch for big wins, knockouts, and reward pops.'
+    :kind==='soundPack'?'Changes reward sounds for XP, level-ups, big pots, and KOs.'
+    :'Changes the table surface theme behind the cards and seats.';
+}
+function rewardCosmeticEffect(kind,id){
+  const txt={
+    felt:{
+      classic:'Default green table look.',
+      midnight:'Cool blue midnight table theme.',
+      emerald:'Brighter premium green felt.',
+      royal:'Purple royal table theme.',
+      lava:'Warm red lava table theme.',
+      arctic:'Ice-blue arctic table theme.'
+    },
+    cardBack:{
+      blue:'Default blue face-down card backs.',
+      gold:'Gold face-down card backs.',
+      red:'Red face-down card backs.',
+      black:'Black face-down card backs.',
+      carbon:'Dark carbon-style card backs.',
+      platinum:'Light platinum card backs.'
+    },
+    avatarFrame:{
+      plain:'Default player plate border.',
+      neon:'Green neon glow around your seat.',
+      champion:'Gold champion glow around your seat.',
+      diamond:'Blue diamond-style glow around your seat.',
+      crown:'Bright crown-style glow around your seat.'
+    },
+    emotePack:{
+      classic:'Basic table reaction emojis.',
+      hype:'Bigger celebration and hype reactions.',
+      elite:'Premium trophy and focus reactions.',
+      legend:'High-roller reaction set.'
+    },
+    winFx:{
+      classic:'Default reward toast and chip burst.',
+      fireworks:'More glow and extra chip burst on wins.',
+      goldRush:'Stronger gold glow and bigger chip burst.',
+      neonBurst:'Blue/green neon reward glow.',
+      jackpot:'Largest casino-style reward glow.'
+    },
+    soundPack:{
+      classic:'Default reward sound set.',
+      arcade:'Brighter arcade-style reward sounds.',
+      retro:'Old-school square-wave reward sounds.',
+      casino:'Higher casino-style reward chimes.'
+    }
+  };
+  return txt[kind]?.[id]||'Cosmetic-only unlock; it never changes poker odds.';
+}
 function rewardNextUnlockText(){
   if(typeof getNextRewardUnlock!=='function')return '';
   const n=getNextRewardUnlock();
@@ -431,10 +486,11 @@ function renderRewardsRoom(){
     const rows=(catalog[kind]||[]).map(c=>{
       const has=unlocked.includes(c.id);
       const on=equipped===c.id;
-      return `<div class="reward-row"><div><b>${c.label}</b><span>${has?'Unlocked':'Unlocks at level '+c.level}</span></div>`+
+      const status=has?'Unlocked':'Unlocks at level '+c.level;
+      return `<div class="reward-row"><div><b>${c.label}</b><span>${rewardCosmeticEffect(kind,c.id)}</span><span class="reward-status">${status}</span></div>`+
         `<button type="button" class="reward-equip${on?' on':''}" data-reward-kind="${kind}" data-reward-id="${c.id}" ${has?'':'disabled'}>${on?'Equipped':has?'Equip':'Locked'}</button></div>`;
     }).join('');
-    return `<div class="reward-panel"><h3>${rewardKindLabel(kind)}</h3>${rows}</div>`;
+    return `<div class="reward-panel"><h3>${rewardKindLabel(kind)}</h3><p class="reward-help">${rewardKindDescription(kind)}</p>${rows}</div>`;
   }).join('');
   const trophies=(globalThis.REWARD_TROPHIES||[]).map(t=>{
     const got=rs.trophies&&rs.trophies[t.id]&&rs.trophies[t.id].done;
@@ -444,6 +500,7 @@ function renderRewardsRoom(){
   $('rewardBody').innerHTML=
     `<div class="reward-grid">`+
       `<div class="reward-panel wide"><h3>Progress</h3>`+
+        `<p class="reward-help">Rewards are cosmetic only: they change table look, reactions, animations, and sounds. They never change cards, odds, or AI behavior.</p>`+
         `<div class="reward-kv"><span>Level</span><b>${rs.level}</b></div>`+
         `<div class="reward-kv"><span>XP</span><b>${rs.xp} / ${p.next}</b></div>`+
         `<div class="reward-bar" style="margin:10px 0;"><i style="width:${p.pct}%"></i></div>`+
