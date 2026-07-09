@@ -15,7 +15,7 @@
   --text:#e8ebf0; --dim:#8d99ab; --gold:#e8b64c; --red:#e2574c; --blue:#4c8fe2; --green:#2e7d4f;
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
-.btn:focus-visible,.preset:focus-visible,#actionbar button:focus-visible,.seg button:focus-visible,.rp-nav button:focus-visible,#revClose:focus-visible,#revAllHands:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.btn:focus-visible,.preset:focus-visible,#actionbar button:focus-visible,.seg button:focus-visible,.rp-nav button:focus-visible,#revClose:focus-visible,#revAllHands:focus-visible,#rewardClose:focus-visible,.reward-equip:focus-visible,#tRewards:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
 .tb-touch{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:44px;padding:4px 8px;margin:-4px -8px;}
 .tb-touch input{width:22px;height:22px;accent-color:var(--gold);cursor:pointer;}
 .setup-touch{display:flex;align-items:center;gap:10px;cursor:pointer;min-height:44px;}
@@ -140,6 +140,10 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #topbar{display:flex;align-items:center;gap:18px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);font-size:13px;color:var(--dim);}
 #topbar b{color:var(--text);font-weight:600;}
 #quitBtn{margin-left:auto;flex-shrink:0;background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:12px;}
+#tRewards{background:none;border:1px solid rgba(230,180,60,.42);color:var(--gold);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap;}
+#tRewards b{color:var(--text);}
+#tRewards .reward-pct,#tRewards .reward-next{color:var(--dim);font-weight:600;}
+#tRewards:hover{background:rgba(230,180,60,.1);}
 #quitBtn:hover{color:var(--text);border-color:var(--dim);}
 
 #tableWrap{flex:1;position:relative;padding:14px;display:flex;gap:14px;min-height:0;}
@@ -199,10 +203,19 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
              repeating-linear-gradient(-45deg,rgba(255,255,255,.10) 0 2.5px,transparent 2.5px 7px);}
 .card.back::after{content:'';position:absolute;inset:4px;border:1.5px solid rgba(255,255,255,.55);border-radius:4px;}
 body.felt-midnight #felt{background:radial-gradient(ellipse at center,#2b5b69 0%,#193b48 58%,#102630 100%);border-color:#263749;}
+body.felt-emerald #felt{background:radial-gradient(ellipse at center,#277a4f 0%,#1b5e3b 58%,#123c28 100%);border-color:#2f3f22;}
 body.felt-royal #felt{background:radial-gradient(ellipse at center,#513f75 0%,#32295b 58%,#201b3b 100%);border-color:#4b3428;}
+body.felt-lava #felt{background:radial-gradient(ellipse at center,#7a3d34 0%,#542b2d 58%,#311b20 100%);border-color:#58331e;}
+body.felt-arctic #felt{background:radial-gradient(ellipse at center,#3c7890 0%,#27556d 58%,#17364a 100%);border-color:#243746;}
 body.cardback-gold .card.back{background:#9d751f;}
 body.cardback-red .card.back{background:#84333a;}
+body.cardback-black .card.back{background:#191d26;}
+body.cardback-carbon .card.back{background:#262b33;}
+body.cardback-platinum .card.back{background:#a8adb7;}
 body.frame-neon .seat.human .plate{border-color:#62d68a;box-shadow:0 0 18px rgba(98,214,138,.62),0 0 0 1px rgba(232,182,76,.35) inset;}
+body.frame-champion .seat.human .plate{border-color:#f2c14f;box-shadow:0 0 20px rgba(242,193,79,.72),0 0 0 2px rgba(98,214,138,.35) inset;}
+body.frame-diamond .seat.human .plate{border-color:#8fd8ff;box-shadow:0 0 20px rgba(143,216,255,.68),0 0 0 2px rgba(255,255,255,.25) inset;}
+body.frame-crown .seat.human .plate{border-color:#f7d779;box-shadow:0 0 22px rgba(247,215,121,.78),0 0 0 2px rgba(226,87,76,.28) inset;}
 .card.small{width:40px;height:57px;border-radius:5px;}
 .card.small .ix{font-size:12px;top:3px;left:4px;}
 .card.small .ix .si{font-size:9px;}
@@ -275,6 +288,10 @@ body.frame-neon .seat.human .plate{border-color:#62d68a;box-shadow:0 0 18px rgba
 #rewardToast .rt-xp{font-size:22px;color:#62d68a;font-weight:900;margin-top:5px;}
 @keyframes rewardPop{0%{opacity:0;transform:translateX(-50%) translateY(-10px) scale(.82);}45%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.06);}100%{opacity:1;transform:translateX(-50%) scale(1);}}
 #rewardToast.show{animation:rewardPop .42s ease both;}
+body.winfx-fireworks #rewardToast.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 36px rgba(98,214,138,.34),0 0 54px rgba(76,143,226,.28);}
+body.winfx-goldRush #rewardToast.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px rgba(232,182,76,.46),0 0 72px rgba(232,182,76,.26);}
+body.winfx-neonBurst #rewardToast.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 38px rgba(76,143,226,.45),0 0 68px rgba(98,214,138,.28);}
+body.winfx-jackpot #rewardToast.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 48px rgba(232,182,76,.55),0 0 82px rgba(226,87,76,.25);}
 /* flying chips (slide-to-pot, push-to-winner) */
 .flychip{position:absolute;z-index:35;pointer-events:none;transition:left .42s cubic-bezier(.45,.05,.3,1),top .42s cubic-bezier(.45,.05,.3,1),opacity .42s ease;}
 @media(prefers-reduced-motion:reduce){
@@ -349,6 +366,31 @@ body.frame-neon .seat.human .plate{border-color:#62d68a;box-shadow:0 0 18px rgba
 #revAllHands,#revClose{width:100%;margin-top:6px;border-radius:9px;padding:10px;font-weight:700;cursor:pointer;}
 #revAllHands{background:none;border:1px solid var(--line);color:var(--text);margin-bottom:8px;}
 #revClose{background:var(--gold);color:#1a1408;border:none;}
+
+/* ---------- REWARDS ROOM ---------- */
+#rewardOv{position:fixed;inset:0;background:rgba(8,10,14,.85);display:flex;align-items:center;justify-content:center;z-index:65;}
+.reward-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 28px;width:760px;max-width:94vw;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);}
+.reward-card h2{font-size:18px;margin-bottom:12px;color:var(--gold);}
+.reward-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.reward-panel{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025);padding:12px;}
+.reward-panel.wide{grid-column:1 / -1;}
+.reward-panel h3{font-size:13px;color:var(--text);margin-bottom:10px;}
+.reward-kv{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--dim);margin-top:6px;}
+.reward-kv b{color:var(--text);}
+.reward-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid rgba(255,255,255,.07);}
+.reward-row:first-of-type{border-top:0;padding-top:0;}
+.reward-row b{display:block;font-size:12.5px;color:var(--text);}
+.reward-row span{display:block;font-size:11px;color:var(--dim);margin-top:2px;}
+.reward-row.done b{color:#62d68a;}
+.reward-equip{border:1px solid var(--line);background:var(--panel2);color:var(--dim);border-radius:8px;padding:6px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.reward-equip.on{border-color:var(--gold);background:var(--gold);color:#1a1408;}
+.reward-equip:disabled{opacity:.45;cursor:default;}
+#rewardClose{width:100%;margin-top:14px;background:var(--gold);color:#1a1408;border:none;border-radius:9px;padding:10px 24px;font-weight:800;cursor:pointer;}
+@media(max-width:680px),(max-width:1024px) and (orientation:portrait),(max-width:1024px) and (orientation:landscape) and (max-height:500px){
+  .reward-card{padding:16px 12px;}
+  .reward-grid{grid-template-columns:1fr;}
+  .reward-panel.wide{grid-column:auto;}
+}
 
 /* ---------- OVERLAY ---------- */
 #overlay{position:fixed;inset:0;background:rgba(8,10,14,.82);display:flex;align-items:center;justify-content:center;z-index:50;}
@@ -821,7 +863,7 @@ body.fl #chipPreview{display:none!important;}
     <span class="tb-opt">Hand <b id="tHand">1</b></span>
     <span class="tb-opt tb-sng-only" id="tNextWrap">Blinds up in <b id="tNext">6</b> hands</span>
     <span id="tPnLWrap" class="hidden tb-opt">Session <b id="tPnLVal">+$0</b></span>
-    <span id="tRewards" class="tb-opt"></span>
+    <button id="tRewards" class="tb-opt" type="button"></button>
     <span>AI: <b id="tDiff">Medium</b></span>
     <label class="tb-touch">
       <input type="checkbox" id="autoNext" checked aria-labelledby="autoNextLbl">
@@ -912,6 +954,14 @@ body.fl #chipPreview{display:none!important;}
     <div id="revList"></div>
     <button id="revAllHands" type="button">All saved hands</button>
     <button id="revClose" type="button">Close</button>
+  </div>
+</div>
+
+<div id="rewardOv" class="hidden" aria-hidden="true">
+  <div class="reward-card" role="document">
+    <h2 id="rewardTitle">Rewards room</h2>
+    <div id="rewardBody"></div>
+    <button id="rewardClose" type="button">Close</button>
   </div>
 </div>
 

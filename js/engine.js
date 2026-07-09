@@ -71,6 +71,9 @@ function newGame(cfg){
   state.gameId=Date.now();
   state.rewardStartStack=stack;
   state.rewardMinHeroChips=stack;
+  state.rewardKos=0;
+  state.rewardWasHeadsUp=false;
+  state.rewardHeadsUpTrailed=false;
   state.gameDecisions=[];   // EV blunders this game
   state.gameHands=[];       // replayable hands this game
   gameSeries=[];            // hero stack per hand (history graph)
@@ -137,6 +140,12 @@ function startHand(){
   if(!state.cfg.allAI)gameSeries.push({h:state.handNum,c:state.players[0].chips});
   state.handOver=false;
   getMode().applyBlinds(state);
+  const liveStart=alive();
+  if(liveStart.length===2&&!state.players[0].out){
+    state.rewardWasHeadsUp=true;
+    const opp=liveStart.find(p=>p.i!==0);
+    if(opp&&state.players[0].chips<opp.chips) state.rewardHeadsUpTrailed=true;
+  }
   state.board=[]; state.stage='preflop';
   state.deck=shuffle(makeDeck());
   for(const p of state.players){
@@ -457,6 +466,19 @@ function showdown(){
   finishHand(SHOWDOWN_PAUSE);
 }
 
+function rewardHeroTrashHand(){
+  const h=state&&state.players[0]&&state.players[0].hole;
+  if(!h||h.length<2)return false;
+  if(h[0].r===h[1].r||h[0].s===h[1].s)return false;
+  const hi=Math.max(h[0].r,h[1].r), lo=Math.min(h[0].r,h[1].r);
+  return hi<=9 && hi-lo>=2;
+}
+function rewardHeroBluffed(){
+  return (state.humanDecisions||[]).some(d=>
+    d.action==='raise' && d.rec!=='RAISE' && d.rec!=='ALLIN'
+  );
+}
+
 function finishHand(pause){
   if(fastFwd()) pause=Math.min(pause,1300);
   if(typeof getMode().beforeStats==='function') getMode().beforeStats(state);
@@ -505,14 +527,24 @@ function finishHand(pause){
     if(rewardsOk){
       const keyBase=`${state.gameId}:${state.handNum}`;
       const wonAmt=state.humanWonAmt||0;
+      const heroWon=wonAmt>0;
+      const heroAllInPressure=heroWon&&!!(state.players[0].allIn||state.lastAllInSweat);
       addReward('handEnd',{key:`hand:${keyBase}`,won:wonAmt>0,pot:wonAmt,net,bb:state.bb});
-      if(wonAmt>0) addReward('potWin',{key:`pot:${keyBase}`,pot:wonAmt,bb:state.bb});
+      if(wonAmt>0) addReward('potWin',{
+        key:`pot:${keyBase}`,pot:wonAmt,bb:state.bb,
+        allInPressure:heroAllInPressure,
+        bluff:rewardHeroBluffed(),
+        trashHand:rewardHeroTrashHand()
+      });
       if(hs.sdWon) addReward('showdownWin',{key:`showdown:${keyBase}`});
       if(state.lastAllInSweat) addReward('allInShowdown',{key:`allin:${keyBase}`,won:wonAmt>0,pot:wonAmt});
       if(f>0) addReward('coachFollowed',{key:`coach:${keyBase}`,count:f});
       if(n>f) addReward('coachMissed',{key:`coach-missed:${keyBase}`});
       const kos=state.lastHumanKos||[];
-      if(kos.length) addReward('ko',{key:`ko:${keyBase}`,count:kos.length,bonus:state.lastKoBonusAward||0,names:kos.map(x=>x.name)});
+      if(kos.length){
+        state.rewardKos=(state.rewardKos||0)+kos.length;
+        addReward('ko',{key:`ko:${keyBase}`,count:kos.length,gameKoCount:state.rewardKos,bonus:state.lastKoBonusAward||0,names:kos.map(x=>x.name)});
+      }
     }
     state.lastRewardSummary=rewardSummary;
     if(rewardSummary&&typeof globalThis.__onRewardEvent==='function'){
@@ -575,6 +607,10 @@ function sfx(kind){
       o.connect(g);g.connect(audioCtx.destination);
       o.start(t0+t);o.stop(t0+t+d);
     };
+    const rewardPack=()=>{
+      try{return typeof getRewardState==='function'?(getRewardState().equippedCosmetics?.soundPack||'classic'):'classic';}
+      catch(e){return 'classic';}
+    };
     if(kind==='deal'){tone(950,0,0.05,0.045,'triangle');}
     else if(kind==='chip'){tone(1500,0,0.04,0.05,'square');tone(1900,0.05,0.04,0.04,'square');}
     else if(kind==='fold'){tone(220,0,0.08,0.045);}
@@ -582,10 +618,34 @@ function sfx(kind){
     else if(kind==='tick'){tone(1150,0,0.03,0.09,'square');tone(750,0.05,0.025,0.05,'square');}
     else if(kind==='alert'){tone(660,0,0.11,0.06);tone(880,0.12,0.11,0.05);}
     else if(kind==='win'){tone(523,0,0.12,0.07);tone(659,0.12,0.12,0.07);tone(784,0.24,0.22,0.07);}
-    else if(kind==='xp'){tone(880,0,0.055,0.055,'triangle');tone(1174,0.07,0.07,0.05,'triangle');}
-    else if(kind==='bigwin'){tone(523,0,0.09,0.08);tone(659,0.09,0.09,0.08);tone(784,0.18,0.12,0.08);tone(1046,0.32,0.18,0.07);}
-    else if(kind==='levelup'){tone(659,0,0.08,0.07);tone(784,0.08,0.08,0.07);tone(988,0.16,0.08,0.07);tone(1318,0.28,0.2,0.06);}
-    else if(kind==='ko'){tone(220,0,0.08,0.08,'square');tone(440,0.1,0.08,0.07,'square');tone(880,0.22,0.16,0.06,'triangle');}
+    else if(kind==='xp'){
+      const p=rewardPack();
+      if(p==='retro'){tone(1046,0,0.05,0.055,'square');tone(1568,0.06,0.05,0.045,'square');}
+      else if(p==='arcade'){tone(784,0,0.05,0.05,'triangle');tone(1174,0.06,0.055,0.05,'triangle');tone(1760,0.13,0.07,0.045,'triangle');}
+      else if(p==='casino'){tone(1760,0,0.035,0.045,'triangle');tone(1396,0.04,0.035,0.04,'triangle');tone(1760,0.09,0.055,0.045,'triangle');}
+      else{tone(880,0,0.055,0.055,'triangle');tone(1174,0.07,0.07,0.05,'triangle');}
+    }
+    else if(kind==='bigwin'){
+      const p=rewardPack();
+      if(p==='retro'){tone(392,0,0.07,0.08,'square');tone(784,0.08,0.08,0.075,'square');tone(1174,0.18,0.12,0.06,'square');}
+      else if(p==='arcade'){tone(523,0,0.08,0.08);tone(784,0.08,0.08,0.08);tone(1046,0.17,0.1,0.08);tone(1568,0.3,0.18,0.07);}
+      else if(p==='casino'){tone(1318,0,0.04,0.065,'triangle');tone(1760,0.06,0.04,0.065,'triangle');tone(2093,0.12,0.08,0.06,'triangle');tone(2637,0.25,0.16,0.055,'triangle');}
+      else{tone(523,0,0.09,0.08);tone(659,0.09,0.09,0.08);tone(784,0.18,0.12,0.08);tone(1046,0.32,0.18,0.07);}
+    }
+    else if(kind==='levelup'){
+      const p=rewardPack();
+      if(p==='retro'){tone(523,0,0.06,0.07,'square');tone(659,0.07,0.06,0.07,'square');tone(784,0.14,0.06,0.07,'square');tone(1046,0.25,0.18,0.06,'square');}
+      else if(p==='arcade'){tone(659,0,0.07,0.07);tone(988,0.08,0.07,0.07);tone(1318,0.16,0.08,0.065);tone(1760,0.28,0.2,0.055);}
+      else if(p==='casino'){tone(1046,0,0.05,0.065,'triangle');tone(1318,0.06,0.05,0.065,'triangle');tone(1568,0.12,0.05,0.065,'triangle');tone(2093,0.24,0.18,0.055,'triangle');}
+      else{tone(659,0,0.08,0.07);tone(784,0.08,0.08,0.07);tone(988,0.16,0.08,0.07);tone(1318,0.28,0.2,0.06);}
+    }
+    else if(kind==='ko'){
+      const p=rewardPack();
+      if(p==='retro'){tone(196,0,0.08,0.08,'square');tone(392,0.1,0.08,0.07,'square');tone(784,0.22,0.14,0.06,'square');}
+      else if(p==='arcade'){tone(247,0,0.07,0.08,'square');tone(494,0.08,0.08,0.075,'square');tone(988,0.2,0.12,0.065,'triangle');tone(1318,0.34,0.12,0.05,'triangle');}
+      else if(p==='casino'){tone(220,0,0.08,0.08,'square');tone(880,0.12,0.05,0.07,'triangle');tone(1760,0.2,0.12,0.055,'triangle');}
+      else{tone(220,0,0.08,0.08,'square');tone(440,0.1,0.08,0.07,'square');tone(880,0.22,0.16,0.06,'triangle');}
+    }
   }catch(e){}
 }
 
@@ -654,6 +714,8 @@ function saveResume(){
       handNum:state.handNum, dealerIdx:state.dealerIdx,
       sessStats:state.sessStats, gameDecisions:state.gameDecisions||[],
       rewardStartStack:state.rewardStartStack, rewardMinHeroChips:state.rewardMinHeroChips,
+      rewardKos:state.rewardKos||0, rewardWasHeadsUp:!!state.rewardWasHeadsUp,
+      rewardHeadsUpTrailed:!!state.rewardHeadsUpTrailed,
       gameSeries:(gameSeries||[]).slice(),
       players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,style:q.style?q.style.id:null})),
       ...getMode().resumeFields(state)
@@ -729,6 +791,9 @@ function applyResumeSnapshot(sv){
   state.handNum=sv.handNum; state.dealerIdx=sv.dealerIdx;
   state.rewardStartStack=sv.rewardStartStack??state.rewardStartStack;
   state.rewardMinHeroChips=sv.rewardMinHeroChips??state.rewardMinHeroChips;
+  state.rewardKos=sv.rewardKos??state.rewardKos;
+  state.rewardWasHeadsUp=!!sv.rewardWasHeadsUp;
+  state.rewardHeadsUpTrailed=!!sv.rewardHeadsUpTrailed;
   if(sv.sessStats) state.sessStats=Object.assign(state.sessStats,sv.sessStats);
   state.gameDecisions=sv.gameDecisions||[];
   gameSeries=sv.gameSeries||[];

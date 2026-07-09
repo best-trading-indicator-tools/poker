@@ -6,38 +6,89 @@
     {id:'win3pots',label:'Win 3 pots',goal:3,xp:80},
     {id:'showdownWin',label:'Win a showdown',goal:1,xp:70},
     {id:'eliminate1',label:'Eliminate 1 player',goal:1,xp:120},
-    {id:'final3',label:'Reach final 3',goal:1,xp:130}
+    {id:'final3',label:'Reach final 3',goal:1,xp:130},
+    {id:'allInPressure',label:'Win with all-in pressure',goal:1,xp:110}
   ];
   const COSMETICS={
     felt:[
       {id:'classic',label:'Classic felt',level:1},
       {id:'midnight',label:'Midnight felt',level:2},
-      {id:'royal',label:'Royal felt',level:7}
+      {id:'emerald',label:'Emerald felt',level:6},
+      {id:'royal',label:'Royal felt',level:11},
+      {id:'lava',label:'Lava felt',level:16},
+      {id:'arctic',label:'Arctic felt',level:21}
     ],
     cardBack:[
       {id:'blue',label:'Blue backs',level:1},
       {id:'gold',label:'Gold backs',level:3},
-      {id:'red',label:'Red backs',level:9}
+      {id:'red',label:'Red backs',level:8},
+      {id:'black',label:'Black backs',level:12},
+      {id:'carbon',label:'Carbon backs',level:17},
+      {id:'platinum',label:'Platinum backs',level:22}
     ],
     avatarFrame:[
       {id:'plain',label:'Plain frame',level:1},
-      {id:'neon',label:'Neon frame',level:4}
+      {id:'neon',label:'Neon frame',level:4},
+      {id:'champion',label:'Champion frame',level:10},
+      {id:'diamond',label:'Diamond frame',level:18},
+      {id:'crown',label:'Crown frame',level:23}
     ],
     emotePack:[
       {id:'classic',label:'Classic reactions',level:1},
-      {id:'hype',label:'Hype reactions',level:5}
+      {id:'hype',label:'Hype reactions',level:5},
+      {id:'elite',label:'Elite reactions',level:15},
+      {id:'legend',label:'Legend reactions',level:20}
+    ],
+    winFx:[
+      {id:'classic',label:'Classic win pop',level:1},
+      {id:'fireworks',label:'Fireworks wins',level:7},
+      {id:'goldRush',label:'Gold rush wins',level:13},
+      {id:'neonBurst',label:'Neon burst wins',level:19},
+      {id:'jackpot',label:'Jackpot wins',level:24}
+    ],
+    soundPack:[
+      {id:'classic',label:'Classic sounds',level:1},
+      {id:'arcade',label:'Arcade sounds',level:9},
+      {id:'retro',label:'Retro sounds',level:14},
+      {id:'casino',label:'Casino sounds',level:25}
     ]
   };
   const UNLOCKS=[
     {level:2,kind:'felt',id:'midnight'},
     {level:3,kind:'cardBack',id:'gold'},
     {level:4,kind:'avatarFrame',id:'neon'},
-    {level:5,kind:'emotePack',id:'hype'},
-    {level:7,kind:'felt',id:'royal'},
-    {level:9,kind:'cardBack',id:'red'}
+    {level:5,kind:'emotePack',id:'hype',major:true},
+    {level:6,kind:'felt',id:'emerald'},
+    {level:7,kind:'winFx',id:'fireworks'},
+    {level:8,kind:'cardBack',id:'red'},
+    {level:9,kind:'soundPack',id:'arcade'},
+    {level:10,kind:'avatarFrame',id:'champion',major:true},
+    {level:11,kind:'felt',id:'royal'},
+    {level:12,kind:'cardBack',id:'black'},
+    {level:13,kind:'winFx',id:'goldRush'},
+    {level:14,kind:'soundPack',id:'retro'},
+    {level:15,kind:'emotePack',id:'elite',major:true},
+    {level:16,kind:'felt',id:'lava'},
+    {level:17,kind:'cardBack',id:'carbon'},
+    {level:18,kind:'avatarFrame',id:'diamond'},
+    {level:19,kind:'winFx',id:'neonBurst'},
+    {level:20,kind:'emotePack',id:'legend',major:true},
+    {level:21,kind:'felt',id:'arctic'},
+    {level:22,kind:'cardBack',id:'platinum'},
+    {level:23,kind:'avatarFrame',id:'crown'},
+    {level:24,kind:'winFx',id:'jackpot'},
+    {level:25,kind:'soundPack',id:'casino',major:true}
+  ];
+  const TROPHIES=[
+    {id:'biggestPot',label:'Biggest pot won',desc:'Set a personal biggest-pot record.'},
+    {id:'firstTournamentWin',label:'First tournament win',desc:'Win a Sit & Go tournament.'},
+    {id:'threeKosOneGame',label:'3 KOs in one game',desc:'Eliminate 3 players in one tournament.'},
+    {id:'headsUpComeback',label:'Heads-up comeback',desc:'Trail heads-up, then win the tournament.'},
+    {id:'bluffWin',label:'Win with a bluff',desc:'Win a pot after raising against the coach line.'},
+    {id:'trashHandWin',label:'Win with trash hand',desc:'Win a pot with a weak unsuited starter.'}
   ];
   const emptySummary=()=>({
-    xp:0,levelBefore:1,levelAfter:1,toasts:[],missions:[],records:[],unlocks:[],
+    xp:0,levelBefore:1,levelAfter:1,toasts:[],missions:[],records:[],unlocks:[],trophies:[],
     winTier:'',duplicate:false
   });
   function todayKey(){
@@ -64,9 +115,10 @@
       lastDaily:todayKey(),
       missions:missionDefaults(),
       streaks:{win:0,bestWin:0,coach:0,bestCoach:0},
-      records:{biggestPot:0,bestFinish:0,longestWinStreak:0,biggestComeback:0},
-      unlockedCosmetics:{felt:['classic'],cardBack:['blue'],avatarFrame:['plain'],emotePack:['classic']},
-      equippedCosmetics:{felt:'classic',cardBack:'blue',avatarFrame:'plain',emotePack:'classic'},
+      records:{biggestPot:0,bestFinish:0,longestWinStreak:0,biggestComeback:0,tournamentWins:0,maxKosInGame:0,bluffWins:0,trashHandWins:0,headsUpComebackWins:0,allInPressureWins:0},
+      trophies:{},
+      unlockedCosmetics:{felt:['classic'],cardBack:['blue'],avatarFrame:['plain'],emotePack:['classic'],winFx:['classic'],soundPack:['classic']},
+      equippedCosmetics:{felt:'classic',cardBack:'blue',avatarFrame:'plain',emotePack:'classic',winFx:'classic',soundPack:'classic'},
       processed:[]
     };
   }
@@ -75,6 +127,21 @@
   function cosmeticLabel(kind,id){
     const c=(COSMETICS[kind]||[]).find(x=>x.id===id);
     return c?c.label:id;
+  }
+  function trophyLabel(id){
+    const t=TROPHIES.find(x=>x.id===id);
+    return t?t.label:id;
+  }
+  function nextUnlock(s){
+    return UNLOCKS.filter(u=>u.level>s.level).sort((a,b)=>a.level-b.level)[0]||null;
+  }
+  function awardTrophy(s,summary,id){
+    const t=s.trophies[id]||(s.trophies[id]={done:false,at:0});
+    if(t.done)return;
+    t.done=true;
+    t.at=Date.now();
+    summary.trophies.push({id,label:trophyLabel(id)});
+    addToast(summary,`Trophy: ${trophyLabel(id)}`);
   }
   function normalize(raw){
     const s=raw&&typeof raw==='object'?raw:defaultState();
@@ -85,9 +152,10 @@
       s.lastDaily=todayKey();
       s.missions=missionDefaults();
     }
-    s.missions=s.missions&&typeof s.missions==='object'?s.missions:missionDefaults();
+    const existingMissions=s.missions&&typeof s.missions==='object'?s.missions:{};
+    s.missions=missionDefaults();
     for(const m of DAILY_MISSIONS){
-      const cur=s.missions[m.id]||{};
+      const cur=existingMissions[m.id]||{};
       s.missions[m.id]={
         progress:Math.max(0,Math.min(m.goal,Number(cur.progress)||0)),
         goal:m.goal,
@@ -97,7 +165,17 @@
       if(s.missions[m.id].progress>=m.goal) s.missions[m.id].complete=true;
     }
     s.streaks=Object.assign({win:0,bestWin:0,coach:0,bestCoach:0},s.streaks||{});
-    s.records=Object.assign({biggestPot:0,bestFinish:0,longestWinStreak:0,biggestComeback:0},s.records||{});
+    s.records=Object.assign({biggestPot:0,bestFinish:0,longestWinStreak:0,biggestComeback:0,tournamentWins:0,maxKosInGame:0,bluffWins:0,trashHandWins:0,headsUpComebackWins:0,allInPressureWins:0},s.records||{});
+    s.trophies=s.trophies&&typeof s.trophies==='object'?s.trophies:{};
+    for(const t of TROPHIES){
+      if(!s.trophies[t.id])s.trophies[t.id]={done:false,at:0};
+    }
+    if(s.records.biggestPot>0)s.trophies.biggestPot={done:true,at:s.trophies.biggestPot.at||0};
+    if(s.records.tournamentWins>0)s.trophies.firstTournamentWin={done:true,at:s.trophies.firstTournamentWin.at||0};
+    if(s.records.maxKosInGame>=3)s.trophies.threeKosOneGame={done:true,at:s.trophies.threeKosOneGame.at||0};
+    if(s.records.headsUpComebackWins>0)s.trophies.headsUpComeback={done:true,at:s.trophies.headsUpComeback.at||0};
+    if(s.records.bluffWins>0)s.trophies.bluffWin={done:true,at:s.trophies.bluffWin.at||0};
+    if(s.records.trashHandWins>0)s.trophies.trashHandWin={done:true,at:s.trophies.trashHandWin.at||0};
     s.unlockedCosmetics=s.unlockedCosmetics&&typeof s.unlockedCosmetics==='object'?s.unlockedCosmetics:{};
     s.equippedCosmetics=s.equippedCosmetics&&typeof s.equippedCosmetics==='object'?s.equippedCosmetics:{};
     for(const kind of Object.keys(COSMETICS)){
@@ -205,16 +283,34 @@
         s.records.biggestPot=pot;
         summary.records.push({id:'biggestPot',label:'Biggest pot',value:pot});
         addToast(summary,'New biggest pot');
+        awardTrophy(s,summary,'biggestPot');
+      }
+      if(payload.allInPressure){
+        s.records.allInPressureWins=(s.records.allInPressureWins||0)+1;
+        progressMission(s,summary,'allInPressure',1);
+      }
+      if(payload.bluff){
+        s.records.bluffWins=(s.records.bluffWins||0)+1;
+        awardTrophy(s,summary,'bluffWin');
+      }
+      if(payload.trashHand){
+        s.records.trashHandWins=(s.records.trashHandWins||0)+1;
+        awardTrophy(s,summary,'trashHandWin');
       }
     }else if(type==='showdownWin'){
       progressMission(s,summary,'showdownWin',1);
       addXp(s,summary,15,'Showdown win');
     }else if(type==='allInShowdown'){
-      addXp(s,summary,payload.won?35:10,payload.won?'All-in won':'All-in sweat');
+      if(payload.won){
+        addXp(s,summary,35,'All-in won');
+      }
     }else if(type==='ko'){
       const count=Math.max(1,Number(payload.count)||1);
       progressMission(s,summary,'eliminate1',count);
       addXp(s,summary,60*count,`KO x${count}`);
+      const gameKo=Math.max(count,Number(payload.gameKoCount)||0);
+      if(gameKo>(s.records.maxKosInGame||0))s.records.maxKosInGame=gameKo;
+      if(gameKo>=3)awardTrophy(s,summary,'threeKosOneGame');
     }else if(type==='coachFollowed'){
       const count=Math.max(1,Number(payload.count)||1);
       s.streaks.coach=(s.streaks.coach||0)+count;
@@ -228,7 +324,11 @@
       }else{
         const place=Math.max(1,Number(payload.place)||9);
         const won=!!payload.won;
-        if(won)addXp(s,summary,200,'Tournament win');
+        if(won){
+          addXp(s,summary,200,'Tournament win');
+          s.records.tournamentWins=(s.records.tournamentWins||0)+1;
+          awardTrophy(s,summary,'firstTournamentWin');
+        }
         else if(place<=3)addXp(s,summary,100,'Final table finish');
         else addXp(s,summary,30,'Tournament finish');
         if(place<=3)progressMission(s,summary,'final3',1);
@@ -242,6 +342,10 @@
           s.records.biggestComeback=comeback;
           summary.records.push({id:'biggestComeback',label:'Biggest comeback',value:comeback});
           addToast(summary,'New biggest comeback');
+        }
+        if(won&&payload.headsUpComeback){
+          s.records.headsUpComebackWins=(s.records.headsUpComebackWins||0)+1;
+          awardTrophy(s,summary,'headsUpComeback');
         }
       }
     }
@@ -287,10 +391,16 @@
     out.missions=out.missions.concat(b.missions||[]);
     out.records=out.records.concat(b.records||[]);
     out.unlocks=out.unlocks.concat(b.unlocks||[]);
+    out.trophies=out.trophies.concat(b.trophies||[]);
     if(b.winTier==='monster'||(b.winTier==='big'&&out.winTier!=='monster')||(!out.winTier&&b.winTier))out.winTier=b.winTier;
     return out;
   }
   global.getRewardState=()=>load();
+  global.getNextRewardUnlock=()=>{
+    const s=load();
+    const u=nextUnlock(s);
+    return u?{...u,label:cosmeticLabel(u.kind,u.id)}:null;
+  };
   global.recordRewardEvent=recordEvent;
   global.claimMission=claimMission;
   global.equipCosmetic=equipCosmetic;
@@ -299,4 +409,5 @@
   global.rewardXpForLevel=xpForLevel;
   global.REWARD_MISSIONS=DAILY_MISSIONS;
   global.REWARD_COSMETICS=COSMETICS;
+  global.REWARD_TROPHIES=TROPHIES;
 })(typeof window!=='undefined'?window:globalThis);

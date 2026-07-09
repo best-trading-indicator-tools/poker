@@ -354,19 +354,35 @@ function rewardLevelProgress(rs){
   const pct=clamp((rs.xp-cur)/Math.max(1,next-cur)*100,0,100);
   return {cur,next,pct};
 }
+function rewardKindLabel(kind){
+  return kind==='cardBack'?'Card backs'
+    :kind==='avatarFrame'?'Avatar frames'
+    :kind==='emotePack'?'Emote packs'
+    :kind==='winFx'?'Win/KO animations'
+    :kind==='soundPack'?'Sound packs'
+    :'Table felt';
+}
+function rewardNextUnlockText(){
+  if(typeof getNextRewardUnlock!=='function')return '';
+  const n=getNextRewardUnlock();
+  return n?`Next L${n.level}: ${n.label}`:'All unlocks claimed';
+}
 function renderRewardTop(){
   if(!HAS_DOM)return;
   const el=$('tRewards'); if(!el||!rewardsEnabled())return;
   const rs=rewardStateSafe(); if(!rs){el.textContent='';return;}
   const p=rewardLevelProgress(rs);
-  el.innerHTML=`Rewards <b>Lv ${rs.level}</b> <span style="color:var(--dim);">${Math.round(p.pct)}%</span>`;
+  const next=typeof getNextRewardUnlock==='function'?getNextRewardUnlock():null;
+  el.innerHTML=`Rewards <b>Lv ${rs.level}</b> <span class="reward-pct">${Math.round(p.pct)}%</span>${next?` <span class="reward-next">Next L${next.level}</span>`:''}`;
+  el.title=next?`Next level ${next.level}: ${next.label}`:'All unlocks claimed';
 }
 function rewardSummaryLine(summary){
-  if(!summary||summary.duplicate||(!summary.xp&&!summary.missions?.length&&!summary.records?.length&&!summary.unlocks?.length))return '';
+  if(!summary||summary.duplicate||(!summary.xp&&!summary.missions?.length&&!summary.records?.length&&!summary.unlocks?.length&&!summary.trophies?.length))return '';
   const bits=[];
   if(summary.xp)bits.push(`<b>+${summary.xp} XP</b>`);
   if(summary.missions&&summary.missions.length)bits.push(`${summary.missions.length} mission${summary.missions.length>1?'s':''}`);
   if(summary.records&&summary.records.length)bits.push(`${summary.records.length} record${summary.records.length>1?'s':''}`);
+  if(summary.trophies&&summary.trophies.length)bits.push(`${summary.trophies.length} troph${summary.trophies.length>1?'ies':'y'}`);
   if(summary.unlocks&&summary.unlocks.length)bits.push(`${summary.unlocks.length} unlock${summary.unlocks.length>1?'s':''}`);
   return `<div class="reward-line">Arcade rewards: ${bits.join(' · ')}</div>`;
 }
@@ -380,18 +396,79 @@ function renderRewardReview(){
   return `<div class="reward-review"><b>Arcade rewards</b>`+
     `<div class="rr-row"><span>Level ${rs.level}</span><span>${rs.xp} XP</span></div>`+
     `<div class="reward-bar" style="margin:8px 0 6px;"><i style="width:${p.pct}%"></i></div>`+
-    `<div>${active}</div></div>`;
+    `<div>${rewardNextUnlockText()}</div>`+
+    `<div style="margin-top:4px;">${active}</div></div>`;
 }
 function renderRewardEndSummary(summary){
   const rs=rewardStateSafe(); if(!rs)return '';
   const parts=[];
   if(summary&&summary.xp)parts.push(`+${summary.xp} XP`);
   if(summary&&summary.missions&&summary.missions.length)parts.push(`${summary.missions.length} mission${summary.missions.length>1?'s':''}`);
+  if(summary&&summary.trophies&&summary.trophies.length)parts.push(`${summary.trophies.length} troph${summary.trophies.length>1?'ies':'y'}`);
   if(summary&&summary.unlocks&&summary.unlocks.length)parts.push(`Unlocked ${summary.unlocks.map(u=>u.label).join(', ')}`);
   if(summary&&summary.records&&summary.records.length)parts.push(`${summary.records.length} record${summary.records.length>1?'s':''}`);
   return `<div class="reward-review"><b>Arcade reward payout</b>`+
     `<div class="rr-row"><span>Level ${rs.level}</span><span>${rs.xp} XP</span></div>`+
-    `<div style="margin-top:7px;color:var(--text);">${parts.length?parts.join(' · '):'Progress saved'}</div></div>`;
+    `<div style="margin-top:7px;color:var(--text);">${parts.length?parts.join(' · '):'Progress saved'}</div>`+
+    `<div style="margin-top:5px;">${rewardNextUnlockText()}</div></div>`;
+}
+function renderRewardsRoom(){
+  if(!HAS_DOM||!rewardsEnabled())return;
+  const rs=rewardStateSafe(); if(!rs)return;
+  const p=rewardLevelProgress(rs);
+  const missions=(globalThis.REWARD_MISSIONS||[]).map(def=>{
+    const m=rs.missions[def.id]||{progress:0,goal:def.goal,complete:false,claimed:false};
+    const done=m.complete||m.progress>=m.goal;
+    return `<div class="reward-row${done?' done':''}"><div><b>${def.label}</b><span>${Math.min(m.progress,m.goal)} / ${m.goal}${done?' · complete':''}</span></div><b>${done?'+'+def.xp+' XP':Math.round(m.progress/m.goal*100)+'%'}</b></div>`;
+  }).join('');
+  const catalog=globalThis.REWARD_COSMETICS||{};
+  const cosmetics=Object.keys(catalog).map(kind=>{
+    const unlocked=rs.unlockedCosmetics&&rs.unlockedCosmetics[kind]||[];
+    const equipped=rs.equippedCosmetics&&rs.equippedCosmetics[kind];
+    const rows=(catalog[kind]||[]).map(c=>{
+      const has=unlocked.includes(c.id);
+      const on=equipped===c.id;
+      return `<div class="reward-row"><div><b>${c.label}</b><span>${has?'Unlocked':'Unlocks at level '+c.level}</span></div>`+
+        `<button type="button" class="reward-equip${on?' on':''}" data-reward-kind="${kind}" data-reward-id="${c.id}" ${has?'':'disabled'}>${on?'Equipped':has?'Equip':'Locked'}</button></div>`;
+    }).join('');
+    return `<div class="reward-panel"><h3>${rewardKindLabel(kind)}</h3>${rows}</div>`;
+  }).join('');
+  const trophies=(globalThis.REWARD_TROPHIES||[]).map(t=>{
+    const got=rs.trophies&&rs.trophies[t.id]&&rs.trophies[t.id].done;
+    return `<div class="reward-row${got?' done':''}"><div><b>${got?'✓ ':'□ '}${t.label}</b><span>${t.desc||''}</span></div><span>${got?'Done':'Locked'}</span></div>`;
+  }).join('');
+  const records=rs.records||{};
+  $('rewardBody').innerHTML=
+    `<div class="reward-grid">`+
+      `<div class="reward-panel wide"><h3>Progress</h3>`+
+        `<div class="reward-kv"><span>Level</span><b>${rs.level}</b></div>`+
+        `<div class="reward-kv"><span>XP</span><b>${rs.xp} / ${p.next}</b></div>`+
+        `<div class="reward-bar" style="margin:10px 0;"><i style="width:${p.pct}%"></i></div>`+
+        `<div class="reward-kv"><span>${rewardNextUnlockText()}</span><b>${Math.max(0,p.next-rs.xp)} XP left</b></div>`+
+      `</div>`+
+      `<div class="reward-panel"><h3>Daily missions</h3>${missions}</div>`+
+      `<div class="reward-panel"><h3>Trophy room</h3>${trophies}</div>`+
+      `<div class="reward-panel wide"><h3>Records</h3>`+
+        `<div class="reward-kv"><span>Biggest pot</span><b>${records.biggestPot?usd(records.biggestPot):'—'}</b></div>`+
+        `<div class="reward-kv"><span>Best finish</span><b>${records.bestFinish?'#'+records.bestFinish:'—'}</b></div>`+
+        `<div class="reward-kv"><span>Max KOs in one game</span><b>${records.maxKosInGame||0}</b></div>`+
+        `<div class="reward-kv"><span>Tournament wins</span><b>${records.tournamentWins||0}</b></div>`+
+      `</div>`+
+      cosmetics+
+    `</div>`;
+  $('rewardBody').querySelectorAll('[data-reward-kind]').forEach(btn=>{
+    btn.onclick=()=>{
+      if(typeof equipCosmetic==='function'&&equipCosmetic(btn.dataset.rewardKind,btn.dataset.rewardId)){
+        applyRewardCosmetics();
+        renderRewardTop();
+        renderRewardsRoom();
+      }
+    };
+  });
+}
+function showRewardsRoom(){
+  renderRewardsRoom();
+  openDialog($('rewardOv'),'rewardTitle');
 }
 function rewardReducedMotion(){
   return !!(HAS_DOM&&window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -401,17 +478,22 @@ function rewardBurst(summary){
   const seat=$('seat0'), felt=$('felt'); if(!seat||!felt)return;
   const c=feltCenter();
   const tx=seat.offsetLeft+seat.offsetWidth/2, ty=seat.offsetTop+seat.offsetHeight/2;
-  const count=summary.winTier==='monster'?16:summary.winTier==='big'?10:summary.type==='ko'?12:summary.levelAfter>summary.levelBefore?14:0;
+  const rs=rewardStateSafe();
+  const fx=rs&&rs.equippedCosmetics?rs.equippedCosmetics.winFx:'classic';
+  const mult=fx==='goldRush'?1.7:fx==='fireworks'?1.35:1;
+  const base=summary.winTier==='monster'?16:summary.winTier==='big'?10:summary.type==='ko'?12:summary.levelAfter>summary.levelBefore?14:0;
+  const count=Math.round(base*mult);
   if(count) flyChips(c.x,c.y+4,tx,ty,count,0);
 }
 function showRewardToast(summary){
   if(!HAS_DOM||!summary||summary.duplicate)return;
   const el=$('rewardToast');
-  if(!el||(!summary.xp&&!summary.toasts?.length&&!summary.unlocks?.length&&!summary.records?.length))return;
+  if(!el||(!summary.xp&&!summary.toasts?.length&&!summary.unlocks?.length&&!summary.records?.length&&!summary.trophies?.length))return;
   const title=summary.levelAfter>summary.levelBefore?`Level ${summary.levelAfter}`:
     summary.winTier==='monster'?'Monster pot':
     summary.winTier==='big'?'Big pot':
     summary.type==='ko'?'Knockout':
+    summary.trophies?.length?'Trophy unlocked':
     summary.unlocks?.length?'New unlock':
     summary.missions?.length?'Mission complete':'Arcade rewards';
   const sub=(summary.toasts||[]).filter(Boolean).slice(0,2).join(' · ');
@@ -430,17 +512,26 @@ function showRewardToast(summary){
 function applyRewardCosmetics(){
   if(!HAS_DOM)return;
   const rs=rewardStateSafe(); if(!rs)return;
-  const cls=['felt-midnight','felt-royal','cardback-gold','cardback-red','frame-neon'];
+  const cls=[
+    'felt-midnight','felt-emerald','felt-royal','felt-lava','felt-arctic',
+    'cardback-gold','cardback-red','cardback-black','cardback-carbon','cardback-platinum',
+    'frame-neon','frame-champion','frame-diamond','frame-crown',
+    'winfx-fireworks','winfx-goldRush','winfx-neonBurst','winfx-jackpot',
+    'soundpack-arcade','soundpack-retro','soundpack-casino'
+  ];
   document.body.classList.remove(...cls);
   const eq=rs.equippedCosmetics||{};
   if(eq.felt&&eq.felt!=='classic')document.body.classList.add('felt-'+eq.felt);
   if(eq.cardBack&&eq.cardBack!=='blue')document.body.classList.add('cardback-'+eq.cardBack);
   if(eq.avatarFrame&&eq.avatarFrame!=='plain')document.body.classList.add('frame-'+eq.avatarFrame);
+  if(eq.winFx&&eq.winFx!=='classic')document.body.classList.add('winfx-'+eq.winFx);
+  if(eq.soundPack&&eq.soundPack!=='classic')document.body.classList.add('soundpack-'+eq.soundPack);
   renderEmoteButtons();
 }
 function handleRewardEvent(summary){
   applyRewardCosmetics();
   renderRewardTop();
+  if(HAS_DOM&&$('rewardOv')&&!$('rewardOv').classList.contains('hidden'))renderRewardsRoom();
   showRewardToast(summary);
 }
 if(HAS_DOM) globalThis.__onRewardEvent=handleRewardEvent;
@@ -1874,7 +1965,8 @@ function showGameOver(won,place){
   if(!BENCH&&typeof recordRewardEvent==='function'&&!(state.cfg.mpRemotes||state.cfg.mpClient)){
     const comeback=Math.max(0,(state.rewardStartStack||0)-(state.rewardMinHeroChips||state.players[0].chips||0));
     state.lastGameRewardSummary=recordRewardEvent('gameEnd',{
-      key:`game:${state.gameId}:end`,mode:'sng',won,place,hands:state.handNum,comeback
+      key:`game:${state.gameId}:end`,mode:'sng',won,place,hands:state.handNum,comeback,
+      headsUpComeback:!!(won&&state.rewardWasHeadsUp&&state.rewardHeadsUpTrailed)
     });
   }
   render();
@@ -2017,7 +2109,9 @@ function showEmoteBtn(){
 }
 const EMOJI_PACKS={
   classic:['👍','😂','😱','🔥','🐔','🤝'],
-  hype:['💥','🤑','⚡','🏆','😎','🚀']
+  hype:['💥','🤑','⚡','🏆','😎','🚀'],
+  elite:['🏆','💎','👑','🎯','🥶','🚀'],
+  legend:['👑','💰','🏆','💎','🎰','⚡']
 };
 function currentEmojis(){
   const rs=rewardStateSafe();
@@ -2186,6 +2280,9 @@ function initUI(){
   $('reviewBtn').onclick=showSessionReview;
   $('revClose').onclick=()=>closeDialog($('reviewOv'));
   $('reviewOv').onclick=e=>{if(e.target.id==='reviewOv')closeDialog($('reviewOv'));};
+  $('tRewards').onclick=showRewardsRoom;
+  $('rewardClose').onclick=()=>closeDialog($('rewardOv'));
+  $('rewardOv').onclick=e=>{if(e.target.id==='rewardOv')closeDialog($('rewardOv'));};
   ['revFilterAll','revFilterCash','revFilterSng'].forEach(id=>{
     const el=$(id);
     if(!el)return;
