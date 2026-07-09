@@ -424,6 +424,7 @@ function showRewardToast(summary){
   if(summary.levelAfter>summary.levelBefore){sfx('levelup');haptic([18,40,18,40,18]);setTimeout(()=>showBanner(`LEVEL ${summary.levelAfter}`),180);}
   else if(summary.winTier==='monster'||summary.winTier==='big'){sfx('bigwin');haptic([16,28,16]);setTimeout(()=>showBanner(summary.winTier==='monster'?'MONSTER POT':'BIG POT'),180);}
   else if(summary.type==='ko'){sfx('ko');haptic([20,35,20]);setTimeout(()=>showBanner('KNOCKOUT'),180);}
+  else if(summary.xp>0){sfx('xp');haptic(10);}
   rewardBurst(summary);
 }
 function applyRewardCosmetics(){

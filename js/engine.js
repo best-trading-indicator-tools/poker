@@ -582,6 +582,7 @@ function sfx(kind){
     else if(kind==='tick'){tone(1150,0,0.03,0.09,'square');tone(750,0.05,0.025,0.05,'square');}
     else if(kind==='alert'){tone(660,0,0.11,0.06);tone(880,0.12,0.11,0.05);}
     else if(kind==='win'){tone(523,0,0.12,0.07);tone(659,0.12,0.12,0.07);tone(784,0.24,0.22,0.07);}
+    else if(kind==='xp'){tone(880,0,0.055,0.055,'triangle');tone(1174,0.07,0.07,0.05,'triangle');}
     else if(kind==='bigwin'){tone(523,0,0.09,0.08);tone(659,0.09,0.09,0.08);tone(784,0.18,0.12,0.08);tone(1046,0.32,0.18,0.07);}
     else if(kind==='levelup'){tone(659,0,0.08,0.07);tone(784,0.08,0.08,0.07);tone(988,0.16,0.08,0.07);tone(1318,0.28,0.2,0.06);}
     else if(kind==='ko'){tone(220,0,0.08,0.08,'square');tone(440,0.1,0.08,0.07,'square');tone(880,0.22,0.16,0.06,'triangle');}
