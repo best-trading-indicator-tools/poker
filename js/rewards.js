@@ -5,7 +5,6 @@
   const DAILY_MISSIONS=[
     {id:'win3pots',label:'Win 3 pots',goal:3,xp:80},
     {id:'showdownWin',label:'Win a showdown',goal:1,xp:70},
-    {id:'followCoach5',label:'Follow coach 5 times',goal:5,xp:90},
     {id:'eliminate1',label:'Eliminate 1 player',goal:1,xp:120},
     {id:'final3',label:'Reach final 3',goal:1,xp:130}
   ];
@@ -220,8 +219,6 @@
       const count=Math.max(1,Number(payload.count)||1);
       s.streaks.coach=(s.streaks.coach||0)+count;
       s.streaks.bestCoach=Math.max(s.streaks.bestCoach||0,s.streaks.coach||0);
-      progressMission(s,summary,'followCoach5',count);
-      addXp(s,summary,6*count,'Coach followed');
     }else if(type==='coachMissed'){
       s.streaks.coach=0;
     }else if(type==='gameEnd'){
