@@ -354,52 +354,6 @@ function rewardLevelProgress(rs){
   const pct=clamp((rs.xp-cur)/Math.max(1,next-cur)*100,0,100);
   return {cur,next,pct};
 }
-function rewardKindLabel(kind){
-  return kind==='cardBack'?'Cards':kind==='avatarFrame'?'Frame':kind==='emotePack'?'Emotes':'Felt';
-}
-function renderRewardMissions(rs,limit){
-  const defs=globalThis.REWARD_MISSIONS||[];
-  const rows=defs.map(def=>{
-    const m=rs.missions&&rs.missions[def.id]||{progress:0,goal:def.goal,complete:false,claimed:false};
-    const done=m.complete||m.progress>=m.goal;
-    return `<div class="reward-mission${done?' done':''}">`+
-      `<div><b>${def.label}</b><span>${Math.min(m.progress,m.goal)} / ${m.goal}${m.claimed?' · claimed':done?' · complete':''}</span></div>`+
-      `<span>${done?'+'+def.xp+' XP':Math.round(m.progress/m.goal*100)+'%'}</span></div>`;
-  });
-  return rows.slice(0,limit||rows.length).join('');
-}
-function renderRewardCosmetics(rs){
-  const catalog=globalThis.REWARD_COSMETICS||{};
-  return Object.keys(catalog).map(kind=>{
-    const unlocked=rs.unlockedCosmetics&&rs.unlockedCosmetics[kind]||[];
-    const equipped=rs.equippedCosmetics&&rs.equippedCosmetics[kind];
-    const opts=(catalog[kind]||[]).filter(c=>unlocked.includes(c.id));
-    if(!opts.length)return '';
-    return opts.map(c=>`<button type="button" class="reward-btn${equipped===c.id?' on':''}" data-reward-kind="${kind}" data-reward-id="${c.id}">${rewardKindLabel(kind)}: ${c.label}</button>`).join('');
-  }).join('');
-}
-function renderRewardHub(){
-  if(!HAS_DOM)return;
-  const el=$('rewardHub');
-  if(!el||!rewardsEnabled())return;
-  const rs=rewardStateSafe(); if(!rs)return;
-  const p=rewardLevelProgress(rs);
-  el.innerHTML=
-    `<div class="reward-head"><b>Arcade rewards</b><span>Level ${rs.level}</span></div>`+
-    `<div class="reward-bar"><i style="width:${p.pct}%"></i></div>`+
-    `<div class="reward-mini">${rs.xp} XP · ${Math.max(0,p.next-rs.xp)} XP to next level</div>`+
-    `<div class="reward-missions">${renderRewardMissions(rs,3)}</div>`+
-    `<div class="reward-cosmetics">${renderRewardCosmetics(rs)}</div>`;
-  el.querySelectorAll('[data-reward-kind]').forEach(btn=>{
-    btn.onclick=()=>{
-      if(typeof equipCosmetic==='function'&&equipCosmetic(btn.dataset.rewardKind,btn.dataset.rewardId)){
-        applyRewardCosmetics();
-        renderRewardHub();
-        renderRewardTop();
-      }
-    };
-  });
-}
 function renderRewardTop(){
   if(!HAS_DOM)return;
   const el=$('tRewards'); if(!el||!rewardsEnabled())return;
@@ -485,7 +439,6 @@ function applyRewardCosmetics(){
 }
 function handleRewardEvent(summary){
   applyRewardCosmetics();
-  renderRewardHub();
   renderRewardTop();
   showRewardToast(summary);
 }
@@ -2213,7 +2166,6 @@ function initUI(){
   $('langTop').onchange=e=>setLang(e.target.value);
   applyLang();
   applyRewardCosmetics();
-  renderRewardHub();
   renderRewardTop();
   /* --- resume saved tournament --- */
   const refreshResume=()=>{
@@ -2259,7 +2211,6 @@ function initUI(){
     }catch(e){}
     Object.assign(lifeStats,{hands:0,won:0,net:0,biggest:0,decisions:0,followed:0});
     applyRewardCosmetics();
-    renderRewardHub();
     renderRewardTop();
     refreshResume();
     if(state&&state.sessStats) renderStats();
