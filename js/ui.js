@@ -373,8 +373,9 @@ function renderRewardTop(){
   const rs=rewardStateSafe(); if(!rs){el.textContent='';return;}
   const p=rewardLevelProgress(rs);
   const next=typeof getNextRewardUnlock==='function'?getNextRewardUnlock():null;
-  el.innerHTML=`Rewards <b>Lv ${rs.level}</b> <span class="reward-pct">${Math.round(p.pct)}%</span>${next?` <span class="reward-next">Next L${next.level}</span>`:''}`;
-  el.title=next?`Next level ${next.level}: ${next.label}`:'All unlocks claimed';
+  el.setAttribute('aria-label','Open rewards room');
+  el.innerHTML=`<span class="reward-icon">🏆</span><span>Rewards</span> <b>Lv ${rs.level}</b> <span class="reward-pct">${Math.round(p.pct)}%</span>${next?` <span class="reward-next">Next L${next.level}</span>`:''}<span class="reward-cta">Open ›</span>`;
+  el.title=next?`Open rewards room · Next level ${next.level}: ${next.label}`:'Open rewards room · All unlocks claimed';
 }
 function rewardSummaryLine(summary){
   if(!summary||summary.duplicate||(!summary.xp&&!summary.missions?.length&&!summary.records?.length&&!summary.unlocks?.length&&!summary.trophies?.length&&!summary.koBonus))return '';
