@@ -294,13 +294,13 @@ body.frame-crown .seat.human .plate{border-color:#f7d779;box-shadow:0 0 22px rgb
 .seat.winner .plate{animation:winnerPop .55s ease both;}
 @keyframes bannerPop{0%{opacity:0;transform:translateY(6px) scale(.85);}60%{transform:translateY(0) scale(1.06);}100%{transform:scale(1);opacity:1;}}
 #banner.show{animation:bannerPop .45s ease both;}
-#rewardToast{position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:75;min-width:240px;max-width:92vw;background:rgba(14,17,22,.96);border:1px solid var(--gold);border-radius:14px;padding:12px 16px;text-align:center;box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 28px rgba(232,182,76,.24);}
+#rewardToast{--rt-x:0;position:fixed;top:72px;right:18px;left:auto;transform:translateX(var(--rt-x));z-index:75;min-width:240px;max-width:min(340px,92vw);background:rgba(14,17,22,.96);border:1px solid var(--gold);border-radius:14px;padding:12px 16px;text-align:center;box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 28px rgba(232,182,76,.24);}
 #rewardToast.hidden{display:none;}
 #rewardToast .rt-title{font-size:14px;font-weight:900;color:var(--gold);letter-spacing:.3px;}
 #rewardToast .rt-sub{font-size:12px;color:var(--text);margin-top:3px;}
 #rewardToast .rt-xp{font-size:22px;color:#62d68a;font-weight:900;margin-top:5px;}
 #rewardToast .rt-bonus{font-size:28px;color:#f7d779;font-weight:950;margin-top:5px;text-shadow:0 0 16px rgba(232,182,76,.5);}
-@keyframes rewardPop{0%{opacity:0;transform:translateX(-50%) translateY(-10px) scale(.82);}45%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.06);}100%{opacity:1;transform:translateX(-50%) scale(1);}}
+@keyframes rewardPop{0%{opacity:0;transform:translateX(var(--rt-x)) translateY(-10px) scale(.82);}45%{opacity:1;transform:translateX(var(--rt-x)) translateY(0) scale(1.06);}100%{opacity:1;transform:translateX(var(--rt-x)) scale(1);}}
 #rewardToast.show{animation:rewardPop .42s ease both;}
 #rewardToast.ko-bonus{border-color:#f7d779;background:linear-gradient(160deg,rgba(14,17,22,.98),rgba(74,48,18,.96));box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px rgba(232,182,76,.42),0 0 72px rgba(226,87,76,.18);}
 #rewardToast.ko-bonus .rt-title{font-size:15px;text-transform:uppercase;}
@@ -309,6 +309,9 @@ body.winfx-goldRush #rewardToast.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0
 body.winfx-neonBurst #rewardToast.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 38px rgba(76,143,226,.45),0 0 68px rgba(98,214,138,.28);}
 body.winfx-jackpot #rewardToast.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 48px rgba(232,182,76,.55),0 0 82px rgba(226,87,76,.25);}
 body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px rgba(232,182,76,.42),0 0 72px rgba(226,87,76,.18);}
+@media(max-width:680px),(max-width:1024px) and (orientation:portrait),(max-width:1024px) and (orientation:landscape) and (max-height:500px){
+  #rewardToast{--rt-x:-50%;top:58px;right:auto;left:50%;max-width:92vw;}
+}
 /* flying chips (slide-to-pot, push-to-winner) */
 .flychip{position:absolute;z-index:35;pointer-events:none;transition:left .42s cubic-bezier(.45,.05,.3,1),top .42s cubic-bezier(.45,.05,.3,1),opacity .42s ease;}
 @media(prefers-reduced-motion:reduce){
