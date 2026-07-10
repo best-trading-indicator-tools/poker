@@ -61,7 +61,7 @@ chartFoldVs:c=>`${c} is in neither the re-raise nor the calling chart against th
 chartOpen:(c,p)=>`${c} is in the ${p} opening chart — a hand list taken from solver-computed ranges: raising it first-in from this seat is profitable in the long run. Come in raising, not limping.`,
 chartIso:(c,p,n)=>`${c} is in the ${p} iso chart — solver-style ranges for raising over ${n} limper${n>1?'s':''}. Isolate with a raise; calling behind limpers bleeds chips.`,
 chartNotInIso:(c,p)=>`${c} is not in the ${p} iso chart — even over limpers, this hand loses money as a raise long-term. Fold, or make a very tight exception only with a huge stack edge.`,
-limpPotNote:n=>` ${n} limper${n>1?'s':''} — dead money widens iso-raise ranges slightly; still raise or fold, don't call behind with marginal hands.`,
+limpPotNote:n=>` ${n} limper${n>1?'s':''} — dead money widens iso-raise ranges slightly, but speculative suited connectors need position/depth before you build a big pot.`,
 pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Suggested preflop size: ${amt} (${bb}). Start around ${pos==='IP'?'3x in position':'4x out of position'}; add about +1x for each flat caller or limper${callers?` (${callers} here)`:''}${ante?' and size up when antes add dead money':''}${depth>0?' and when stacks are deep enough that callers can realize implied odds':depth<0?' while keeping it controlled because stacks are shallower':''}.`,
 chartNotIn:(c,p)=>`${c} is not in the ${p} opening chart — solver-computed ranges say this hand loses money when raised from this seat over the long run. Folding now saves chips for a better spot.`,
 chartShove:(c,bb,p)=>`At ${bb} BB, ${c} is in the ${p} all-in chart (solver-computed shove ranges for short stacks). Going all-in maximizes your chance of winning the blinds and antes uncontested.`,
@@ -125,6 +125,9 @@ profStation:` The bettor is the 📞 Loose-passive type — he calls everything 
 blockerAce:` You hold an Ace — a "blocker": since one of the four aces is in YOUR hand, it's less likely he holds the big ace-hands (like a pair of aces or top pair with an ace). That makes calling slightly better.`,
 blockerFlush:` You hold the ace of the flush suit — even without a flush yourself, that card means HE cannot have the best possible flush. A bluff-raise from you is also extra believable, because you could have the nut flush.`,
 suitedConn:` Hands like this (suited and connected) play better than their raw ranking suggests — they make hidden straights and flushes that win big pots when stacks are deep. The coach loosens up slightly for them.`,
+scFlatMulti:(c,n)=>`${c} is a speculative suited connector, not a hand that wants to build a big pot into ${n} limper${n>1?'s':''}/callers. Take the cheap price and try to flop a strong draw or hidden made hand; if you miss, be ready to let it go.`,
+scFoldEarly:c=>`${c} is a speculative suited connector, but too many players can still wake up behind you. Without late position or dead money to attack, do not force a big raise — fold and wait for a cleaner spot.`,
+drawMwCheck:n=>`This is mostly a draw in a multiway pot (${n} opponents). Semi-bluffing works best heads-up or against capped ranges; with several players still in, take the free card instead of building a pot you may not win.`,
 gtoSolving:'⚖️ Running GTO solve…',gtoUnavail:'GTO solve unavailable for this spot.',gtoFail:'GTO solve failed for this spot.',
 gtoMulti:n=>'⚖️ GTO solving applies heads-up only (like commercial solvers). With '+n+' opponents, advice uses range-equity math.',
 gtoNote:'Equilibrium of your range vs theirs on this exact board. Abstractions: current street only, 66%-pot + all-in sizings, 8 strength buckets, check-down rollouts. Directionally GTO — not solver-exact.',
@@ -194,7 +197,7 @@ chartFoldVs:c=>`${c} ne figure ni dans la charte de 3-bet ni dans celle de call 
 chartOpen:(c,p)=>`${c} figure dans la charte d'ouverture ${p} — une liste de mains issue de ranges calculées par solveur : la relancer en premier depuis ce siège est rentable à long terme. Entrez en relançant, pas en limpant.`,
 chartIso:(c,p,n)=>`${c} figure dans la charte iso ${p} — ranges pour relancer sur ${n} limpeur${n>1?'s':''}. Isolez en relançant ; suivre derrière des limps perd des jetons.`,
 chartNotInIso:(c,p)=>`${c} n'est pas dans la charte iso ${p} — même sur des limps, cette main perd de l'argent en relance. Couchez-vous.`,
-limpPotNote:n=>` ${n} limpeur${n>1?'s':''} — argent mort : les ranges d'iso s'élargissent un peu ; relancez ou couchez, ne suivez pas en marginal.`,
+limpPotNote:n=>` ${n} limpeur${n>1?'s':''} — l'argent mort élargit un peu les ranges d'iso, mais les connecteurs assortis spéculatifs ont besoin de position/profondeur avant de grossir le pot.`,
 pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Taille préflop suggérée : ${amt} (${bb}). Basez-vous sur environ ${pos==='IP'?'3x en position':'4x hors position'} ; ajoutez environ +1x par caller/limpeur${callers?` (${callers} ici)`:''}${ante?' et augmentez quand les antes ajoutent de l\'argent mort':''}${depth>0?' et quand les tapis profonds donnent des cotes implicites aux callers':depth<0?' tout en contrôlant la taille avec des tapis plus courts':''}.`,
 chartNotIn:(c,p)=>`${c} ne figure pas dans la charte d'ouverture ${p} — les ranges calculées par solveur indiquent que cette main perd de l'argent relancée depuis ce siège. Se coucher maintenant garde des jetons pour un meilleur spot.`,
 chartShove:(c,bb,p)=>`À ${bb} BB, ${c} figure dans la charte de tapis ${p} (ranges de shove calculées par solveur pour tapis courts). Partir à tapis maximise vos chances de gagner blinds et antes sans bagarre.`,
@@ -258,6 +261,9 @@ profStation:` Le miseur est du type 📞 Passif — il paie tout mais ne mise pr
 blockerAce:` Vous tenez un As — un « blocker » : comme l'un des quatre as est dans VOTRE main, il est moins probable qu'il ait les grosses mains à as (paire d'as, top paire avec as). Cela rend le call un peu meilleur.`,
 blockerFlush:` Vous tenez l'as de la couleur du board — même sans couleur vous-même, cette carte signifie qu'IL ne peut pas avoir la meilleure couleur possible. Et un bluff-raise de votre part devient très crédible.`,
 suitedConn:` Ce genre de main (assortie et connectée) joue mieux que son classement brut — elle fait des quintes et couleurs cachées qui gagnent de gros pots quand les tapis sont profonds. Le coach s'élargit légèrement pour elles.`,
+scFlatMulti:(c,n)=>`${c} est une main spéculative assortie/connectée, pas une main qui veut grossir le pot contre ${n} limper${n>1?'s':''}/caller${n>1?'s':''}. Prenez le prix pas cher et cherchez un gros tirage ou une main cachée ; si le flop rate, lâchez facilement.`,
+scFoldEarly:c=>`${c} est une main spéculative assortie/connectée, mais trop de joueurs peuvent encore se réveiller derrière vous. Sans position tardive ni dead money à attaquer, ne forcez pas une grosse relance — couchez et attendez un spot plus propre.`,
+drawMwCheck:n=>`C'est surtout un tirage dans un pot multiway (${n} adversaires). Les semi-bluffs marchent mieux en heads-up ou contre des ranges plafonnées ; avec plusieurs joueurs encore là, prenez la carte gratuite au lieu de grossir un pot que vous ne gagnerez pas toujours.`,
 gtoSolving:'⚖️ Calcul GTO en cours…',gtoUnavail:'Calcul GTO indisponible pour ce spot.',gtoFail:'Échec du calcul GTO pour ce spot.',
 gtoMulti:n=>'⚖️ Le calcul GTO ne s’applique qu’en tête-à-tête (comme les solveurs commerciaux). Avec '+n+' adversaires, le conseil repose sur l’équité contre les ranges.',
 gtoNote:'Équilibre de votre range contre la sienne sur ce board exact. Abstractions : rue courante seulement, mises 66% pot + tapis, 8 niveaux de force, rollouts en check-down. Directionnellement GTO — pas exact au solveur près.',
@@ -327,7 +333,7 @@ chartFoldVs:c=>`${c} no está ni en la tabla de 3-bet ni en la de llamada contra
 chartOpen:(c,p)=>`${c} está en la tabla de apertura de ${p} — una lista de manos sacada de rangos calculados por solver: subirla primero desde este asiento es rentable a largo plazo. Entra subiendo, no de limp.`,
 chartIso:(c,p,n)=>`${c} está en la tabla iso de ${p} — rangos para subir sobre ${n} limper${n>1?'s':''}. Aísla con subida; pagar detrás de limps pierde fichas.`,
 chartNotInIso:(c,p)=>`${c} no está en la tabla iso de ${p} — incluso sobre limps, subir pierde dinero a largo plazo. Retírate.`,
-limpPotNote:n=>` ${n} limper${n>1?'s':''} — dinero muerto: los rangos iso se amplían un poco; sube o retírate, no pagues marginal.`,
+limpPotNote:n=>` ${n} limper${n>1?'s':''} — el dinero muerto amplía un poco los rangos de iso, pero los conectores suited especulativos necesitan posición/profundidad antes de inflar el bote.`,
 pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Tamaño preflop sugerido: ${amt} (${bb}). Empieza cerca de ${pos==='IP'?'3x en posición':'4x fuera de posición'}; añade alrededor de +1x por cada caller o limper${callers?` (${callers} aquí)`:''}${ante?' y sube el tamaño cuando los antes añaden dinero muerto':''}${depth>0?' y cuando los stacks profundos dan odds implícitas a los callers':depth<0?' manteniéndolo controlado con stacks más cortos':''}.`,
 chartNotIn:(c,p)=>`${c} no está en la tabla de apertura de ${p} — los rangos calculados por solver dicen que esta mano pierde dinero subida desde este asiento. Retirarse ahora guarda fichas para un momento mejor.`,
 chartShove:(c,bb,p)=>`Con ${bb} BB, ${c} está en la tabla de all-in de ${p} (rangos de shove calculados por solver para stacks cortos). Ir all-in maximiza tus opciones de llevarte ciegas y antes sin pelea.`,
@@ -391,6 +397,9 @@ profStation:` El apostador es del tipo 📞 Pasivo — lo paga todo pero casi nu
 blockerAce:` Tienes un As — un "blocker": como uno de los cuatro ases está en TU mano, es menos probable que él tenga las grandes manos con as (pareja de ases, top pair con as). Eso mejora un poco la llamada.`,
 blockerFlush:` Tienes el as del palo del color — aunque tú no tengas color, esa carta significa que ÉL no puede tener el mejor color posible. Y un farol-subida tuyo resulta muy creíble.`,
 suitedConn:` Manos así (del mismo palo y conectadas) juegan mejor que su ranking bruto — hacen escaleras y colores escondidos que ganan botes grandes con stacks profundos. El coach se abre un poco con ellas.`,
+scFlatMulti:(c,n)=>`${c} es una mano especulativa suited/conectada, no una mano que quiera inflar el bote contra ${n} limper${n>1?'s':''}/caller${n>1?'s':''}. Toma el precio barato y busca un proyecto fuerte o una mano escondida; si fallas el flop, suelta fácil.`,
+scFoldEarly:c=>`${c} es una mano especulativa suited/conectada, pero demasiados jugadores aún pueden despertar detrás. Sin posición tardía ni dinero muerto claro que atacar, no fuerces una subida grande — retírate y espera un spot más limpio.`,
+drawMwCheck:n=>`Esto es sobre todo un proyecto en un bote multiway (${n} rivales). El semi-bluff funciona mejor heads-up o contra rangos limitados; con varios jugadores dentro, toma la carta gratis en vez de inflar un bote que quizá no ganes.`,
 gtoSolving:'⚖️ Calculando GTO…',gtoUnavail:'Cálculo GTO no disponible para esta situación.',gtoFail:'Falló el cálculo GTO en esta situación.',
 gtoMulti:n=>'⚖️ El cálculo GTO solo aplica mano a mano (como los solvers comerciales). Con '+n+' rivales, el consejo usa equidad contra rangos.',
 gtoNote:'Equilibrio de tu rango contra el suyo en esta mesa exacta. Abstracciones: solo la calle actual, apuestas de 66% del bote + all-in, 8 niveles de fuerza, rollouts de check-down. Direccionalmente GTO — no exacto a nivel solver.',
@@ -1291,6 +1300,7 @@ function coachDecide(p){
     const gapSC=Math.abs(p.hole[0].r-p.hole[1].r);
     const scAdj=!isPair&&p.hole[0].s===p.hole[1].s&&gapSC>=1&&gapSC<=2
       &&Math.max(p.hole[0].r,p.hole[1].r)<=12&&Math.min(p.hole[0].r,p.hole[1].r)>=5&&stackBB>=(flags.deepStack?25:30);
+    const lowSuitedConnector=scAdj&&Math.max(p.hole[0].r,p.hole[1].r)<=10;
     const prEff=(pairAdj?pr*0.8:pr)*(scAdj?0.85:1);
     if(scAdj&&state.currentBet<=state.bb) extra.push(C('suitedConn'));
     if(flags.deepStack&&stackBB>=50) extra.push(C('cashDeepNote',Math.round(stackBB)));
@@ -1399,7 +1409,15 @@ function coachDecide(p){
       const pressureOpen=prEff<=thrEff&&callAmt>0||prEff<=Math.min(thrEff,0.10)&&callAmt===0;
       const isoSlack=dom.tier===2?0.13:dom.tier===1?0.08:0;
       const borderlineIso=dom.iso&&lateSteal&&callAmt>0&&!chartHit&&prEff<=thrEff+isoSlack&&eq>=0.14;
-      if(chartHit&&callAmt>0||pressureOpen){
+      const scCrowded=lowSuitedConnector&&((limpPot&&(nLimps>=2||!actsLast||opps>=3))||(!limpPot&&!late&&aliveN>=6));
+      const scFlatOk=scCrowded&&limpPot&&callAmt>0&&stackBB>=20;
+      if(scFlatOk){
+        rec='CALL';
+        why.push(C('scFlatMulti',code,nLimps));
+      }else if(scCrowded&&callAmt>0){
+        rec='FOLD';
+        why.push(C('scFoldEarly',code));
+      }else if(chartHit&&callAmt>0||pressureOpen){
         rec='RAISE';
         if(chartHit&&isoList) why.push(C('chartIso',code,pos,nLimps));
         else why.push(chartHit?C('chartOpen',code,pos):C('pfOpen',code,prTxt,Math.round(thrEff*100),pos,pairAdj&&pr>thrEff));
@@ -1524,6 +1542,9 @@ function coachDecide(p){
       :null;
     const thinBoardKickerValue=boardKickerValue&&checkedInFront>0&&boardKickerValue.kicker>=13;
     const strongMade=realTwoPairOrBetter(madeScore,p.hole);
+    const freeDraw=state.stage!=='river'?detectDraws(p.hole,state.board):null;
+    const drawOnlyFree=freeDraw&&(freeDraw.flush||freeDraw.oesd||freeDraw.gutshot)&&madeScore&&madeScore[0]<1;
+    const multiwayDrawCaution=drawOnlyFree&&opps>=2&&!realTwoPairOrBetter(madeScore,p.hole);
     const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&strongMade;
     const leadStrongMade=!river&&checkedInFront===0&&opps<=2&&eq>=0.45&&strongMade;
     const protectTopPair=!river&&checkedInFront>0&&opps<=3&&eq>=0.48&&hasTopPairOrBetter(madeScore,p.hole,state.board);
@@ -1534,6 +1555,9 @@ function coachDecide(p){
     }else if(protectMade||leadStrongMade||protectTopPair){
       rec='RAISE';
       why.push(C('protectBet',handDesc,pct(eq),opps));
+    }else if(multiwayDrawCaution){
+      rec='CHECK';
+      why.push(C('drawMwCheck',opps));
     }else if(checkedDown.length&&eq>probeMin){
       rec='RAISE';
       smallStab=true;
