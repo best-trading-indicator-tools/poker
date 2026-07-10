@@ -104,6 +104,45 @@ function aiOpenRaiseProb(p, d){
   if(sid==='shark') return Math.min(0.98,base+0.04);
   return base;
 }
+function aiBbOptionLimpers(p){
+  if(state.stage!=='preflop'||state.currentBet>state.bb||(p.pos||'')!=='BB')return [];
+  return inHand().filter(q=>q!==p&&!q.allIn&&(q.pos||'')!=='BB'&&q.bet>=state.bb);
+}
+function aiBbIsoTarget(p,limpers){
+  const st=aiEffectiveStyle(p);
+  const size=(st&&st.size)||1;
+  const bb=state.bb, sb=Math.max(1,state.sb||Math.round(bb/2));
+  let target=bb*(3.5+Math.min(limpers,4))*size;
+  target=Math.round(target/sb)*sb;
+  return clamp(target,state.currentBet+state.lastRaiseSize,p.bet+p.chips);
+}
+function aiBbOptionRaise(p,callAmt,d,press){
+  if(callAmt>0||state.stage!=='preflop'||state.currentBet>state.bb||(p.pos||'')!=='BB')return null;
+  const limpers=aiBbOptionLimpers(p);
+  if(!limpers.length||alive().length<=2)return null;
+  const pr=handPct[holeCode(p.hole)]||1;
+  const st=aiEffectiveStyle(p);
+  const sid=st?.id;
+  const monster=pr<=0.055;
+  let isoThr=d==='easy'?0.09:d==='medium'?0.15:0.22;
+  isoThr+=Math.min(limpers.length,3)*(d==='hard'?0.025:0.015);
+  isoThr+=press*(st?.adapt||0)*0.06;
+  if(sid==='rock')isoThr-=0.035;
+  else if(sid==='station')isoThr-=0.015;
+  else if(sid==='shark')isoThr+=0.035;
+  else if(sid==='maniac')isoThr+=0.065;
+  isoThr=clamp(isoThr,0.07,d==='hard'?0.34:0.26);
+  if(!monster&&pr>isoThr)return null;
+  let prob=monster?(d==='hard'?0.99:d==='medium'?0.94:0.84):(d==='hard'?0.82:d==='medium'?0.58:0.34);
+  prob+=Math.min(limpers.length,3)*0.035;
+  if(sid==='rock')prob-=monster?0.04:0.18;
+  else if(sid==='station')prob-=monster?0.03:0.10;
+  else if(sid==='shark')prob+=0.08;
+  else if(sid==='maniac')prob+=0.12;
+  if(monster)prob=Math.max(prob,d==='hard'?0.98:d==='medium'?0.92:0.80);
+  if(Math.random()>clamp(prob,0.12,0.995))return null;
+  return {type:'raise',amount:aiBbIsoTarget(p,limpers.length)};
+}
 function aiShortPushThr(p, stackBB){
   const bucket=posBucket(p.pos||'BTN');
   const press=isCashGame()?clamp((16-stackBB)/6,0,1)*0.5:tourneyPressure(stackBB);
@@ -524,6 +563,8 @@ function aiDecide(p){
   const foldRaise=(base.foldRaise||0)+(base.id==='rock'&&facingRaise?0.08:0);
   const firstInPreflop=state.stage==='preflop'&&state.currentBet<=state.bb;
   const openRange=firstInPreflop&&handInOpenRange(p, press);
+  const bbOptionRaise=aiBbOptionRaise(p,callAmt,d,press);
+  if(bbOptionRaise)return bbOptionRaise;
   const hardOpen=aiHardUnopenedPreflop(p,openRange,press,pot,eq,callAmt,d);
   if(hardOpen)return hardOpen;
 
