@@ -101,6 +101,50 @@ function aiShortPushThr(p, stackBB){
   if(hu.active) thr=Math.min(0.94, thr*(p.pos==='SB/BTN'?1.45:1.2)+hu.leadBoost*0.16);
   return Math.min(hu.active?0.94:0.90, thr+press*(p.style?.adapt||0)*0.12);
 }
+function aiHeadsUpShortStackJam(p,callAmt,d){
+  if(isCashGame()||state.stage!=='preflop')return null;
+  const live=alive();
+  if(live.length!==2)return null;
+  const opp=live.find(q=>q!==p);
+  if(!opp)return null;
+  const myStack=p.chips+p.bet, oppStack=opp.chips+opp.bet;
+  const stackBB=myStack/Math.max(state.bb,1);
+  const shortRatio=myStack/Math.max(oppStack,1);
+  if(stackBB>14||shortRatio>0.80)return null;
+  const pos=p.pos||'SB/BTN';
+  const sbBtn=/^(SB\/BTN|BTN|SB)$/.test(pos);
+  const effBB=Math.min(myStack,oppStack)/Math.max(state.bb,1);
+  const base=typeof headsUpShoveThreshold==='function'
+    ?headsUpShoveThreshold(pos,effBB,callAmt)
+    :(sbBtn?(effBB<=5?1:effBB<=8?0.86:effBB<=12?0.66:0.48):(effBB<=5?0.78:effBB<=8?0.60:effBB<=12?0.44:0.32));
+  let thr=base;
+  if(shortRatio<=0.33)thr+=0.16;
+  else if(shortRatio<=0.50)thr+=0.11;
+  else if(shortRatio<=0.70)thr+=0.06;
+  if(stackBB<=4)thr=Math.max(thr,sbBtn?1.00:0.86);
+  else if(stackBB<=6)thr=Math.max(thr,sbBtn?0.94:0.72);
+  else if(stackBB<=9)thr=Math.max(thr,sbBtn?0.82:0.58);
+  else if(stackBB<=12)thr=Math.max(thr,sbBtn?0.68:0.46);
+  const sid=p.style?.id;
+  if(sid==='rock')thr-=0.03;
+  else if(sid==='station')thr+=0.03;
+  else if(sid==='shark')thr+=0.04;
+  else if(sid==='maniac')thr+=0.08;
+  if(d==='hard')thr+=0.04;
+  else if(d==='easy')thr-=0.04;
+  thr=clamp(thr,0.12,sbBtn?1.00:0.96);
+  const pr=handPct[holeCode(p.hole)]||1;
+  if(callAmt===0){
+    if(pr<=thr && (sbBtn||stackBB<=7))return {type:'raise',amount:p.bet+p.chips};
+    return null;
+  }
+  if(pr<=thr)return {type:'raise',amount:p.bet+p.chips};
+  const odds=callAmt/Math.max(state.players.reduce((s,q)=>s+q.totalBet,0)+callAmt,1);
+  if(stackBB<=5&&pr<=Math.min(0.96,thr+0.10))return {type:'raise',amount:p.bet+p.chips};
+  if(stackBB<=7&&callAmt<=state.bb&&pr<=Math.min(0.92,thr+0.12))return {type:'call'};
+  if(stackBB<=5&&preflopEq(p.hole,2)>=odds+0.02)return {type:'call'};
+  return null;
+}
 function aiCanValueRaise(p){
   if(!p.style) return true;
   const hu=aiHeadsUpPressure(p);
@@ -280,6 +324,9 @@ function aiDecide(p){
   const noise = d==='hard'?0.045 : d==='medium'?0.10 : 0.22;
   eq=clamp(eq+(Math.random()*2-1)*noise,0,1);
   const odds = callAmt>0 ? callAmt/(pot+callAmt) : 0;
+
+  const huShortJam=aiHeadsUpShortStackJam(p,callAmt,d);
+  if(huShortJam)return huShortJam;
 
   let posBonus=0;
   if(d==='hard'){
