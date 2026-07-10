@@ -2381,7 +2381,11 @@ function initUI(){
   });
   $('revAllHands').onclick=()=>{closeDialog($('reviewOv'));showHistoryReplay();};
   /* --- clear saved data (human name for localStorage wipe) --- */
-  $('resetInfoBtn').onclick=()=>$('resetInfo').classList.toggle('hidden');
+  $('resetInfoBtn').onclick=()=>{
+    const info=$('resetInfo');
+    const hidden=info.classList.toggle('hidden');
+    $('resetInfoBtn').setAttribute('aria-expanded',hidden?'false':'true');
+  };
   $('timerInfoBtn').onclick=()=>$('timerInfo').classList.toggle('hidden');
   $('koBonusInfoBtn').onclick=()=>$('koBonusInfo').classList.toggle('hidden');
   wireCoachInfoTips();
