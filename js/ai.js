@@ -104,6 +104,166 @@ function aiOpenRaiseProb(p, d){
   if(sid==='shark') return Math.min(0.98,base+0.04);
   return base;
 }
+function rangeModelStyle(p){
+  const sid=aiEffectiveStyle(p)?.id||p.style?.id||'';
+  if(sid==='rock')return {open:0.72,call:0.72,trap:0.10,bluff:0.03};
+  if(sid==='station')return {open:1.25,call:1.45,trap:0.05,bluff:0.02};
+  if(sid==='shark')return {open:1.05,call:1.00,trap:0.24,bluff:0.18};
+  if(sid==='maniac')return {open:1.50,call:1.35,trap:0.08,bluff:0.28};
+  return {open:1,call:1,trap:0.10,bluff:0.08};
+}
+function rangeModelInit(p){
+  const st=rangeModelStyle(p);
+  p.rangeModel={
+    v:1,cap:1,floor:0,preCap:1,preFloor:0,strong:0,capped:0,passive:0,aggr:0,
+    calls:0,raises:0,checks:0,limps:0,trap:st.trap,bluff:st.bluff,
+    lastAction:'',lastStreet:'',lastBetRatio:0
+  };
+  return p.rangeModel;
+}
+function rangeModelEnsure(p){
+  if(!p.rangeModel||p.rangeModel.v!==1)return rangeModelInit(p);
+  return p.rangeModel;
+}
+function rangeModelSyncLegacy(p,m){
+  const cap=clamp(Math.min(m.cap??1,p.rangeCap??1),0.03,1);
+  const floor=clamp(Math.max(m.floor??0,p.rangeFloor??0),0,Math.min(0.45,cap*0.75));
+  m.cap=cap; m.floor=floor; p.rangeCap=cap; p.rangeFloor=floor;
+}
+function rangeModelOpeningCap(p,ctx){
+  const pos=p.pos||'';
+  const st=rangeModelStyle(p);
+  const bucket=posBucket(pos||'BTN');
+  let cap=(OPEN_THR[bucket]||0.20)*st.open;
+  if(pos==='BB')cap=0.18*st.open;
+  if(ctx&&ctx.cbBefore>state.bb)cap=(/^(BB|SB|SB\/BTN)$/.test(pos)?0.12:0.085)*st.open;
+  else if(ctx&&ctx.cbBefore<=state.bb){
+    const limps=inHand().filter(q=>q!==p&&!q.allIn&&(q.pos||'')!=='BB'&&q.bet>=state.bb).length;
+    if(limps)cap+=Math.min(0.10,limps*0.025);
+  }
+  return clamp(cap,0.04,0.82);
+}
+function rangeModelCallCap(p,ctx){
+  const st=rangeModelStyle(p);
+  const pos=p.pos||'';
+  if(!ctx||ctx.callAmt<=0)return pos==='BB'?0.72:1;
+  if(ctx.cbBefore<=state.bb)return clamp((pos==='SB'?0.36:0.52)*st.call,0.16,0.82);
+  const blind=/^(BB|SB|SB\/BTN)$/.test(pos);
+  const base=blind?0.34:0.24;
+  const pressure=ctx.callAmt/Math.max((ctx.potBefore||state.bb)+ctx.callAmt,1);
+  return clamp((base-pressure*0.18)*st.call,0.08,0.55);
+}
+function rangeModelApplyAction(p,type,ctx={}){
+  if(!p||p.out)return;
+  const m=rangeModelEnsure(p);
+  const pre=state.stage==='preflop';
+  const ratio=ctx.betRatio||0;
+  const modelAction=type==='call'&&(ctx.callAmt||0)<=0?'check':type;
+  m.lastAction=modelAction; m.lastStreet=state.stage; m.lastBetRatio=ratio;
+  if(type==='fold'){rangeModelSyncLegacy(p,m);return;}
+  if(pre){
+    if(type==='raise'){
+      const cap=rangeModelOpeningCap(p,ctx);
+      m.raises++; m.aggr=clamp(m.aggr+0.34+ratio*0.25,0,1);
+      m.strong=clamp(m.strong+0.32+ratio*0.35,0,1);
+      m.capped=0; m.passive=clamp(m.passive*0.45,0,1);
+      m.preCap=m.cap=clamp(Math.min(m.cap,cap),0.03,1);
+      m.floor=0; m.preFloor=0;
+    }else if(type==='call'){
+      if((ctx.callAmt||0)<=0){
+        m.checks++; m.capped=clamp(m.capped+0.28,0,1); m.passive=clamp(m.passive+0.22,0,1);
+        m.floor=clamp(Math.max(m.floor,0.035),0,0.35);
+      }else{
+        const cap=rangeModelCallCap(p,ctx);
+        if((ctx.cbBefore||0)<=state.bb)m.limps++;
+        else m.calls++;
+        m.passive=clamp(m.passive+0.18,0,1);
+        m.strong=clamp(m.strong+(ctx.cbBefore>state.bb?0.12:0.04),0,1);
+        m.capped=clamp(m.capped+(ctx.cbBefore<=state.bb?0.18:0.05),0,1);
+        m.preCap=m.cap=clamp(Math.min(m.cap,cap),0.03,1);
+        m.floor=clamp(Math.max(m.floor,ctx.cbBefore>state.bb?0.018:0.025),0,0.35);
+        m.preFloor=m.floor;
+      }
+    }
+    p.rangeCap=m.cap; p.rangeFloor=m.floor;
+    rangeModelSyncLegacy(p,m);
+    return;
+  }
+  if(type==='raise'){
+    m.raises++; m.aggr=clamp(m.aggr+0.25+ratio*0.35,0,1);
+    const trap=p.checkedStreet?0.30:0;
+    m.strong=clamp(m.strong+0.24+ratio*0.36+trap,0,1);
+    m.capped=p.checkedStreet?clamp(m.capped*0.35,0,1):clamp(m.capped*0.55,0,1);
+    m.passive=clamp(m.passive*0.55,0,1);
+    if(ratio>=0.75)m.floor=clamp(Math.min(m.floor,0.04),0,0.25);
+  }else if(type==='call'){
+    if((ctx.callAmt||0)>0){
+      m.calls++; m.passive=clamp(m.passive+0.12,0,1);
+      m.strong=clamp(m.strong+0.10+ratio*0.10,0,1);
+      m.capped=clamp(m.capped*0.75,0,1);
+    }else{
+      m.checks++; m.passive=clamp(m.passive+0.18,0,1);
+      m.capped=clamp(m.capped+0.20*(1-m.trap),0,1);
+      m.strong=clamp(m.strong*0.82,0,1);
+    }
+  }
+  rangeModelSyncLegacy(p,m);
+}
+function rangeModelComboInfo(hole,board){
+  const pct=handPct[holeCode(hole)]||1;
+  if(!board||board.length<3)return {pct,made:0,draw:0,medium:0,strong:0};
+  const score=evalBest(hole.concat(board));
+  const boardMax=Math.max(...board.map(c=>c.r));
+  const topPair=score[0]===1&&score[1]===boardMax&&hole.some(c=>c.r===score[1]);
+  const overPair=score[0]===1&&hole[0].r===hole[1].r&&hole[0].r>boardMax;
+  let made=score[0]>=6?0.96:score[0]===5?0.88:score[0]===4?0.84:score[0]===3?0.74:
+    score[0]===2?0.62:(topPair||overPair)?0.50:score[0]===1?0.28:0.06;
+  let draw=0;
+  if(state.stage!=='river'&&typeof detectDraws==='function'){
+    const d=detectDraws(hole,board);
+    if(d.flush)draw=Math.max(draw,0.42);
+    if(d.oesd)draw=Math.max(draw,0.34);
+    else if(d.gutshot)draw=Math.max(draw,0.18);
+  }
+  return {pct,made,draw,medium:made>=0.25&&made<0.62,strong:made>=0.62};
+}
+function rangeModelComboWeight(model,hole,board,capArg,floorArg){
+  const m=model||{};
+  const info=rangeModelComboInfo(hole,board);
+  const cap=clamp(capArg??m.cap??1,0.03,1);
+  const floor=clamp(floorArg??m.floor??0,0,Math.min(0.45,cap*0.75));
+  let w=1;
+  if(info.pct>cap)w*=clamp(0.06+(cap/info.pct)*0.22,0.03,0.28);
+  else if(info.pct<=floor)w*=clamp(0.10+m.trap*0.35+m.aggr*0.45,0.08,0.95);
+  if(board&&board.length>=3){
+    const pressure=clamp(m.lastBetRatio||0,0,1.6);
+    w*=1+clamp(m.aggr||0,0,1)*(info.made*1.10+info.draw*0.65-(info.made<0.18?0.18:0));
+    w*=1+clamp(m.strong||0,0,1)*(info.made*0.95+info.draw*0.35-0.18);
+    w*=1+clamp(m.passive||0,0,1)*(info.medium?0.24:info.made<0.18?0.18:-0.10);
+    w*=1+clamp(m.capped||0,0,1)*(info.made<0.18?0.42:info.medium?0.22:info.strong?-0.55:-0.10);
+    if((m.calls||0)>0)w*=1+(info.medium?0.28:info.draw?0.22:info.strong?0.10:-0.18);
+    if(pressure>=0.65&&m.lastAction==='call')w*=info.made>=0.45||info.draw>=0.30?1.18:0.38;
+    if(state.stage==='river')w*=info.draw>0?0.50:1;
+  }
+  return clamp(w,0.01,1);
+}
+function rangeModelPick(pool,model,board,cap,floor){
+  let best=null,bestW=-1;
+  for(let k=0;k<40;k++){
+    let i=Math.floor(Math.random()*pool.length);
+    let j=Math.floor(Math.random()*(pool.length-1)); if(j>=i)j++;
+    const w=rangeModelComboWeight(model,[pool[i],pool[j]],board,cap,floor);
+    if(w>bestW){bestW=w;best={i,j};}
+    if(Math.random()<w)return {i,j};
+  }
+  return best;
+}
+function rangeModelRead(q){
+  const m=q&&q.rangeModel;
+  if(!m)return {bluffy:0,capped:0,strong:0};
+  const bluffy=clamp((m.bluff||0)+(m.aggr||0)*0.18+(m.capped||0)*0.10-(m.strong||0)*0.18,0,0.45);
+  return {bluffy,capped:clamp(m.capped||0,0,1),strong:clamp(m.strong||0,0,1)};
+}
 function aiBbOptionLimpers(p){
   if(state.stage!=='preflop'||state.currentBet>state.bb||(p.pos||'')!=='BB')return [];
   return inHand().filter(q=>q!==p&&!q.allIn&&(q.pos||'')!=='BB'&&q.bet>=state.bb);
@@ -209,8 +369,9 @@ function aiCanValueRaise(p){
   return (handPct[holeCode(p.hole)]||1)<=Math.min(0.55,cap);
 }
 function aiOppCaps(p){
+  const useModel=state.cfg&&state.cfg.difficulty==='hard';
   return inHand().filter(q=>q!==p)
-    .map(q=>({cap:clamp(q.rangeCap||1,0.03,1),floor:clamp(q.rangeFloor||0,0,0.25)}))
+    .map(q=>({cap:clamp(q.rangeCap||1,0.03,1),floor:clamp(q.rangeFloor||0,0,0.25),model:useModel?q.rangeModel:null}))
     .sort((a,b)=>a.cap-b.cap).slice(0,4);
 }
 function aiEstEquity(p, live, d){
@@ -306,6 +467,13 @@ function aiVillainFoldChance(actor,q,betSize,potBefore,d,tex){
   if((q.checkStreets||[]).length>=2) f+=0.08;
   f+=clamp(q.rangeFloor||0,0,0.25)*0.75;       // capped top range = easier to push off
   f-=clamp(0.35-(q.rangeCap||1),0,0.30)*0.75; // recently strong range = sticky
+  if(d==='hard'&&q.rangeModel){
+    const r=rangeModelRead(q);
+    f+=r.capped*0.12+r.bluffy*0.10-r.strong*0.14;
+    if((q.rangeModel.calls||0)>=2)f-=0.04;
+    if(q.rangeModel.lastAction==='call'&&(q.rangeModel.lastBetRatio||0)>=0.65)f-=0.06;
+    if(q.rangeModel.lastAction==='check'&&(q.rangeModel.checks||0)>=2)f+=0.06;
+  }
   if(q.lineRead==='cbet') f+=0.04;
   else if(q.lineRead==='barrel2'||q.lineRead==='barrel3'||q.lineRead==='checkraise'||q.lineRead==='donk') f-=0.12;
   if(tex.dry) f+=0.06;
@@ -468,11 +636,13 @@ function aiHardPostflopNoBet(p,eq,pot,d,st,pfAdj){
   const betSize=Math.max(state.bb,Math.round(pot*(opps.length>2?0.46:0.56)));
   const fe=aiEstimateFoldEquity(p,betSize,pot,d);
   const tex=aiTextureForFE();
-  const capped=checked>0||opps.some(q=>(q.checkStreets||[]).length>=2);
+  const modeledCap=opps.reduce((s,q)=>s+rangeModelRead(q).capped,0)/Math.max(1,opps.length);
+  const modeledStrong=opps.reduce((s,q)=>s+rangeModelRead(q).strong,0)/Math.max(1,opps.length);
+  const capped=checked>0||modeledCap>=0.22||opps.some(q=>(q.checkStreets||[]).length>=2);
   const madeFloor=score[0]>=2?0.28:topPair?0.24:0.34;
   const cappedMade=valueHand&&capped&&opps.length<=3&&eq>=madeFloor;
   const value=(eq>=(opps.length>2?0.57:0.50)&&valueHand)||cappedMade;
-  const stab=capped&&((eq>=0.34&&fe>=0.20)||(tex.dry&&eq>=0.25&&fe>=0.28));
+  const stab=capped&&modeledStrong<0.62&&((eq>=0.34&&fe>=0.20)||(tex.dry&&eq>=0.25&&fe>=0.28));
   if(!value&&!stab)return null;
   let freq=value?0.86:0.62;
   freq+=st.raiseF*0.18+pfAdj.betBoost*0.35;
@@ -488,8 +658,15 @@ function aiHardPostflopVsBet(p,eq,odds,callAmt,pot,d,st,pfAdj){
   const draw=state.stage!=='river'?detectDraws(p.hole,state.board):null;
   const strongDraw=draw&&(draw.flush||draw.oesd);
   const strongMade=score[0]>=3||(score[0]===2&&p.hole.some(c=>c.r===score[1]||c.r===score[2]));
+  const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+  const read=rangeModelRead(agg);
+  const checkRaiseSpot=p.checkedStreet&&agg&&betRatio<=0.75;
+  if(checkRaiseSpot&&(strongMade||strongDraw)&&Math.random()<clamp(0.34+st.raiseF+read.bluffy*0.45-read.strong*0.18,0.08,0.78))
+    return {type:'raise',amount:betTarget(p,pot,Math.max(eq,strongMade?0.70:0.56),d)};
   if(strongMade&&eq>0.58&&betRatio<=0.75&&Math.random()<clamp(0.58+st.raiseF,0.25,0.88))
     return {type:'raise',amount:betTarget(p,pot,Math.max(eq,0.68),d)};
+  if(!strongMade&&eq>=odds+0.04-read.bluffy*0.45+read.strong*0.12&&betRatio<=0.75)
+    return {type:'call'};
   if(betRatio>=0.75&&!strongMade&&!strongDraw&&eq<odds+0.045)return {type:'fold'};
   if(state.stage==='river'&&betRatio>=0.50&&score[0]<1&&eq<odds+0.06)return {type:'fold'};
   return null;

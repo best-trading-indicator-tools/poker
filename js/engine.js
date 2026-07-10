@@ -151,7 +151,7 @@ function startHand(){
   for(const p of state.players){
     p.hole=[]; p.folded=p.out; p.allIn=false; p.bet=0; p.totalBet=0;
     p.acted=false; p.lastAct=''; p.revealed=false; p.rangeCap=1; p.rangeFloor=0; p.checkedStreet=false;
-    p.aggStreets=[]; p.checkStreets=[]; p.lineRead='';
+    p.aggStreets=[]; p.checkStreets=[]; p.lineRead=''; p.rangeModel=null;
   }
   state.dealerIdx=nextSeat(state.dealerIdx,p=>!p.out);
   const n=alive().length;
@@ -160,6 +160,7 @@ function startHand(){
   else { sbIdx=nextSeat(state.dealerIdx,p=>!p.out); bbIdx=nextSeat(sbIdx,p=>!p.out); }
   for(const p of alive()) if(state.ante) payAnte(p,state.ante);
   assignPositions(sbIdx);
+  if(typeof rangeModelInit==='function') for(const p of alive()) rangeModelInit(p);
   payBet(state.players[sbIdx],state.sb); state.players[sbIdx].lastAct='SB '+usd(state.sb);
   payBet(state.players[bbIdx],state.bb); state.players[bbIdx].lastAct='BB '+usd(state.bb);
   state.currentBet=state.bb; state.lastRaiseSize=state.bb;
@@ -247,12 +248,14 @@ function applyAction(p,type,amt){
   const callAmt=Math.max(0,Math.min(state.currentBet-p.bet,p.chips));
   if(type==='fold'&&callAmt<=0) type='call'; // checking is the only legal zero-price fold alternative
   const cbBefore=state.currentBet;   // bet level BEFORE this action (for line reading)
+  const rangeCtx={callAmt,cbBefore,potBefore:state.players.reduce((s,q)=>s+q.totalBet,0),raiseSize:0,target:0,betRatio:0};
   if(type==='fold'){
     p.folded=true; p.lastAct='Fold'; sfx('fold');
   }else if(type==='call'){
     const paid=payBet(p,callAmt);
     p.lastAct = callAmt<=0 ? 'Check' : (p.allIn?'All-in '+usd(p.bet):'Call '+usd(paid));
     sfx(callAmt<=0?'check':'chip');
+    rangeCtx.betRatio=callAmt>0?callAmt/Math.max(rangeCtx.potBefore-callAmt,state.bb):0;
     if(callAmt>0){
       narrowRange(p, state.stage==='preflop'?0.35:0.50);
       p.rangeFloor=(p.rangeFloor||0)*0.5;   // calling after checking: medium strength, weakness read fades
@@ -271,6 +274,7 @@ function applyAction(p,type,amt){
     }
     payBet(p,target-p.bet);
     const raiseSize=target-state.currentBet;
+    rangeCtx.raiseSize=raiseSize; rangeCtx.target=target;
     if(raiseSize>=state.lastRaiseSize){
       state.lastRaiseSize=raiseSize;
       for(const q of state.players) if(q!==p&&!q.folded&&!q.allIn&&!q.out) q.acted=false;
@@ -298,6 +302,7 @@ function applyAction(p,type,amt){
     /* the bigger the raise relative to the pot, the narrower the credible range */
     const potNow=state.players.reduce((s,q)=>s+q.totalBet,0);
     const ratio=raiseSize/Math.max(potNow-raiseSize,state.bb);
+    rangeCtx.betRatio=ratio;
     let cap=base;
     if(ratio>=1.2) cap*=0.35;        // overbet / jam → very strong
     else if(ratio>=0.8) cap*=0.55;   // pot-sized
@@ -309,6 +314,7 @@ function applyAction(p,type,amt){
     if(state.stage==='preflop') state.pfAggIdx=p.i;
     state.lastAggIdx=p.i;
   }
+  if(typeof rangeModelApplyAction==='function') rangeModelApplyAction(p,type,rangeCtx);
   p.acted=true;
   log(`${p.name}: ${p.lastAct}`);
   saveResume();
@@ -740,6 +746,7 @@ function saveResume(){
           hole:q.hole.map(cardToCode), pos:q.pos||'', bet:q.bet, totalBet:q.totalBet,
           folded:q.folded, allIn:q.allIn, acted:q.acted, lastAct:q.lastAct||'',
           revealed:q.revealed, rangeCap:q.rangeCap, rangeFloor:q.rangeFloor,
+          rangeModel:q.rangeModel?{...q.rangeModel}:null,
           checkedStreet:!!q.checkedStreet, aggStreets:(q.aggStreets||[]).slice(),
           checkStreets:(q.checkStreets||[]).slice(), lineRead:q.lineRead||'', bank:q.bank??TT_BANK
         }))
@@ -774,13 +781,15 @@ function restoreMidHand(mh){
     p.bet=q.bet; p.totalBet=q.totalBet;
     p.folded=q.folded; p.allIn=q.allIn; p.acted=q.acted;
     p.lastAct=q.lastAct||''; p.revealed=q.revealed;
+    p.pos=q.pos||'';
     p.rangeCap=q.rangeCap??1; p.rangeFloor=q.rangeFloor??0;
+    p.rangeModel=q.rangeModel?{...q.rangeModel}:null;
+    if(!p.rangeModel&&typeof rangeModelInit==='function')rangeModelInit(p);
     p.checkedStreet=!!q.checkedStreet;
     p.aggStreets=(q.aggStreets||[]).slice();
     p.checkStreets=(q.checkStreets||[]).slice();
     p.lineRead=q.lineRead||'';
     p.bank=q.bank??TT_BANK;
-    p.pos=q.pos||'';
   });
   showBanner(T('revMidBanner'));
   hideNextBtn();

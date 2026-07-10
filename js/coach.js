@@ -505,12 +505,16 @@ function mcEquityR(hole,board,caps,sims){
     for(const o of caps){
       const cap=typeof o==='number'?o:o.cap;
       const floor=Math.min(typeof o==='number'?0:(o.floor||0), cap*0.5); // never empty the window
-      let i=0,j=1;
-      for(let k=0;k<12;k++){
-        i=Math.floor(Math.random()*pool.length);
-        j=Math.floor(Math.random()*(pool.length-1)); if(j>=i)j++;
-        const pct=handPct[holeCode([pool[i],pool[j]])]||1;
-        if(pct<=cap&&pct>floor) break;
+      let pick=null;
+      if(o&&o.model&&typeof rangeModelPick==='function') pick=rangeModelPick(pool,o.model,board,cap,floor);
+      let i=pick?pick.i:0,j=pick?pick.j:1;
+      if(!pick){
+        for(let k=0;k<12;k++){
+          i=Math.floor(Math.random()*pool.length);
+          j=Math.floor(Math.random()*(pool.length-1)); if(j>=i)j++;
+          const pct=handPct[holeCode([pool[i],pool[j]])]||1;
+          if(pct<=cap&&pct>floor) break;
+        }
       }
       oppH.push([pool[i],pool[j]]);
       const hi=Math.max(i,j),lo=Math.min(i,j);
