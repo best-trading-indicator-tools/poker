@@ -1377,6 +1377,7 @@ function render(winners){
     $('tAnte').textContent=state.ante?usd(state.ante):'—';
     const per=SPEED_HANDS[state.cfg.speed];
     $('tNext').textContent= state.level>=state.levels.length-1 ? '—' : (per-((state.handNum-1)%per+1)+1);
+    renderKoBonusTop();
   }
   renderRewardTop();
   const potCollected=state.players.reduce((s,p)=>s+p.totalBet-p.bet,0);
@@ -1626,6 +1627,18 @@ function renderFeedback(net){
   html+=rewardSummaryLine(state.lastRewardSummary);
   el.innerHTML=html;
 }
+function renderKoBonusTop(){
+  if(!HAS_DOM||!state)return;
+  const wrap=$('tKoWrap'), ko=$('tKoBonus');
+  if(!wrap||!ko)return;
+  const cash=isCashGame();
+  wrap.classList.toggle('hidden',cash);
+  if(cash)return;
+  const on=!!state.cfg.koBonus;
+  ko.textContent=on?'ON':'OFF';
+  ko.className=on?'on':'off';
+  wrap.title=on?'KO bonus enabled: eliminating a player pays an extra chip bounty.':'KO bonus disabled: eliminations do not pay extra chips.';
+}
 function renderStats(){
   if(!HAS_DOM||!state||!state.sessStats||BENCH)return;
   const s=state.sessStats,l=lifeStats;
@@ -1655,6 +1668,7 @@ function renderStats(){
     `<div class="srow"><span>${T('handsPW')}</span><b>${l.hands} / ${l.won}</b></div>`+
     `<div class="srow"><span>${T('net')}</span><b>${l.net>=0?'+':'−'}${usd(Math.abs(l.net))}</b></div>`+
     `<div class="srow"><span>${T('coachFollowed')}</span><b>${fp(l)}</b></div>`;
+  renderKoBonusTop();
   renderRewardTop();
 }
 /* ---------- hand replayer: browse hands (this game or saved history), step through streets ---------- */
@@ -2138,6 +2152,8 @@ function applyLang(){
   /* topbar */
   const tn=(id,k)=>{const b=$(id);if(b&&b.parentNode.firstChild)b.parentNode.firstChild.nodeValue=T(k);};
   tn('tLevel','level'); tn('tHand','hand');
+  const koTop=$('tKoWrap');
+  if(koTop&&koTop.firstChild)koTop.firstChild.nodeValue=T('koBonusOpt')+' ';
   const up=$('tNext');
   if(up){up.parentNode.firstChild.nodeValue=T('blindsUpA'); up.parentNode.lastChild.nodeValue=T('blindsUpB');}
   const an=$('autoNextLbl'); if(an) an.textContent=T('autoNext');
