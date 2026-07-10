@@ -307,6 +307,57 @@ function aiPressureRaise(p,eq,pot,d,st,pfAdj,callAmt=0){
   if(Math.random()>clamp(freq,0.02,0.96)) return null;
   return {type:'raise',amount:target,foldEq:fe,edge};
 }
+function aiPostflopOrder(){
+  if(typeof postflopOrder==='function') return postflopOrder();
+  const n=state.players.length, ord=[];
+  for(let k=1;k<=n;k++){
+    const q=state.players[(state.dealerIdx+k)%n];
+    if(!q.out&&!q.folded)ord.push(q);
+  }
+  return ord;
+}
+function aiRiverBoardKickerValueSpot(p,d){
+  if(state.stage!=='river'||state.currentBet>p.bet)return null;
+  const info=typeof boardTwoPairKickerInfo==='function'
+    ?boardTwoPairKickerInfo(p.hole,state.board)
+    :null;
+  if(!info)return null;
+  const opps=inHand().filter(q=>q!==p&&!q.allIn);
+  if(!opps.length)return null;
+  const checkedInFront=opps.filter(q=>q.checkedStreet||(q.checkStreets||[]).includes('river')).length;
+  const ord=aiPostflopOrder().filter(q=>!q.allIn);
+  const idx=ord.indexOf(p);
+  const actorsLeft=idx<0?0:ord.slice(idx+1).filter(q=>q!==p&&!q.allIn).length;
+  let freq=d==='hard'?0.72:d==='medium'?0.58:0.38;
+  if(checkedInFront>0)freq+=0.12;
+  if(actorsLeft===0)freq+=0.10;
+  else if(actorsLeft===1)freq+=0.03;
+  else freq-=0.10;
+  if(info.kicker===14)freq+=0.12;
+  else if(info.kicker===13)freq+=0.08;
+  else if(info.kicker===12)freq+=0.02;
+  else if(info.kicker<=10)freq-=0.08;
+  const sid=p.style?.id;
+  if(sid==='rock')freq-=0.15;
+  else if(sid==='station')freq-=0.08;
+  else if(sid==='shark')freq+=0.08;
+  else if(sid==='maniac')freq+=0.05;
+  freq-=Math.max(0,opps.length-2)*0.07;
+  return {...info,checkedInFront,actorsLeft,freq:clamp(freq,0.18,0.94)};
+}
+function aiThinRiverValueTarget(p,pot,d,spot){
+  const sid=p.style?.id;
+  let frac=d==='hard'?0.46:d==='medium'?0.38:0.30;
+  if(spot.actorsLeft>0)frac+=0.04;
+  if(spot.kicker===14)frac+=0.04;
+  if(sid==='rock')frac-=0.05;
+  else if(sid==='maniac')frac+=0.08;
+  frac=clamp(frac,0.25,0.62);
+  const size=(p.style&&p.style.size)||1;
+  let t=state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*frac*size));
+  t=Math.round(t/state.sb)*state.sb;
+  return clamp(t,state.currentBet+state.lastRaiseSize,p.bet+p.chips);
+}
 
 function aiDecide(p){
   const callAmt=Math.min(state.currentBet-p.bet, p.chips);
@@ -384,6 +435,9 @@ function aiDecide(p){
     if(openRange&&Math.random()<aiOpenRaiseProb(p,d))
       return {type:'raise',amount:betTarget(p,pot,Math.max(eq,0.62),d)};
     if(p.style?.id==='maniac'&&state.stage!=='preflop'&&Math.random()<0.12) return {type:'call'};
+    const kickerValue=aiRiverBoardKickerValueSpot(p,d);
+    if(kickerValue&&Math.random()<kickerValue.freq)
+      return {type:'raise',amount:aiThinRiverValueTarget(p,pot,d,kickerValue)};
     const pressure=aiPressureRaise(p,eq,pot,d,st,pfAdj,0);
     if(pressure) return {type:'raise',amount:pressure.amount};
     let betProb=0,bluffProb=0;

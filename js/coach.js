@@ -1487,12 +1487,17 @@ function coachDecide(p){
     const probeMin=difficultyApplies&&difficulty==='easy'?0.38:difficultyApplies&&difficulty==='hard'?0.26:0.30;
     const probeMax=difficultyApplies&&difficulty==='hard'?0.65:0.62;
     const probeStab=passiveMajority&&eq>=probeMin&&eq<=probeMax&&(actsLast||river||boardTexture(state.board).dry);
+    const boardKickerValue=river&&typeof boardTwoPairKickerInfo==='function'
+      ?boardTwoPairKickerInfo(p.hole,state.board)
+      :null;
+    const thinBoardKickerValue=boardKickerValue&&checkedInFront>0&&boardKickerValue.kicker>=13;
     const strongMade=realTwoPairOrBetter(madeScore,p.hole);
     const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&strongMade;
     const leadStrongMade=!river&&checkedInFront===0&&opps<=2&&eq>=0.45&&strongMade;
     const protectTopPair=!river&&checkedInFront>0&&opps<=3&&eq>=0.48&&hasTopPairOrBetter(madeScore,p.hole,state.board);
-    if(eq>valueThresh){
+    if(eq>valueThresh||thinBoardKickerValue){
       rec='RAISE';
+      if(thinBoardKickerValue)smallStab=true;
       why.push(river?C('valRiver',pct(eq),opps):C('valBet',pct(eq),opps));
     }else if(protectMade||leadStrongMade||protectTopPair){
       rec='RAISE';

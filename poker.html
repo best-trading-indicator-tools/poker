@@ -26,7 +26,9 @@ body{background:var(--bg);color:var(--text);overflow:hidden;}
 
 /* ---------- SETUP ---------- */
 #setup{height:100%;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 0;}
-.setup-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:36px 42px;width:430px;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.setup-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:36px 42px;width:min(980px,calc(100vw - 48px));box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.setup-layout{display:grid;grid-template-columns:minmax(380px,1fr) minmax(320px,360px);gap:30px;align-items:start;}
+.setup-main,.setup-side{min-width:0;}
 .setup-card h1{font-size:25px;margin-bottom:4px;letter-spacing:.3px;}
 .setup-card .sub{color:var(--dim);font-size:13px;margin-bottom:26px;}
 .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
@@ -68,6 +70,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #ovBlunders .bl-more{font-size:11px;color:var(--dim);text-align:center;padding-top:6px;}
 /* multiplayer: lobby + chat */
 #mpSec{margin-top:18px;border:1px solid rgba(230,180,60,.38);background:linear-gradient(180deg,rgba(230,180,60,.08),rgba(230,180,60,.02));border-radius:14px;padding:14px;}
+.setup-side #mpSec{margin-top:0;}
 #mpSec h3{font-size:17px;font-weight:800;color:var(--gold);margin-bottom:3px;letter-spacing:.3px;}
 #mpSub{font-size:11.5px;color:var(--dim);margin-bottom:11px;}
 #mpName{width:100%;margin-bottom:8px;background:#10141b;border:1px solid var(--line);border-radius:9px;color:var(--text);padding:10px 11px;font-size:13.5px;box-sizing:border-box;}
@@ -678,6 +681,8 @@ body.fl #chipPreview{display:none!important;}
   /* the start menu is taller than small screens: let it scroll instead of clipping */
   #setup{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;}
   .setup-card{display:block;width:auto;max-width:94vw;padding:24px 22px;margin:max(10px,env(safe-area-inset-top)) auto max(24px,env(safe-area-inset-bottom));}
+  .setup-layout{display:block;}
+  .setup-side #mpSec{margin-top:18px;}
   .setup-card h1{font-size:21px;}
   .radios label,.seg button,select{font-size:13px;}
   /* breathing room between row labels and their controls on small screens */
@@ -775,108 +780,114 @@ body.fl #chipPreview{display:none!important;}
 
 <div id="setup">
   <div class="setup-card">
-    <h1 id="setupTitle">Sit &amp; Go Hold&rsquo;em</h1>
-    <div class="sub" id="setupSub">No-Limit Texas Hold&rsquo;em tournament vs AI</div>
-    <div class="row">
-      <label class="main" id="modeLbl">Game mode</label>
-      <div class="seg" id="modeSeg">
-        <button data-m="sng" class="on">Sit &amp; Go</button>
-        <button data-m="cash">Cash Game</button>
+    <div class="setup-layout">
+      <div class="setup-main">
+        <h1 id="setupTitle">Sit &amp; Go Hold&rsquo;em</h1>
+        <div class="sub" id="setupSub">No-Limit Texas Hold&rsquo;em tournament vs AI</div>
+        <div class="row">
+          <label class="main" id="modeLbl">Game mode</label>
+          <div class="seg" id="modeSeg">
+            <button data-m="sng" class="on">Sit &amp; Go</button>
+            <button data-m="cash">Cash Game</button>
+          </div>
+        </div>
+        <div class="row">
+          <label class="main">Players</label>
+          <div class="stepper">
+            <button id="pMinus">&#9662;</button><span id="pCount">9</span><button id="pPlus">&#9652;</button>
+          </div>
+        </div>
+        <div class="row">
+          <label class="main">Blinds</label>
+          <select id="startBlind">
+            <option value="20">$10 / $20</option>
+            <option value="40">$20 / $40</option>
+            <option value="100" selected>$50 / $100</option>
+            <option value="200">$100 / $200</option>
+          </select>
+        </div>
+        <div class="row">
+          <label class="main">Buy-in</label>
+          <select id="startBB">
+            <option value="50">50 BB</option>
+            <option value="75">75 BB</option>
+            <option value="100" selected>100 BB</option>
+            <option value="150">150 BB</option>
+            <option value="200">200 BB</option>
+          </select>
+        </div>
+        <div class="row sng-only">
+          <label class="main">Ante</label>
+          <select id="anteSel">
+            <option value="0" selected>no ante</option>
+            <option value="0.05">5% of BB</option>
+            <option value="0.10">10% of BB</option>
+            <option value="0.20">20% of BB</option>
+          </select>
+        </div>
+        <div class="row sng-only">
+          <label class="main">Blinds Change Speed</label>
+          <div class="radios">
+            <label><input type="radio" name="speed" value="turbo" checked> Turbo</label>
+            <label><input type="radio" name="speed" value="standard"> Standard</label>
+            <label><input type="radio" name="speed" value="slow"> Slow</label>
+          </div>
+        </div>
+        <div class="row setup-touch sng-only">
+          <label class="main" id="koBonusLbl">🎯 KO bonus</label>
+          <span style="display:flex;gap:8px;align-items:center;">
+            <button id="koBonusInfoBtn" aria-label="What does this do?" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;min-height:44px;">&#8505;&#65039;</button>
+            <input type="checkbox" id="koBonusChk" aria-labelledby="koBonusLbl">
+          </span>
+        </div>
+        <p id="koBonusInfo" class="hidden sng-only"></p>
+        <div class="row setup-touch">
+          <label class="main" id="timerLbl">⏱ Turn timer</label>
+          <span style="display:flex;gap:8px;align-items:center;">
+            <button id="timerInfoBtn" aria-label="What does this do?" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;min-height:44px;">&#8505;&#65039;</button>
+            <input type="checkbox" id="timerChk" aria-labelledby="timerLbl">
+          </span>
+        </div>
+        <p id="timerInfo" class="hidden"></p>
+        <div class="row">
+          <label class="main">Language</label>
+          <select id="langSel">
+            <option value="en">English</option>
+            <option value="fr">Fran&ccedil;ais</option>
+            <option value="es">Espa&ntilde;ol</option>
+          </select>
+        </div>
+        <div class="row">
+          <label class="main">AI Difficulty</label>
+          <div class="seg" id="diffSeg">
+            <button data-d="easy">Easy</button>
+            <button data-d="medium" class="on">Medium</button>
+            <button data-d="hard">Hard</button>
+          </div>
+        </div>
+        <button id="startBtn">Deal me in</button>
+        <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
+        <button id="reviewBtn" class="hidden">&#128202; Session review</button>
+      </div>
+      <div class="setup-side">
+        <div id="mpSec" class="sng-only">
+          <h3 id="mpTitle">👥 Play with friends</h3>
+          <div id="mpSub">Invite friends with a link — free, no accounts</div>
+          <input id="mpName" maxlength="14" placeholder="Your name">
+          <div id="mpRow">
+            <button id="mpCreate">Create room</button>
+            <input id="mpCode" maxlength="8" placeholder="CODE">
+            <button id="mpJoinBtn">Join</button>
+          </div>
+          <p id="mpStatus" class="hidden"></p>
+        </div>
+        <div id="resetRow">
+          <button id="resetBtn">&#129529; <span id="resetLbl">Clear saved data</span></button>
+          <button id="resetInfoBtn" aria-label="What does this do?">&#8505;&#65039;</button>
+        </div>
+        <p id="resetInfo" class="hidden"></p>
       </div>
     </div>
-    <div class="row">
-      <label class="main">Players</label>
-      <div class="stepper">
-        <button id="pMinus">&#9662;</button><span id="pCount">9</span><button id="pPlus">&#9652;</button>
-      </div>
-    </div>
-    <div class="row">
-      <label class="main">Blinds</label>
-      <select id="startBlind">
-        <option value="20">$10 / $20</option>
-        <option value="40">$20 / $40</option>
-        <option value="100" selected>$50 / $100</option>
-        <option value="200">$100 / $200</option>
-      </select>
-    </div>
-    <div class="row">
-      <label class="main">Buy-in</label>
-      <select id="startBB">
-        <option value="50">50 BB</option>
-        <option value="75">75 BB</option>
-        <option value="100" selected>100 BB</option>
-        <option value="150">150 BB</option>
-        <option value="200">200 BB</option>
-      </select>
-    </div>
-    <div class="row sng-only">
-      <label class="main">Ante</label>
-      <select id="anteSel">
-        <option value="0" selected>no ante</option>
-        <option value="0.05">5% of BB</option>
-        <option value="0.10">10% of BB</option>
-        <option value="0.20">20% of BB</option>
-      </select>
-    </div>
-    <div class="row sng-only">
-      <label class="main">Blinds Change Speed</label>
-      <div class="radios">
-        <label><input type="radio" name="speed" value="turbo" checked> Turbo</label>
-        <label><input type="radio" name="speed" value="standard"> Standard</label>
-        <label><input type="radio" name="speed" value="slow"> Slow</label>
-      </div>
-    </div>
-    <div class="row setup-touch sng-only">
-      <label class="main" id="koBonusLbl">🎯 KO bonus</label>
-      <span style="display:flex;gap:8px;align-items:center;">
-        <button id="koBonusInfoBtn" aria-label="What does this do?" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;min-height:44px;">&#8505;&#65039;</button>
-        <input type="checkbox" id="koBonusChk" aria-labelledby="koBonusLbl">
-      </span>
-    </div>
-    <p id="koBonusInfo" class="hidden sng-only"></p>
-    <div class="row setup-touch">
-      <label class="main" id="timerLbl">⏱ Turn timer</label>
-      <span style="display:flex;gap:8px;align-items:center;">
-        <button id="timerInfoBtn" aria-label="What does this do?" style="background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;min-height:44px;">&#8505;&#65039;</button>
-        <input type="checkbox" id="timerChk" aria-labelledby="timerLbl">
-      </span>
-    </div>
-    <p id="timerInfo" class="hidden"></p>
-    <div class="row">
-      <label class="main">Language</label>
-      <select id="langSel">
-        <option value="en">English</option>
-        <option value="fr">Fran&ccedil;ais</option>
-        <option value="es">Espa&ntilde;ol</option>
-      </select>
-    </div>
-    <div class="row">
-      <label class="main">AI Difficulty</label>
-      <div class="seg" id="diffSeg">
-        <button data-d="easy">Easy</button>
-        <button data-d="medium" class="on">Medium</button>
-        <button data-d="hard">Hard</button>
-      </div>
-    </div>
-    <button id="startBtn">Deal me in</button>
-    <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
-    <button id="reviewBtn" class="hidden">&#128202; Session review</button>
-    <div id="mpSec" class="sng-only">
-      <h3 id="mpTitle">👥 Play with friends</h3>
-      <div id="mpSub">Invite friends with a link — free, no accounts</div>
-      <input id="mpName" maxlength="14" placeholder="Your name">
-      <div id="mpRow">
-        <button id="mpCreate">Create room</button>
-        <input id="mpCode" maxlength="8" placeholder="CODE">
-        <button id="mpJoinBtn">Join</button>
-      </div>
-      <p id="mpStatus" class="hidden"></p>
-    </div>
-    <div id="resetRow">
-      <button id="resetBtn">&#129529; <span id="resetLbl">Clear saved data</span></button>
-      <button id="resetInfoBtn" aria-label="What does this do?">&#8505;&#65039;</button>
-    </div>
-    <p id="resetInfo" class="hidden"></p>
   </div>
 </div>
 

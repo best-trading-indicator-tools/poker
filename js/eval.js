@@ -79,6 +79,16 @@ function evalBest(cards){
   }
   return best;
 }
+function boardTwoPairKickerInfo(hole,board){
+  if(!hole||!board||board.length!==5)return null;
+  const boardScore=evalBest(board);
+  if(!boardScore||boardScore[0]!==2)return null;
+  const score=evalBest(hole.concat(board));
+  if(!score||score[0]!==2)return null;
+  if(score[1]!==boardScore[1]||score[2]!==boardScore[2])return null;
+  if(score[3]<=boardScore[3])return null;
+  return {kicker:score[3],boardKicker:boardScore[3],score,boardScore};
+}
 function handName(s){
   const nm=rankNm(s[1]),pl=rankPl(s[1]),pl2=rankPl(s[2]);
   if(lang==='fr') switch(s[0]){
