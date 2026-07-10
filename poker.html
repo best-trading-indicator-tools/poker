@@ -29,6 +29,7 @@ body{background:var(--bg);color:var(--text);overflow:hidden;}
 .setup-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:36px 42px;width:min(980px,calc(100vw - 48px));box-shadow:0 24px 60px rgba(0,0,0,.5);}
 .setup-layout{display:grid;grid-template-columns:minmax(380px,1fr) minmax(320px,360px);gap:30px;align-items:start;}
 .setup-main,.setup-side{min-width:0;}
+.setup-side{border-left:1px solid rgba(255,255,255,.10);padding-left:30px;}
 .setup-card h1{font-size:25px;margin-bottom:4px;letter-spacing:.3px;}
 .setup-card .sub{color:var(--dim);font-size:13px;margin-bottom:26px;}
 .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
@@ -682,6 +683,7 @@ body.fl #chipPreview{display:none!important;}
   #setup{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;}
   .setup-card{display:block;width:auto;max-width:94vw;padding:24px 22px;margin:max(10px,env(safe-area-inset-top)) auto max(24px,env(safe-area-inset-bottom));}
   .setup-layout{display:block;}
+  .setup-side{border-left:0;padding-left:0;}
   .setup-side #mpSec{margin-top:18px;}
   .setup-card h1{font-size:21px;}
   .radios label,.seg button,select{font-size:13px;}
