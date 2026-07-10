@@ -30,9 +30,11 @@ huFold:(bb,c,pr,t,p)=>`Heads-up at ${bb} BB effective, ${c} (${pr}) is below the
 pfOpen:(c,pr,t,p,pair)=>`No one has raised yet, and ${c} (${pr}) is inside the chart-based ~${t}% opening range for ${p}${pair?' once its set-mining value is counted — pocket pairs play above their raw ranking when stacks are deep, because flopping a set (~12%) is disguised and wins big pots':''}. Come in raising, not limping — it takes the initiative and can win the blinds outright.`,
 pfBBfree:c=>`${c} isn't strong enough to raise from the big blind, but you see the flop for free.`,
 pfOpenFold:(c,pr,t,p)=>`${c} (${pr}) is below the ~${t}% opening range for ${p}. Open-folding here is the textbook play — limping weak hands leaks chips long-term.`,
+pfOpenFoldPair:(c,p)=>`${c} is a small pocket pair, but from ${p} with no raise yet it is not a good limp. Small pairs mostly want to flop a set (~12%); if the chart/depth does not support an open-raise, just fold and avoid playing a tiny pair out of position.`,
 pf3bet:c=>`${c} is a premium holding (top 5%). Against a raise the standard play is to re-raise (3-bet) for value — flat calling lets weaker hands in cheaply behind you.`,
 pfCallRange:(p,ct,c,pr,e,o)=>`Facing a raise, ${p} continues with roughly the top ${ct}% — ${c} (${pr}) qualifies, and your equity vs their range (${e}) covers the price (${o}).`,
 pfSetMine:(c,amt,x)=>`${c} doesn't qualify on raw strength, but this is a textbook set-mine: the call is only ${amt} with ~${x}x that behind. You flop a set ~12% of the time — disguised, and it wins stacks. The 15-to-1 rule says the implied odds are there. Miss the flop, and it's an easy fold.`,
+pfSetMineFold:(c,amt,x)=>`${c} is basically a set-mining hand versus this raise. You only flop a set ~12% of the time, so the call needs deep implied odds — roughly 15x the call behind. Here it costs ${amt} with only ~${x}x effective, so folding is cleaner than paying to miss most flops.`,
 pfFoldRange:(ct,p,c,pr,e,o)=>`Against a raise, the ~top ${ct}% continues from ${p}; ${c} (${pr}) doesn't make it. Your equity vs a raiser's range is ~${e} needing ${o} — let it go.`,
 valRiver:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're likely best at showdown. Bet for value — a check wins you nothing extra, and worse hands may still pay you off.`,
 valBet:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're likely ahead. Bet for value — checking gives weaker hands and draws a free card to outdraw you.`,
@@ -161,9 +163,11 @@ huFold:(bb,c,pr,t,p)=>`Heads-up à ${bb} BB effectives, ${c} (${pr}) est sous la
 pfOpen:(c,pr,t,p,pair)=>`Personne n’a relancé, et ${c} (${pr}) est dans la range d’ouverture (~${t}%) pour ${p}${pair?' une fois sa valeur de set-mining comptée — les paires servies valent plus que leur classement brut quand les tapis sont profonds : flopper un brelan (~12%) est caché et gagne de gros pots':''}. Entrez en relançant, pas en limpant — vous prenez l’initiative et pouvez gagner les blinds directement.`,
 pfBBfree:c=>`${c} n’est pas assez fort pour relancer depuis la grosse blind, mais vous voyez le flop gratuitement.`,
 pfOpenFold:(c,pr,t,p)=>`${c} (${pr}) est sous la range d’ouverture (~${t}%) pour ${p}. Se coucher ici est le jeu correct — limper des mains faibles fait fuir des jetons à long terme.`,
+pfOpenFoldPair:(c,p)=>`${c} est une petite paire servie, mais depuis ${p} sans relance avant vous, ce n’est pas un bon limp. Les petites paires cherchent surtout à flopper un brelan (~12%) ; si la charte/profondeur ne justifie pas une ouverture en relance, couchez et évitez de jouer une mini-paire hors de position.`,
 pf3bet:c=>`${c} est une main premium (top 5%). Face à une relance, le jeu standard est de sur-relancer (3-bet) pour la valeur — caller laisse entrer des mains plus faibles à bas prix derrière vous.`,
 pfCallRange:(p,ct,c,pr,e,o)=>`Face à une relance, ${p} continue avec environ le top ${ct}% — ${c} (${pr}) est dedans, et votre équité contre sa range (${e}) couvre le prix (${o}).`,
 pfSetMine:(c,amt,x)=>`${c} ne se qualifie pas sur sa force brute, mais c’est un set-mine d’école : le call ne coûte que ${amt} avec ~${x}x derrière. Vous floppez un brelan ~12% du temps — caché, et il gagne des tapis. La règle du 15 contre 1 valide les cotes implicites. Flop raté : on se couche sans regret.`,
+pfSetMineFold:(c,amt,x)=>`${c} est surtout une main de set-mining face à cette relance. Vous ne floppez un brelan qu’environ 12% du temps, donc le call exige de fortes cotes implicites — environ 15x le call derrière. Ici cela coûte ${amt} avec seulement ~${x}x effectifs, donc folder est plus propre que payer pour rater la plupart des flops.`,
 pfFoldRange:(ct,p,c,pr,e,o)=>`Face à une relance, seul le top ~${ct}% continue depuis ${p} ; ${c} (${pr}) n’en fait pas partie. Votre équité contre la range d’un relanceur est ~${e} pour ${o} requis — laissez tomber.`,
 valRiver:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':''}, vous êtes probablement devant à l’abattage. Misez pour la valeur — un check ne rapporte rien de plus, et des mains moins bonnes peuvent encore payer.`,
 valBet:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':''}, vous êtes probablement devant. Misez pour la valeur — checker offre une carte gratuite aux mains plus faibles et aux tirages.`,
@@ -292,9 +296,11 @@ huFold:(bb,c,pr,t,p)=>`Heads-up con ${bb} BB efectivas, ${c} (${pr}) está por d
 pfOpen:(c,pr,t,p,pair)=>`Nadie ha subido aún, y ${c} (${pr}) está dentro del rango de apertura (~${t}%) para ${p}${pair?' contando su valor de set-mining — las parejas de mano valen más que su ranking bruto con stacks profundos: ligar un trío (~12%) va disfrazado y gana botes grandes':''}. Entra subiendo, no de limp — tomas la iniciativa y puedes llevarte las ciegas directamente.`,
 pfBBfree:c=>`${c} no es lo bastante fuerte para subir desde la ciega grande, pero ves el flop gratis.`,
 pfOpenFold:(c,pr,t,p)=>`${c} (${pr}) está por debajo del rango de apertura (~${t}%) para ${p}. Retirarse aquí es el juego de libro — entrar de limp con manos débiles pierde fichas a largo plazo.`,
+pfOpenFoldPair:(c,p)=>`${c} es una pareja pequeña de mano, pero desde ${p} sin subida previa no es un buen limp. Las parejas pequeñas buscan sobre todo ligar trío (~12%); si la tabla/profundidad no justifica abrir subiendo, retírate y evita jugar una pareja mínima fuera de posición.`,
 pf3bet:c=>`${c} es una mano premium (top 5%). Contra una subida, lo estándar es resubir (3-bet) por valor — solo igualar deja entrar barato a manos peores detrás de ti.`,
 pfCallRange:(p,ct,c,pr,e,o)=>`Ante una subida, ${p} continúa con aproximadamente el top ${ct}% — ${c} (${pr}) califica, y tu equidad contra su rango (${e}) cubre el precio (${o}).`,
 pfSetMine:(c,amt,x)=>`${c} no califica por fuerza bruta, pero es un set-mine de manual: la llamada cuesta solo ${amt} con ~${x}x detrás. Ligas trío ~12% de las veces — disfrazado, y gana stacks enteros. La regla del 15 a 1 dice que las odds implícitas están. Si fallas el flop, te retiras sin dudar.`,
+pfSetMineFold:(c,amt,x)=>`${c} es básicamente una mano de set-mining contra esta subida. Solo ligas trío ~12% de las veces, así que pagar necesita odds implícitas profundas — más o menos 15x la llamada detrás. Aquí cuesta ${amt} con solo ~${x}x efectivas, así que retirarse es más limpio que pagar para fallar la mayoría de flops.`,
 pfFoldRange:(ct,p,c,pr,e,o)=>`Contra una subida, solo continúa el ~top ${ct}% desde ${p}; ${c} (${pr}) no llega. Tu equidad contra el rango de quien sube es ~${e} necesitando ${o} — déjala ir.`,
 valRiver:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, probablemente eres el mejor en el showdown. Apuesta por valor — pasar no te gana nada extra, y manos peores aún pueden pagarte.`,
 valBet:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, probablemente vas por delante. Apuesta por valor — pasar regala una carta gratis a manos peores y proyectos.`,
@@ -1065,6 +1071,14 @@ function stackDominance(p){
   else if((ratio>=1.35&&coverPct>=0.5)||(avgRatio>=1.55&&coverPct>=0.67)){tier=1;factor=1.07;iso=true;}
   return {factor,ratio,avgRatio,covers,coverPct,iso,tier,oppN:oppStacks.length};
 }
+function setMineMultiple(p,callAmt,raiser){
+  if(!callAmt)return 0;
+  const hero=p.chips+p.bet;
+  const villain=raiser&&!raiser.folded&&!raiser.out
+    ?raiser.chips+raiser.bet
+    :Math.max(...inHand().filter(q=>q!==p).map(q=>q.chips+q.bet),0);
+  return Math.max(0,Math.floor(Math.min(hero,villain)/callAmt));
+}
 function coachDifficulty(){
   return state&&state.cfg&&state.cfg.difficulty?state.cfg.difficulty:'medium';
 }
@@ -1267,6 +1281,7 @@ function coachDecide(p){
     const unopened=state.currentBet<=state.bb;
     /* pocket pairs gain implied-odds value when deep: sets are disguised and win stacks */
     const isPair=p.hole[0].r===p.hole[1].r;
+    const smallPair=isPair&&p.hole[0].r<=6;
     const pairAdj=isPair&&stackBB>=(flags.deepStack?30:40);
     /* suited connectors also play above their raw ranking when deep (hidden straights/flushes) */
     const gapSC=Math.abs(p.hole[0].r-p.hole[1].r);
@@ -1392,7 +1407,8 @@ function coachDecide(p){
         why.push(C('pfBBfree',code));
       }else{
         rec='FOLD';
-        if(isoList) why.push(C('chartNotInIso',code,pos));
+        if(smallPair) why.push(C('pfOpenFoldPair',code,pos));
+        else if(isoList) why.push(C('chartNotInIso',code,pos));
         else why.push(rfi?C('chartNotIn',code,pos):C('pfOpenFold',code,prTxt,Math.round(thrEff*100),pos));
         if(dom.tier>=1&&lateSteal&&callAmt>0) extra.push(C('stackDomFoldHint'));
       }
@@ -1407,6 +1423,9 @@ function coachDecide(p){
       const domCall=stackDominance(p);
       const diffCallPad=difficultyApplies?coachDifficultyCallPad(difficulty):0;
       const stackCallOk=list=>isPair&&domCall.tier===2&&list.includes(code)&&callAmt>0&&eq>=odds+icmPrem+diffCallPad-0.05;
+      const setMineX=setMineMultiple(p,callAmt,raiser);
+      const setMineOk=smallPair&&callAmt>0&&setMineX>=15;
+      const setMineThin=smallPair&&callAmt>0&&setMineX<15;
       if(facing){
         const {fc,label,perPos,bbDefend}=facing;
         chartInfo={kind:bbDefend?'bbDefend':'facing',pos:bbDefend?`BB vs ${label}`:(perPos?`vs ${label}`:label),list:fc.raise,list2:fc.call};
@@ -1420,12 +1439,15 @@ function coachDecide(p){
           }else if(stackCallOk(fc.call)){
             rec='CALL';
             why.push(C('stackDomCall',code,Math.round(domCall.ratio*10)/10,pct(eq),pct(odds)));
-          }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
+          }else if(setMineOk){
             rec='CALL';
-            why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
+            why.push(C('pfSetMine',code,usd(callAmt),setMineX));
           }else if(aliveN<=4&&pr<=shortCt&&eq>=odds+icmPrem+diffCallPad){
             rec='CALL';
             why.push(C('pfCallRange',pos,Math.round(shortCt*100),code,prTxt,pct(eq),pct(odds)));
+          }else if(setMineThin){
+            rec='FOLD';
+            why.push(C('pfSetMineFold',code,usd(callAmt),setMineX));
           }else if(fc.call.includes(code)){
             rec='FOLD';
             why.push(C('chartIcmFold',code,pct(eq),pct(odds)));
@@ -1444,12 +1466,15 @@ function coachDecide(p){
         }else if(stackCallOk(fc.call)){
           rec='CALL';
           why.push(C('stackDomCall',code,Math.round(domCall.ratio*10)/10,pct(eq),pct(odds)));
-        }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
+        }else if(setMineOk){
           rec='CALL';
-          why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
+          why.push(C('pfSetMine',code,usd(callAmt),setMineX));
         }else if(aliveN<=4&&pr<=shortCt&&eq>=odds+icmPrem+diffCallPad){
           rec='CALL';
           why.push(C('pfCallRange',pos,Math.round(shortCt*100),code,prTxt,pct(eq),pct(odds)));
+        }else if(setMineThin){
+          rec='FOLD';
+          why.push(C('pfSetMineFold',code,usd(callAmt),setMineX));
         }else if(fc.call.includes(code)){
           rec='FOLD';
           why.push(C('chartIcmFold',code,pct(eq),pct(odds)));
@@ -1466,9 +1491,12 @@ function coachDecide(p){
         }else if(pr<=ct&&eq>=odds+icmPrem+diffCallPad){
           rec='CALL';
           why.push(C('pfCallRange',pos,Math.round(ct*100),code,prTxt,pct(eq),pct(odds)));
-        }else if(isPair&&callAmt>0&&callAmt<=(p.chips+p.bet)/15){
+        }else if(setMineOk){
           rec='CALL';
-          why.push(C('pfSetMine',code,usd(callAmt),Math.round((p.chips+p.bet)/callAmt)));
+          why.push(C('pfSetMine',code,usd(callAmt),setMineX));
+        }else if(setMineThin){
+          rec='FOLD';
+          why.push(C('pfSetMineFold',code,usd(callAmt),setMineX));
         }else{
           rec='FOLD';
           why.push(C('pfFoldRange',Math.round(ct*100),pos,code,prTxt,pct(eq),pct(odds)));
