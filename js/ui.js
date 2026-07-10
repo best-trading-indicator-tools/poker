@@ -487,8 +487,11 @@ function renderRewardsRoom(){
       const has=unlocked.includes(c.id);
       const on=equipped===c.id;
       const status=has?'Unlocked':'Unlocks at level '+c.level;
+      const btnClass=on?' on':has?' available':' locked';
+      const label=on?'Active':has?'Use':'Locked';
+      const aria=on?`${c.label} is active`:has?`Use ${c.label}`:`${c.label} unlocks at level ${c.level}`;
       return `<div class="reward-row"><div><b>${c.label}</b><span>${rewardCosmeticEffect(kind,c.id)}</span><span class="reward-status">${status}</span></div>`+
-        `<button type="button" class="reward-equip${on?' on':''}" data-reward-kind="${kind}" data-reward-id="${c.id}" ${has?'':'disabled'}>${on?'Equipped':has?'Equip':'Locked'}</button></div>`;
+        `<button type="button" class="reward-equip${btnClass}" data-reward-kind="${kind}" data-reward-id="${c.id}" aria-label="${aria}" ${has?'':'disabled'}><span>${label}</span></button></div>`;
     }).join('');
     return `<div class="reward-panel"><h3>${rewardKindLabel(kind)}</h3><p class="reward-help">${rewardKindDescription(kind)}</p>${rows}</div>`;
   }).join('');
