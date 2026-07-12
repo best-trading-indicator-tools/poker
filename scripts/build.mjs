@@ -45,7 +45,7 @@ const MODULE_RANGES = {
   'ui.js': [[718, 888], [2347, 2680], [3172, 3624], [4203, 4474]],
 };
 
-const LOAD_ORDER = ['eval.js', 'modes/registry.js', 'modes/tournament.js', 'modes/cash.js', 'engine.js', 'coach.js', 'ai.js', 'mp.js', 'ui.js'];
+const LOAD_ORDER = ['eval.js', 'modes/registry.js', 'modes/tournament.js', 'modes/cash.js', 'engine.js', 'rewards.js', 'coach.js', 'ai.js', 'mp.js', 'ui.js'];
 
 function readLines() {
   const html = fs.readFileSync(HTML, 'utf8');
