@@ -9,8 +9,8 @@ const AI_NAMES   = ['Viktor','Mia','Doyle','Selma','Ivan','Nora','Phil','Daria']
 const STYLES=[
   {id:'rock',   label:'🪨 Tight',      margin:+0.07, raiseT:+0.06, raiseF:-0.15, bluff:-0.04, size:0.70, adapt:0.20, openMult:0.50, raiseCap:0.08, foldRaise:+0.10},
   {id:'station',label:'📞 Loose',      margin:-0.14, raiseT:+0.04, raiseF:-0.10, bluff:0,      size:0.85, adapt:0.35, openMult:1.65, raiseCap:0.20, foldRaise:-0.07},
-  {id:'shark',  label:'🦈 Aggressive', margin:+0.02, raiseT:-0.03, raiseF:+0.15, bluff:+0.05, size:1.15, adapt:1.00, openMult:1.00, raiseCap:0.22, foldRaise:0},
-  {id:'maniac', label:'🔥 Wild',       margin:-0.10, raiseT:-0.14, raiseF:+0.45, bluff:+0.18, size:1.40, adapt:0.70, openMult:1.85, raiseCap:0.48, foldRaise:-0.12},
+  {id:'shark',  label:'🦈 Aggressive', margin:+0.02, raiseT:-0.02, raiseF:+0.15, bluff:+0.04, size:1.15, adapt:1.00, openMult:0.96, raiseCap:0.20, foldRaise:0},
+  {id:'maniac', label:'🔥 Wild',       margin:-0.05, raiseT:-0.09, raiseF:+0.36, bluff:+0.12, size:1.30, adapt:0.70, openMult:1.48, raiseCap:0.34, foldRaise:-0.06},
 ];
 function profileLabel(style){
   const label=style&&style.label?String(style.label):'';
