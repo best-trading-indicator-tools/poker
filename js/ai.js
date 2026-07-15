@@ -619,6 +619,26 @@ function aiThinRiverValueTarget(p,pot,d,spot){
   t=Math.round(t/state.sb)*state.sb;
   return clamp(t,state.currentBet+state.lastRaiseSize,p.bet+p.chips);
 }
+function aiHardPreflopTarget(p,threeBet=false){
+  const bb=state.bb, step=Math.max(1,state.sb||bb/2);
+  const oop=/^(SB|BB)$/.test(p.pos||'');
+  const callers=inHand().filter(q=>q!==p&&q.bet===state.currentBet).length;
+  let target=threeBet
+    ?state.currentBet*(oop?3.8:3.25)+callers*state.currentBet*0.65
+    :bb*(/^(UTG|UTG\+1|MP)/.test(p.pos||'')?2.5:2.25);
+  target=Math.round(target/step)*step;
+  return clamp(target,state.currentBet+state.lastRaiseSize,p.bet+p.chips);
+}
+function aiPolarThreeBetCandidate(p,steal,earlyR){
+  const a=p.hole[0],b=p.hole[1],hi=Math.max(a.r,b.r),lo=Math.min(a.r,b.r);
+  const suited=a.s===b.s;
+  const aceWheel=suited&&hi===14&&lo<=5;
+  const suitedBroadway=suited&&hi>=11&&lo>=9;
+  const suitedConnector=suited&&hi<=11&&hi-lo<=1&&lo>=6;
+  if(earlyR)return aceWheel&&lo>=4;
+  if(steal)return aceWheel||suitedBroadway||suitedConnector;
+  return aceWheel||suitedBroadway;
+}
 function aiHardUnopenedPreflop(p,openRange,press,pot,eq,callAmt,d){
   if(d!=='hard'||state.stage!=='preflop'||state.currentBet>state.bb)return null;
   const pos=p.pos||'';
@@ -630,7 +650,7 @@ function aiHardUnopenedPreflop(p,openRange,press,pot,eq,callAmt,d){
     if(bbFree) raiseProb=pos==='BB'?0.42:0.70;
     if(sid==='shark'||sid==='maniac')raiseProb+=0.04;
     if(Math.random()<clamp(raiseProb,0.20,0.98))
-      return {type:'raise',amount:betTarget(p,pot,Math.max(eq,0.62),d)};
+      return {type:'raise',amount:aiHardPreflopTarget(p,false)};
     return bbFree?{type:'call'}:{type:'fold'};
   }
   if(bbFree)return {type:'call'};
@@ -645,17 +665,28 @@ function aiHardPreflopVsRaise(p,callAmt,pot,eq,odds,margin,d){
   const earlyR=raiser&&/^(UTG|MP)/.test(raiser.pos||'');
   const blind=/^(BB|SB|SB\/BTN)$/.test(p.pos||'');
   const sid=aiEffectiveStyle(p)?.id;
+  const raiseBB=state.currentBet/Math.max(state.bb,1);
+  let valueThr=earlyR?0.055:steal?0.095:0.075;
   let threeBetThr=earlyR?0.065:steal?0.125:0.095;
   if(blind&&steal)threeBetThr+=0.025;
   if(sid==='rock')threeBetThr-=0.018;
   else if(sid==='shark')threeBetThr+=0.025;
   else if(sid==='maniac')threeBetThr+=0.035;
-  if(pr<=clamp(threeBetThr,0.04,0.18)&&Math.random()<(sid==='rock'?0.72:0.88))
-    return {type:'raise',amount:betTarget(p,pot,Math.max(eq,0.66),d)};
-  const defendThr=clamp((steal?0.30:earlyR?0.15:0.22)+(blind?0.06:0)+(sid==='station'?0.04:0),0.10,0.42);
-  const expensive=state.currentBet>=state.bb*3.4||callAmt/(pot+callAmt)>0.30;
-  if(expensive&&pr>defendThr&&eq<odds+Math.max(0.025,margin*0.45))return {type:'fold'};
-  return null;
+  valueThr+=blind&&steal?0.015:0;
+  const polar=aiPolarThreeBetCandidate(p,steal,earlyR);
+  const bluffFreq=earlyR?0.18:steal?0.46:0.30;
+  const value3bet=pr<=clamp(valueThr,0.04,0.13);
+  const bluff3bet=polar&&pr<=clamp(threeBetThr+0.12,0.12,0.30)&&Math.random()<bluffFreq;
+  if((value3bet||bluff3bet)&&raiseBB<=5.5)
+    return {type:'raise',amount:aiHardPreflopTarget(p,true)};
+  let defendThr=(steal?0.30:earlyR?0.145:0.22)+(blind?0.065:0);
+  defendThr-=Math.max(0,raiseBB-2.2)*0.035;
+  if(!blind)defendThr-=0.025;
+  if(sid==='station')defendThr+=0.018;
+  if(sid==='rock')defendThr-=0.012;
+  defendThr=clamp(defendThr,0.09,0.38);
+  if(pr<=defendThr&&eq>=odds+Math.max(0.01,margin*0.25))return {type:'call'};
+  return {type:'fold'};
 }
 function aiHardPostflopNoBet(p,eq,pot,d,st,pfAdj){
   if(d!=='hard'||state.stage==='preflop'||state.currentBet>p.bet)return null;
