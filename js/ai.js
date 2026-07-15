@@ -70,6 +70,24 @@ function aiHeadsUpPressure(p){
   const leadBoost=leadRatio>=3?1:leadRatio>=2?0.75:leadRatio>=1.5?0.5:leadRatio>=1.2?0.25:0;
   return {active:true,leadRatio,leadBoost,potHeadsUp:contenders.length===2,opp};
 }
+function aiIcmPressure(p){
+  if(isCashGame()||state.cfg?.difficulty!=='hard'||typeof PAYOUTS!=='function')return {active:false,callPremium:0,rangeShift:0};
+  const live=alive();
+  const paid=PAYOUTS(state.cfg.numPlayers||live.length).length;
+  if(live.length>paid+2||live.length<=1)return {active:false,callPremium:0,rangeShift:0};
+  const stacks=live.slice().sort((a,b)=>(a.chips+a.bet)-(b.chips+b.bet));
+  const rank=stacks.indexOf(p), mine=p.chips+p.bet;
+  const shortest=rank===0, biggest=rank===stacks.length-1;
+  const bubble=live.length===paid+1;
+  const agg=state.lastAggIdx>=0?state.players[state.lastAggIdx]:null;
+  const covered=agg&&agg!==p&&(agg.chips+agg.bet)>mine;
+  let callPremium=bubble?0.055:0.025;
+  if(covered)callPremium+=0.025;
+  if(shortest)callPremium*=0.35;
+  else if(biggest)callPremium*=0.25;
+  let rangeShift=shortest?0.035:biggest?0.045:-(bubble?0.075:0.035);
+  return {active:true,callPremium:clamp(callPremium,0,0.11),rangeShift};
+}
 function aiOpenThr(p, press){
   const bucket=posBucket(p.pos||'BTN');
   const st=aiEffectiveStyle(p);
@@ -319,7 +337,8 @@ function aiShortPushThr(p, stackBB){
   else if(sid==='maniac' && /^(CO|BTN|SB|SB\/BTN)$/.test(p.pos)) thr=Math.min(0.68, thr*1.45);
   else if(sid==='shark' && /^(CO|BTN)$/.test(p.pos)) thr=Math.min(0.50, thr*1.12);
   if(hu.active) thr=Math.min(0.94, thr*(p.pos==='SB/BTN'?1.45:1.2)+hu.leadBoost*0.16);
-  return Math.min(hu.active?0.94:0.90, thr+press*(st?.adapt||0)*0.12);
+  const icm=aiIcmPressure(p);
+  return clamp(thr+press*(st?.adapt||0)*0.12+icm.rangeShift,0.06,hu.active?0.94:0.90);
 }
 function aiHeadsUpShortStackJam(p,callAmt,d){
   if(isCashGame()||state.stage!=='preflop')return null;
@@ -790,6 +809,7 @@ function aiDecide(p){
   const cash=isCashGame();
   const cashDeep=cash?aiCashDepth(stackBB):0;
   const hu=aiHeadsUpPressure(p);
+  const icm=aiIcmPressure(p);
   const huAgg=hu.active?(0.16+hu.leadBoost*0.30):0;
 
   let eq=aiEstEquity(p, live, d);
@@ -824,7 +844,7 @@ function aiDecide(p){
     const callThr=d==='hard'
       ?Math.min(0.62,pushThr*(sid==='station'?1.18:sid==='rock'?0.82:1.05))
       :sid==='station'?Math.min(0.78,pushThr*2.2):sid==='rock'?pushThr*0.55:pushThr*1.1;
-    if(pr<=callThr || (sid==='station'&&eq>=odds-0.08)) return {type:'call'};
+    if(pr<=Math.max(0.04,callThr-icm.callPremium*0.75) || (sid==='station'&&eq>=odds-0.08+icm.callPremium)) return {type:'call'};
     return {type:'fold'};
   }
 
@@ -903,7 +923,7 @@ function aiDecide(p){
     return {type:'call'};
   }
 
-  const margin = (d==='easy'?-0.12 : d==='medium'?0.0 : 0.02-posBonus) + st.margin + foldRaise + pfAdj.margin;
+  const margin = (d==='easy'?-0.12 : d==='medium'?0.0 : 0.02-posBonus) + st.margin + foldRaise + pfAdj.margin + icm.callPremium;
   const raiseThresh = (d==='easy'?0.82 : d==='medium'?0.68 : 0.64-posBonus) + st.raiseT;
   let raiseFreq   = clamp((d==='easy'?0.35 : d==='medium'?0.55 : 0.75) + st.raiseF, 0.05, 0.95);
   if(base.id==='maniac') raiseFreq*=d==='hard'?(0.78+Math.random()*0.22):(0.55+Math.random()*0.45);
