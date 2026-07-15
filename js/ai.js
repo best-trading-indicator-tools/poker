@@ -461,12 +461,52 @@ function aiActorPressureBias(p, eq){
   if(sid==='maniac') return value?1.05:1.35;
   return value?0.85:0.75;
 }
+function aiObserveAction(p,type,ctx){
+  if(!p?.isHuman||!state?.humanModel||state.cfg?.difficulty!=='hard')return;
+  const m=state.humanModel;
+  m.actions++;
+  if(state.stage==='preflop'){
+    m.preActions++;
+    if(type==='raise')m.preRaises++;
+  }else{
+    m.postActions++;
+    if(type==='raise')m.postBets++;
+    else if(type==='call'&&(ctx.callAmt||0)>0)m.postCalls++;
+    else if(type==='call')m.postChecks++;
+  }
+  if((ctx.callAmt||0)>0){m.facing++;if(type==='fold')m.folds++;}
+}
+function aiHumanRead(){
+  const m=state?.humanModel;
+  if(!m||m.actions<6)return {reliable:false,fold:0.35,preAgg:0.22,postAgg:0.35,call:0.40,checks:0.35};
+  return {
+    reliable:true,
+    fold:m.facing?m.folds/m.facing:0.35,
+    preAgg:m.preActions?m.preRaises/m.preActions:0.22,
+    postAgg:m.postActions?m.postBets/m.postActions:0.35,
+    call:m.postActions?m.postCalls/m.postActions:0.40,
+    checks:m.postActions?m.postChecks/m.postActions:0.35
+  };
+}
+function aiHumanExploit(p){
+  if(state.cfg?.difficulty!=='hard'||!inHand().some(q=>q.isHuman&&!q.folded))return {margin:0,raiseF:0,bluff:0,size:0};
+  const r=aiHumanRead();
+  if(!r.reliable)return {margin:0,raiseF:0,bluff:0,size:0};
+  const overfold=clamp((r.fold-0.42)*0.55,-0.06,0.13);
+  const sticky=clamp((0.34-r.fold)*0.45,0,0.10)+clamp((r.call-0.42)*0.35,0,0.08);
+  const aggressive=clamp((r.postAgg-0.40)*0.28,0,0.09);
+  return {margin:-sticky*0.35,raiseF:overfold+sticky*0.25-aggressive*0.25,bluff:overfold-sticky,size:sticky+aggressive*0.35};
+}
 function aiVillainFoldChance(actor,q,betSize,potBefore,d,tex){
   if(q.allIn||q.out||q.folded) return 0;
   const pot=Math.max(potBefore,state.bb||1);
   const ratio=betSize/pot;
   let f=0.26;
   f+=aiStyleFoldBias(q);
+  if(q.isHuman&&d==='hard'){
+    const r=aiHumanRead();
+    if(r.reliable)f+=clamp((r.fold-0.35)*0.65,-0.12,0.22);
+  }
   if(q.checkedStreet||(q.checkStreets||[]).includes(state.stage)) f+=0.12;
   if((q.checkStreets||[]).length>=2) f+=0.08;
   f+=clamp(q.rangeFloor||0,0,0.25)*0.75;       // capped top range = easier to push off
@@ -801,6 +841,8 @@ function aiDecide(p){
     bluff:  (base.id==='rock'||base.id==='station') ? huAgg*0.18 : base.bluff + press*0.05 + huAgg*0.55,
     size:   base.size + hu.leadBoost*0.18
   };
+  const exploit=aiHumanExploit(p);
+  st.margin+=exploit.margin;st.raiseF+=exploit.raiseF;st.bluff+=exploit.bluff;st.size+=exploit.size;
   if(cash){
     st.margin-=cashDeep*0.05;
     if(cashDeep>=0.35&&late){ st.raiseF+=0.12*cashDeep; st.raiseT-=0.04*cashDeep; }

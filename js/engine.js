@@ -46,7 +46,8 @@ function newGame(cfg){
   state={
     cfg, levels:[startBlind], level:0, handNum:0, board:[], stage:null, deck:[],
     currentBet:0, lastRaiseSize:0, turnIdx:0, players:[],
-    gameOver:false, bb:startBlind, sb:startBlind/2, ante:0, handOver:false
+    gameOver:false, bb:startBlind, sb:startBlind/2, ante:0, handOver:false,
+    humanModel:{actions:0,preActions:0,preRaises:0,facing:0,folds:0,postActions:0,postBets:0,postCalls:0,postChecks:0}
   };
   mode.initState(cfg,state);
   const stack=cfg.startBB*startBlind;
@@ -249,6 +250,7 @@ function applyAction(p,type,amt){
   if(type==='fold'&&callAmt<=0) type='call'; // checking is the only legal zero-price fold alternative
   const cbBefore=state.currentBet;   // bet level BEFORE this action (for line reading)
   const rangeCtx={callAmt,cbBefore,potBefore:state.players.reduce((s,q)=>s+q.totalBet,0),raiseSize:0,target:0,betRatio:0};
+  if(typeof aiObserveAction==='function')aiObserveAction(p,type,rangeCtx);
   if(type==='fold'){
     p.folded=true; p.lastAct='Fold'; sfx('fold');
   }else if(type==='call'){
