@@ -49,9 +49,9 @@ function aiEffectiveStyle(p){
   if(!st||!state||!state.cfg||state.cfg.difficulty!=='hard') return st;
   const t=Object.assign({},st);
   if(st.id==='rock'){
-    Object.assign(t,{margin:+0.045,raiseT:+0.025,raiseF:-0.06,bluff:+0.005,size:0.86,adapt:0.50,openMult:0.70,raiseCap:0.13,foldRaise:+0.045});
+    Object.assign(t,{margin:+0.018,raiseT:+0.01,raiseF:-0.025,bluff:+0.015,size:0.92,adapt:0.75,openMult:0.86,raiseCap:0.18,foldRaise:+0.018});
   }else if(st.id==='station'){
-    Object.assign(t,{margin:-0.055,raiseT:+0.005,raiseF:+0.04,bluff:+0.015,size:0.96,adapt:0.65,openMult:1.35,raiseCap:0.27,foldRaise:-0.02});
+    Object.assign(t,{margin:-0.018,raiseT:0,raiseF:+0.08,bluff:+0.025,size:1.00,adapt:0.82,openMult:1.16,raiseCap:0.28,foldRaise:-0.008});
   }else if(st.id==='shark'){
     Object.assign(t,{margin:0,raiseT:-0.05,raiseF:+0.23,bluff:+0.07,size:1.14,adapt:1.15,openMult:1.06,raiseCap:0.28,foldRaise:-0.02});
   }else if(st.id==='maniac'){
@@ -310,9 +310,12 @@ function aiShortPushThr(p, stackBB){
   const st=aiEffectiveStyle(p);
   const sid=st?.id;
   const hu=aiHeadsUpPressure(p);
-  let thr=(PUSH_THR[bucket]||0.25)*((st&&{rock:0.55,station:1.20,shark:1.08,maniac:1.35}[st.id])||1);
-  if(sid==='rock') thr*=0.50;
-  else if(sid==='station') thr=Math.min(0.72, thr*1.4);
+  const hard=state.cfg?.difficulty==='hard';
+  let thr=(PUSH_THR[bucket]||0.25)*((st&&(hard
+    ?{rock:0.88,station:1.08,shark:1.10,maniac:1.18}
+    :{rock:0.55,station:1.20,shark:1.08,maniac:1.35})[st.id])||1);
+  if(sid==='rock'&&!hard) thr*=0.50;
+  else if(sid==='station'&&!hard) thr=Math.min(0.72, thr*1.4);
   else if(sid==='maniac' && /^(CO|BTN|SB|SB\/BTN)$/.test(p.pos)) thr=Math.min(0.68, thr*1.45);
   else if(sid==='shark' && /^(CO|BTN)$/.test(p.pos)) thr=Math.min(0.50, thr*1.12);
   if(hu.active) thr=Math.min(0.94, thr*(p.pos==='SB/BTN'?1.45:1.2)+hu.leadBoost*0.16);
@@ -747,7 +750,9 @@ function aiDecide(p){
     if(pr<=pushThr && (callAmt>state.bb*2||stackBB<8))
       return {type:'raise',amount:p.bet+p.chips};
     if(sid==='rock' && state.currentBet>state.bb*2) return {type:'fold'};
-    const callThr=sid==='station'?Math.min(0.78,pushThr*2.2):sid==='rock'?pushThr*0.55:pushThr*1.1;
+    const callThr=d==='hard'
+      ?Math.min(0.62,pushThr*(sid==='station'?1.18:sid==='rock'?0.82:1.05))
+      :sid==='station'?Math.min(0.78,pushThr*2.2):sid==='rock'?pushThr*0.55:pushThr*1.1;
     if(pr<=callThr || (sid==='station'&&eq>=odds-0.08)) return {type:'call'};
     return {type:'fold'};
   }
