@@ -271,6 +271,7 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 ### 2026-06-11 — Coach benchmark
 - **🧪 Coach benchmark** button on the start screen: simulates 25 full 9-player tournaments where a bot follows the coach's advice on every single decision, then reports win rate, in-the-money rate and average finish vs a random player baseline. First measurements: the coach bot wins ~3–4× the random baseline. This is the live measuring stick for every future coach improvement
 - The coach brain was refactored into a pure, headless decision engine (`coachDecide`) — the on-screen panel and the benchmark bot now share the exact same logic by construction
+- **Hard-mode regression benchmark**: `node scripts/benchmark-hard.mjs 100` runs the coach policy against eight hard bots and fails when the coach wins >18%, finishes top-three >46%, or averages better than 4.35th place.
 
 ### 2026-06-11 — The road to "follow the coach, win the tournament"
 - **💰 ICM prize pressure**: the game now has a real payout structure (50/30/20 for 7–9 players, 65/35 for 5–6, winner-takes-all under 5) and the coach computes Malmuth-Harville ICM. When a call risks your tournament life near the bubble, the panel shows "Prize pressure: +6% extra needed" and explains in plain words why chips you might lose are worth more than chips you might win
