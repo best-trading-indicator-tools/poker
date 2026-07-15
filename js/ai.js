@@ -952,10 +952,26 @@ function betTarget(p,pot,eq,d){
   const size=((st&&st.size)||1)+(hu.active?0.08+hu.leadBoost*0.22:0);
   let t;
   if(state.stage==='preflop'){
+    if(d==='hard')return aiHardPreflopTarget(p,state.currentBet>state.bb);
     t = (state.currentBet>state.bb ? state.currentBet*2.6 : state.bb*(2.5+Math.random()))*size;
     if(isCashGame()&&aiIsLate(p)&&(p.chips+p.bet)/state.bb>=60) t*=1.08;
   }else{
-    const f = (d==='easy' ? (0.3+Math.random()*0.7) : (0.5+Math.random()*0.35))*size;
+    let f;
+    if(d==='hard'){
+      const tex=aiTextureForFE();
+      const opps=Math.max(1,inHand().length-1);
+      const score=evalBest(p.hole.concat(state.board));
+      const value=eq>=0.58||score[0]>=2;
+      const quality=aiBluffQuality(p);
+      if(state.stage==='flop')f=tex.dry?0.34:tex.wet?0.68:0.50;
+      else if(state.stage==='turn')f=tex.wet?0.72:0.58;
+      else f=value?0.72:(quality>=0.45?0.78:0.48);
+      if(value&&score[0]>=3)f+=0.10;
+      if(opps>1)f+=Math.min(0.16,(opps-1)*0.07);
+      const spr=p.chips/Math.max(pot,1);
+      if(spr<=1.25&&value)f=Math.max(f,0.90);
+      f=clamp(f*clamp(size,0.86,1.18),0.28,1.10);
+    }else f=(d==='easy' ? (0.3+Math.random()*0.7) : (0.5+Math.random()*0.35))*size;
     t = state.currentBet + Math.max(state.lastRaiseSize, Math.round(pot*f));
   }
   const stackBB=(p.chips+p.bet)/Math.max(state.bb,1);
