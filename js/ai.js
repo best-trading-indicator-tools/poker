@@ -761,6 +761,7 @@ function aiHardPostflopNoBet(p,eq,pot,d,st,pfAdj){
   const betSize=Math.max(state.bb,Math.round(pot*(opps.length>2?0.46:0.56)));
   const fe=aiEstimateFoldEquity(p,betSize,pot,d);
   const tex=aiTextureForFE();
+  const draw=state.stage!=='river'?detectDraws(p.hole,state.board):null;
   const modeledCap=opps.reduce((s,q)=>s+rangeModelRead(q).capped,0)/Math.max(1,opps.length);
   const modeledStrong=opps.reduce((s,q)=>s+rangeModelRead(q).strong,0)/Math.max(1,opps.length);
   const capped=checked>0||modeledCap>=0.22||opps.some(q=>(q.checkStreets||[]).length>=2);
@@ -770,6 +771,20 @@ function aiHardPostflopNoBet(p,eq,pot,d,st,pfAdj){
   const leverageStab=hu.active&&hu.leadBoost>=0.5&&opps.length===1&&checked>0&&modeledStrong<0.70
     &&(eq>=0.20||fe>=0.24||tex.dry);
   const stab=(capped&&modeledStrong<0.62&&((eq>=0.34&&fe>=0.20)||(tex.dry&&eq>=0.25&&fe>=0.28)))||leverageStab;
+  if(p.aiPlan?.mode==='trap'&&value){
+    p.aiPlan=null;
+  }else if(p.aiPlan?.mode==='barrel'&&state.stage!=='flop'){
+    const newCard=state.board[state.board.length-1];
+    const scare=newCard&&(newCard.r>=12||newCard.r>p.aiPlan.flopMax);
+    const improved=score[0]>p.aiPlan.made||(draw&&(draw.flush||draw.oesd));
+    if(!value&&!stab&&!scare&&!improved&&eq<0.38){p.aiPlan=null;return {type:'call'};}
+  }
+  const protectable=value&&opps.length<=2&&(tex.dry||score[0]>=2);
+  const protectFreq=clamp(0.16+(aiEffectiveStyle(p)?.id==='shark'?0.10:0)+(modeledStrong>0.45?0.08:0),0.12,0.36);
+  if(protectable&&Math.random()<protectFreq){
+    p.aiPlan={mode:'trap',made:score[0],street:state.stage};
+    return {type:'call'};
+  }
   if(!value&&!stab)return null;
   let freq=value?0.86:0.62;
   freq+=st.raiseF*0.18+pfAdj.betBoost*0.35;
@@ -777,6 +792,7 @@ function aiHardPostflopNoBet(p,eq,pot,d,st,pfAdj){
   if(stab)freq*=leverageStab?Math.max(pfAdj.bluffMult,0.72+hu.leadBoost*0.16):pfAdj.bluffMult;
   if(opps.length>2)freq-=0.12;
   if(Math.random()>clamp(freq,0.18,0.94))return null;
+  if(state.stage==='flop')p.aiPlan={mode:'barrel',made:score[0],flopMax:boardMax,draw:!!(draw&&(draw.flush||draw.oesd))};
   return {type:'raise',amount:betTarget(p,pot,Math.max(eq,value?0.62:0.48),d)};
 }
 function aiHardPostflopVsBet(p,eq,odds,callAmt,pot,d,st,pfAdj){

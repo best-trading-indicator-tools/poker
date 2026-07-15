@@ -151,7 +151,7 @@ function startHand(){
   state.deck=shuffle(makeDeck());
   for(const p of state.players){
     p.hole=[]; p.folded=p.out; p.allIn=false; p.bet=0; p.totalBet=0;
-    p.acted=false; p.lastAct=''; p.revealed=false; p.rangeCap=1; p.rangeFloor=0; p.checkedStreet=false;
+    p.acted=false; p.lastAct=''; p.revealed=false; p.rangeCap=1; p.rangeFloor=0; p.checkedStreet=false;p.aiPlan=null;
     p.aggStreets=[]; p.checkStreets=[]; p.lineRead=''; p.rangeModel=null;
   }
   state.dealerIdx=nextSeat(state.dealerIdx,p=>!p.out);
