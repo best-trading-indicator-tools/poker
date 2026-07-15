@@ -398,7 +398,7 @@ function aiOppCaps(p){
     .sort((a,b)=>a.cap-b.cap).slice(0,4);
 }
 function aiEstEquity(p, live, d){
-  const sims=d==='hard'?160:d==='medium'?70:35;
+  const sims=d==='hard'?210:d==='medium'?70:35;
   const caps=aiOppCaps(p);
   if(state.stage==='preflop'){
     if(caps.length) return mcEquityR(p.hole,[],caps,sims);
@@ -830,7 +830,7 @@ function aiDecide(p){
 
   let eq=aiEstEquity(p, live, d);
 
-  const noise = d==='hard'?0.02 : d==='medium'?0.10 : 0.22;
+  const noise = d==='hard'?0.008 : d==='medium'?0.10 : 0.22;
   eq=clamp(eq+(Math.random()*2-1)*noise,0,1);
   const odds = callAmt>0 ? callAmt/(pot+callAmt) : 0;
 
