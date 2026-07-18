@@ -795,6 +795,31 @@ function aiHardPostflopNoBet(p,eq,pot,d,st,pfAdj){
   if(state.stage==='flop')p.aiPlan={mode:'barrel',made:score[0],flopMax:boardMax,draw:!!(draw&&(draw.flush||draw.oesd))};
   return {type:'raise',amount:betTarget(p,pot,Math.max(eq,value?0.62:0.48),d)};
 }
+function aiPostflopContinueInfo(p){
+  if(state.stage==='preflop')return {playable:true,made:true,strongDraw:false,gutshot:false,overcards:0,aceHigh:false};
+  const score=evalBest(p.hole.concat(state.board));
+  const usesHole=score[0]===1
+    ?p.hole.some(c=>c.r===score[1])
+    :score[0]===2?p.hole.some(c=>c.r===score[1]||c.r===score[2])
+    :score[0]>=3;
+  const made=usesHole;
+  const draw=state.stage!=='river'?detectDraws(p.hole,state.board):null;
+  const strongDraw=!!(draw&&(draw.flush||draw.oesd));
+  const gutshot=!!(draw&&draw.gutshot);
+  const boardMax=Math.max(...state.board.map(c=>c.r));
+  const overcards=p.hole.filter(c=>c.r>boardMax).length;
+  const aceHigh=score[0]===0&&p.hole.some(c=>c.r===14);
+  return {playable:made||strongDraw||gutshot||overcards>0,made,strongDraw,gutshot,overcards,aceHigh,score};
+}
+function aiCanCallWithHand(p,betRatio,read,live){
+  const q=aiPostflopContinueInfo(p);
+  if(q.made||q.strongDraw)return true;
+  if(state.stage==='river')return live===2&&q.aceHigh&&betRatio<=0.28&&(read?.bluffy||0)>=0.22;
+  if(q.gutshot)return betRatio<=0.42;
+  if(state.stage==='flop'&&q.overcards===2)return live===2&&betRatio<=0.34;
+  if(state.stage==='flop'&&q.overcards===1&&q.aceHigh)return live===2&&betRatio<=0.22;
+  return false;
+}
 function aiHardPostflopVsBet(p,eq,odds,callAmt,pot,d,st,pfAdj){
   if(d!=='hard'||state.stage==='preflop'||callAmt<=0)return null;
   const betRatio=callAmt/Math.max(pot-callAmt,state.bb||1);
@@ -804,13 +829,15 @@ function aiHardPostflopVsBet(p,eq,odds,callAmt,pot,d,st,pfAdj){
   const strongMade=score[0]>=3||(score[0]===2&&p.hole.some(c=>c.r===score[1]||c.r===score[2]));
   const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
   const read=rangeModelRead(agg);
+  const canCall=aiCanCallWithHand(p,betRatio,read,inHand().length);
   const checkRaiseSpot=p.checkedStreet&&agg&&betRatio<=0.75;
   if(checkRaiseSpot&&(strongMade||strongDraw)&&Math.random()<clamp(0.34+st.raiseF+read.bluffy*0.45-read.strong*0.18,0.08,0.78))
     return {type:'raise',amount:betTarget(p,pot,Math.max(eq,strongMade?0.70:0.56),d)};
   if(strongMade&&eq>0.58&&betRatio<=0.75&&Math.random()<clamp(0.58+st.raiseF,0.25,0.88))
     return {type:'raise',amount:betTarget(p,pot,Math.max(eq,0.68),d)};
-  if(!strongMade&&eq>=odds+0.04-read.bluffy*0.45+read.strong*0.12&&betRatio<=0.75)
+  if(canCall&&!strongMade&&eq>=odds+0.04-read.bluffy*0.30+read.strong*0.12&&betRatio<=0.75)
     return {type:'call'};
+  if(!canCall)return {type:'fold'};
   if(betRatio>=0.75&&!strongMade&&!strongDraw&&eq<odds+0.045)return {type:'fold'};
   if(state.stage==='river'&&betRatio>=0.50&&score[0]<1&&eq<odds+0.06)return {type:'fold'};
   return null;
@@ -953,7 +980,10 @@ function aiDecide(p){
   if(hardPostBet)return hardPostBet;
   const pressure=aiPressureRaise(p,eq,pot,d,st,pfAdj,callAmt);
   if(pressure) return {type:'raise',amount:pressure.amount};
-  if(eq>=odds+margin) return {type:'call'};
+  const postBetRatio=state.stage==='preflop'?0:callAmt/Math.max(pot-callAmt,state.bb||1);
+  const postAgg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+  const callHasHand=state.stage==='preflop'||aiCanCallWithHand(p,postBetRatio,rangeModelRead(postAgg),live);
+  if(callHasHand&&eq>=odds+margin) return {type:'call'};
   const bluffRaise=(base.id==='rock'||base.id==='station')?(d==='hard'?0.018:0)
     :((d==='hard'?0.07:0.02)+st.bluff)*pfAdj.bluffMult;
   const raiseFE=state.stage==='preflop'?0:aiEstimateFoldEquity(p,Math.max(state.bb,pot*0.55),pot,d);
