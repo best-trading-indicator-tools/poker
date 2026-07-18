@@ -111,7 +111,7 @@ bucketMWFace:n=>` Multiway (${n} opponents) facing a bet — continue only with 
 bucketMWIP:n=>` Multiway (${n} opponents) and you act last (IP) — more bluffs and thin value bets work; still respect raises.`,
 bucketMWOOP:n=>` Multiway (${n} opponents) and you act first (OOP) — check more marginal hands; betting gets called by someone too often.`,
 bucketMWPaired:n=>` Multiway (${n} opponents) on a paired board — trips/full houses are live; one pair is often not enough.`,
-bucketMWFlushDraw:n=>` Multiway (${n} opponents) with a flush draw possible — someone may already have a flush or be drawing.`,
+bucketMWFlushDraw:n=>` Multiway (${n} opponents) with a flush draw possible — a caller may be drawing to a flush.`,
 bucketMWBigPot:p=>` Large multiway pot (~${p} BB) — mistakes are costly; continue only with clear equity or strong draws.`,
 bucketMWSqueeze:n=>` Multiway (${n} opponents) facing a squeeze/raise — ranges are strong; fold marginal continues unless odds are excellent.`,
 briefSpot:(eq,need,call,pot,pos,ip,opps)=>` 📋 Spot: ~${eq} equity${need!=='—'?` vs ${need} needed`:''}${call!=='—'?` · price ${call} → ${pot}`:''} · ${pos} (${ip}) · ${opps} opp${opps>1?'s':''}.`,
@@ -247,7 +247,7 @@ bucketMWFace:n=>` Multiway (${n} adversaires) face à une mise — continuez seu
 bucketMWIP:n=>` Multiway (${n} adversaires) et vous parlez en dernier (IP) — plus de bluffs et de mises fines ; respectez quand même les relances.`,
 bucketMWOOP:n=>` Multiway (${n} adversaires) et vous parlez en premier (OOP) — checkez plus de mains marginales ; miser se fait trop souvent suivre.`,
 bucketMWPaired:n=>` Multiway (${n} adversaires) sur board apparié — brelans/full sont possibles ; une paire ne suffit souvent pas.`,
-bucketMWFlushDraw:n=>` Multiway (${n} adversaires) avec tirage couleur possible — quelqu'un peut déjà avoir la couleur.`,
+bucketMWFlushDraw:n=>` Multiway (${n} adversaires) avec tirage couleur possible — un joueur peut être en train de tirer la couleur.`,
 bucketMWBigPot:p=>` Gros pot multiway (~${p} BB) — les erreurs coûtent cher ; continuez seulement avec équité claire.`,
 bucketMWSqueeze:n=>` Multiway (${n} adversaires) face à une squeeze — ranges fortes ; couchez les marginales sauf excellentes cotes.`,
 briefSpot:(eq,need,call,pot,pos,ip,opps)=>` 📋 Spot : ~${eq} d'équité${need!=='—'?` vs ${need} requis`:''}${call!=='—'?` · prix ${call} → ${pot}`:''} · ${pos} (${ip}) · ${opps} adv.`,
@@ -383,7 +383,7 @@ bucketMWFace:n=>` Multiway (${n} rivales) frente a apuesta — continúa solo co
 bucketMWIP:n=>` Multiway (${n} rivales) y hablas último (IP) — más faroles y apuestas finas; respeta subidas.`,
 bucketMWOOP:n=>` Multiway (${n} rivales) y hablas primero (OOP) — pasa más manos marginales; apostar suele recibir call.`,
 bucketMWPaired:n=>` Multiway (${n} rivales) en board emparejado — tríos/full son posibles; una pareja a menudo no basta.`,
-bucketMWFlushDraw:n=>` Multiway (${n} rivales) con posible proyecto de color — alguien puede tener ya el color.`,
+bucketMWFlushDraw:n=>` Multiway (${n} rivales) con posible proyecto de color — un jugador puede estar buscando completar el color.`,
 bucketMWBigPot:p=>` Bote multiway grande (~${p} BB) — los errores cuestan; continúa solo con equity clara.`,
 bucketMWSqueeze:n=>` Multiway (${n} rivales) frente a squeeze — rangos fuertes; retira marginales salvo odds excelentes.`,
 briefSpot:(eq,need,call,pot,pos,ip,opps)=>` 📋 Spot: ~${eq} equity${need!=='—'?` vs ${need} necesario`:''}${call!=='—'?` · precio ${call} → ${pot}`:''} · ${pos} (${ip}) · ${opps} rival${opps>1?'es':''}.`,
@@ -840,7 +840,7 @@ function boardTexture(board){
   const monotone=Math.max(...bs)>=3;
   const twoTone=bs.filter(v=>v>=2).length>=1&&Math.max(...bs)<3;
   const connected=br.length>=3&&br[br.length-1]-br[0]<=4;
-  const wet=paired||monotone||connected;
+  const wet=paired||monotone||twoTone||connected;
   return {paired,monotone,wet,flushDraw:monotone||twoTone,dry:!wet};
 }
 function coachSpotBrief(p,extra,ctx){

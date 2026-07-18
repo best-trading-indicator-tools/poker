@@ -460,7 +460,7 @@ function aiTextureForFE(){
   const monotone=Math.max(...suits)>=3;
   const twoTone=suits.some(v=>v>=2)&&!monotone;
   const connected=ranks.length>=3&&ranks[ranks.length-1]-ranks[0]<=4;
-  const wet=paired||monotone||connected;
+  const wet=paired||monotone||twoTone||connected;
   return {dry:!wet,wet,paired,monotone,flushDraw:monotone||twoTone};
 }
 function aiStyleFoldBias(q){
