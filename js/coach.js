@@ -50,6 +50,8 @@ weakFree:e=>`Only ~${e} to win, but checking costs nothing. Take the free card a
 bigBet:r=>` This bet is ≈${r}% of the pot — bets that large are usually made hands (two pair or better), so the coach discounts your raw win chance here.`,
 gutWarn:' Chasing a 4-out gutshot into big bets is a long-term money leak — even when you hit, you may not get paid enough to cover all the misses (poor implied odds).',
 airWarn:' You have no made hand and no real draw — players who bet usually have at least a pair, and "pot-odds correct" calls with high cards are one of the biggest leaks in poker. The coach heavily discounts your raw win chance here.',
+weakDrawWarn:' You have no made hand and only a weak gutshot — those four outs are included in the equity, but this is not a strong draw like an open-ender or flush draw. The coach discounts it heavily against aggression.',
+rangeLikelyHands:(n,h)=>` ${n}'s highest-weight holdings after this action history: ${h}. These are the strongest examples in the “very likely” band, not a claim that one exact hand is certain.`,
 raiseVal:e=>`~${e} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Suggested postflop raise size: ${amt} (${bb}). The opponent's bet is about ${ratio}% pot, so use roughly ${x}x that bet: small bets can be raised much larger, while big bets and overbets usually only need about 2-3x.`,
 callOk:(amt,pt,o,e,disc,ea)=>`The call costs ${amt} to win a ${pt} pot, so you need ${o} equity to break even. You have ~${e}${disc?` (counted as ~${ea} after discounts)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`,
@@ -186,6 +188,8 @@ weakFree:e=>`Seulement ~${e} de chances de gain, mais checker ne coûte rien. Pr
 bigBet:r=>` Cette mise fait ≈${r}% du pot — des mises aussi grosses sont généralement des mains faites (deux paires ou mieux), donc le coach décote votre chance de gain brute.`,
 gutWarn:' Payer de grosses mises pour chasser un ventral à 4 outs est une fuite d’argent à long terme — même touché, vous ne serez pas assez payé pour couvrir tous les échecs (cotes implicites médiocres).',
 airWarn:' Vous n’avez ni main faite ni vrai tirage — celui qui mise a généralement au moins une paire, et les calls « corrects en cotes » avec hauteur sont l’une des plus grosses fuites du poker. Le coach décote fortement votre chance de gain ici.',
+weakDrawWarn:' Vous n’avez pas de main faite et seulement une gutshot faible — ces quatre outs sont inclus dans l’équité, mais ce n’est pas un gros tirage comme une quinte par les deux bouts ou une couleur. Le coach la décote fortement face à l’agression.',
+rangeLikelyHands:(n,h)=>` Les mains les plus pondérées de ${n} après toute cette action : ${h}. Ce sont les meilleurs exemples de la zone « très probable », pas la certitude d’une main exacte.`,
 raiseVal:e=>`~${e} de chances de gain : vous êtes grand favori. Relancez pour la valeur et pour faire payer les tirages — caller laisse de l’argent sur la table.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Taille de relance postflop suggérée : ${amt} (${bb}). La mise adverse fait environ ${ratio}% du pot, donc utilisez environ ${x}x cette mise : les petites mises peuvent être relancées beaucoup plus cher, tandis que les grosses mises et overbets demandent souvent seulement 2-3x.`,
 callOk:(amt,pt,o,e,disc,ea)=>`Le call coûte ${amt} pour gagner un pot de ${pt} : il vous faut ${o} d’équité pour être à l’équilibre. Vous avez ~${e}${disc?` (compté ~${ea} après décotes)`:''} — caller est rentable à long terme, mais relancer risquerait trop avec une main non premium.`,
@@ -322,6 +326,8 @@ weakFree:e=>`Solo ~${e} de probabilidad, pero pasar no cuesta nada. Toma la cart
 bigBet:r=>` Esta apuesta es ≈${r}% del bote — apuestas tan grandes suelen ser manos hechas (doble pareja o mejor), así que el coach descuenta tu probabilidad bruta aquí.`,
 gutWarn:' Perseguir una escalera interna de 4 outs contra apuestas grandes es una fuga de dinero a largo plazo — incluso cuando ligas, no te pagan lo suficiente para cubrir todos los fallos (odds implícitas pobres).',
 airWarn:' No tienes mano hecha ni proyecto real — quien apuesta suele tener al menos una pareja, y las llamadas "correctas por odds" con carta alta son una de las mayores fugas del póker. El coach descuenta mucho tu probabilidad bruta aquí.',
+weakDrawWarn:' No tienes mano hecha y solo una gutshot débil — esos cuatro outs ya están incluidos en la equity, pero no es un proyecto fuerte como una escalera abierta o color. El coach la descuenta mucho frente a agresión.',
+rangeLikelyHands:(n,h)=>` Las manos con mayor peso de ${n} tras toda esta acción: ${h}. Son los mejores ejemplos de la zona « muy probable », no la certeza de una mano exacta.`,
 raiseVal:e=>`~${e} de probabilidad: eres gran favorito. Sube por valor y para cobrar a los proyectos — solo igualar deja dinero sobre la mesa.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Tamaño de subida postflop sugerido: ${amt} (${bb}). La apuesta rival es aprox. ${ratio}% del bote, así que usa cerca de ${x}x esa apuesta: las apuestas pequeñas se pueden subir mucho más, mientras que apuestas grandes y overbets suelen necesitar solo 2-3x.`,
 callOk:(amt,pt,o,e,disc,ea)=>`La llamada cuesta ${amt} para ganar un bote de ${pt}: necesitas ${o} de equidad para no perder. Tienes ~${e}${disc?` (contado como ~${ea} tras descuentos)`:''} — igualar es rentable a largo plazo, pero subir arriesgaría demasiado con una mano no premium.`,
@@ -1598,6 +1604,8 @@ function coachDecide(p){
       chartInfo={kind:'range',pos:`${agg.name}${agg.pos?' ('+agg.pos+')':''}`,list:lst,
         model:agg.rangeModel?Object.assign({},agg.rangeModel):null,cap:capA,floor:floorA,
         board:state.board.slice(),dead:p.hole.slice()};
+      const likely=rangeMostLikelyCodes(chartInfo,8);
+      if(likely.length)extra.push(C('rangeLikelyHands',agg.name,likely.join(', ')));
     }
     let exploitAdj=0;
     if(agg&&agg.style&&!agg.folded){
@@ -1631,7 +1639,7 @@ function coachDecide(p){
     const edge=eqAdj-odds-posAdj-icmPrem;
     if(bigBetPen>=0.05) extra.push(C('bigBet',Math.round(betRatio*100)));
     if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
-    if(airPen) extra.push(C('airWarn'));
+    if(airPen) extra.push(C(d&&d.gutshot?'weakDrawWarn':'airWarn'));
     extra.push(C('mentalMath',usd(callAmt),usd(pot+callAmt),pct(odds)));
     if(eqAdj>0.68+posAdj&&!drawOnly){
       rec='RAISE';
@@ -1692,6 +1700,10 @@ function rangeMatrixWeight(code,info){
     total+=rangeModelComboWeight(info.model,[a,b],info.board||[],info.cap,info.floor);n++;
   }
   return n?total/n:0;
+}
+function rangeMostLikelyCodes(info,n=8){
+  return HAND_ORDER.map(code=>({code,w:rangeMatrixWeight(code,info)}))
+    .filter(x=>x.w>0).sort((a,b)=>b.w-a.w).slice(0,n).map(x=>x.code);
 }
 function rangeMatrixCells(info,heroCode,compact=false){
   const R=['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
