@@ -1573,6 +1573,7 @@ function updateCoach(p){
     (showM?`<div class="coach-row"><span>M-ratio</span><b>M = ${M>99?'99+':Math.round(M)} · ${T('zone'+mZone)}</b></div>`:'')+
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
     sizeRow+
+    (R.chartInfo?.kind==='range'?`<div class="coach-range-inline"><b>${R.chartInfo.pos} — ${T('chartTitleRange')}</b>${rangeMatrixCells(R.chartInfo,R.code,true)}<small>${T('legendRange')}</small></div>`:'')+
     (R.chartInfo?`<button class="chart-link" id="chartViewBtn">${T(R.chartInfo.kind==='range'?'viewRange':'viewChart')}</button>`:'')+
     coachProseHtml(why,extra)+
     mixTip(rec,R);

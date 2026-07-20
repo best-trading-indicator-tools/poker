@@ -1595,7 +1595,9 @@ function coachDecide(p){
       floorA=Math.min(floorA,capA*0.5);
       const lst=[];
       for(const h of HAND_ORDER){const ph=handPct[h];if(ph<=capA&&ph>floorA)lst.push(h);}
-      chartInfo={kind:'range',pos:`${agg.name}${agg.pos?' ('+agg.pos+')':''}`,list:lst};
+      chartInfo={kind:'range',pos:`${agg.name}${agg.pos?' ('+agg.pos+')':''}`,list:lst,
+        model:agg.rangeModel?Object.assign({},agg.rangeModel):null,cap:capA,floor:floorA,
+        board:state.board.slice(),dead:p.hole.slice()};
     }
     let exploitAdj=0;
     if(agg&&agg.style&&!agg.folded){
@@ -1680,16 +1682,33 @@ function coachDecide(p){
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */
-function showChartMatrix(info,heroCode){
-  if(!HAS_DOM||!info)return;
+function rangeMatrixWeight(code,info){
+  if(info.kind!=='range'||!info.model||typeof rangeModelComboWeight!=='function')return info.list.includes(code)?1:0;
+  const dead=new Set((info.board||[]).concat(info.dead||[]).map(c=>c.r*4+c.s));
+  let total=0,n=0;
+  for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++){
+    const a=FULL_DECK[i],b=FULL_DECK[j];
+    if(dead.has(a.r*4+a.s)||dead.has(b.r*4+b.s)||holeCode([a,b])!==code)continue;
+    total+=rangeModelComboWeight(info.model,[a,b],info.board||[],info.cap,info.floor);n++;
+  }
+  return n?total/n:0;
+}
+function rangeMatrixCells(info,heroCode,compact=false){
   const R=['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
-  const inSet=new Set(info.list), inSet2=new Set(info.list2||[]);
+  const inSet2=new Set(info.list2||[]);
   let html='';
   for(let i=0;i<13;i++)for(let j=0;j<13;j++){
     const h=i===j?R[i]+R[j]:i<j?R[i]+R[j]+'s':R[j]+R[i]+'o';
-    html+=`<div class="cc${inSet.has(h)?' in':inSet2.has(h)?' in2':''}${h===heroCode?' me':''}">${h}</div>`;
+    const w=rangeMatrixWeight(h,info);
+    const alpha=w<=0?0:0.10+Math.pow(w,0.72)*0.90;
+    const style=info.kind==='range'?` style="--rw:${alpha.toFixed(2)}"`:'';
+    html+=`<div class="cc${w>0?' in':''}${inSet2.has(h)?' in2':''}${h===heroCode?' me':''}"${style} title="${h}${info.kind==='range'?' · '+Math.round(w*100)+'% relative weight':''}">${h}</div>`;
   }
-  $('chartGrid').innerHTML=html;
+  return `<div class="range-grid${compact?' compact':''}">${html}</div>`;
+}
+function showChartMatrix(info,heroCode){
+  if(!HAS_DOM||!info)return;
+  $('chartGrid').innerHTML=rangeMatrixCells(info,heroCode);
   const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='iso'?'chartTitleIso':info.kind==='facing'?'chartTitleFacing':info.kind==='bbDefend'?'chartTitleBbDefend':info.kind==='range'?'chartTitleRange':'chartTitleShove';
   $('chartTitle').textContent=`${info.pos} — ${T(titleKey)}`;
   $('chartLegend').innerHTML=
