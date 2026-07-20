@@ -1554,6 +1554,14 @@ function coachDecide(p){
     const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&strongMade;
     const leadStrongMade=!river&&checkedInFront===0&&opps<=2&&eq>=0.45&&strongMade;
     const protectTopPair=!river&&checkedInFront>0&&opps<=3&&eq>=0.48&&hasTopPairOrBetter(madeScore,p.hole,state.board);
+    /* No current bettor: show the most relevant checked opponent's UPDATED range. */
+    const checkedVillain=inHand().filter(q=>q!==p&&!q.allIn&&((q.checkStreets||[]).length||q.checkedStreet))
+      .sort((a,b)=>(b.checkStreets||[]).length-(a.checkStreets||[]).length)[0];
+    if(checkedVillain){
+      chartInfo=coachRangeChartInfo(checkedVillain,p,difficultyApplies,difficulty);
+      const likely=rangeMostLikelyCodes(chartInfo,8);
+      if(likely.length)extra.push(C('rangeLikelyHands',checkedVillain.name,likely.join(', ')));
+    }
     if(eq>valueThresh||thinBoardKickerValue){
       rec='RAISE';
       if(thinBoardKickerValue)smallStab=true;
@@ -1596,14 +1604,7 @@ function coachDecide(p){
     const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
     /* postflop "matrix": show the hands the bettor is currently modeled on */
     if(agg){
-      let capA=clamp(agg.rangeCap||1,0.03,1), floorA=clamp(agg.rangeFloor||0,0,0.25);
-      if(difficultyApplies){const dA=coachDifficultyRange(agg,capA,floorA,difficulty);capA=dA.cap;floorA=dA.floor;}
-      floorA=Math.min(floorA,capA*0.5);
-      const lst=[];
-      for(const h of HAND_ORDER){const ph=handPct[h];if(ph<=capA&&ph>floorA)lst.push(h);}
-      chartInfo={kind:'range',pos:`${agg.name}${agg.pos?' ('+agg.pos+')':''}`,list:lst,
-        model:agg.rangeModel?Object.assign({},agg.rangeModel):null,cap:capA,floor:floorA,
-        board:state.board.slice(),dead:p.hole.slice()};
+      chartInfo=coachRangeChartInfo(agg,p,difficultyApplies,difficulty);
       const likely=rangeMostLikelyCodes(chartInfo,8);
       if(likely.length)extra.push(C('rangeLikelyHands',agg.name,likely.join(', ')));
     }
@@ -1690,6 +1691,15 @@ function coachDecide(p){
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */
+function coachRangeChartInfo(villain,hero,difficultyApplies,difficulty){
+  let cap=clamp(villain.rangeCap||1,0.03,1),floor=clamp(villain.rangeFloor||0,0,0.25);
+  if(difficultyApplies){const adjusted=coachDifficultyRange(villain,cap,floor,difficulty);cap=adjusted.cap;floor=adjusted.floor;}
+  floor=Math.min(floor,cap*0.5);
+  const list=HAND_ORDER.filter(h=>{const pct=handPct[h];return pct<=cap&&pct>floor;});
+  return {kind:'range',pos:`${villain.name}${villain.pos?' ('+villain.pos+')':''}`,list,
+    model:villain.rangeModel?Object.assign({},villain.rangeModel):null,cap,floor,
+    board:state.board.slice(),dead:hero.hole.slice()};
+}
 function rangeMatrixWeight(code,info){
   if(info.kind!=='range'||!info.model||typeof rangeModelComboWeight!=='function')return info.list.includes(code)?1:0;
   const dead=new Set((info.board||[]).concat(info.dead||[]).map(c=>c.r*4+c.s));
