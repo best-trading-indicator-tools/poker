@@ -1696,15 +1696,25 @@ function rangeMatrixWeight(code,info){
 function rangeMatrixCells(info,heroCode,compact=false){
   const R=['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
   const inSet2=new Set(info.list2||[]);
-  let html='';
+  const cells=[];
   for(let i=0;i<13;i++)for(let j=0;j<13;j++){
     const h=i===j?R[i]+R[j]:i<j?R[i]+R[j]+'s':R[j]+R[i]+'o';
     const w=rangeMatrixWeight(h,info);
-    const alpha=w<=0?0:0.10+Math.pow(w,0.72)*0.90;
-    const style=info.kind==='range'?` style="--rw:${alpha.toFixed(2)}"`:'';
-    html+=`<div class="cc${w>0?' in':''}${inSet2.has(h)?' in2':''}${h===heroCode?' me':''}"${style} title="${h}${info.kind==='range'?' · '+Math.round(w*100)+'% relative weight':''}">${h}</div>`;
+    cells.push({h,w,in2:inSet2.has(h),me:h===heroCode});
   }
+  const max=Math.max(...cells.map(c=>c.w),0.01);
+  const ranked=cells.filter(c=>c.w>0).slice().sort((a,b)=>b.w-a.w);
+  const rank=new Map(ranked.map((c,i)=>[c.h,i/Math.max(1,ranked.length)]));
+  const html=cells.map(c=>{
+    const rel=c.w/max;
+    const pct=rank.get(c.h)??1;
+    const tier=info.kind!=='range'?(c.w>0?' rw4':''):pct<0.12?' rw4':pct<0.32?' rw3':pct<0.62?' rw2':c.w>0?' rw1':'';
+    return `<div class="cc${tier}${c.in2?' in2':''}${c.me?' me':''}" title="${c.h}${info.kind==='range'?' · '+Math.round(rel*100)+'% relative likelihood':''}">${c.h}</div>`;
+  }).join('');
   return `<div class="range-grid${compact?' compact':''}">${html}</div>`;
+}
+function rangeMatrixLegend(){
+  return `<div class="range-heat-legend"><span><i class="rw1"></i>${T('rangeFringe')}</span><span><i class="rw2"></i>${T('rangePossible')}</span><span><i class="rw3"></i>${T('rangeLikely')}</span><span><i class="rw4"></i>${T('rangeVeryLikely')}</span></div>`;
 }
 function showChartMatrix(info,heroCode){
   if(!HAS_DOM||!info)return;
@@ -1712,7 +1722,7 @@ function showChartMatrix(info,heroCode){
   const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='iso'?'chartTitleIso':info.kind==='facing'?'chartTitleFacing':info.kind==='bbDefend'?'chartTitleBbDefend':info.kind==='range'?'chartTitleRange':'chartTitleShove';
   $('chartTitle').textContent=`${info.pos} — ${T(titleKey)}`;
   $('chartLegend').innerHTML=
-    `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'||info.kind==='iso'?'legendOpen':info.kind==='facing'||info.kind==='bbDefend'?'legend3bet':info.kind==='range'?'legendRange':'legendShove')}</span>`+
+    (info.kind==='range'?rangeMatrixLegend():`<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'||info.kind==='iso'?'legendOpen':info.kind==='facing'||info.kind==='bbDefend'?'legend3bet':'legendShove')}</span>`)+
     (info.list2?`<span><span class="sw" style="background:#2e7d8f;"></span>${T('legendCall')}</span>`:'')+
     `<span><span class="sw" style="background:#1d232e;"></span>${T('legendFold')}</span>`+
     `<span><span class="sw" style="background:none;outline:2px solid #4da3ff;outline-offset:-1px;"></span>${T('legendYou')}</span>`;
