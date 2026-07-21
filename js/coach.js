@@ -51,7 +51,7 @@ bigBet:r=>` This bet is ≈${r}% of the pot — bets that large are usually made
 gutWarn:' Chasing a 4-out gutshot into big bets is a long-term money leak — even when you hit, you may not get paid enough to cover all the misses (poor implied odds).',
 airWarn:' You have no made hand and no real draw — players who bet usually have at least a pair, and "pot-odds correct" calls with high cards are one of the biggest leaks in poker. The coach heavily discounts your raw win chance here.',
 weakDrawWarn:' You have no made hand and only a weak gutshot — those four outs are included in the equity, but this is not a strong draw like an open-ender or flush draw. The coach discounts it heavily against aggression.',
-rangeLikelyHands:(n,h)=>` ${n}'s highest-weight holdings after this action history: ${h}. These are the strongest examples in the “very likely” band, not a claim that one exact hand is certain.`,
+rangeLikelyHands:(n,h)=>` ${n}'s most likely hand classes after the full action history: ${h}. Percentages are their normalized share of the current range, after known-card blockers — not a claim that one exact hand is certain.`,
 raiseVal:e=>`~${e} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Suggested postflop raise size: ${amt} (${bb}). The opponent's bet is about ${ratio}% pot, so use roughly ${x}x that bet: small bets can be raised much larger, while big bets and overbets usually only need about 2-3x.`,
 callOk:(amt,pt,o,e,disc,ea)=>`The call costs ${amt} to win a ${pt} pot, so you need ${o} equity to break even. You have ~${e}${disc?` (counted as ~${ea} after discounts)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`,
@@ -194,7 +194,7 @@ bigBet:r=>` Cette mise fait ≈${r}% du pot — des mises aussi grosses sont gé
 gutWarn:' Payer de grosses mises pour chasser un ventral à 4 outs est une fuite d’argent à long terme — même touché, vous ne serez pas assez payé pour couvrir tous les échecs (cotes implicites médiocres).',
 airWarn:' Vous n’avez ni main faite ni vrai tirage — celui qui mise a généralement au moins une paire, et les calls « corrects en cotes » avec hauteur sont l’une des plus grosses fuites du poker. Le coach décote fortement votre chance de gain ici.',
 weakDrawWarn:' Vous n’avez pas de main faite et seulement une gutshot faible — ces quatre outs sont inclus dans l’équité, mais ce n’est pas un gros tirage comme une quinte par les deux bouts ou une couleur. Le coach la décote fortement face à l’agression.',
-rangeLikelyHands:(n,h)=>` Les mains les plus pondérées de ${n} après toute cette action : ${h}. Ce sont les meilleurs exemples de la zone « très probable », pas la certitude d’une main exacte.`,
+rangeLikelyHands:(n,h)=>` Les classes de mains les plus probables de ${n} après toute l'action : ${h}. Les pourcentages représentent leur part normalisée de la range actuelle après les blockers connus — pas la certitude d'une main exacte.`,
 raiseVal:e=>`~${e} de chances de gain : vous êtes grand favori. Relancez pour la valeur et pour faire payer les tirages — caller laisse de l’argent sur la table.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Taille de relance postflop suggérée : ${amt} (${bb}). La mise adverse fait environ ${ratio}% du pot, donc utilisez environ ${x}x cette mise : les petites mises peuvent être relancées beaucoup plus cher, tandis que les grosses mises et overbets demandent souvent seulement 2-3x.`,
 callOk:(amt,pt,o,e,disc,ea)=>`Le call coûte ${amt} pour gagner un pot de ${pt} : il vous faut ${o} d’équité pour être à l’équilibre. Vous avez ~${e}${disc?` (compté ~${ea} après décotes)`:''} — caller est rentable à long terme, mais relancer risquerait trop avec une main non premium.`,
@@ -337,7 +337,7 @@ bigBet:r=>` Esta apuesta es ≈${r}% del bote — apuestas tan grandes suelen se
 gutWarn:' Perseguir una escalera interna de 4 outs contra apuestas grandes es una fuga de dinero a largo plazo — incluso cuando ligas, no te pagan lo suficiente para cubrir todos los fallos (odds implícitas pobres).',
 airWarn:' No tienes mano hecha ni proyecto real — quien apuesta suele tener al menos una pareja, y las llamadas "correctas por odds" con carta alta son una de las mayores fugas del póker. El coach descuenta mucho tu probabilidad bruta aquí.',
 weakDrawWarn:' No tienes mano hecha y solo una gutshot débil — esos cuatro outs ya están incluidos en la equity, pero no es un proyecto fuerte como una escalera abierta o color. El coach la descuenta mucho frente a agresión.',
-rangeLikelyHands:(n,h)=>` Las manos con mayor peso de ${n} tras toda esta acción: ${h}. Son los mejores ejemplos de la zona « muy probable », no la certeza de una mano exacta.`,
+rangeLikelyHands:(n,h)=>` Las clases de manos más probables de ${n} tras todo el historial: ${h}. Los porcentajes son su parte normalizada del rango actual después de los blockers conocidos, no la certeza de una mano exacta.`,
 raiseVal:e=>`~${e} de probabilidad: eres gran favorito. Sube por valor y para cobrar a los proyectos — solo igualar deja dinero sobre la mesa.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Tamaño de subida postflop sugerido: ${amt} (${bb}). La apuesta rival es aprox. ${ratio}% del bote, así que usa cerca de ${x}x esa apuesta: las apuestas pequeñas se pueden subir mucho más, mientras que apuestas grandes y overbets suelen necesitar solo 2-3x.`,
 callOk:(amt,pt,o,e,disc,ea)=>`La llamada cuesta ${amt} para ganar un bote de ${pt}: necesitas ${o} de equidad para no perder. Tienes ~${e}${disc?` (contado como ~${ea} tras descuentos)`:''} — igualar es rentable a largo plazo, pero subir arriesgaría demasiado con una mano no premium.`,
@@ -523,33 +523,68 @@ function tableSizeFacingFactor(n,pos){
   if(n===5) return 1.06;
   return 1;
 }
-/* equity vs RANGES: each opponent sampled from their top-X% range (rejection sampling) */
+const RANGE_DISTRIBUTION_CACHE=new WeakMap();
+function rangeDistribution(o,hole,board){
+  const cap=typeof o==='number'?o:o.cap;
+  const floor=Math.min(typeof o==='number'?0:(o.floor||0),cap*0.5);
+  const model=typeof o==='number'?null:o.model;
+  const cacheKey=hole.concat(board).map(c=>c.r*4+c.s).sort((a,b)=>a-b).join(',');
+  const weights=model&&Array.isArray(model.weights)?model.weights:null;
+  if(weights){
+    const cached=RANGE_DISTRIBUTION_CACHE.get(weights);
+    if(cached&&cached.key===cacheKey)return cached.value;
+  }
+  const dead=new Set(hole.concat(board).map(c=>c.r*4+c.s));
+  const out=[];let total=0;
+  for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++){
+    const a=FULL_DECK[i],b=FULL_DECK[j];
+    if(dead.has(a.r*4+a.s)||dead.has(b.r*4+b.s))continue;
+    let w=null;
+    if(model&&typeof rangeModelPosteriorWeight==='function')w=rangeModelPosteriorWeight(model,[a,b]);
+    if(w===null){
+      const pct=handPct[holeCode([a,b])]||1;
+      w=pct<=cap&&pct>floor?1:0;
+    }
+    if(w<=0)continue;
+    total+=w;out.push({a,b,ai:a.r*4+a.s,bi:b.r*4+b.s,w,cdf:total});
+  }
+  if(total<=0)return [];
+  for(const x of out)x.cdf/=total;
+  if(weights)RANGE_DISTRIBUTION_CACHE.set(weights,{key:cacheKey,value:out});
+  return out;
+}
+function sampleRangeDistribution(dist,used){
+  if(!dist.length)return null;
+  for(let tries=0;tries<64;tries++){
+    const x=Math.random();let lo=0,hi=dist.length-1;
+    while(lo<hi){const mid=(lo+hi)>>1;if(dist[mid].cdf<x)lo=mid+1;else hi=mid;}
+    const pick=dist[lo];
+    if(!used.has(pick.ai)&&!used.has(pick.bi))return pick;
+  }
+  /* Exact compatible fallback for extremely blocker-heavy multiway samples. */
+  let total=0;const compatible=[];
+  for(const x of dist)if(!used.has(x.ai)&&!used.has(x.bi)){total+=x.w;compatible.push({x,total});}
+  if(!compatible.length)return null;
+  const r=Math.random()*total;let lo=0,hi=compatible.length-1;
+  while(lo<hi){const mid=(lo+hi)>>1;if(compatible[mid].total<r)lo=mid+1;else hi=mid;}
+  return compatible[lo].x;
+}
+/* Equity vs explicit weighted ranges. Distributions are built once, then sampled proportionally;
+   multiway samples are conditioned on card removal so two villains can never share a blocker. */
 function mcEquityR(hole,board,caps,sims){
-  const used=new Set();
-  for(const c of hole.concat(board)) used.add(c.r*4+c.s);
-  const base=FULL_DECK.filter(c=>!used.has(c.r*4+c.s));
+  const deadBase=new Set();
+  for(const c of hole.concat(board))deadBase.add(c.r*4+c.s);
+  const distributions=caps.map(o=>rangeDistribution(o,hole,board));
   let win=0;
   for(let t=0;t<sims;t++){
-    const pool=base.slice();
+    const used=new Set(deadBase);
     const oppH=[];
-    for(const o of caps){
-      const cap=typeof o==='number'?o:o.cap;
-      const floor=Math.min(typeof o==='number'?0:(o.floor||0), cap*0.5); // never empty the window
-      let pick=null;
-      if(o&&o.model&&typeof rangeModelPick==='function') pick=rangeModelPick(pool,o.model,board,cap,floor);
-      let i=pick?pick.i:0,j=pick?pick.j:1;
-      if(!pick){
-        for(let k=0;k<12;k++){
-          i=Math.floor(Math.random()*pool.length);
-          j=Math.floor(Math.random()*(pool.length-1)); if(j>=i)j++;
-          const pct=handPct[holeCode([pool[i],pool[j]])]||1;
-          if(pct<=cap&&pct>floor) break;
-        }
-      }
-      oppH.push([pool[i],pool[j]]);
-      const hi=Math.max(i,j),lo=Math.min(i,j);
-      pool.splice(hi,1); pool.splice(lo,1);
+    for(const dist of distributions){
+      const pick=sampleRangeDistribution(dist,used);
+      if(!pick)continue;
+      oppH.push([pick.a,pick.b]);used.add(pick.ai);used.add(pick.bi);
     }
+    const pool=FULL_DECK.filter(c=>!used.has(c.r*4+c.s));
     const need=5-board.length;
     for(let k=0;k<need;k++){const idx=k+Math.floor(Math.random()*(pool.length-k));const tmp=pool[k];pool[k]=pool[idx];pool[idx]=tmp;}
     const fullBoard=board.concat(pool.slice(0,need));
@@ -1236,7 +1271,7 @@ function coachDecide(p){
     .map(q=>{
       let cap=clamp(q.rangeCap||1,0.03,1), floor=clamp(q.rangeFloor||0,0,0.25);
       if(difficultyApplies){const d=coachDifficultyRange(q,cap,floor,difficulty);cap=d.cap;floor=d.floor;}
-      return {cap,floor};
+      return {cap,floor,model:difficultyApplies&&difficulty==='hard'?q.rangeModel:null};
     })
     .sort((a,b)=>a.cap-b.cap).slice(0,4);
   const code=holeCode(p.hole), pr=handPct[code]||1;
@@ -1771,20 +1806,37 @@ function coachRangeChartInfo(villain,hero,difficultyApplies,difficulty){
     model:villain.rangeModel?Object.assign({},villain.rangeModel):null,cap,floor,
     board:state.board.slice(),dead:hero.hole.slice()};
 }
-function rangeMatrixWeight(code,info){
-  if(info.kind!=='range'||!info.model||typeof rangeModelComboWeight!=='function')return info.list.includes(code)?1:0;
+function rangeMatrixMassMap(info){
+  if(info._massByCode)return info._massByCode;
+  const mass=Object.create(null);
+  if(info.kind!=='range'){
+    for(const code of info.list||[])mass[code]=1;
+    info._massByCode=mass;return mass;
+  }
   const dead=new Set((info.board||[]).concat(info.dead||[]).map(c=>c.r*4+c.s));
-  let total=0,n=0;
+  let total=0;
   for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++){
     const a=FULL_DECK[i],b=FULL_DECK[j];
-    if(dead.has(a.r*4+a.s)||dead.has(b.r*4+b.s)||holeCode([a,b])!==code)continue;
-    total+=rangeModelComboWeight(info.model,[a,b],info.board||[],info.cap,info.floor);n++;
+    if(dead.has(a.r*4+a.s)||dead.has(b.r*4+b.s))continue;
+    let w=null;
+    if(info.model&&typeof rangeModelPosteriorWeight==='function')w=rangeModelPosteriorWeight(info.model,[a,b]);
+    if(w===null){
+      if(info.model&&typeof rangeModelComboWeight==='function')w=rangeModelComboWeight(info.model,[a,b],info.board||[],info.cap,info.floor);
+      else w=(info.list||[]).includes(holeCode([a,b]))?1:0;
+    }
+    if(w<=0)continue;
+    const code=holeCode([a,b]);mass[code]=(mass[code]||0)+w;total+=w;
   }
-  return n?total/n:0;
+  if(total>0)for(const code of Object.keys(mass))mass[code]/=total;
+  info._massByCode=mass;return mass;
+}
+function rangeMatrixWeight(code,info){
+  return rangeMatrixMassMap(info)[code]||0;
 }
 function rangeMostLikelyCodes(info,n=8){
   return HAND_ORDER.map(code=>({code,w:rangeMatrixWeight(code,info)}))
-    .filter(x=>x.w>0).sort((a,b)=>b.w-a.w).slice(0,n).map(x=>x.code);
+    .filter(x=>x.w>0).sort((a,b)=>b.w-a.w).slice(0,n)
+    .map(x=>`${x.code} (${x.w>=0.001?Math.round(x.w*1000)/10:Math.round(x.w*10000)/100}%)`);
 }
 function rangeMatrixCells(info,heroCode,compact=false){
   const R=['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
@@ -1795,14 +1847,10 @@ function rangeMatrixCells(info,heroCode,compact=false){
     const w=rangeMatrixWeight(h,info);
     cells.push({h,w,in2:inSet2.has(h),me:h===heroCode});
   }
-  const max=Math.max(...cells.map(c=>c.w),0.01);
-  const ranked=cells.filter(c=>c.w>0).slice().sort((a,b)=>b.w-a.w);
-  const rank=new Map(ranked.map((c,i)=>[c.h,i/Math.max(1,ranked.length)]));
   const html=cells.map(c=>{
-    const rel=c.w/max;
-    const pct=rank.get(c.h)??1;
-    const tier=info.kind!=='range'?(c.w>0?' rw4':''):pct<0.12?' rw4':pct<0.32?' rw3':pct<0.62?' rw2':c.w>0?' rw1':'';
-    return `<div class="cc${tier}${c.in2?' in2':''}${c.me?' me':''}" title="${c.h}${info.kind==='range'?' · '+Math.round(rel*100)+'% relative likelihood':''}">${c.h}</div>`;
+    const tier=info.kind!=='range'?(c.w>0?' rw4':''):c.w>=0.02?' rw4':c.w>=0.01?' rw3':c.w>=0.0035?' rw2':c.w>=0.0003?' rw1':'';
+    const probability=c.w>=0.001?`${Math.round(c.w*1000)/10}%`:`${Math.round(c.w*10000)/100}%`;
+    return `<div class="cc${tier}${c.in2?' in2':''}${c.me?' me':''}" title="${c.h}${info.kind==='range'?' · '+probability+' of range':''}">${c.h}</div>`;
   }).join('');
   return `<div class="range-grid${compact?' compact':''}">${html}</div>`;
 }

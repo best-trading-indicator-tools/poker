@@ -131,17 +131,25 @@ function rangeModelStyle(p){
   if(sid==='maniac')return {open:1.50,call:1.35,trap:0.08,bluff:0.28};
   return {open:1,call:1,trap:0.10,bluff:0.08};
 }
+function rangeCardId(c){return c.s*13+(c.r-2);}
+function rangeComboIndex(hole){
+  let a=rangeCardId(hole[0]),b=rangeCardId(hole[1]);
+  if(a>b){const t=a;a=b;b=t;}
+  return a*51-a*(a-1)/2+(b-a-1);
+}
+function rangePosteriorPrior(){return new Array(1326).fill(1/1326);}
 function rangeModelInit(p){
   const st=rangeModelStyle(p);
   p.rangeModel={
-    v:1,cap:1,floor:0,preCap:1,preFloor:0,strong:0,capped:0,passive:0,aggr:0,
+    v:2,cap:1,floor:0,preCap:1,preFloor:0,strong:0,capped:0,passive:0,aggr:0,
     calls:0,raises:0,checks:0,limps:0,trap:st.trap,bluff:st.bluff,
-    lastAction:'',lastStreet:'',lastBetRatio:0
+    lastAction:'',lastStreet:'',lastBetRatio:0,weights:rangePosteriorPrior(),history:[],effectiveCombos:1326
   };
   return p.rangeModel;
 }
 function rangeModelEnsure(p){
-  if(!p.rangeModel||p.rangeModel.v!==1)return rangeModelInit(p);
+  if(!p.rangeModel||p.rangeModel.v!==2||!Array.isArray(p.rangeModel.weights)||p.rangeModel.weights.length!==1326)
+    return rangeModelInit(p);
   return p.rangeModel;
 }
 function rangeModelSyncLegacy(p,m){
@@ -172,12 +180,126 @@ function rangeModelCallCap(p,ctx){
   const pressure=ctx.callAmt/Math.max((ctx.potBefore||state.bb)+ctx.callAmt,1);
   return clamp((base-pressure*0.18)*st.call,0.08,0.55);
 }
+function rangeSmoothInside(pct,cap,width){
+  return 1/(1+Math.exp((pct-cap)/Math.max(width||0.035,0.008)));
+}
+function rangePreflopShape(hole){
+  const code=holeCode(hole);
+  const pair=hole[0].r===hole[1].r;
+  const suited=hole[0].s===hole[1].s;
+  const hi=Math.max(hole[0].r,hole[1].r),lo=Math.min(hole[0].r,hole[1].r);
+  return {code,pair,suited,connector:suited&&hi-lo<=2&&hi<=12,blocker:/^A[2345]s$/.test(code)};
+}
+/* P(observed action | hypothetical combo, public state). These likelihoods are deliberately
+   smooth rather than hard chart cut-offs, so bluffs, traps and profile deviations retain weight. */
+function rangeActionLikelihood(p,m,type,ctx,hole,knownInfo){
+  const action=type==='call'&&(ctx.callAmt||0)<=0?'check':type;
+  const st=rangeModelStyle(p), info=knownInfo||rangeModelComboInfo(hole,state.board||[]);
+  const ratio=clamp(ctx.betRatio||0,0,2), pre=state.stage==='preflop';
+  if(action==='fold')return 1;
+  if(pre){
+    const shape=rangePreflopShape(hole);
+    if(action==='raise'){
+      const facing=(ctx.cbBefore||0)>state.bb;
+      const reraising=(ctx.playerBetBefore||0)>state.bb;
+      let cap=rangeModelOpeningCap(p,ctx);
+      if(reraising)cap=clamp((p.style?.id==='maniac'?0.09:p.style?.id==='shark'?0.065:p.style?.id==='station'?0.04:0.03)*st.open,0.02,0.12);
+      const inside=rangeSmoothInside(info.pct,cap,facing?0.022:0.045);
+      let likelihood=0.018+0.91*inside;
+      const bluffChance=st.bluff*(facing?1.15:0.55);
+      if(shape.blocker)likelihood=Math.max(likelihood,0.025+bluffChance);
+      else if(shape.connector&&info.pct<=cap*1.6)likelihood=Math.max(likelihood,0.018+bluffChance*0.55);
+      if(ratio>=0.75)likelihood*=0.48+0.62*rangeSmoothInside(info.pct,Math.min(cap,0.075),0.02);
+      return clamp(likelihood,0.006,0.985);
+    }
+    if(action==='call'){
+      const free=(ctx.callAmt||0)<=0;
+      if(free){
+        const openCap=rangeModelOpeningCap(p,ctx);
+        const wouldRaise=rangeSmoothInside(info.pct,openCap,0.045);
+        return clamp(0.96-wouldRaise*(0.72-st.trap*0.42),0.08,0.98);
+      }
+      const cap=rangeModelCallCap(p,ctx), inside=rangeSmoothInside(info.pct,cap,0.04);
+      const premium=rangeSmoothInside(info.pct,0.045,0.014);
+      let likelihood=0.018+0.80*inside;
+      likelihood*=1-premium*(0.58-st.trap*0.45);
+      if(shape.pair||shape.suited)likelihood*=1.10;
+      if(ratio>=0.40&&info.pct>0.16)likelihood*=0.55;
+      return clamp(likelihood,0.006,0.96);
+    }
+  }
+  const made=info.made||0,draw=state.stage==='river'?0:(info.draw||0);
+  const air=clamp(1-Math.max(made*1.35,draw*1.10),0,1);
+  if(action==='raise'){
+    const facing=(ctx.cbBefore||0)>0, checkRaise=!!p.checkedStreet&&facing;
+    const value=made*(0.62+ratio*0.20)*(checkRaise?1.22:1);
+    const semi=draw*(0.44+st.bluff*0.55)*(facing?0.78:1);
+    const bluff=air*st.bluff*(facing?0.40:0.72)*(ratio>=0.85?0.62:1);
+    return clamp(0.012+value+semi+bluff,0.006,0.985);
+  }
+  if(action==='call'){
+    const continueStrength=Math.max(made,draw*0.90);
+    let likelihood=0.012+continueStrength*0.82;
+    if(made>=0.74)likelihood+=st.trap*0.20;
+    if(ratio>=0.70&&continueStrength<0.35)likelihood*=0.34;
+    return clamp(likelihood,0.006,0.96);
+  }
+  if(action==='check'){
+    const medium=info.medium?1:0;
+    let likelihood=0.12+air*0.74+medium*0.18+draw*0.38+made*0.10;
+    if(made>=0.62)likelihood=0.035+st.trap*0.68+draw*0.18;
+    return clamp(likelihood,0.012,0.98);
+  }
+  return 0.5;
+}
+function rangeComboInfoVector(){
+  const board=state.board||[];
+  const key=board.map(rangeCardId).join('-')||'pre';
+  if(!state._rangeComboInfoCache)state._rangeComboInfoCache=Object.create(null);
+  if(state._rangeComboInfoCache[key])return state._rangeComboInfoCache[key];
+  const out=[];
+  for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++)
+    out.push(rangeModelComboInfo([FULL_DECK[i],FULL_DECK[j]],board));
+  state._rangeComboInfoCache[key]=out;
+  return out;
+}
+function rangePosteriorApply(p,m,type,ctx){
+  const dead=new Set((state.board||[]).map(rangeCardId));
+  const infos=rangeComboInfoVector();
+  const next=new Array(1326); let sum=0,k=0;
+  for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++,k++){
+    const a=FULL_DECK[i],b=FULL_DECK[j];
+    const legal=!dead.has(i)&&!dead.has(j);
+    const prior=Number.isFinite(m.weights[k])?m.weights[k]:1/1326;
+    const w=legal?prior*rangeActionLikelihood(p,m,type,ctx,[a,b],infos[k]):0;
+    next[k]=w;sum+=w;
+  }
+  if(sum<=0){
+    const legal=next.reduce((n,w)=>n+(w>=0?1:0),0)||1326;
+    for(let i=0;i<next.length;i++)next[i]=next[i]>=0?1/legal:0;
+  }else for(let i=0;i<next.length;i++)next[i]/=sum;
+  m.weights=next;
+  let sq=0;for(const w of next)sq+=w*w;
+  m.effectiveCombos=Math.round(1/Math.max(sq,1/1326));
+  if(!Array.isArray(m.history))m.history=[];
+  m.history.push({street:state.stage,action:type==='call'&&(ctx.callAmt||0)<=0?'check':type,
+    callBB:Math.round(((ctx.callAmt||0)/Math.max(state.bb,1))*10)/10,
+    betRatio:Math.round((ctx.betRatio||0)*100)/100,cbBB:Math.round(((ctx.cbBefore||0)/Math.max(state.bb,1))*10)/10,
+    board:(state.board||[]).map(rangeCardId)});
+  if(m.history.length>24)m.history.shift();
+}
+function rangeModelPosteriorWeight(model,hole){
+  if(!model||model.v!==2||!Array.isArray(model.weights))return null;
+  const w=model.weights[rangeComboIndex(hole)];
+  return Number.isFinite(w)?Math.max(0,w):null;
+}
 function rangeModelApplyAction(p,type,ctx={}){
   if(!p||p.out)return;
   const m=rangeModelEnsure(p);
   const pre=state.stage==='preflop';
   const ratio=ctx.betRatio||0;
   const modelAction=type==='call'&&(ctx.callAmt||0)<=0?'check':type;
+  rangePosteriorApply(p,m,type,ctx);
   m.lastAction=modelAction; m.lastStreet=state.stage; m.lastBetRatio=ratio;
   if(type==='fold'){rangeModelSyncLegacy(p,m);return;}
   if(pre){
@@ -248,6 +370,8 @@ function rangeModelComboInfo(hole,board){
 }
 function rangeModelComboWeight(model,hole,board,capArg,floorArg){
   const m=model||{};
+  const posterior=rangeModelPosteriorWeight(m,hole);
+  if(posterior!==null)return posterior;
   const info=rangeModelComboInfo(hole,board);
   const cap=clamp(capArg??m.cap??1,0.03,1);
   const floor=clamp(floorArg??m.floor??0,0,Math.min(0.45,cap*0.75));
@@ -267,15 +391,17 @@ function rangeModelComboWeight(model,hole,board,capArg,floorArg){
   return clamp(w,0.01,1);
 }
 function rangeModelPick(pool,model,board,cap,floor){
-  let best=null,bestW=-1;
-  for(let k=0;k<40;k++){
-    let i=Math.floor(Math.random()*pool.length);
-    let j=Math.floor(Math.random()*(pool.length-1)); if(j>=i)j++;
+  const choices=[];let total=0;
+  for(let i=0;i<pool.length;i++)for(let j=i+1;j<pool.length;j++){
     const w=rangeModelComboWeight(model,[pool[i],pool[j]],board,cap,floor);
-    if(w>bestW){bestW=w;best={i,j};}
-    if(Math.random()<w)return {i,j};
+    if(w<=0)continue;
+    total+=w;choices.push({i,j,total});
   }
-  return best;
+  if(!choices.length)return null;
+  const x=Math.random()*total;
+  let lo=0,hi=choices.length-1;
+  while(lo<hi){const mid=(lo+hi)>>1;if(choices[mid].total<x)lo=mid+1;else hi=mid;}
+  return {i:choices[lo].i,j:choices[lo].j};
 }
 function rangeModelRead(q){
   const m=q&&q.rangeModel;

@@ -147,7 +147,7 @@ function startHand(){
     const opp=liveStart.find(p=>p.i!==0);
     if(opp&&state.players[0].chips<opp.chips) state.rewardHeadsUpTrailed=true;
   }
-  state.board=[]; state.stage='preflop';
+  state.board=[]; state.stage='preflop'; state._rangeComboInfoCache=Object.create(null);
   state.deck=shuffle(makeDeck());
   for(const p of state.players){
     p.hole=[]; p.folded=p.out; p.allIn=false; p.bet=0; p.totalBet=0;
@@ -249,7 +249,8 @@ function applyAction(p,type,amt){
   const callAmt=Math.max(0,Math.min(state.currentBet-p.bet,p.chips));
   if(type==='fold'&&callAmt<=0) type='call'; // checking is the only legal zero-price fold alternative
   const cbBefore=state.currentBet;   // bet level BEFORE this action (for line reading)
-  const rangeCtx={callAmt,cbBefore,potBefore:state.players.reduce((s,q)=>s+q.totalBet,0),raiseSize:0,target:0,betRatio:0};
+  const rangeCtx={callAmt,cbBefore,playerBetBefore:p.bet,
+    potBefore:state.players.reduce((s,q)=>s+q.totalBet,0),raiseSize:0,target:0,betRatio:0};
   if(typeof aiObserveAction==='function')aiObserveAction(p,type,rangeCtx);
   if(type==='fold'){
     p.folded=true; p.lastAct='Fold'; sfx('fold');
