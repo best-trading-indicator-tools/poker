@@ -1560,6 +1560,10 @@ function updateCoach(p){
   const showM=flags.mRatio;
   const sprRow=flags.showSpr&&spr!=null&&state.stage!=='preflop'
     ?`<div class="coach-row"><span>${T('sprLbl')}</span><b>~${Math.round(spr*10)/10} · ${T(sprZone==='deep'?'sprZoneDeep':sprZone==='mid'?'sprZoneMid':'sprZoneLow')}</b></div>`:'';
+  const rangeCharts=R.rangeCharts?.length?R.rangeCharts:(R.chartInfo?.kind==='range'?[R.chartInfo]:[]);
+  const rangePanel=rangeCharts.length?`<div class="coach-range-inline">`+
+    (rangeCharts.length>1?`<div class="coach-range-tabs">${rangeCharts.map((x,i)=>`<button type="button" data-range-index="${i}" class="${i===0?'on':''}">${x.pos}</button>`).join('')}</div>`:'')+
+    `<b id="coachRangeTitle">${rangeCharts[0].pos} — ${T('chartTitleRange')}</b><div id="coachRangeMatrix">${rangeMatrixCells(rangeCharts[0],R.code,true)}</div>${rangeMatrixLegend()}</div>`:'';
   $('coachBody').innerHTML=
     `<div class="rec ${rec}">${recLabel}</div>`+
     `<div class="coach-row"><span>${T('yourHand')}</span><b>${handDesc}</b></div>`+
@@ -1573,13 +1577,26 @@ function updateCoach(p){
     (showM?`<div class="coach-row"><span>M-ratio</span><b>M = ${M>99?'99+':Math.round(M)} · ${T('zone'+mZone)}</b></div>`:'')+
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
     sizeRow+
-    (R.chartInfo?.kind==='range'?`<div class="coach-range-inline"><b>${R.chartInfo.pos} — ${T('chartTitleRange')}</b>${rangeMatrixCells(R.chartInfo,R.code,true)}${rangeMatrixLegend()}</div>`:'')+
+    rangePanel+
     (R.chartInfo?`<button class="chart-link" id="chartViewBtn">${T(R.chartInfo.kind==='range'?'viewRange':'viewChart')}</button>`:'')+
     coachProseHtml(why,extra)+
     mixTip(rec,R);
+  let activeChart=R.chartInfo;
+  if(rangeCharts.length){
+    activeChart=rangeCharts[0];
+    $('coachBody').querySelectorAll('[data-range-index]').forEach(btn=>btn.onclick=()=>{
+      const idx=Number(btn.dataset.rangeIndex),info=rangeCharts[idx];
+      if(!info)return;
+      activeChart=info;
+      $('coachBody').querySelectorAll('[data-range-index]').forEach(b=>b.classList.toggle('on',b===btn));
+      const title=$('coachRangeTitle'),matrix=$('coachRangeMatrix');
+      if(title)title.textContent=`${info.pos} — ${T('chartTitleRange')}`;
+      if(matrix)matrix.innerHTML=rangeMatrixCells(info,R.code,true);
+    });
+  }
   if(R.chartInfo){
     const cb=$('chartViewBtn');
-    if(cb) cb.onclick=()=>showChartMatrix(R.chartInfo,R.code);
+    if(cb) cb.onclick=()=>showChartMatrix(activeChart,R.code);
   }
   coachRecNow={rec,stage:state.stage,evs,eq,eqAdj:R.eqAdj??eq,odds,callAmt,pot,airPen:R.airPen||0};
 

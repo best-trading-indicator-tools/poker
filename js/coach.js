@@ -1294,7 +1294,7 @@ function coachDecide(p){
   if(flags.icm&&icmPrem>=0.01) extra.push(C('icmNote',Math.round(icmPrem*100),aliveN,Math.min(PAYOUTS(state.cfg.numPlayers).length,aliveN)));
   if(flags.cashNote) extra.push(C('cashModeNote'));
 
-  let rec,why=[],chartInfo=null, smallStab=false;
+  let rec,why=[],chartInfo=null,rangeCharts=[],smallStab=false;
   if(state.stage==='preflop'){
     const bucket=posBucket(pos), prTxt='top ~'+Math.round(pr*100)+'%';
     const unopened=state.currentBet<=state.bb;
@@ -1554,14 +1554,6 @@ function coachDecide(p){
     const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&strongMade;
     const leadStrongMade=!river&&checkedInFront===0&&opps<=2&&eq>=0.45&&strongMade;
     const protectTopPair=!river&&checkedInFront>0&&opps<=3&&eq>=0.48&&hasTopPairOrBetter(madeScore,p.hole,state.board);
-    /* No current bettor: show the most relevant checked opponent's UPDATED range. */
-    const checkedVillain=inHand().filter(q=>q!==p&&!q.allIn&&((q.checkStreets||[]).length||q.checkedStreet))
-      .sort((a,b)=>(b.checkStreets||[]).length-(a.checkStreets||[]).length)[0];
-    if(checkedVillain){
-      chartInfo=coachRangeChartInfo(checkedVillain,p,difficultyApplies,difficulty);
-      const likely=rangeMostLikelyCodes(chartInfo,8);
-      if(likely.length)extra.push(C('rangeLikelyHands',checkedVillain.name,likely.join(', ')));
-    }
     if(eq>valueThresh||thinBoardKickerValue){
       rec='RAISE';
       if(thinBoardKickerValue)smallStab=true;
@@ -1602,12 +1594,6 @@ function coachDecide(p){
     const drawOnly=d&&(d.gutshot||d.oesd||d.flush)&&myScore[0]<2;
     /* WHO is betting, and WHAT LINE did they take? exploit the player, read the story */
     const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
-    /* postflop "matrix": show the hands the bettor is currently modeled on */
-    if(agg){
-      chartInfo=coachRangeChartInfo(agg,p,difficultyApplies,difficulty);
-      const likely=rangeMostLikelyCodes(chartInfo,8);
-      if(likely.length)extra.push(C('rangeLikelyHands',agg.name,likely.join(', ')));
-    }
     let exploitAdj=0;
     if(agg&&agg.style&&!agg.folded){
       if(agg.style.id==='rock'){exploitAdj=-0.04;extra.push(C('profRock'));}
@@ -1653,6 +1639,21 @@ function coachDecide(p){
       why.push(C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),!!bigBetPen));
     }
   }
+  /* Every live opponent gets a matrix. Current aggressor first, then checked/acted players. */
+  if(state.stage!=='preflop'){
+    const villains=inHand().filter(q=>q!==p).sort((a,b)=>{
+      const relevance=q=>(q.i===state.lastAggIdx?1000:0)+(q.checkedStreet?100:0)+(q.acted?25:0)+(q.checkStreets||[]).length*10;
+      return relevance(b)-relevance(a);
+    });
+    rangeCharts=villains.map(v=>coachRangeChartInfo(v,p,difficultyApplies,difficulty));
+    if(rangeCharts.length){
+      chartInfo=rangeCharts[0];
+      rangeCharts.slice(0,3).forEach((info,i)=>{
+        const likely=rangeMostLikelyCodes(info,6);
+        if(likely.length)extra.push(C('rangeLikelyHands',villains[i].name,likely.join(', ')));
+      });
+    }
+  }
   let coachT=0, sizePlan=null, postSizePlan=null;
   if(rec==='RAISE'||rec==='ALLIN'){
     let t;
@@ -1687,7 +1688,7 @@ function coachDecide(p){
   };
   coachSpotBrief(p,extra,{eq,eqAdj,odds,callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,odds,callAmt,pot,opps,pos,early,late,
-          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,code,spr,sprZone};
+          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,rangeCharts,code,spr,sprZone};
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */
