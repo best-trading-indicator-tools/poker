@@ -313,9 +313,20 @@ function rangePostflopActionPolicy(p,m,ctx,hole,info){
   let check=0.12+air*0.74+medium*0.18+draw*0.38+made*0.10;
   if(made>=0.62)check=0.035+st.trap*0.68+draw*0.18;
   const priorChecks=ctx.rangePriorPostChecks||0;
-  const boardHit=(state.board||[]).some(b=>hole.some(c=>c.r===b.r));
-  if(ctx.rangeCheckedTo&&boardHit){
-    const sid=p.style?.id||'',aggressive=/^(shark|maniac)$/.test(sid);
+  const boardHit=info.boardHit??(state.board||[]).some(b=>hole.some(c=>c.r===b.r));
+  const sid=p.style?.id||'',aggressive=/^(shark|maniac)$/.test(sid);
+  const lastPost=(m.history||[]).filter(x=>x.street!=='preflop').at(-1);
+  const ledPreviousStreet=lastPost?.action==='raise';
+  const firstOop=!ctx.rangeCheckedTo&&!ctx.inPosition&&(ctx.checkedBefore||0)===0;
+  if((info.topPair||info.overPair)&&firstOop){
+    /* OOP checks retain some pot-control/traps, but checking after leading the prior street
+       is still evidence against a newly made top pair. Loose/passive profiles keep more Kx. */
+    let factor=ledPreviousStreet?0.58:0.72;
+    if(sid==='station')factor+=0.10;
+    else if(sid==='rock')factor+=0.05;
+    else if(sid==='maniac')factor-=0.10;
+    check*=clamp(factor,0.38,0.82);
+  }else if(ctx.rangeCheckedTo&&boardHit){
     if(made>=0.45&&made<0.62){
       const first=aggressive?(sid==='maniac'?0.34:0.43):sid==='rock'?0.60:0.66;
       const repeat=aggressive?(sid==='maniac'?0.22:0.30):sid==='rock'?0.48:0.55;
@@ -475,7 +486,8 @@ function rangeModelComboInfo(hole,board){
     if(d.oesd)draw=Math.max(draw,0.34);
     else if(d.gutshot)draw=Math.max(draw,0.18);
   }
-  return {pct,made,draw,medium:made>=0.25&&made<0.62,strong:made>=0.62};
+  return {pct,made,draw,topPair,overPair,boardHit:board.some(b=>hole.some(c=>c.r===b.r)),
+    medium:made>=0.25&&made<0.62,strong:made>=0.62};
 }
 function rangeModelComboWeight(model,hole,board,capArg,floorArg){
   const m=model||{};

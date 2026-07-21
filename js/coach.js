@@ -1885,9 +1885,13 @@ function rangeActionTrail(info){
 function rangeMatrixMetaHtml(info,controls=false,mode='density'){
   if(info.kind!=='range')return '';
   const metrics=rangeMatrixMetrics(info),trail=rangeActionTrail(info),top=rangeMostLikelyCodes(info,5).join(' · ');
+  const topRank=(info.board||[]).length?Math.max(...info.board.map(c=>c.r)):0,topChar=topRank?RANK_CH[topRank]:'',topCode=topRank?CODE_R[topRank]:'';
+  const topCardMass=topCode?Object.keys(metrics.mass).reduce((s,code)=>s+(code.slice(0,2).includes(topCode)?metrics.mass[code]:0),0):0;
+  const topCardPct=topCardMass>=0.001?Math.round(topCardMass*1000)/10:Math.round(topCardMass*10000)/100;
   return `<div class="range-meta"><span>≈${metrics.effective} ${T('rangeEffective')}</span>`+
     (controls?`<span class="range-mode"><button data-range-mode="density" class="${mode==='density'?'on':''}">${T('rangeDensity')}</button><button data-range-mode="mass" class="${mode==='mass'?'on':''}">${T('rangeClassProb')}</button></span>`:`<span>${T('rangeDensity')}</span>`)+
     `</div>${trail?`<div class="range-line"><b>${T('rangeLine')}:</b> ${trail}</div>`:''}`+
+    (topCardMass?`<div class="range-line range-read"><b>${T('rangeTopCard')}:</b> ${topChar}x ≈ ${topCardPct}%</div>`:'')+
     (top?`<div class="range-line range-top"><b>${T('rangeTopHands')}:</b> ${top}</div>`:'');
 }
 function showChartMatrix(info,heroCode){

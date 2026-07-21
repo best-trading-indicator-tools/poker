@@ -53,6 +53,29 @@ const result=vm.runInContext(`(()=>{
   const airCheck=rangePostflopActionPolicy(p,{},postCtx,air,rangeModelComboInfo(air,state.board)).check;
   if(!(topCheck<airCheck))throw new Error('repeated checked-to street must discount top pair');
 
+  const rankMass=(model,board,rank)=>{
+    const dead=new Set(board.map(rangeCardId));let hit=0,total=0;
+    for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++){
+      if(dead.has(i)||dead.has(j))continue;
+      const hole=[FULL_DECK[i],FULL_DECK[j]],w=rangeModelPosteriorWeight(model,hole)||0;
+      total+=w;if(hole.some(c=>c.r===rank))hit+=w;
+    }
+    return hit/Math.max(total,1e-12);
+  };
+  p.style=STYLES.find(x=>x.id==='station');rangeModelInit(p);
+  state.stage='preflop';state.board=[];state._rangeComboInfoCache=Object.create(null);
+  rangePosteriorApply(p,p.rangeModel,'call',{stage:'preflop',callAmt:50,cbBefore:100,playerBetBefore:50,
+    potBefore:150,betRatio:.5,price:.25,raisesBefore:0,preflopRaisesBefore:0,bb:100,sb:50,effectiveStackBB:36});
+  state.stage='flop';state.board=[C(7,3),C(4,2),C(5,0)];state._rangeComboInfoCache=Object.create(null);
+  rangePosteriorApply(p,p.rangeModel,'raise',{stage:'flop',callAmt:0,cbBefore:0,playerBetBefore:0,potBefore:300,
+    target:150,targetBB:1.5,actionPotRatio:.5,betRatio:.5,raisesBefore:0,activePlayers:2,inPosition:false,checkedBefore:0,bb:100,sb:50,effectiveStackBB:36});
+  state.stage='turn';state.board.push(C(13,1));state._rangeComboInfoCache=Object.create(null);
+  const kingBeforeCheck=rankMass(p.rangeModel,state.board,13);
+  rangePosteriorApply(p,p.rangeModel,'call',{stage:'turn',callAmt:0,cbBefore:0,playerBetBefore:0,potBefore:600,
+    betRatio:0,raisesBefore:0,activePlayers:2,inPosition:false,checkedBefore:0,bb:100,sb:50,effectiveStackBB:34});
+  const kingAfterCheck=rankMass(p.rangeModel,state.board,13);
+  if(!(kingAfterCheck<kingBeforeCheck&&kingAfterCheck>0))throw new Error('OOP turn check must reduce, not erase, Kx');
+
   state.stage='preflop';state.board=[];state._rangeComboInfoCache=Object.create(null);
   rangeModelInit(p);
   const posteriorCtx={...base,preflopRaisesBefore:1,raisesBefore:1,raiseOrdinal:2,target:1000,targetBB:10};
@@ -67,6 +90,7 @@ const result=vm.runInContext(`(()=>{
   const massSum=Object.values(metrics.mass).reduce((a,b)=>a+b,0);
   if(Math.abs(massSum-1)>1e-9)throw new Error('matrix class probabilities not normalized');
   if(!(metrics.effective>0&&metrics.effective<=metrics.legal))throw new Error('invalid effective combo count');
+  if(!rangeMatrixMetaHtml(info).includes('Qx ≈'))throw new Error('top-card probability missing from matrix summary');
 
   newGame(cfg);state.stage='preflop';state.board=[];state.bb=100;state.sb=50;state.currentBet=100;
   state.lastRaiseSize=100;state.streetRaiseCount=0;state.preflopRaiseCount=0;state.handLog=[];
@@ -82,7 +106,8 @@ const result=vm.runInContext(`(()=>{
   const ordinals=[opener.rangeModel.history[0].raiseOrdinal,reraiser.rangeModel.history[0].raiseOrdinal,
     opener.rangeModel.history[1].raiseOrdinal,reraiser.rangeModel.history[1].raiseOrdinal];
   if(ordinals.join(',')!=='1,2,3,4')throw new Error('action tree ordinals '+ordinals.join(','));
-  return {policy,jamAA,jamA5,topCheck,airCheck,effective:metrics.effective,legal:metrics.legal,ordinals};
+  return {policy,jamAA,jamA5,topCheck,airCheck,kingBeforeCheck,kingAfterCheck,
+    effective:metrics.effective,legal:metrics.legal,ordinals};
 })()`,context);
 
 assert.ok(result);
