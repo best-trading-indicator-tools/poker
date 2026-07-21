@@ -92,6 +92,38 @@ const result=vm.runInContext(`(()=>{
   if(!(metrics.effective>0&&metrics.effective<=metrics.legal))throw new Error('invalid effective combo count');
   if(!rangeMatrixMetaHtml(info).includes('Qx ≈'))throw new Error('top-card probability missing from matrix summary');
 
+  const k96=[C(13,1),C(9,2),C(6,1)],threes=H(C(3,0),C(3,2));
+  const underpair=coachUnderpairRealization(threes,k96,.80,true,detectDraws(threes,k96));
+  if(!underpair||underpair.overcards!==3||underpair.penalty<.08)
+    throw new Error('three-underpair realization penalty too small '+JSON.stringify(underpair));
+  const k96Backdoor=[C(13,2),C(9,2),C(6,1)];
+  const withBackdoor=coachUnderpairRealization(threes,k96Backdoor,.80,true,detectDraws(threes,k96Backdoor));
+  const smallIp=coachUnderpairRealization(threes,k96,.33,false,detectDraws(threes,k96));
+  if(!withBackdoor||!withBackdoor.backdoors||!(withBackdoor.penalty<underpair.penalty))
+    throw new Error('backdoor must soften underpair penalty');
+  if(!smallIp||!(smallIp.penalty<underpair.penalty))
+    throw new Error('small IP bet must carry less realization penalty');
+  if(coachUnderpairRealization(holes.AA,k96,.80,true,detectDraws(holes.AA,k96)))
+    throw new Error('overpair must not receive underpair penalty');
+
+  newGame(cfg);
+  const hero=state.players[0],phil=state.players[1];
+  for(const x of state.players){
+    x.out=x!==hero&&x!==phil;x.folded=x.out;x.allIn=false;x.bet=0;x.totalBet=0;x.acted=true;
+    x.checkedStreet=false;x.aggStreets=[];x.checkStreets=[];x.rangeCap=1;x.rangeFloor=0;x.lineRead='';
+  }
+  state.stage='flop';state.board=k96.slice();state._rangeComboInfoCache=Object.create(null);
+  state.bb=20;state.sb=10;state.ante=0;state.dealerIdx=phil.i;state.currentBet=120;state.lastRaiseSize=70;
+  state.lastAggIdx=phil.i;state.pfAggIdx=phil.i;state.streetRaiseCount=0;
+  hero.pos='BB';hero.hole=threes;hero.chips=1930;hero.bet=0;hero.totalBet=80;hero.acted=false;
+  phil.pos='BTN';phil.style=STYLES.find(x=>x.id==='shark');phil.chips=1830;phil.bet=120;phil.totalBet=190;
+  phil.rangeCap=.29;phil.lineRead='cbet';rangeModelInit(phil);
+  const savedEquity=mcEquityR;mcEquityR=()=>.36;
+  const underpairDecision=coachDecide(hero);
+  mcEquityR=savedEquity;
+  if(underpairDecision.rec!=='FOLD'||underpairDecision.underpairPen<.08||underpairDecision.evs.CALL>=0)
+    throw new Error('33/K96 vs 80% c-bet must fold '+JSON.stringify({rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL}));
+
   newGame(cfg);state.stage='preflop';state.board=[];state.bb=100;state.sb=50;state.currentBet=100;
   state.lastRaiseSize=100;state.streetRaiseCount=0;state.preflopRaiseCount=0;state.handLog=[];
   const opener=state.players[1],reraiser=state.players[2];
@@ -107,7 +139,8 @@ const result=vm.runInContext(`(()=>{
     opener.rangeModel.history[1].raiseOrdinal,reraiser.rangeModel.history[1].raiseOrdinal];
   if(ordinals.join(',')!=='1,2,3,4')throw new Error('action tree ordinals '+ordinals.join(','));
   return {policy,jamAA,jamA5,topCheck,airCheck,kingBeforeCheck,kingAfterCheck,
-    effective:metrics.effective,legal:metrics.legal,ordinals};
+    effective:metrics.effective,legal:metrics.legal,underpair,withBackdoor,smallIp,
+    underpairDecision:{rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL},ordinals};
 })()`,context);
 
 assert.ok(result);

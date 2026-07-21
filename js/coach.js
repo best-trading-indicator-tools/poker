@@ -51,6 +51,7 @@ bigBet:r=>` This bet is ≈${r}% of the pot — bets that large are usually made
 gutWarn:' Chasing a 4-out gutshot into big bets is a long-term money leak — even when you hit, you may not get paid enough to cover all the misses (poor implied odds).',
 airWarn:' You have no made hand and no real draw — players who bet usually have at least a pair, and "pot-odds correct" calls with high cards are one of the biggest leaks in poker. The coach heavily discounts your raw win chance here.',
 weakDrawWarn:' You have no made hand and only a weak gutshot — those four outs are included in the equity, but this is not a strong draw like an open-ender or flush draw. The coach discounts it heavily against aggression.',
+underpairRealization:(n,pen,size,oop,backdoors)=>` Your pocket pair sits below ${n} distinct board rank${n>1?'s':''}. ${oop?'Out of position, ':''}facing a ${size}%-pot bet with more betting still possible, raw showdown equity overstates how often you can profitably reach the river. The coach removes about ${pen} equity points${backdoors?' after giving some credit to your backdoor possibilities':''}.`,
 rangeLikelyHands:(n,h)=>` ${n}'s most likely hand classes after the full action history: ${h}. Percentages are their normalized share of the current range, after known-card blockers — not a claim that one exact hand is certain.`,
 raiseVal:e=>`~${e} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Suggested postflop raise size: ${amt} (${bb}). The opponent's bet is about ${ratio}% pot, so use roughly ${x}x that bet: small bets can be raised much larger, while big bets and overbets usually only need about 2-3x.`,
@@ -194,6 +195,7 @@ bigBet:r=>` Cette mise fait ≈${r}% du pot — des mises aussi grosses sont gé
 gutWarn:' Payer de grosses mises pour chasser un ventral à 4 outs est une fuite d’argent à long terme — même touché, vous ne serez pas assez payé pour couvrir tous les échecs (cotes implicites médiocres).',
 airWarn:' Vous n’avez ni main faite ni vrai tirage — celui qui mise a généralement au moins une paire, et les calls « corrects en cotes » avec hauteur sont l’une des plus grosses fuites du poker. Le coach décote fortement votre chance de gain ici.',
 weakDrawWarn:' Vous n’avez pas de main faite et seulement une gutshot faible — ces quatre outs sont inclus dans l’équité, mais ce n’est pas un gros tirage comme une quinte par les deux bouts ou une couleur. Le coach la décote fortement face à l’agression.',
+underpairRealization:(n,pen,size,oop,backdoors)=>` Votre paire servie est sous ${n} hauteur${n>1?'s':''} distincte${n>1?'s':''} du board. ${oop?'Hors de position, ':''}face à une mise de ${size}% du pot avec encore des décisions à venir, l’équité brute jusqu’au showdown surestime la fréquence à laquelle vous atteindrez la river de façon rentable. Le coach retire environ ${pen} points d’équité${backdoors?' après avoir accordé un peu de valeur à vos backdoors':''}.`,
 rangeLikelyHands:(n,h)=>` Les classes de mains les plus probables de ${n} après toute l'action : ${h}. Les pourcentages représentent leur part normalisée de la range actuelle après les blockers connus — pas la certitude d'une main exacte.`,
 raiseVal:e=>`~${e} de chances de gain : vous êtes grand favori. Relancez pour la valeur et pour faire payer les tirages — caller laisse de l’argent sur la table.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Taille de relance postflop suggérée : ${amt} (${bb}). La mise adverse fait environ ${ratio}% du pot, donc utilisez environ ${x}x cette mise : les petites mises peuvent être relancées beaucoup plus cher, tandis que les grosses mises et overbets demandent souvent seulement 2-3x.`,
@@ -337,6 +339,7 @@ bigBet:r=>` Esta apuesta es ≈${r}% del bote — apuestas tan grandes suelen se
 gutWarn:' Perseguir una escalera interna de 4 outs contra apuestas grandes es una fuga de dinero a largo plazo — incluso cuando ligas, no te pagan lo suficiente para cubrir todos los fallos (odds implícitas pobres).',
 airWarn:' No tienes mano hecha ni proyecto real — quien apuesta suele tener al menos una pareja, y las llamadas "correctas por odds" con carta alta son una de las mayores fugas del póker. El coach descuenta mucho tu probabilidad bruta aquí.',
 weakDrawWarn:' No tienes mano hecha y solo una gutshot débil — esos cuatro outs ya están incluidos en la equity, pero no es un proyecto fuerte como una escalera abierta o color. El coach la descuenta mucho frente a agresión.',
+underpairRealization:(n,pen,size,oop,backdoors)=>` Tu pareja de mano está por debajo de ${n} altura${n>1?'s':''} distinta${n>1?'s':''} de la mesa. ${oop?'Fuera de posición, ':''}ante una apuesta del ${size}% del bote y con más decisiones por venir, la equity bruta hasta el showdown exagera la frecuencia con la que llegarás al river de forma rentable. El coach resta unos ${pen} puntos de equity${backdoors?' después de dar algo de crédito a tus backdoors':''}.`,
 rangeLikelyHands:(n,h)=>` Las clases de manos más probables de ${n} tras todo el historial: ${h}. Los porcentajes son su parte normalizada del rango actual después de los blockers conocidos, no la certeza de una mano exacta.`,
 raiseVal:e=>`~${e} de probabilidad: eres gran favorito. Sube por valor y para cobrar a los proyectos — solo igualar deja dinero sobre la mesa.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Tamaño de subida postflop sugerido: ${amt} (${bb}). La apuesta rival es aprox. ${ratio}% del bote, así que usa cerca de ${x}x esa apuesta: las apuestas pequeñas se pueden subir mucho más, mientras que apuestas grandes y overbets suelen necesitar solo 2-3x.`,
@@ -1001,6 +1004,44 @@ function classifyMade(hole,board,score){
   }
   return '';
 }
+function underpairBackdoors(hole,board,draw){
+  if(board.length!==3)return {flush:false,straight:false,frontdoor:false};
+  const frontdoor=!!(draw&&(draw.flush||draw.oesd));
+  const flush=hole.some(h=>board.filter(c=>c.s===h.s).length===2);
+  const ranks=new Set(hole.concat(board).map(c=>c.r));
+  if(ranks.has(14))ranks.add(1);
+  const pairRank=hole[0].r;
+  let straight=false;
+  for(let lo=1;lo<=10&&!straight;lo++){
+    const window=[];for(let r=lo;r<lo+5;r++)window.push(r);
+    const pairInWindow=window.includes(pairRank)||(pairRank===14&&window.includes(1));
+    if(pairInWindow&&window.filter(r=>ranks.has(r)).length===3)straight=true;
+  }
+  return {flush,straight,frontdoor};
+}
+/* Raw all-the-way equity overstates the value of an underpair when future barrels can
+   force it off the hand. Scale that realization loss by board coverage, sizing,
+   position and remaining streets; genuine/frontdoor and runner-runner draws soften it. */
+function coachUnderpairRealization(hole,board,betRatio,actsFirst,draw){
+  if(!hole||hole.length!==2||board.length<3||board.length>=5||hole[0].r!==hole[1].r)return null;
+  const pairRank=hole[0].r,score=evalBest(hole.concat(board));
+  if(score[0]!==1||score[1]!==pairRank)return null;
+  const overRanks=[...new Set(board.map(c=>c.r).filter(r=>r>pairRank))];
+  if(!overRanks.length)return null;
+  const flop=board.length===3,bd=underpairBackdoors(hole,board,draw);
+  let penalty=0.025+overRanks.length*0.012;
+  penalty+=Math.min(Math.max(betRatio,0),1.25)*0.018;
+  if(actsFirst)penalty+=0.012;
+  if(!flop)penalty*=0.58;
+  if(bd.frontdoor)penalty*=0.25;
+  else{
+    if(draw&&draw.gutshot)penalty-=0.014;
+    if(bd.flush)penalty-=0.008;
+    if(bd.straight)penalty-=0.006;
+  }
+  penalty=clamp(penalty,0.01,0.11);
+  return {penalty,overcards:overRanks.length,backdoors:bd.flush||bd.straight||bd.frontdoor};
+}
 function realTwoPairOrBetter(score,hole){
   if(!score)return false;
   if(score[0]>=3)return true;
@@ -1276,7 +1317,7 @@ function coachDecide(p){
     .sort((a,b)=>a.cap-b.cap).slice(0,4);
   const code=holeCode(p.hole), pr=handPct[code]||1;
   let eq,handDesc,drawRow='',extra=[];
-  let eqAdj,airPen=0;
+  let eqAdj,airPen=0,underpairPen=0,underpairInfo=null;
   let madeScore=null;
   const tightOpps=oppCaps.filter(o=>o.cap<1).length;
   const weakOpps=oppCaps.filter(o=>o.floor>0).length;
@@ -1725,18 +1766,21 @@ function coachDecide(p){
     const noMade=myScore[0]===0||(myScore[0]<=2&&!usesHole);
     const goodDraw=d&&(d.flush||d.oesd);
     airPen=(noMade&&!goodDraw)?0.15:0;
-    eqAdj=eq-bigBetPen-airPen+exploitAdj+blockAdj+diffAggAdj;
+    underpairInfo=coachUnderpairRealization(p.hole,state.board,betRatio,actsFirst,d);
+    underpairPen=underpairInfo?underpairInfo.penalty:0;
+    eqAdj=eq-bigBetPen-airPen-underpairPen+exploitAdj+blockAdj+diffAggAdj;
     const edge=eqAdj-odds-posAdj-icmPrem;
     if(bigBetPen>=0.05) extra.push(C('bigBet',Math.round(betRatio*100)));
     if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
     if(airPen) extra.push(C(d&&d.gutshot?'weakDrawWarn':'airWarn'));
+    if(underpairInfo)extra.push(C('underpairRealization',underpairInfo.overcards,Math.round(underpairPen*100),Math.round(betRatio*100),actsFirst,underpairInfo.backdoors));
     extra.push(C('mentalMath',usd(callAmt),usd(pot+callAmt),pct(odds)));
     if(eqAdj>0.68+posAdj&&!drawOnly){
       rec='RAISE';
       why.push(C('raiseVal',pct(eq)));
     }else if(edge>=0){
       rec='CALL';
-      why.push(C('callOk',usd(callAmt),usd(pot),pct(odds),pct(eq),!!(bigBetPen||airPen),pct(eqAdj)));
+      why.push(C('callOk',usd(callAmt),usd(pot),pct(odds),pct(eq),!!(bigBetPen||airPen||underpairPen),pct(eqAdj)));
     }else{
       rec='FOLD';
       why.push(C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),!!bigBetPen));
@@ -1788,11 +1832,11 @@ function coachDecide(p){
   const evR=A=>FE*pot+(1-FE)*(eq*(pot+2*A)-A);             // raise A more chips
   const evs={
     FOLD:0,
-    CALL:Math.round(callAmt>0 ? eq*(pot+callAmt)-callAmt : eq*pot),
+    CALL:Math.round(callAmt>0 ? eqAdj*(pot+callAmt)-callAmt : eq*pot),
     RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
   };
   coachSpotBrief(p,extra,{eq,eqAdj,odds,callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
-  return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,odds,callAmt,pot,opps,pos,early,late,
+  return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,rangeCharts,code,spr,sprZone};
 }
 
