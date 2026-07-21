@@ -57,6 +57,10 @@ postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Suggested postflop raise size: ${amt} 
 callOk:(amt,pt,o,e,disc,ea)=>`The call costs ${amt} to win a ${pt} pot, so you need ${o} equity to break even. You have ~${e}${disc?` (counted as ~${ea} after discounts)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`,
 foldAdv:(o,amt,pt,ea,resp)=>`You need ${o} equity to call (${amt} into ${pt}) but only have ~${ea}${resp?' once the size of this bet is respected':''}. Every chip you put in here loses value — fold and wait for a better spot.`,
 chart3bet:(c,e)=>`${c} is in the re-raise (3-bet) chart against ${e?'an early-position raiser':'a late-position raiser'} — solver ranges re-raise these hands instead of just calling: the big pairs for value, and hands like A5s as "blocker bluffs" (your ace makes his monster hands less likely). Flat-calling would let players behind you in cheaply.`,
+fourBetFold:(c,amt,bb,eff,read)=>`This is not a 3-bet spot: you already raised and now face a 3-bet to ${amt} (${bb}). ${c} is not strong enough to continue${read?' against this large/tight line':''}. The ace blocker can make it an occasional 4-bet bluff against a normal, wide 3-bet when stacks are deep, but at ${eff} BB effective this sizing commits too much — fold.`,
+fourBetValue:(c,amt,bb)=>`You already raised and now face a 3-bet to ${amt} (${bb}). ${c} belongs to the value 4-bet range; with this much already in the middle, use a committed raise rather than an awkward size that leaves a tiny stack behind.`,
+fourBetBluff:(c,amt,bb)=>`You already raised and now face a 3-bet to ${amt} (${bb}). ${c} can be used as a selective 4-bet bluff here: your ace blocks AA/AK, the 3-bettor's range is wide, the size is still normal, and stacks are deep enough to fold if shoved on.`,
+fourBetCall:(c,e,o)=>`You already raised and now face a 3-bet. ${c} is strong enough to continue but does not want to build a 4-bet pot; call with ${e} equity versus a ${o} price.`,
 chartCallRaise:(c,e,o)=>`${c} is in the calling chart against this raise — strong enough to see a flop, not strong enough to re-raise. Your win chance (${e}) covers the price (${o}). Call, and play carefully if you miss the flop.`,
 chartIcmFold:(c,e,o)=>`${c} is normally a call here, but right now your simulated win chance (${e}) doesn't cover the price (${o}) once prize pressure and this raiser's range are counted. The chart is a guide — the math of THIS table says fold.`,
 chartFoldVs:c=>`${c} is in neither the re-raise nor the calling chart against this raise — solver ranges simply fold it. Calling raises with hands like this is one of the most expensive habits in poker.`,
@@ -65,6 +69,7 @@ chartIso:(c,p,n)=>`${c} is in the ${p} iso chart — solver-style ranges for rai
 chartNotInIso:(c,p)=>`${c} is not in the ${p} iso chart — even over limpers, this hand loses money as a raise long-term. Fold, or make a very tight exception only with a huge stack edge.`,
 limpPotNote:n=>` ${n} limper${n>1?'s':''} — dead money widens iso-raise ranges slightly, but speculative suited connectors need position/depth before you build a big pot.`,
 pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Suggested preflop size: ${amt} (${bb}). Start around ${pos==='IP'?'3x in position':'4x out of position'}; add about +1x for each flat caller or limper${callers?` (${callers} here)`:''}${ante?' and size up when antes add dead money':''}${depth>0?' and when stacks are deep enough that callers can realize implied odds':depth<0?' while keeping it controlled because stacks are shallower':''}.`,
+fourBetSize:(amt,bb,x)=>` Suggested 4-bet size: ${amt} (${bb}), about ${x}x the 3-bet. This is deliberately much smaller than a 3x 3-bet sizing; if that size would commit roughly 40% of the effective stack, the clean choice with a value hand is all-in instead.`,
 chartNotIn:(c,p)=>`${c} is not in the ${p} opening chart — solver-computed ranges say this hand loses money when raised from this seat over the long run. Folding now saves chips for a better spot.`,
 chartShove:(c,bb,p)=>`At ${bb} BB, ${c} is in the ${p} all-in chart (solver-computed shove ranges for short stacks). Going all-in maximizes your chance of winning the blinds and antes uncontested.`,
 chartNotInShove:(c,p)=>`${c} is not in the ${p} all-in chart for this stack depth — shoving it loses money long-term. Fold and wait: even one round of patience usually offers a better hand.`,
@@ -195,6 +200,10 @@ postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Taille de relance postflop suggérée 
 callOk:(amt,pt,o,e,disc,ea)=>`Le call coûte ${amt} pour gagner un pot de ${pt} : il vous faut ${o} d’équité pour être à l’équilibre. Vous avez ~${e}${disc?` (compté ~${ea} après décotes)`:''} — caller est rentable à long terme, mais relancer risquerait trop avec une main non premium.`,
 foldAdv:(o,amt,pt,ea,resp)=>`Il vous faut ${o} d’équité pour payer (${amt} dans ${pt}) mais vous n’avez que ~${ea}${resp?' une fois la taille de cette mise respectée':''}. Chaque jeton investi ici perd de la valeur — couchez-vous et attendez un meilleur spot.`,
 chart3bet:(c,e)=>`${c} figure dans la charte de sur-relance (3-bet) contre ${e?'un relanceur en début de parole':'un relanceur en fin de parole'} — les ranges solveur sur-relancent ces mains au lieu de suivre : les grosses paires pour la valeur, et des mains comme A5s en « bluff à blocker » (votre as rend ses monstres moins probables). Suivre laisserait entrer les joueurs derrière à bas prix.`,
+fourBetFold:(c,amt,bb,eff,read)=>`Ce n'est pas un spot de 3-bet : vous avez déjà relancé et faites maintenant face à un 3-bet à ${amt} (${bb}). ${c} n'est pas assez forte pour continuer${read?' contre cette ligne grosse/serrée':''}. Le bloqueur As peut servir de bluff 4-bet occasionnel contre un 3-bet normal et large avec des tapis profonds, mais à ${eff} BB effectives cette taille engage trop de jetons — couchez-vous.`,
+fourBetValue:(c,amt,bb)=>`Vous avez déjà relancé et faites maintenant face à un 3-bet à ${amt} (${bb}). ${c} appartient à la range de 4-bet pour valeur ; avec autant de jetons déjà au milieu, utilisez une relance engagée plutôt qu'une taille bancale qui laisse un tout petit tapis.`,
+fourBetBluff:(c,amt,bb)=>`Vous avez déjà relancé et faites maintenant face à un 3-bet à ${amt} (${bb}). ${c} peut servir de bluff 4-bet sélectif : votre As bloque AA/AK, la range de 3-bet adverse est large, la taille reste normale et les tapis permettent encore de folder face à un shove.`,
+fourBetCall:(c,e,o)=>`Vous avez déjà relancé et faites maintenant face à un 3-bet. ${c} est assez forte pour continuer sans vouloir gonfler un pot 4-bet ; payez avec ${e} d'équité pour un prix de ${o}.`,
 chartCallRaise:(c,e,o)=>`${c} figure dans la charte de call contre cette relance — assez fort pour voir un flop, pas assez pour sur-relancer. Votre chance de gain (${e}) couvre le prix (${o}). Suivez, et jouez prudemment si vous ratez le flop.`,
 chartIcmFold:(c,e,o)=>`${c} serait normalement un call ici, mais votre chance de gain simulée (${e}) ne couvre pas le prix (${o}) une fois la pression des prix et la range de ce relanceur comptées. La charte est un guide — le calcul de CETTE table dit de se coucher.`,
 chartFoldVs:c=>`${c} ne figure ni dans la charte de 3-bet ni dans celle de call contre cette relance — les ranges solveur la couchent, tout simplement. Suivre des relances avec ce genre de main est l'une des habitudes les plus coûteuses du poker.`,
@@ -203,6 +212,7 @@ chartIso:(c,p,n)=>`${c} figure dans la charte iso ${p} — ranges pour relancer 
 chartNotInIso:(c,p)=>`${c} n'est pas dans la charte iso ${p} — même sur des limps, cette main perd de l'argent en relance. Couchez-vous.`,
 limpPotNote:n=>` ${n} limpeur${n>1?'s':''} — l'argent mort élargit un peu les ranges d'iso, mais les connecteurs assortis spéculatifs ont besoin de position/profondeur avant de grossir le pot.`,
 pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Taille préflop suggérée : ${amt} (${bb}). Basez-vous sur environ ${pos==='IP'?'3x en position':'4x hors position'} ; ajoutez environ +1x par caller/limpeur${callers?` (${callers} ici)`:''}${ante?' et augmentez quand les antes ajoutent de l\'argent mort':''}${depth>0?' et quand les tapis profonds donnent des cotes implicites aux callers':depth<0?' tout en contrôlant la taille avec des tapis plus courts':''}.`,
+fourBetSize:(amt,bb,x)=>` Taille de 4-bet suggérée : ${amt} (${bb}), soit environ ${x}x le 3-bet. C'est volontairement bien moins que la formule 3x d'un 3-bet ; si cette taille engage environ 40 % du tapis effectif, le choix propre avec une main de valeur est le tapis.`,
 chartNotIn:(c,p)=>`${c} ne figure pas dans la charte d'ouverture ${p} — les ranges calculées par solveur indiquent que cette main perd de l'argent relancée depuis ce siège. Se coucher maintenant garde des jetons pour un meilleur spot.`,
 chartShove:(c,bb,p)=>`À ${bb} BB, ${c} figure dans la charte de tapis ${p} (ranges de shove calculées par solveur pour tapis courts). Partir à tapis maximise vos chances de gagner blinds et antes sans bagarre.`,
 chartNotInShove:(c,p)=>`${c} ne figure pas dans la charte de tapis ${p} à cette profondeur — la jouer à tapis perd de l'argent à long terme. Couchez-vous : un tour de patience offre souvent une meilleure main.`,
@@ -333,6 +343,10 @@ postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Tamaño de subida postflop sugerido: $
 callOk:(amt,pt,o,e,disc,ea)=>`La llamada cuesta ${amt} para ganar un bote de ${pt}: necesitas ${o} de equidad para no perder. Tienes ~${e}${disc?` (contado como ~${ea} tras descuentos)`:''} — igualar es rentable a largo plazo, pero subir arriesgaría demasiado con una mano no premium.`,
 foldAdv:(o,amt,pt,ea,resp)=>`Necesitas ${o} de equidad para igualar (${amt} en ${pt}) pero solo tienes ~${ea}${resp?' una vez respetado el tamaño de esta apuesta':''}. Cada ficha que pongas aquí pierde valor — retírate y espera un mejor momento.`,
 chart3bet:(c,e)=>`${c} está en la tabla de resubida (3-bet) contra ${e?'quien sube desde posición temprana':'quien sube desde posición tardía'} — los rangos de solver resuben estas manos en vez de solo igualar: las parejas grandes por valor, y manos como A5s como "farol con blocker" (tu as hace menos probables sus monstruos). Solo igualar dejaría entrar barato a los de detrás.`,
+fourBetFold:(c,amt,bb,eff,read)=>`Este no es un spot de 3-bet: ya subiste y ahora afrontas un 3-bet a ${amt} (${bb}). ${c} no es lo bastante fuerte para continuar${read?' contra esta línea grande/cerrada':''}. El bloqueo del As puede servir como farol de 4-bet ocasional contra un 3-bet normal y amplio con stacks profundos, pero con ${eff} BB efectivas este tamaño compromete demasiado — retírate.`,
+fourBetValue:(c,amt,bb)=>`Ya subiste y ahora afrontas un 3-bet a ${amt} (${bb}). ${c} pertenece al rango de 4-bet por valor; con tanto dinero ya en medio, usa una subida comprometida en vez de un tamaño incómodo que deje un stack diminuto.`,
+fourBetBluff:(c,amt,bb)=>`Ya subiste y ahora afrontas un 3-bet a ${amt} (${bb}). ${c} puede usarse como farol selectivo de 4-bet: tu As bloquea AA/AK, el rango rival es amplio, el tamaño aún es normal y los stacks permiten retirarse ante un shove.`,
+fourBetCall:(c,e,o)=>`Ya subiste y ahora afrontas un 3-bet. ${c} es lo bastante fuerte para continuar, pero no quiere inflar un bote de 4-bet; iguala con ${e} de equity frente a un precio de ${o}.`,
 chartCallRaise:(c,e,o)=>`${c} está en la tabla de llamada contra esta subida — bastante fuerte para ver un flop, no tanto como para resubir. Tu probabilidad (${e}) cubre el precio (${o}). Iguala, y juega con cuidado si fallas el flop.`,
 chartIcmFold:(c,e,o)=>`${c} normalmente sería una llamada aquí, pero tu probabilidad simulada (${e}) no cubre el precio (${o}) contando la presión de premios y el rango de quien sube. La tabla es una guía — las cuentas de ESTA mesa dicen retirarse.`,
 chartFoldVs:c=>`${c} no está ni en la tabla de 3-bet ni en la de llamada contra esta subida — los rangos de solver simplemente la tiran. Igualar subidas con manos así es uno de los hábitos más caros del póker.`,
@@ -341,6 +355,7 @@ chartIso:(c,p,n)=>`${c} está en la tabla iso de ${p} — rangos para subir sobr
 chartNotInIso:(c,p)=>`${c} no está en la tabla iso de ${p} — incluso sobre limps, subir pierde dinero a largo plazo. Retírate.`,
 limpPotNote:n=>` ${n} limper${n>1?'s':''} — el dinero muerto amplía un poco los rangos de iso, pero los conectores suited especulativos necesitan posición/profundidad antes de inflar el bote.`,
 pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Tamaño preflop sugerido: ${amt} (${bb}). Empieza cerca de ${pos==='IP'?'3x en posición':'4x fuera de posición'}; añade alrededor de +1x por cada caller o limper${callers?` (${callers} aquí)`:''}${ante?' y sube el tamaño cuando los antes añaden dinero muerto':''}${depth>0?' y cuando los stacks profundos dan odds implícitas a los callers':depth<0?' manteniéndolo controlado con stacks más cortos':''}.`,
+fourBetSize:(amt,bb,x)=>` Tamaño de 4-bet sugerido: ${amt} (${bb}), unas ${x}x el 3-bet. Es deliberadamente mucho menor que una fórmula 3x de 3-bet; si ese tamaño compromete cerca del 40 % del stack efectivo, con una mano de valor la opción limpia es ir all-in.`,
 chartNotIn:(c,p)=>`${c} no está en la tabla de apertura de ${p} — los rangos calculados por solver dicen que esta mano pierde dinero subida desde este asiento. Retirarse ahora guarda fichas para un momento mejor.`,
 chartShove:(c,bb,p)=>`Con ${bb} BB, ${c} está en la tabla de all-in de ${p} (rangos de shove calculados por solver para stacks cortos). Ir all-in maximiza tus opciones de llevarte ciegas y antes sin pelea.`,
 chartNotInShove:(c,p)=>`${c} no está en la tabla de all-in de ${p} a esta profundidad — jugarla all-in pierde dinero a largo plazo. Retírate: una ronda de paciencia suele traer una mano mejor.`,
@@ -802,8 +817,26 @@ function flatCallerCount(p){
   const raiserIdx=state.lastAggIdx;
   return inHand().filter(q=>q!==p&&q.i!==raiserIdx&&q.bet>=state.currentBet).length;
 }
+function coachFourBetSizing(p,actsLast){
+  const raiser=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+  const heroTotal=p.bet+p.chips;
+  const villainTotal=raiser?raiser.bet+raiser.chips:heroTotal;
+  const effective=Math.max(state.currentBet,Math.min(heroTotal,villainTotal));
+  const mult=actsLast?2.15:2.3;
+  const minTarget=state.currentBet+state.lastRaiseSize;
+  const target=Math.max(minTarget,state.currentBet*mult);
+  return {
+    kind:'fourBet',
+    target,
+    mult,
+    effective,
+    /* Once a normal 4-bet invests this much, leaving a small tail is worse than jamming value. */
+    jam:target>=effective*0.40||effective-target<state.bb*20
+  };
+}
 function coachPreflopRaiseSizing(p,actsLast){
   const facingRaise=state.currentBet>state.bb;
+  if(facingRaise&&p.bet>state.bb) return coachFourBetSizing(p,actsLast);
   const unit=facingRaise?state.currentBet:state.bb;
   const callers=facingRaise?flatCallerCount(p):limperCount(p);
   const stackBB=(p.chips+p.bet)/state.bb;
@@ -827,6 +860,22 @@ function coachPreflopRaiseSizing(p,actsLast){
     anteAdj:anteBB>0,
     depthAdj
   };
+}
+function coachFourBetPlan(p,raiser,actsLast,code,icmPrem){
+  const sizing=coachFourBetSizing(p,actsLast);
+  const effectiveBB=sizing.effective/Math.max(state.bb,1);
+  const threeBetBB=state.currentBet/Math.max(state.bb,1);
+  const tight=!!(raiser&&((raiser.style&&raiser.style.id==='rock')||(raiser.rangeCap||1)<=0.10));
+  const wide=!!(raiser&&raiser.style&&/^(shark|maniac)$/.test(raiser.style.id));
+  const large=state.currentBet>=sizing.effective*0.22||threeBetBB>=16;
+  const lateOpen=/^(HJ|CO|BTN|SB|SB\/BTN)$/.test(p.pos||'');
+  const value=tight&&large?['AA','KK']:['AA','KK','QQ','AKs','AKo'];
+  const calls=tight&&large?['QQ','JJ','AKs','AKo']
+    :(tight||large)?['JJ','TT','AQs','AKo']:['JJ','TT','99','AQs','AJs','KQs','AQo'];
+  const canBluff=wide&&!large&&lateOpen&&effectiveBB>=75&&icmPrem<0.02;
+  const bluffs=canBluff?['A5s','A4s']:[];
+  return {sizing,effectiveBB,threeBetBB,tight,large,value,calls,bluffs,
+    valueHit:value.includes(code),callHit:calls.includes(code),bluffHit:bluffs.includes(code)};
 }
 function coachPostflopRaiseSizing(p,pot,callAmt){
   const potBeforeBet=Math.max(pot-callAmt,state.bb);
@@ -1443,6 +1492,7 @@ function coachDecide(p){
     }else{
       /* facing a raise: BB defense vs steals, then per-raiser-position chart, then EP/LP bucket */
       const raiser=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+      const facingReraise=p.bet>state.bb;
       const shortCtBase=clamp(0.13+(late?0.05:0)+(early?-0.03:0),0.06,0.25);
       const shortCt=clamp(shortCtBase*tableSizeFacingFactor(aliveN,pos),0.06,aliveN<=2?0.45:aliveN===3?0.36:aliveN===4?0.30:0.25);
       if(aliveN<=4&&shortCt>shortCtBase*1.08) extra.push(C('tableSizeNote',aliveN,Math.round(shortCtBase*100),Math.round(shortCt*100)));
@@ -1454,7 +1504,25 @@ function coachDecide(p){
       const setMineX=setMineMultiple(p,callAmt,raiser);
       const setMineOk=smallPair&&callAmt>0&&setMineX>=15;
       const setMineThin=smallPair&&callAmt>0&&setMineX<15;
-      if(facing){
+      if(facingReraise){
+        /* Hero already opened (or 3-bet): this is a 4-bet-or-fold decision, never the 3-bet chart. */
+        const four=coachFourBetPlan(p,raiser,actsLast,code,icmPrem);
+        const villainPos=raiser&&raiser.pos?raiser.pos:'villain';
+        chartInfo={kind:'fourBet',pos:`${pos} vs ${villainPos} 3-bet`,list:four.value.concat(four.bluffs),list2:four.calls};
+        if(four.valueHit){
+          rec=four.sizing.jam?'ALLIN':'RAISE';
+          why.push(C('fourBetValue',code,usd(state.currentBet),bbs(state.currentBet)));
+        }else if(four.bluffHit){
+          rec='RAISE';
+          why.push(C('fourBetBluff',code,usd(state.currentBet),bbs(state.currentBet)));
+        }else if(four.callHit&&eq>=odds+icmPrem+diffCallPad){
+          rec='CALL';
+          why.push(C('fourBetCall',code,pct(eq),pct(odds)));
+        }else{
+          rec='FOLD';
+          why.push(C('fourBetFold',code,usd(state.currentBet),bbs(state.currentBet),Math.round(four.effectiveBB),four.tight||four.large));
+        }
+      }else if(facing){
         const {fc,label,perPos,bbDefend}=facing;
         chartInfo={kind:bbDefend?'bbDefend':'facing',pos:bbDefend?`BB vs ${label}`:(perPos?`vs ${label}`:label),list:fc.raise,list2:fc.call};
         if(bbDefend){
@@ -1668,7 +1736,9 @@ function coachDecide(p){
       t=state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*(smallStab?0.33:0.66)));
     }
     coachT=clamp(Math.round(t/state.sb)*state.sb, state.currentBet+state.lastRaiseSize, p.bet+p.chips);
-    if(sizePlan) extra.push(C('pfRaiseSize',usd(coachT),bbs(coachT),sizePlan.posKey,sizePlan.callers,sizePlan.anteAdj,sizePlan.depthAdj));
+    if(sizePlan) extra.push(sizePlan.kind==='fourBet'
+      ?C('fourBetSize',usd(coachT),bbs(coachT),Math.round(sizePlan.mult*10)/10)
+      :C('pfRaiseSize',usd(coachT),bbs(coachT),sizePlan.posKey,sizePlan.callers,sizePlan.anteAdj,sizePlan.depthAdj));
     if(postSizePlan) extra.push(C('postflopRaiseSize',usd(coachT),bbs(coachT),Math.round(postSizePlan.mult*10)/10,usd(callAmt),Math.round(postSizePlan.betRatio*100)));
   }
   /* rough chip-EV per available action (for blunder tracking) */
@@ -1742,10 +1812,10 @@ function rangeMatrixLegend(){
 function showChartMatrix(info,heroCode){
   if(!HAS_DOM||!info)return;
   $('chartGrid').innerHTML=rangeMatrixCells(info,heroCode);
-  const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='iso'?'chartTitleIso':info.kind==='facing'?'chartTitleFacing':info.kind==='bbDefend'?'chartTitleBbDefend':info.kind==='range'?'chartTitleRange':'chartTitleShove';
+  const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='iso'?'chartTitleIso':info.kind==='facing'?'chartTitleFacing':info.kind==='bbDefend'?'chartTitleBbDefend':info.kind==='fourBet'?'chartTitleFourBet':info.kind==='range'?'chartTitleRange':'chartTitleShove';
   $('chartTitle').textContent=`${info.pos} — ${T(titleKey)}`;
   $('chartLegend').innerHTML=
-    (info.kind==='range'?rangeMatrixLegend():`<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'||info.kind==='iso'?'legendOpen':info.kind==='facing'||info.kind==='bbDefend'?'legend3bet':'legendShove')}</span>`)+
+    (info.kind==='range'?rangeMatrixLegend():`<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'||info.kind==='iso'?'legendOpen':info.kind==='fourBet'?'legendFourBet':info.kind==='facing'||info.kind==='bbDefend'?'legend3bet':'legendShove')}</span>`)+
     (info.list2?`<span><span class="sw" style="background:#2e7d8f;"></span>${T('legendCall')}</span>`:'')+
     `<span><span class="sw" style="background:#1d232e;"></span>${T('legendFold')}</span>`+
     `<span><span class="sw" style="background:none;outline:2px solid #4da3ff;outline-offset:-1px;"></span>${T('legendYou')}</span>`;
