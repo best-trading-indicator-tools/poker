@@ -1806,18 +1806,19 @@ function coachRangeChartInfo(villain,hero,difficultyApplies,difficulty){
     model:villain.rangeModel?Object.assign({},villain.rangeModel):null,cap,floor,
     board:state.board.slice(),dead:hero.hole.slice()};
 }
-function rangeMatrixMassMap(info){
-  if(info._massByCode)return info._massByCode;
-  const mass=Object.create(null);
+function rangeMatrixMetrics(info){
+  if(info._rangeMetrics)return info._rangeMetrics;
+  const mass=Object.create(null),available=Object.create(null),comboWeights=[];
   if(info.kind!=='range'){
-    for(const code of info.list||[])mass[code]=1;
-    info._massByCode=mass;return mass;
+    for(const code of info.list||[]){mass[code]=1;available[code]=1;}
+    return info._rangeMetrics={mass,available,lift:mass,effective:(info.list||[]).length,legal:(info.list||[]).length};
   }
   const dead=new Set((info.board||[]).concat(info.dead||[]).map(c=>c.r*4+c.s));
-  let total=0;
+  let total=0,legal=0;
   for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++){
     const a=FULL_DECK[i],b=FULL_DECK[j];
     if(dead.has(a.r*4+a.s)||dead.has(b.r*4+b.s))continue;
+    const code=holeCode([a,b]);available[code]=(available[code]||0)+1;legal++;
     let w=null;
     if(info.model&&typeof rangeModelPosteriorWeight==='function')w=rangeModelPosteriorWeight(info.model,[a,b]);
     if(w===null){
@@ -1825,10 +1826,16 @@ function rangeMatrixMassMap(info){
       else w=(info.list||[]).includes(holeCode([a,b]))?1:0;
     }
     if(w<=0)continue;
-    const code=holeCode([a,b]);mass[code]=(mass[code]||0)+w;total+=w;
+    mass[code]=(mass[code]||0)+w;total+=w;comboWeights.push(w);
   }
   if(total>0)for(const code of Object.keys(mass))mass[code]/=total;
-  info._massByCode=mass;return mass;
+  const lift=Object.create(null);
+  for(const code of Object.keys(mass))lift[code]=(mass[code]/Math.max(available[code]||1,1))*legal;
+  let sq=0;for(const w of comboWeights){const n=w/Math.max(total,1e-12);sq+=n*n;}
+  return info._rangeMetrics={mass,available,lift,effective:Math.round(1/Math.max(sq,1/Math.max(legal,1))),legal};
+}
+function rangeMatrixMassMap(info){
+  return rangeMatrixMetrics(info).mass;
 }
 function rangeMatrixWeight(code,info){
   return rangeMatrixMassMap(info)[code]||0;
@@ -1838,35 +1845,71 @@ function rangeMostLikelyCodes(info,n=8){
     .filter(x=>x.w>0).sort((a,b)=>b.w-a.w).slice(0,n)
     .map(x=>`${x.code} (${x.w>=0.001?Math.round(x.w*1000)/10:Math.round(x.w*10000)/100}%)`);
 }
-function rangeMatrixCells(info,heroCode,compact=false){
+function rangeMatrixCells(info,heroCode,compact=false,mode='density'){
   const R=['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
-  const inSet2=new Set(info.list2||[]);
+  const inSet2=new Set(info.list2||[]),metrics=rangeMatrixMetrics(info);
   const cells=[];
   for(let i=0;i<13;i++)for(let j=0;j<13;j++){
     const h=i===j?R[i]+R[j]:i<j?R[i]+R[j]+'s':R[j]+R[i]+'o';
-    const w=rangeMatrixWeight(h,info);
-    cells.push({h,w,in2:inSet2.has(h),me:h===heroCode});
+    const mass=metrics.mass[h]||0,lift=metrics.lift[h]||0,combos=metrics.available[h]||0;
+    cells.push({h,mass,lift,combos,in2:inSet2.has(h),me:h===heroCode});
   }
   const html=cells.map(c=>{
-    const tier=info.kind!=='range'?(c.w>0?' rw4':''):c.w>=0.02?' rw4':c.w>=0.01?' rw3':c.w>=0.0035?' rw2':c.w>=0.0003?' rw1':'';
-    const probability=c.w>=0.001?`${Math.round(c.w*1000)/10}%`:`${Math.round(c.w*10000)/100}%`;
-    return `<div class="cc${tier}${c.in2?' in2':''}${c.me?' me':''}" title="${c.h}${info.kind==='range'?' · '+probability+' of range':''}">${c.h}</div>`;
+    const score=mode==='mass'?c.mass:c.lift;
+    const tier=info.kind!=='range'?(c.mass>0?' rw4':''):mode==='mass'
+      ?score>=0.02?' rw4':score>=0.01?' rw3':score>=0.0035?' rw2':score>=0.0003?' rw1':''
+      :score>=4?' rw4':score>=2?' rw3':score>=0.8?' rw2':score>=0.2?' rw1':'';
+    const probability=c.mass>=0.001?`${Math.round(c.mass*1000)/10}%`:`${Math.round(c.mass*10000)/100}%`;
+    const title=info.kind==='range'?` · ${probability} ${T('rangeOfRange')} · ${c.combos} ${T('rangeCombos')} · ${Math.round(c.lift*10)/10}× ${T('rangeAvgCombo')}`:'';
+    return `<div class="cc${tier}${c.in2?' in2':''}${c.me?' me':''}" title="${c.h}${title}"><span>${c.h}</span>${!compact&&info.kind==='range'&&c.mass>0?`<small>${probability}</small>`:''}</div>`;
   }).join('');
   return `<div class="range-grid${compact?' compact':''}">${html}</div>`;
 }
 function rangeMatrixLegend(){
   return `<div class="range-heat-legend"><span><i class="rw1"></i>${T('rangeFringe')}</span><span><i class="rw2"></i>${T('rangePossible')}</span><span><i class="rw3"></i>${T('rangeLikely')}</span><span><i class="rw4"></i>${T('rangeVeryLikely')}</span></div>`;
 }
+function rangeActionTrail(info){
+  const history=info.model?.history||[];
+  return history.map(h=>{
+    const street=h.street==='preflop'?T('preflop'):h.street==='flop'?T('flop'):h.street==='turn'?T('turnSt'):T('riverSt');
+    if(h.action==='raise'){
+      const size=h.targetBB?` ${h.targetBB} BB`:h.betRatio?` ${Math.round(h.betRatio*100)}% pot`:'';
+      if(h.street==='preflop')return `${h.raiseOrdinal===1?T('rangeOpen'):h.raiseOrdinal===2?'3-bet':h.raiseOrdinal===3?'4-bet':h.raiseOrdinal>=4?'5-bet':T('raiseW')}${size}`;
+      return `${h.raisesBefore>0?T('raiseW'):T('betW')} ${street}${size}`;
+    }
+    if(h.action==='check')return `${T('check')} ${street}`;
+    if(h.action==='call')return `${T('call')} ${h.callBB||''}${h.callBB?' BB ':''}${street}`;
+    return `${h.action} ${street}`;
+  }).join(' → ');
+}
+function rangeMatrixMetaHtml(info,controls=false,mode='density'){
+  if(info.kind!=='range')return '';
+  const metrics=rangeMatrixMetrics(info),trail=rangeActionTrail(info),top=rangeMostLikelyCodes(info,5).join(' · ');
+  return `<div class="range-meta"><span>≈${metrics.effective} ${T('rangeEffective')}</span>`+
+    (controls?`<span class="range-mode"><button data-range-mode="density" class="${mode==='density'?'on':''}">${T('rangeDensity')}</button><button data-range-mode="mass" class="${mode==='mass'?'on':''}">${T('rangeClassProb')}</button></span>`:`<span>${T('rangeDensity')}</span>`)+
+    `</div>${trail?`<div class="range-line"><b>${T('rangeLine')}:</b> ${trail}</div>`:''}`+
+    (top?`<div class="range-line range-top"><b>${T('rangeTopHands')}:</b> ${top}</div>`:'');
+}
 function showChartMatrix(info,heroCode){
   if(!HAS_DOM||!info)return;
-  $('chartGrid').innerHTML=rangeMatrixCells(info,heroCode);
+  let mode='density';
+  const paint=()=>{
+    $('chartGrid').innerHTML=rangeMatrixCells(info,heroCode,false,mode);
+    $('chartRangeMeta').innerHTML=rangeMatrixMetaHtml(info,true,mode);
+    $('chartRangeMeta').querySelectorAll('[data-range-mode]').forEach(btn=>btn.onclick=()=>{mode=btn.dataset.rangeMode;paint();});
+    if(info.kind==='range')$('chartLegend').innerHTML=rangeMatrixLegend();
+  };
+  paint();
   const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='iso'?'chartTitleIso':info.kind==='facing'?'chartTitleFacing':info.kind==='bbDefend'?'chartTitleBbDefend':info.kind==='fourBet'?'chartTitleFourBet':info.kind==='range'?'chartTitleRange':'chartTitleShove';
   $('chartTitle').textContent=`${info.pos} — ${T(titleKey)}`;
-  $('chartLegend').innerHTML=
-    (info.kind==='range'?rangeMatrixLegend():`<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'||info.kind==='iso'?'legendOpen':info.kind==='fourBet'?'legendFourBet':info.kind==='facing'||info.kind==='bbDefend'?'legend3bet':'legendShove')}</span>`)+
-    (info.list2?`<span><span class="sw" style="background:#2e7d8f;"></span>${T('legendCall')}</span>`:'')+
-    `<span><span class="sw" style="background:#1d232e;"></span>${T('legendFold')}</span>`+
-    `<span><span class="sw" style="background:none;outline:2px solid #4da3ff;outline-offset:-1px;"></span>${T('legendYou')}</span>`;
+  if(info.kind!=='range'){
+    $('chartRangeMeta').innerHTML='';
+    $('chartLegend').innerHTML=
+      `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'||info.kind==='iso'?'legendOpen':info.kind==='fourBet'?'legendFourBet':info.kind==='facing'||info.kind==='bbDefend'?'legend3bet':'legendShove')}</span>`+
+      (info.list2?`<span><span class="sw" style="background:#2e7d8f;"></span>${T('legendCall')}</span>`:'')+
+      `<span><span class="sw" style="background:#1d232e;"></span>${T('legendFold')}</span>`+
+      `<span><span class="sw" style="background:none;outline:2px solid #4da3ff;outline-offset:-1px;"></span>${T('legendYou')}</span>`;
+  }
   openDialog($('chartOv'),'chartTitle');
 }
 

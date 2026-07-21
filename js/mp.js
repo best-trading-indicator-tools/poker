@@ -466,6 +466,7 @@ function mpSnapshotFor(seat){
   }
   return {players,board:state.board,stage:state.stage,
     currentBet:state.currentBet,lastRaiseSize:state.lastRaiseSize,
+    streetRaiseCount:state.streetRaiseCount||0,preflopRaiseCount:state.preflopRaiseCount||0,
     turnIdx:rot(state.turnIdx),dealerIdx:rot(state.dealerIdx),
     pfAggIdx:state.pfAggIdx>=0?rot(state.pfAggIdx):-1,
     lastAggIdx:state.lastAggIdx>=0?rot(state.lastAggIdx):-1,

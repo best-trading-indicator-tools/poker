@@ -124,7 +124,8 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #chartOv.hidden{display:none;}
 #chartGrid{margin:10px 0;}
 .range-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:2px;}
-.range-grid .cc{width:30px;height:26px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;border-radius:4px;background:#1d232e;color:#5b6675;font-variant-numeric:tabular-nums;}
+.range-grid .cc{width:38px;height:33px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;line-height:1.05;border-radius:4px;background:#1d232e;color:#5b6675;font-variant-numeric:tabular-nums;}
+.range-grid .cc small{font-size:7px;font-weight:650;opacity:.78;margin-top:2px;}
 .range-grid .cc.rw1{background:#29313b;color:#7f8da0;}
 .range-grid .cc.rw2{background:#65532e;color:#f2dfaa;}
 .range-grid .cc.rw3{background:#bd882c;color:#17120a;}
@@ -133,6 +134,13 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 .range-grid .cc.me{outline:2.5px solid #4da3ff;outline-offset:-1px;z-index:1;}
 .coach-range-inline{margin:10px 0 3px;padding:8px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.025);overflow:hidden;}
 .coach-range-inline>b{display:block;font-size:11px;color:var(--gold);margin-bottom:6px;}
+.range-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 5px;color:var(--dim);font-size:9.5px;}
+.range-line{margin:0 0 7px;color:#aeb8c6;font-size:9.5px;line-height:1.35;overflow-wrap:anywhere;}
+.range-line b{color:var(--gold);}
+.range-mode{display:flex;gap:4px;}
+.range-mode button{border:1px solid var(--line);border-radius:999px;background:#222a34;color:var(--dim);padding:4px 8px;font-size:10px;font-weight:700;cursor:pointer;}
+.range-mode button.on{border-color:var(--gold);background:rgba(232,182,76,.16);color:var(--gold);}
+#chartRangeMeta .range-meta,#chartRangeMeta .range-line{font-size:11px;}
 .coach-range-tabs{display:flex;gap:5px;overflow-x:auto;margin-bottom:7px;padding-bottom:2px;}
 .coach-range-tabs button{flex:0 0 auto;border:1px solid var(--line);border-radius:999px;background:#222a34;color:var(--dim);padding:4px 8px;font-size:9.5px;font-weight:750;cursor:pointer;}
 .coach-range-tabs button.on{border-color:var(--gold);background:rgba(232,182,76,.16);color:var(--gold);}
@@ -1057,6 +1065,7 @@ body.fl #chipPreview{display:none!important;}
 <div id="chartOv" class="hidden" aria-hidden="true">
   <div class="rp-card" style="width:auto;" role="document">
     <h2 id="chartTitle"></h2>
+    <div id="chartRangeMeta"></div>
     <div id="chartGrid"></div>
     <div id="chartLegend"></div>
     <button id="chartClose">Close</button>

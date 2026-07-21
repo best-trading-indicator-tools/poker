@@ -56,6 +56,7 @@ mpJoined:n=>`${n} joined the room`,mpGone:n=>`${n} disconnected — their hand i
 mpYou:"(you · host)",mpYouG:"(you)",chatPh:"Message…",
 viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleIso:"iso vs limpers chart",chartTitleShove:"all-in chart",chartTitleFacing:"chart vs this raise",chartTitleBbDefend:"BB defense chart",chartTitleFourBet:"response vs 3-bet",
 viewRange:"📊 Enlarge opponent range",chartTitleRange:"estimated range right now",legendRange:"hands he could still have",rangeFringe:"Fringe",rangePossible:"Possible",rangeLikely:"Likely",rangeVeryLikely:"Very likely",
+rangeDensity:"Per-combo likelihood",rangeClassProb:"Class probability",rangeEffective:"effective combos",rangeLine:"Action line",rangeTopHands:"Top candidates",rangeOpen:"Open",rangeOfRange:"of range",rangeCombos:"available combos",rangeAvgCombo:"average combo likelihood",
 legendOpen:"raise first-in",legendShove:"go all-in",legendFold:"fold",legendYou:"your hand",legend3bet:"re-raise (3-bet)",legendFourBet:"4-bet",legendCall:"call",
 benchConfirm:"Simulate 25 full 9-player tournaments where a bot plays PURE coach advice, to measure how good the coach really is. Takes a minute or two. Run it?",
 youWin:"You win the tournament!",playAgain:"Play again",
@@ -121,6 +122,7 @@ mpJoined:n=>`${n} a rejoint le salon`,mpGone:n=>`${n} s'est déconnecté — sa 
 mpYou:"(vous · hôte)",mpYouG:"(vous)",chatPh:"Message…",
 viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleIso:"charte iso vs limps",chartTitleShove:"charte de tapis",chartTitleFacing:"charte face à cette relance",chartTitleBbDefend:"charte défense BB",chartTitleFourBet:"réponse face au 3-bet",
 viewRange:"📊 Agrandir la range adverse",chartTitleRange:"range estimée en ce moment",legendRange:"mains qu'il peut encore avoir",rangeFringe:"Marginal",rangePossible:"Possible",rangeLikely:"Probable",rangeVeryLikely:"Très probable",
+rangeDensity:"Probabilité par combo",rangeClassProb:"Probabilité de la classe",rangeEffective:"combos effectifs",rangeLine:"Ligne d'actions",rangeTopHands:"Candidats principaux",rangeOpen:"Open",rangeOfRange:"de la range",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilité moyenne d'un combo",
 legendOpen:"relancer en premier",legendShove:"partir à tapis",legendFold:"se coucher",legendYou:"votre main",legend3bet:"sur-relancer (3-bet)",legendFourBet:"4-bet",legendCall:"suivre",
 benchConfirm:"Simuler 25 tournois complets à 9 joueurs où un bot suit UNIQUEMENT les conseils du coach, pour mesurer sa vraie valeur. Compte une à deux minutes. Lancer ?",
 youWin:"Vous remportez le tournoi !",playAgain:"Rejouer",
@@ -186,6 +188,7 @@ mpJoined:n=>`${n} entró en la sala`,mpGone:n=>`${n} se desconectó — su mano 
 mpYou:"(tú · anfitrión)",mpYouG:"(tú)",chatPh:"Mensaje…",
 viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleIso:"tabla iso vs limps",chartTitleShove:"tabla de all-in",chartTitleFacing:"tabla contra esta subida",chartTitleBbDefend:"tabla defensa BB",chartTitleFourBet:"respuesta frente al 3-bet",
 viewRange:"📊 Ampliar el rango rival",chartTitleRange:"rango estimado ahora mismo",legendRange:"manos que aún puede tener",rangeFringe:"Marginal",rangePossible:"Posible",rangeLikely:"Probable",rangeVeryLikely:"Muy probable",
+rangeDensity:"Probabilidad por combo",rangeClassProb:"Probabilidad de la clase",rangeEffective:"combos efectivos",rangeLine:"Línea de acciones",rangeTopHands:"Candidatos principales",rangeOpen:"Open",rangeOfRange:"del rango",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilidad media de un combo",
 legendOpen:"subir de primeras",legendShove:"ir all-in",legendFold:"retirarse",legendYou:"tu mano",legend3bet:"resubir (3-bet)",legendFourBet:"4-bet",legendCall:"igualar",
 benchConfirm:"Simular 25 torneos completos de 9 jugadores donde un bot sigue SOLO los consejos del coach, para medir lo bueno que es de verdad. Tarda uno o dos minutos. ¿Lanzar?",
 youWin:"¡Ganas el torneo!",playAgain:"Jugar de nuevo",
@@ -1563,7 +1566,7 @@ function updateCoach(p){
   const rangeCharts=R.rangeCharts?.length?R.rangeCharts:(R.chartInfo?.kind==='range'?[R.chartInfo]:[]);
   const rangePanel=rangeCharts.length?`<div class="coach-range-inline">`+
     (rangeCharts.length>1?`<div class="coach-range-tabs">${rangeCharts.map((x,i)=>`<button type="button" data-range-index="${i}" class="${i===0?'on':''}">${x.pos}</button>`).join('')}</div>`:'')+
-    `<b id="coachRangeTitle">${rangeCharts[0].pos} — ${T('chartTitleRange')}</b><div id="coachRangeMatrix">${rangeMatrixCells(rangeCharts[0],R.code,true)}</div>${rangeMatrixLegend()}</div>`:'';
+    `<b id="coachRangeTitle">${rangeCharts[0].pos} — ${T('chartTitleRange')}</b><div id="coachRangeMeta">${rangeMatrixMetaHtml(rangeCharts[0])}</div><div id="coachRangeMatrix">${rangeMatrixCells(rangeCharts[0],R.code,true)}</div>${rangeMatrixLegend()}</div>`:'';
   $('coachBody').innerHTML=
     `<div class="rec ${rec}">${recLabel}</div>`+
     `<div class="coach-row"><span>${T('yourHand')}</span><b>${handDesc}</b></div>`+
@@ -1589,8 +1592,9 @@ function updateCoach(p){
       if(!info)return;
       activeChart=info;
       $('coachBody').querySelectorAll('[data-range-index]').forEach(b=>b.classList.toggle('on',b===btn));
-      const title=$('coachRangeTitle'),matrix=$('coachRangeMatrix');
+      const title=$('coachRangeTitle'),meta=$('coachRangeMeta'),matrix=$('coachRangeMatrix');
       if(title)title.textContent=`${info.pos} — ${T('chartTitleRange')}`;
+      if(meta)meta.innerHTML=rangeMatrixMetaHtml(info);
       if(matrix)matrix.innerHTML=rangeMatrixCells(info,R.code,true);
     });
   }

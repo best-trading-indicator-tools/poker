@@ -188,88 +188,167 @@ function rangePreflopShape(hole){
   const pair=hole[0].r===hole[1].r;
   const suited=hole[0].s===hole[1].s;
   const hi=Math.max(hole[0].r,hole[1].r),lo=Math.min(hole[0].r,hole[1].r);
-  return {code,pair,suited,connector:suited&&hi-lo<=2&&hi<=12,blocker:/^A[2345]s$/.test(code)};
+  return {code,pct:handPct[code]||1,pair,suited,connector:suited&&hi-lo<=2&&hi<=12,blocker:/^A[2345]s$/.test(code)};
 }
-/* P(observed action | hypothetical combo, public state). These likelihoods are deliberately
-   smooth rather than hard chart cut-offs, so bluffs, traps and profile deviations retain weight. */
+function rangePolicyNormalize(raw,legal){
+  let total=0;const out={fold:0,check:0,call:0,raise:0};
+  for(const a of legal){out[a]=Math.max(0.0005,raw[a]||0);total+=out[a];}
+  for(const a of legal)out[a]/=total||1;
+  return out;
+}
+function rangeIsOopPreflop(p){return /^(SB|BB)$/.test(p.pos||'');}
+function rangeExpectedPreflopTarget(p,ctx,raiseOrdinal){
+  const bb=ctx.bb||state.bb||1,step=Math.max(1,ctx.sb||state.sb||bb/2);
+  const current=ctx.cbBefore??state.currentBet,playerBet=ctx.playerBetBefore??p.bet;
+  const stackTotal=ctx.stackTotalBefore||playerBet+(p.chips||0),oop=rangeIsOopPreflop(p);
+  const callers=Math.max(0,ctx.callersAtLevel||0),limpers=Math.max(0,ctx.limpersBefore||0);
+  let target;
+  if(raiseOrdinal<=1){
+    const early=/^(UTG|UTG\+1|MP)/.test(p.pos||'');
+    target=bb*(early?2.5:2.25)+limpers*bb;
+  }else if(raiseOrdinal===2){
+    target=current*(oop?3.8:3.25)+callers*current*0.65;
+  }else if(raiseOrdinal===3){
+    target=current*(oop?2.35:2.15)+callers*current*0.25;
+  }else target=stackTotal;
+  target=Math.round(target/step)*step;
+  const effective=(ctx.effectiveStackBB||stackTotal/bb)*bb;
+  const invest=Math.max(0,target-playerBet);
+  if(raiseOrdinal>=3&&invest>=effective*0.38)target=stackTotal;
+  const minTarget=Math.min(stackTotal,current+(ctx.facedRaiseSize||state.lastRaiseSize||bb));
+  return clamp(target,minTarget,stackTotal);
+}
+function rangeLogSizeKernel(actual,expected,width=0.24){
+  if(!(actual>0)||!(expected>0))return 0.04;
+  const z=Math.log(actual/expected)/width;
+  return 0.025+0.975*Math.exp(-0.5*z*z);
+}
+function rangePreflopSizingLikelihood(p,ctx,hole,info){
+  if(!(ctx.target>0))return 1;
+  const ordinal=ctx.raiseOrdinal||((ctx.preflopRaisesBefore||0)+1);
+  const normal=rangeExpectedPreflopTarget(p,ctx,ordinal);
+  const stackTotal=ctx.stackTotalBefore||(ctx.playerBetBefore||0)+(p.chips||0);
+  const normalLike=rangeLogSizeKernel(ctx.target,normal,ordinal>=3?0.30:0.24);
+  const jamLike=rangeLogSizeKernel(ctx.target,stackTotal,0.12);
+  const premium=rangeSmoothInside(info.pct,ordinal>=4?0.018:ordinal===3?0.032:0.055,0.012);
+  const short=(ctx.effectiveStackBB||100)<=22;
+  let jamMix=short?0.30+premium*0.55:ordinal>=4?0.72+premium*0.24:ordinal===3?premium*0.34:premium*0.05;
+  if(/^A[2345]s$/.test(holeCode(hole))&&(ctx.effectiveStackBB||100)>45)jamMix*=0.20;
+  return clamp(normalLike*(1-jamMix)+jamLike*jamMix,0.01,1);
+}
+/* A pure preflop policy kernel shared by the hard bots and the range posterior.
+   It explicitly separates open, 3-bet, 4-bet and 5-bet branches. */
+function rangePreflopActionPolicy(p,ctx,hole,knownInfo){
+  const info=knownInfo||rangePreflopShape(hole),shape=info.code?info:rangePreflopShape(hole);
+  const st=rangeModelStyle(p),sid=p.style?.id||'',price=ctx.callAmt||0,free=price<=0;
+  const raises=Math.max(0,ctx.preflopRaisesBefore??ctx.raisesBefore??0);
+  const raiseBB=(ctx.cbBefore||0)/Math.max(ctx.bb||state.bb||1,1);
+  if(raises===0){
+    const cap=rangeModelOpeningCap(p,ctx);
+    const inOpen=rangeSmoothInside(info.pct,cap,0.04);
+    let raiseMix=clamp(0.58+(sid==='maniac'?0.31:sid==='shark'?0.24:sid==='station'?-0.08:sid==='rock'?-0.20:0),0.18,0.97);
+    if((p.pos||'')==='BB'&&free)raiseMix*=ctx.limpersBefore?0.76:0.38;
+    const raise=inOpen*raiseMix;
+    if(free)return rangePolicyNormalize({raise,check:1-raise},['check','raise']);
+    if((p.pos||'')!=='SB')return rangePolicyNormalize({raise,fold:1-raise},['fold','raise']);
+    const limpBonus=(shape.pair?0.10:0)+(shape.suited?0.08:0);
+    const play=clamp(inOpen+limpBonus*(1-inOpen),0.01,0.99);
+    return rangePolicyNormalize({raise:play*raiseMix,call:play*(1-raiseMix),fold:1-play},['fold','call','raise']);
+  }
+  const steal=/^(CO|BTN|SB|SB\/BTN)$/.test(ctx.lastAggPos||'');
+  const early=/^(UTG|UTG\+1|MP|MP\+)/.test(ctx.lastAggPos||'');
+  const blind=/^(BB|SB|SB\/BTN)$/.test(p.pos||'');
+  let continueCap,raiseValueCap,callWidth,bluffMix=st.bluff;
+  if(raises===1){
+    continueCap=(steal?0.30:early?0.145:0.22)+(blind?0.065:0);
+    continueCap-=Math.max(0,raiseBB-2.2)*0.035;
+    raiseValueCap=(early?0.055:steal?0.095:0.075)+(blind&&steal?0.015:0);
+    callWidth=0.035;bluffMix+=early?0.10:steal?0.30:0.20;
+  }else if(raises===2){
+    continueCap=clamp(0.082-Math.max(0,raiseBB-8)*0.004,0.035,0.09);
+    raiseValueCap=0.030;callWidth=0.018;bluffMix+=0.12;
+  }else{
+    continueCap=clamp(0.034-Math.max(0,raiseBB-22)*0.0008,0.016,0.04);
+    raiseValueCap=0.016;callWidth=0.010;bluffMix+=0.035;
+  }
+  if(sid==='station')continueCap*=1.12;
+  else if(sid==='rock')continueCap*=0.84;
+  else if(sid==='maniac')continueCap*=1.18;
+  const continueP=clamp(rangeSmoothInside(info.pct,continueCap,callWidth),0.002,0.995);
+  const value=rangeSmoothInside(info.pct,raiseValueCap,raises>=2?0.008:0.014);
+  const polar=shape.blocker||(raises===1&&shape.connector&&steal);
+  let polarFreq=polar?clamp(bluffMix*(raises>=2?0.48:0.85),0.01,0.58):0;
+  if(raises>=3&&shape.code!=='A5s')polarFreq*=0.10;
+  if(raiseBB>(raises===1?5.5:raises===2?15:35))polarFreq*=0.24;
+  let raiseMix=clamp(value*0.84+(1-value)*polarFreq,0.004,0.96);
+  if(raises>=3&&value>0.5)raiseMix=Math.max(raiseMix,0.78);
+  const raise=continueP*raiseMix,call=continueP-raise;
+  return rangePolicyNormalize({raise,call,fold:1-continueP},['fold','call','raise']);
+}
+function rangePostflopActionPolicy(p,m,ctx,hole,info){
+  const st=rangeModelStyle(p),ratio=clamp(ctx.betRatio||0,0,2);
+  const made=info.made||0,draw=(ctx.stage||state.stage)==='river'?0:(info.draw||0);
+  const air=clamp(1-Math.max(made*1.35,draw*1.10),0,1),facing=(ctx.cbBefore||0)>0;
+  const checkRaise=!!p.checkedStreet&&facing,multi=Math.max(1,(ctx.activePlayers||2)-1);
+  const line=ctx.lineType||'',facedLine=ctx.facedLine||'';
+  let value=made*(0.62+ratio*0.20)*(checkRaise?1.22:1);
+  let semi=draw*(0.44+st.bluff*0.55)*(facing?0.78:1);
+  let bluff=air*st.bluff*(facing?0.40:0.72)*(ratio>=0.85?0.62:1);
+  if(multi>1){semi*=0.84;bluff*=Math.pow(0.62,multi-1);}
+  if(ctx.inPosition&&!facing)bluff*=1.18;
+  if(line==='cbet')bluff*=1.34;
+  else if(line==='donk'){value*=1.15;bluff*=0.58;}
+  else if(line==='checkraise'){value*=1.26;bluff*=0.52;}
+  let raise=0.012+value+semi+bluff;
+  if(facing){
+    const strength=Math.max(made,draw*0.90);
+    let call=0.012+strength*0.82+(made>=0.74?st.trap*0.20:0);
+    if(ratio>=0.70&&strength<0.35)call*=0.34;
+    if(/^(donk|barrel2|barrel3|checkraise)$/.test(facedLine)&&strength<0.62)call*=0.72;
+    if(multi>1&&strength<0.45)call*=Math.pow(0.78,multi-1);
+    const fold=0.10+air*0.86+(ratio>=0.70?Math.max(0,0.35-strength)*0.55:0);
+    return rangePolicyNormalize({raise,call,fold},['fold','call','raise']);
+  }
+  const medium=info.medium?1:0;
+  let check=0.12+air*0.74+medium*0.18+draw*0.38+made*0.10;
+  if(made>=0.62)check=0.035+st.trap*0.68+draw*0.18;
+  const priorChecks=ctx.rangePriorPostChecks||0;
+  const boardHit=(state.board||[]).some(b=>hole.some(c=>c.r===b.r));
+  if(ctx.rangeCheckedTo&&boardHit){
+    const sid=p.style?.id||'',aggressive=/^(shark|maniac)$/.test(sid);
+    if(made>=0.45&&made<0.62){
+      const first=aggressive?(sid==='maniac'?0.34:0.43):sid==='rock'?0.60:0.66;
+      const repeat=aggressive?(sid==='maniac'?0.22:0.30):sid==='rock'?0.48:0.55;
+      check*=priorChecks>0?repeat:first;
+    }else if(made>=0.25&&made<0.45&&priorChecks>0)check*=aggressive?0.72:0.84;
+    else if(made>=0.62)check*=priorChecks>0?0.62:0.78;
+  }
+  return rangePolicyNormalize({raise,check},['check','raise']);
+}
+function rangePostflopSizingLikelihood(p,ctx,info){
+  if(!(ctx.target>0))return 1;
+  const ratio=ctx.actionPotRatio||ctx.betRatio||0,stage=ctx.stage||state.stage;
+  const strong=(info.made||0)>=0.62,medium=(info.made||0)>=0.25&&!strong,draw=(info.draw||0)>0.20;
+  let expected=stage==='flop'?0.52:stage==='turn'?0.62:0.68;
+  if(strong)expected+=0.13;else if(medium)expected-=0.13;else if(draw)expected+=0.04;
+  if((ctx.raisesBefore||0)>0)expected+=0.24;
+  if((ctx.activePlayers||2)>2)expected+=Math.min(0.14,((ctx.activePlayers||2)-2)*0.06);
+  if((ctx.effectiveStackBB||100)<=18&&strong)expected=Math.max(expected,0.90);
+  const normal=rangeLogSizeKernel(Math.max(ratio,0.02),expected,0.42);
+  const polar=(strong||draw||((info.made||0)<0.18&&rangeModelStyle(p).bluff>0.10))?1:0.18;
+  const overbet=ratio>0.95?polar:1;
+  return clamp(normal*overbet,0.01,1);
+}
+/* P(observed action | hypothetical combo, public state), normalized across every legal
+   alternative. The posterior therefore follows prior × policy frequency, as solver ranges do. */
 function rangeActionLikelihood(p,m,type,ctx,hole,knownInfo){
   const action=type==='call'&&(ctx.callAmt||0)<=0?'check':type;
-  const st=rangeModelStyle(p), info=knownInfo||rangeModelComboInfo(hole,state.board||[]);
-  const ratio=clamp(ctx.betRatio||0,0,2), pre=state.stage==='preflop';
-  if(action==='fold')return 1;
-  if(pre){
-    const shape=knownInfo&&knownInfo.code?knownInfo:rangePreflopShape(hole);
-    if(action==='raise'){
-      const facing=(ctx.cbBefore||0)>state.bb;
-      const reraising=(ctx.playerBetBefore||0)>state.bb;
-      let cap=rangeModelOpeningCap(p,ctx);
-      if(reraising)cap=clamp((p.style?.id==='maniac'?0.09:p.style?.id==='shark'?0.065:p.style?.id==='station'?0.04:0.03)*st.open,0.02,0.12);
-      const inside=rangeSmoothInside(info.pct,cap,facing?0.022:0.045);
-      let likelihood=0.018+0.91*inside;
-      const bluffChance=st.bluff*(facing?1.15:0.55);
-      if(shape.blocker)likelihood=Math.max(likelihood,0.025+bluffChance);
-      else if(shape.connector&&info.pct<=cap*1.6)likelihood=Math.max(likelihood,0.018+bluffChance*0.55);
-      if(ratio>=0.75)likelihood*=0.48+0.62*rangeSmoothInside(info.pct,Math.min(cap,0.075),0.02);
-      return clamp(likelihood,0.006,0.985);
-    }
-    if(action==='call'){
-      const free=(ctx.callAmt||0)<=0;
-      if(free){
-        const openCap=rangeModelOpeningCap(p,ctx);
-        const wouldRaise=rangeSmoothInside(info.pct,openCap,0.045);
-        return clamp(0.96-wouldRaise*(0.72-st.trap*0.42),0.08,0.98);
-      }
-      const cap=rangeModelCallCap(p,ctx), inside=rangeSmoothInside(info.pct,cap,0.04);
-      const premium=rangeSmoothInside(info.pct,0.045,0.014);
-      let likelihood=0.018+0.80*inside;
-      likelihood*=1-premium*(0.58-st.trap*0.45);
-      if(shape.pair||shape.suited)likelihood*=1.10;
-      if(ratio>=0.40&&info.pct>0.16)likelihood*=0.55;
-      return clamp(likelihood,0.006,0.96);
-    }
-  }
-  const made=info.made||0,draw=state.stage==='river'?0:(info.draw||0);
-  const air=clamp(1-Math.max(made*1.35,draw*1.10),0,1);
-  if(action==='raise'){
-    const facing=(ctx.cbBefore||0)>0, checkRaise=!!p.checkedStreet&&facing;
-    const value=made*(0.62+ratio*0.20)*(checkRaise?1.22:1);
-    const semi=draw*(0.44+st.bluff*0.55)*(facing?0.78:1);
-    const bluff=air*st.bluff*(facing?0.40:0.72)*(ratio>=0.85?0.62:1);
-    return clamp(0.012+value+semi+bluff,0.006,0.985);
-  }
-  if(action==='call'){
-    const continueStrength=Math.max(made,draw*0.90);
-    let likelihood=0.012+continueStrength*0.82;
-    if(made>=0.74)likelihood+=st.trap*0.20;
-    if(ratio>=0.70&&continueStrength<0.35)likelihood*=0.34;
-    return clamp(likelihood,0.006,0.96);
-  }
-  if(action==='check'){
-    const medium=info.medium?1:0;
-    let likelihood=0.12+air*0.74+medium*0.18+draw*0.38+made*0.10;
-    if(made>=0.62)likelihood=0.035+st.trap*0.68+draw*0.18;
-    const checkedTo=!!ctx.rangeCheckedTo;
-    const priorChecks=ctx.rangePriorPostChecks||0;
-    const boardHit=(state.board||[]).some(b=>hole.some(c=>c.r===b.r));
-    if(checkedTo&&boardHit){
-      const sid=p.style?.id||'';
-      const aggressive=/^(shark|maniac)$/.test(sid);
-      if(made>=0.45&&made<0.62){
-        /* Top-pair type hands usually take value when checked to; a second pass is stronger evidence. */
-        const first=aggressive?(sid==='maniac'?0.34:0.43):sid==='rock'?0.60:0.66;
-        const repeat=aggressive?(sid==='maniac'?0.22:0.30):sid==='rock'?0.48:0.55;
-        likelihood*=priorChecks>0?repeat:first;
-      }else if(made>=0.25&&made<0.45&&priorChecks>0){
-        /* Second/third pair can reasonably pot-control, so only a modest repeat-check discount. */
-        likelihood*=aggressive?0.72:0.84;
-      }else if(made>=0.62){
-        /* Preserve traps, but slow-playing a monster through multiple checked-to streets is uncommon. */
-        likelihood*=priorChecks>0?0.62:0.78;
-      }
-    }
-    return clamp(likelihood,0.012,0.98);
-  }
-  return 0.5;
+  const pre=(ctx.stage||state.stage)==='preflop';
+  const info=knownInfo||(pre?rangePreflopShape(hole):rangeModelComboInfo(hole,state.board||[]));
+  const policy=pre?rangePreflopActionPolicy(p,ctx,hole,info):rangePostflopActionPolicy(p,m,ctx,hole,info);
+  let likelihood=policy[action]||0.0005;
+  if(action==='raise')likelihood*=pre?rangePreflopSizingLikelihood(p,ctx,hole,info):rangePostflopSizingLikelihood(p,ctx,info);
+  return clamp(likelihood,0.00005,0.9999);
 }
 let RANGE_PREFLOP_META=null;
 function rangeComboInfoVector(){
@@ -290,7 +369,7 @@ function rangePosteriorApply(p,m,type,ctx){
   const infos=rangeComboInfoVector();
   const evidence=Object.assign({},ctx,{
     rangePriorPostChecks:(m.history||[]).filter(x=>x.action==='check'&&x.street!=='preflop').length,
-    rangeCheckedTo:(ctx.cbBefore||0)<=0&&state.players.some(q=>q!==p&&!q.folded&&!q.out&&q.checkedStreet)
+    rangeCheckedTo:(ctx.cbBefore||0)<=0&&((ctx.checkedBefore||0)>0||state.players.some(q=>q!==p&&!q.folded&&!q.out&&q.checkedStreet))
   });
   const next=new Array(1326); let sum=0,k=0;
   for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++,k++){
@@ -308,9 +387,13 @@ function rangePosteriorApply(p,m,type,ctx){
   let sq=0;for(const w of next)sq+=w*w;
   m.effectiveCombos=Math.round(1/Math.max(sq,1/1326));
   if(!Array.isArray(m.history))m.history=[];
-  m.history.push({street:state.stage,action:type==='call'&&(ctx.callAmt||0)<=0?'check':type,
+  m.history.push({street:ctx.stage||state.stage,action:type==='call'&&(ctx.callAmt||0)<=0?'check':type,
     callBB:Math.round(((ctx.callAmt||0)/Math.max(state.bb,1))*10)/10,
     betRatio:Math.round((ctx.betRatio||0)*100)/100,cbBB:Math.round(((ctx.cbBefore||0)/Math.max(state.bb,1))*10)/10,
+    targetBB:Math.round((ctx.targetBB||0)*10)/10,raiseOrdinal:ctx.raiseOrdinal||0,
+    raisesBefore:ctx.raisesBefore||0,price:Math.round((ctx.price||0)*1000)/1000,
+    lastAggPos:ctx.lastAggPos||'',effectiveStackBB:Math.round((ctx.effectiveStackBB||0)*10)/10,
+    activePlayers:ctx.activePlayers||0,inPosition:!!ctx.inPosition,lineType:ctx.lineType||'',facedLine:ctx.facedLine||'',
     board:(state.board||[]).map(rangeCardId)});
   if(m.history.length>24)m.history.shift();
 }
@@ -830,15 +913,20 @@ function aiThinRiverValueTarget(p,pot,d,spot){
   t=Math.round(t/state.sb)*state.sb;
   return clamp(t,state.currentBet+state.lastRaiseSize,p.bet+p.chips);
 }
-function aiHardPreflopTarget(p,threeBet=false){
-  const bb=state.bb, step=Math.max(1,state.sb||bb/2);
-  const oop=/^(SB|BB)$/.test(p.pos||'');
-  const callers=inHand().filter(q=>q!==p&&q.bet===state.currentBet).length;
-  let target=threeBet
-    ?state.currentBet*(oop?3.8:3.25)+callers*state.currentBet*0.65
-    :bb*(/^(UTG|UTG\+1|MP)/.test(p.pos||'')?2.5:2.25);
-  target=Math.round(target/step)*step;
-  return clamp(target,state.currentBet+state.lastRaiseSize,p.bet+p.chips);
+function aiCurrentRangeContext(p,callAmt,pot){
+  const lastAgg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+  const effective=Math.min(p.chips+p.bet,lastAgg?(lastAgg.chips+lastAgg.bet):p.chips+p.bet);
+  return {stage:state.stage,callAmt,cbBefore:state.currentBet,playerBetBefore:p.bet,potBefore:pot,
+    raisesBefore:state.streetRaiseCount||0,preflopRaisesBefore:state.preflopRaiseCount||0,
+    facedRaiseSize:state.lastRaiseSize||0,lastAggPos:lastAgg?.pos||'',lastAggStyle:lastAgg?.style?.id||'',
+    bb:state.bb,sb:state.sb,stackTotalBefore:p.chips+p.bet,effectiveStackBB:effective/Math.max(state.bb,1),
+    limpersBefore:state.stage==='preflop'?inHand().filter(q=>q!==p&&q.bet===state.bb&&q.i!==state.lastAggIdx).length:0,
+    callersAtLevel:inHand().filter(q=>q!==p&&q.i!==state.lastAggIdx&&q.bet===state.currentBet).length,
+    activePlayers:inHand().length};
+}
+function aiHardPreflopTarget(p,raiseOrdinal=1,ctx=null){
+  const c=ctx||aiCurrentRangeContext(p,Math.max(0,state.currentBet-p.bet),state.players.reduce((s,q)=>s+q.totalBet,0));
+  return rangeExpectedPreflopTarget(p,c,raiseOrdinal);
 }
 function aiPolarThreeBetCandidate(p,steal,earlyR){
   const a=p.hole[0],b=p.hole[1],hi=Math.max(a.r,b.r),lo=Math.min(a.r,b.r);
@@ -852,51 +940,19 @@ function aiPolarThreeBetCandidate(p,steal,earlyR){
 }
 function aiHardUnopenedPreflop(p,openRange,press,pot,eq,callAmt,d){
   if(d!=='hard'||state.stage!=='preflop'||state.currentBet>state.bb)return null;
-  const pos=p.pos||'';
-  const pr=handPct[holeCode(p.hole)]||1;
-  const sid=aiEffectiveStyle(p)?.id;
-  const bbFree=callAmt<=0;
-  if(openRange){
-    let raiseProb=aiOpenRaiseProb(p,d);
-    if(bbFree) raiseProb=pos==='BB'?0.42:0.70;
-    if(sid==='shark'||sid==='maniac')raiseProb+=0.04;
-    if(Math.random()<clamp(raiseProb,0.20,0.98))
-      return {type:'raise',amount:aiHardPreflopTarget(p,false)};
-    return bbFree?{type:'call'}:{type:'fold'};
-  }
-  if(bbFree)return {type:'call'};
-  const sbComplete=pos==='SB'&&callAmt<=state.sb&&pr<=0.34&&eq>=0.30&&Math.random()<0.16;
-  return sbComplete?{type:'call'}:{type:'fold'};
+  const ctx=aiCurrentRangeContext(p,callAmt,pot),policy=rangePreflopActionPolicy(p,ctx,p.hole);
+  const roll=Math.random();
+  if(openRange&&roll<policy.raise)return {type:'raise',amount:aiHardPreflopTarget(p,1,ctx)};
+  if(callAmt<=0)return {type:'call'};
+  if((p.pos||'')==='SB'&&roll<policy.raise+policy.call)return {type:'call'};
+  return {type:'fold'};
 }
 function aiHardPreflopVsRaise(p,callAmt,pot,eq,odds,margin,d){
   if(d!=='hard'||state.stage!=='preflop'||state.currentBet<=state.bb||callAmt<=0)return null;
-  const pr=handPct[holeCode(p.hole)]||1;
-  const raiser=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
-  const steal=raiser&&/^(CO|BTN|SB|SB\/BTN)$/.test(raiser.pos||'');
-  const earlyR=raiser&&/^(UTG|MP)/.test(raiser.pos||'');
-  const blind=/^(BB|SB|SB\/BTN)$/.test(p.pos||'');
-  const sid=aiEffectiveStyle(p)?.id;
-  const raiseBB=state.currentBet/Math.max(state.bb,1);
-  let valueThr=earlyR?0.055:steal?0.095:0.075;
-  let threeBetThr=earlyR?0.065:steal?0.125:0.095;
-  if(blind&&steal)threeBetThr+=0.025;
-  if(sid==='rock')threeBetThr-=0.018;
-  else if(sid==='shark')threeBetThr+=0.025;
-  else if(sid==='maniac')threeBetThr+=0.035;
-  valueThr+=blind&&steal?0.015:0;
-  const polar=aiPolarThreeBetCandidate(p,steal,earlyR);
-  const bluffFreq=earlyR?0.18:steal?0.46:0.30;
-  const value3bet=pr<=clamp(valueThr,0.04,0.13);
-  const bluff3bet=polar&&pr<=clamp(threeBetThr+0.12,0.12,0.30)&&Math.random()<bluffFreq;
-  if((value3bet||bluff3bet)&&raiseBB<=5.5)
-    return {type:'raise',amount:aiHardPreflopTarget(p,true)};
-  let defendThr=(steal?0.30:earlyR?0.145:0.22)+(blind?0.065:0);
-  defendThr-=Math.max(0,raiseBB-2.2)*0.035;
-  if(!blind)defendThr-=0.025;
-  if(sid==='station')defendThr+=0.018;
-  if(sid==='rock')defendThr-=0.012;
-  defendThr=clamp(defendThr,0.09,0.38);
-  if(pr<=defendThr&&eq>=odds+Math.max(0.01,margin*0.25))return {type:'call'};
+  const ctx=aiCurrentRangeContext(p,callAmt,pot),policy=rangePreflopActionPolicy(p,ctx,p.hole);
+  const roll=Math.random(),ordinal=(ctx.preflopRaisesBefore||0)+1;
+  if(roll<policy.raise)return {type:'raise',amount:aiHardPreflopTarget(p,ordinal,ctx)};
+  if(roll<policy.raise+policy.call)return {type:'call'};
   return {type:'fold'};
 }
 function aiHardPostflopNoBet(p,eq,pot,d,st,pfAdj){
@@ -1150,7 +1206,7 @@ function betTarget(p,pot,eq,d){
   const size=((st&&st.size)||1)+(hu.active?0.08+hu.leadBoost*0.22:0);
   let t;
   if(state.stage==='preflop'){
-    if(d==='hard')return aiHardPreflopTarget(p,state.currentBet>state.bb);
+    if(d==='hard')return aiHardPreflopTarget(p,(state.preflopRaiseCount||0)+1);
     t = (state.currentBet>state.bb ? state.currentBet*2.6 : state.bb*(2.5+Math.random()))*size;
     if(isCashGame()&&aiIsLate(p)&&(p.chips+p.bet)/state.bb>=60) t*=1.08;
   }else{

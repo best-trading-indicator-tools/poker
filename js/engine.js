@@ -45,7 +45,7 @@ function newGame(cfg){
   const mode=getMode(cfg);
   state={
     cfg, levels:[startBlind], level:0, handNum:0, board:[], stage:null, deck:[],
-    currentBet:0, lastRaiseSize:0, turnIdx:0, players:[],
+    currentBet:0, lastRaiseSize:0, streetRaiseCount:0, preflopRaiseCount:0, turnIdx:0, players:[],
     gameOver:false, bb:startBlind, sb:startBlind/2, ante:0, handOver:false,
     humanModel:{actions:0,preActions:0,preRaises:0,facing:0,folds:0,postActions:0,postBets:0,postCalls:0,postChecks:0}
   };
@@ -148,6 +148,7 @@ function startHand(){
     if(opp&&state.players[0].chips<opp.chips) state.rewardHeadsUpTrailed=true;
   }
   state.board=[]; state.stage='preflop'; state._rangeComboInfoCache=Object.create(null);
+  state.streetRaiseCount=0; state.preflopRaiseCount=0;
   state.deck=shuffle(makeDeck());
   for(const p of state.players){
     p.hole=[]; p.folded=p.out; p.allIn=false; p.bet=0; p.totalBet=0;
@@ -249,8 +250,23 @@ function applyAction(p,type,amt){
   const callAmt=Math.max(0,Math.min(state.currentBet-p.bet,p.chips));
   if(type==='fold'&&callAmt<=0) type='call'; // checking is the only legal zero-price fold alternative
   const cbBefore=state.currentBet;   // bet level BEFORE this action (for line reading)
-  const rangeCtx={callAmt,cbBefore,playerBetBefore:p.bet,
-    potBefore:state.players.reduce((s,q)=>s+q.totalBet,0),raiseSize:0,target:0,betRatio:0};
+  const potBefore=state.players.reduce((s,q)=>s+q.totalBet,0);
+  const streetBetsBefore=state.players.reduce((s,q)=>s+q.bet,0);
+  const lastAgg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+  const raisesBefore=state.streetRaiseCount||0;
+  const effectiveStack=Math.min(p.chips+p.bet,lastAgg?(lastAgg.chips+lastAgg.bet):p.chips+p.bet);
+  const postOrder=state.stage!=='preflop'&&typeof postflopOrder==='function'?postflopOrder().filter(q=>!q.allIn):[];
+  const postIdx=postOrder.indexOf(p),actorsAfter=postIdx<0?0:postOrder.slice(postIdx+1).length;
+  const rangeCtx={stage:state.stage,callAmt,cbBefore,playerBetBefore:p.bet,potBefore,
+    streetPotBefore:Math.max(0,potBefore-streetBetsBefore),raiseSize:0,target:0,betRatio:0,
+    raisesBefore,preflopRaisesBefore:state.preflopRaiseCount||0,
+    facedRaiseSize:state.lastRaiseSize||0,lastAggPos:lastAgg?.pos||'',lastAggStyle:lastAgg?.style?.id||'',
+    facedLine:lastAgg?.lineRead||'',actorsAfter,inPosition:state.stage!=='preflop'&&actorsAfter===0,
+    activePlayers:inHand().length,bb:state.bb,sb:state.sb,stackTotalBefore:p.chips+p.bet,
+    effectiveStackBB:effectiveStack/Math.max(state.bb,1),
+    limpersBefore:state.stage==='preflop'?inHand().filter(q=>q!==p&&q.bet===state.bb&&q.i!==state.lastAggIdx).length:0,
+    callersAtLevel:inHand().filter(q=>q!==p&&q.i!==state.lastAggIdx&&q.bet===cbBefore).length,
+    checkedBefore:state.stage==='preflop'?0:inHand().filter(q=>q!==p&&q.checkedStreet).length};
   if(typeof aiObserveAction==='function')aiObserveAction(p,type,rangeCtx);
   if(type==='fold'){
     p.folded=true; p.lastAct='Fold'; sfx('fold');
@@ -259,6 +275,7 @@ function applyAction(p,type,amt){
     p.lastAct = callAmt<=0 ? 'Check' : (p.allIn?'All-in '+usd(p.bet):'Call '+usd(paid));
     sfx(callAmt<=0?'check':'chip');
     rangeCtx.betRatio=callAmt>0?callAmt/Math.max(rangeCtx.potBefore-callAmt,state.bb):0;
+    rangeCtx.price=callAmt>0?callAmt/Math.max(rangeCtx.potBefore+callAmt,1):0;
     if(callAmt>0){
       narrowRange(p, state.stage==='preflop'?0.35:0.50);
       p.rangeFloor=(p.rangeFloor||0)*0.5;   // calling after checking: medium strength, weakness read fades
@@ -278,6 +295,11 @@ function applyAction(p,type,amt){
     payBet(p,target-p.bet);
     const raiseSize=target-state.currentBet;
     rangeCtx.raiseSize=raiseSize; rangeCtx.target=target;
+    rangeCtx.investment=target-rangeCtx.playerBetBefore;
+    rangeCtx.targetBB=target/Math.max(state.bb,1);
+    rangeCtx.raiseOrdinal=raisesBefore+1;
+    rangeCtx.actionPotRatio=rangeCtx.investment/Math.max(potBefore,state.bb);
+    rangeCtx.raiseOverCurrent=cbBefore>0?target/cbBefore:0;
     if(raiseSize>=state.lastRaiseSize){
       state.lastRaiseSize=raiseSize;
       for(const q of state.players) if(q!==p&&!q.folded&&!q.allIn&&!q.out) q.acted=false;
@@ -305,12 +327,13 @@ function applyAction(p,type,amt){
     /* the bigger the raise relative to the pot, the narrower the credible range */
     const potNow=state.players.reduce((s,q)=>s+q.totalBet,0);
     const ratio=raiseSize/Math.max(potNow-raiseSize,state.bb);
-    rangeCtx.betRatio=ratio;
+    rangeCtx.betRatio=rangeCtx.actionPotRatio;
     let cap=base;
     if(ratio>=1.2) cap*=0.35;        // overbet / jam → very strong
     else if(ratio>=0.8) cap*=0.55;   // pot-sized
     else if(ratio>=0.5) cap*=0.8;    // 2/3-pot-ish
     if(p.checkedStreet){ cap*=0.5; p.lineRead='checkraise'; } // the check was a trap
+    rangeCtx.lineType=p.lineRead;
     p.rangeFloor=0;                  // betting cancels any weakness read
     narrowRange(p, cap);
     p.aggStreets.push(state.stage);
@@ -318,6 +341,10 @@ function applyAction(p,type,amt){
     state.lastAggIdx=p.i;
   }
   if(typeof rangeModelApplyAction==='function') rangeModelApplyAction(p,type,rangeCtx);
+  if(type==='raise'){
+    state.streetRaiseCount=raisesBefore+1;
+    if(state.stage==='preflop')state.preflopRaiseCount=(state.preflopRaiseCount||0)+1;
+  }
   p.acted=true;
   log(`${p.name}: ${p.lastAct}`);
   saveResume();
@@ -358,7 +385,7 @@ function endRound(){
   later(()=>{
     if(!state||state.gameOver||state.handOver)return;
     for(const p of state.players){p.bet=0;p.acted=false;p.checkedStreet=false;}
-    state.currentBet=0; state.lastRaiseSize=state.bb;
+    state.currentBet=0; state.lastRaiseSize=state.bb; state.streetRaiseCount=0;
     const live=inHand();
     if(live.length===1) return endHandFold();
     if(state.stage==='river') return showdown();
@@ -739,7 +766,8 @@ function saveResume(){
     if(!state.handOver&&state.stage){
       snap.midHand={
         stage:state.stage, board:state.board.map(cardToCode), deck:state.deck.map(cardToCode),
-        currentBet:state.currentBet, lastRaiseSize:state.lastRaiseSize, turnIdx:state.turnIdx,
+        currentBet:state.currentBet, lastRaiseSize:state.lastRaiseSize,
+        streetRaiseCount:state.streetRaiseCount||0, preflopRaiseCount:state.preflopRaiseCount||0, turnIdx:state.turnIdx,
         level:state.level, bb:state.bb, sb:state.sb, ante:state.ante,
         pfAggIdx:state.pfAggIdx??-1, lastAggIdx:state.lastAggIdx??-1,
         handLog:(state.handLog||[]).slice(), humanDecisions:(state.humanDecisions||[]).slice(),
@@ -766,6 +794,8 @@ function restoreMidHand(mh){
   state.stage=mh.stage;
   state.currentBet=mh.currentBet;
   state.lastRaiseSize=mh.lastRaiseSize;
+  state.streetRaiseCount=mh.streetRaiseCount||0;
+  state.preflopRaiseCount=mh.preflopRaiseCount||0;
   state.turnIdx=mh.turnIdx;
   state.pfAggIdx=mh.pfAggIdx??-1;
   state.lastAggIdx=mh.lastAggIdx??-1;
