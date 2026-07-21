@@ -198,7 +198,7 @@ function rangeActionLikelihood(p,m,type,ctx,hole,knownInfo){
   const ratio=clamp(ctx.betRatio||0,0,2), pre=state.stage==='preflop';
   if(action==='fold')return 1;
   if(pre){
-    const shape=rangePreflopShape(hole);
+    const shape=knownInfo&&knownInfo.code?knownInfo:rangePreflopShape(hole);
     if(action==='raise'){
       const facing=(ctx.cbBefore||0)>state.bb;
       const reraising=(ctx.playerBetBefore||0)>state.bb;
@@ -248,30 +248,56 @@ function rangeActionLikelihood(p,m,type,ctx,hole,knownInfo){
     const medium=info.medium?1:0;
     let likelihood=0.12+air*0.74+medium*0.18+draw*0.38+made*0.10;
     if(made>=0.62)likelihood=0.035+st.trap*0.68+draw*0.18;
+    const checkedTo=!!ctx.rangeCheckedTo;
+    const priorChecks=ctx.rangePriorPostChecks||0;
+    const boardHit=(state.board||[]).some(b=>hole.some(c=>c.r===b.r));
+    if(checkedTo&&boardHit){
+      const sid=p.style?.id||'';
+      const aggressive=/^(shark|maniac)$/.test(sid);
+      if(made>=0.45&&made<0.62){
+        /* Top-pair type hands usually take value when checked to; a second pass is stronger evidence. */
+        const first=aggressive?(sid==='maniac'?0.34:0.43):sid==='rock'?0.60:0.66;
+        const repeat=aggressive?(sid==='maniac'?0.22:0.30):sid==='rock'?0.48:0.55;
+        likelihood*=priorChecks>0?repeat:first;
+      }else if(made>=0.25&&made<0.45&&priorChecks>0){
+        /* Second/third pair can reasonably pot-control, so only a modest repeat-check discount. */
+        likelihood*=aggressive?0.72:0.84;
+      }else if(made>=0.62){
+        /* Preserve traps, but slow-playing a monster through multiple checked-to streets is uncommon. */
+        likelihood*=priorChecks>0?0.62:0.78;
+      }
+    }
     return clamp(likelihood,0.012,0.98);
   }
   return 0.5;
 }
+let RANGE_PREFLOP_META=null;
 function rangeComboInfoVector(){
   const board=state.board||[];
   const key=board.map(rangeCardId).join('-')||'pre';
+  if(key==='pre'&&RANGE_PREFLOP_META)return RANGE_PREFLOP_META;
   if(!state._rangeComboInfoCache)state._rangeComboInfoCache=Object.create(null);
   if(state._rangeComboInfoCache[key])return state._rangeComboInfoCache[key];
   const out=[];
   for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++)
     out.push(rangeModelComboInfo([FULL_DECK[i],FULL_DECK[j]],board));
+  if(key==='pre')RANGE_PREFLOP_META=out;
   state._rangeComboInfoCache[key]=out;
   return out;
 }
 function rangePosteriorApply(p,m,type,ctx){
   const dead=new Set((state.board||[]).map(rangeCardId));
   const infos=rangeComboInfoVector();
+  const evidence=Object.assign({},ctx,{
+    rangePriorPostChecks:(m.history||[]).filter(x=>x.action==='check'&&x.street!=='preflop').length,
+    rangeCheckedTo:(ctx.cbBefore||0)<=0&&state.players.some(q=>q!==p&&!q.folded&&!q.out&&q.checkedStreet)
+  });
   const next=new Array(1326); let sum=0,k=0;
   for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++,k++){
     const a=FULL_DECK[i],b=FULL_DECK[j];
     const legal=!dead.has(i)&&!dead.has(j);
     const prior=Number.isFinite(m.weights[k])?m.weights[k]:1/1326;
-    const w=legal?prior*rangeActionLikelihood(p,m,type,ctx,[a,b],infos[k]):0;
+    const w=legal?prior*rangeActionLikelihood(p,m,type,evidence,[a,b],infos[k]):0;
     next[k]=w;sum+=w;
   }
   if(sum<=0){
@@ -352,7 +378,7 @@ function rangeModelApplyAction(p,type,ctx={}){
 }
 function rangeModelComboInfo(hole,board){
   const pct=handPct[holeCode(hole)]||1;
-  if(!board||board.length<3)return {pct,made:0,draw:0,medium:0,strong:0};
+  if(!board||board.length<3)return Object.assign(rangePreflopShape(hole),{pct,made:0,draw:0,medium:0,strong:0});
   const score=evalBest(hole.concat(board));
   const boardMax=Math.max(...board.map(c=>c.r));
   const topPair=score[0]===1&&score[1]===boardMax&&hole.some(c=>c.r===score[1]);
