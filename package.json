@@ -6,6 +6,7 @@
     "build:bundle": "node scripts/build.mjs bundle",
     "build:extract": "node scripts/build.mjs extract",
     "test:ranges": "node scripts/test-range-model.mjs",
+    "test:scenarios": "node scripts/test-table-scenarios.mjs",
     "test:landscape": "node scripts/test-landscape-mobile.cjs"
   },
   "devDependencies": {

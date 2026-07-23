@@ -47,6 +47,16 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 .seg button.on{background:var(--gold);color:#1a1408;}
 #startBtn{width:100%;margin-top:8px;background:var(--gold);color:#1a1408;font-size:16px;font-weight:700;border:none;border-radius:10px;padding:13px;cursor:pointer;}
 #startBtn:hover{filter:brightness(1.08);}
+#startBtn:disabled{opacity:.48;cursor:not-allowed;filter:none;}
+.table-scenario-preview{margin:-8px 0 20px;padding:11px 13px;border:1px solid rgba(232,182,76,.32);border-radius:10px;background:rgba(232,182,76,.06);}
+.table-scenario-preview strong{display:block;color:var(--gold);font-size:13px;margin-bottom:4px;}
+.table-scenario-preview p{color:var(--dim);font-size:11.5px;line-height:1.45;}
+.table-scenario-lineup{margin-top:7px!important;color:var(--text)!important;font-weight:650;}
+.table-custom-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;}
+.table-custom-grid label{display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:8px;padding:6px 8px;color:var(--text);font-size:12px;font-weight:650;}
+.table-custom-grid input{width:48px;background:#10141b;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px;text-align:center;font-size:13px;}
+#tableCustomStatus{margin-top:7px;font-size:11px;color:var(--dim);}
+#tableCustomStatus.invalid{color:#ef776d;}
 #resetRow{display:flex;gap:8px;margin-top:18px;align-items:stretch;border-top:1px solid var(--line);padding-top:14px;}
 #resetBtn{flex:1;background:none;border:1px solid var(--line);color:var(--dim);font-size:12.5px;border-radius:9px;padding:8px;cursor:pointer;}
 #resetBtn:hover{color:#e2574c;border-color:#e2574c;}
@@ -894,6 +904,30 @@ body.fl #chipPreview{display:none!important;}
             <button data-d="medium" class="on">Medium</button>
             <button data-d="hard">Hard</button>
           </div>
+        </div>
+        <div class="row">
+          <label class="main" id="tableScenarioLbl">Table style</label>
+          <select id="tableScenarioSel">
+            <option value="balanced">Balanced mix</option>
+            <option value="tight">Tight table</option>
+            <option value="loose">Loose table</option>
+            <option value="aggressive">Aggressive table</option>
+            <option value="wild">Wild table</option>
+            <option value="random">Random</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div id="tableScenarioPreview" class="table-scenario-preview" aria-live="polite">
+          <strong id="tableScenarioName">Balanced mix</strong>
+          <p id="tableScenarioDesc">A varied table containing every opponent personality.</p>
+          <p id="tableScenarioLineup" class="table-scenario-lineup"></p>
+          <div id="tableCustom" class="table-custom-grid hidden">
+            <label><span id="tableRoleRock">🪨 Tight</span><input class="table-role-count" data-style="rock" type="number" min="0" max="8" value="2" inputmode="numeric"></label>
+            <label><span id="tableRoleStation">📞 Loose</span><input class="table-role-count" data-style="station" type="number" min="0" max="8" value="2" inputmode="numeric"></label>
+            <label><span id="tableRoleShark">🦈 Aggressive</span><input class="table-role-count" data-style="shark" type="number" min="0" max="8" value="2" inputmode="numeric"></label>
+            <label><span id="tableRoleManiac">🔥 Wild</span><input class="table-role-count" data-style="maniac" type="number" min="0" max="8" value="2" inputmode="numeric"></label>
+          </div>
+          <div id="tableCustomStatus" class="hidden"></div>
         </div>
         <button id="startBtn">Deal me in</button>
         <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>

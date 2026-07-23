@@ -12,6 +12,48 @@ const STYLES=[
   {id:'shark',  label:'🦈 Aggressive', margin:+0.02, raiseT:-0.02, raiseF:+0.15, bluff:+0.04, size:1.15, adapt:1.00, openMult:0.96, raiseCap:0.20, foldRaise:0},
   {id:'maniac', label:'🔥 Wild',       margin:-0.05, raiseT:-0.09, raiseF:+0.36, bluff:+0.12, size:1.30, adapt:0.70, openMult:1.48, raiseCap:0.34, foldRaise:-0.06},
 ];
+const TABLE_STYLE_IDS=['rock','station','shark','maniac'];
+const TABLE_SCENARIOS={
+  balanced:{weights:{rock:1,station:1,shark:1,maniac:1},priority:['shark','rock','station','maniac']},
+  tight:{weights:{rock:3,station:1,shark:1,maniac:0},priority:['rock','shark','station','maniac']},
+  loose:{weights:{rock:0,station:3,shark:1,maniac:1},priority:['station','shark','maniac','rock']},
+  aggressive:{weights:{rock:1,station:0,shark:3,maniac:1},priority:['shark','maniac','rock','station']},
+  wild:{weights:{rock:0,station:1,shark:1,maniac:3},priority:['maniac','shark','station','rock']},
+  random:{random:true},
+  custom:{custom:true}
+};
+function normalizeTableScenario(id){
+  return TABLE_SCENARIOS[id]?id:'balanced';
+}
+function allocateTableStyleCounts(weights,n,priority=TABLE_STYLE_IDS){
+  n=Math.max(0,Math.round(n||0));
+  const clean={};let total=0;
+  for(const id of TABLE_STYLE_IDS){clean[id]=Math.max(0,Number(weights&&weights[id])||0);total+=clean[id];}
+  if(total<=0)return allocateTableStyleCounts(TABLE_SCENARIOS.balanced.weights,n,TABLE_SCENARIOS.balanced.priority);
+  const counts={},fractions=[];
+  for(const id of TABLE_STYLE_IDS){
+    const raw=n*clean[id]/total,base=Math.floor(raw);
+    counts[id]=base;
+    fractions.push({id,f:raw-base,p:priority.indexOf(id)});
+  }
+  let left=n-TABLE_STYLE_IDS.reduce((s,id)=>s+counts[id],0);
+  fractions.sort((a,b)=>b.f-a.f||(a.p<0?99:a.p)-(b.p<0?99:b.p));
+  for(let i=0;i<left;i++)counts[fractions[i%fractions.length].id]++;
+  return counts;
+}
+function tableScenarioCounts(id,n,custom){
+  id=normalizeTableScenario(id);
+  if(id==='random')return null;
+  const spec=TABLE_SCENARIOS[id];
+  return allocateTableStyleCounts(spec.custom?custom:spec.weights,n,spec.priority);
+}
+function tableScenarioStyleIds(cfg,n){
+  const id=normalizeTableScenario(cfg&&cfg.tableScenario);
+  if(id==='random')return Array.from({length:n},()=>TABLE_STYLE_IDS[Math.floor(Math.random()*TABLE_STYLE_IDS.length)]);
+  const counts=tableScenarioCounts(id,n,cfg&&cfg.tableCustom),ids=[];
+  for(const styleId of TABLE_STYLE_IDS)for(let i=0;i<(counts[styleId]||0);i++)ids.push(styleId);
+  return shuffle(ids);
+}
 function profileLabel(style){
   const label=style&&style.label?String(style.label):'';
   return label.replace(/[A-Za-zÀ-ÖØ-öø-ÿ]/,c=>c.toUpperCase());
@@ -41,6 +83,7 @@ let state=null;
 
 function newGame(cfg){
   cfg.gameType=cfg.gameType||'sng';
+  cfg.tableScenario=normalizeTableScenario(cfg.tableScenario);
   const startBlind=cfg.startBlind||BASE_BB;
   const mode=getMode(cfg);
   state={
@@ -54,10 +97,9 @@ function newGame(cfg){
   const mk=(i,name,avatar,isHuman)=>({i,name,avatar,isHuman,chips:stack,hole:[],folded:false,out:false,allIn:false,bet:0,totalBet:0,acted:false,lastAct:'',revealed:false,place:0,bank:TT_BANK});
   state.players.push(mk(0, cfg.allAI?'Bot-You':'You', '😎', !cfg.allAI));
   const names=shuffle(AI_NAMES.map((n,k)=>[n,AI_AVATARS[k]]));
-  const styles=shuffle(STYLES.concat(STYLES));
   for(let k=1;k<cfg.numPlayers;k++){
     const q=mk(k,names[k-1][0],names[k-1][1],false);
-    q.style=styles[k-1];
+    q.style=STYLES[0];
     state.players.push(q);
   }
   /* multiplayer: claim seats for remote human players (host-authoritative) */
@@ -67,6 +109,9 @@ function newGame(cfg){
       q.name=r.name; q.avatar='🙂'; q.remote=true; q.isHuman=false; q.style=null;
     }
   }
+  const profileBots=state.players.filter(q=>q.i!==0&&!q.remote);
+  const styleIds=tableScenarioStyleIds(cfg,profileBots.length);
+  profileBots.forEach((q,i)=>{q.style=STYLES.find(s=>s.id===styleIds[i])||STYLES[0];});
   state.sessStats={hands:0,won:0,net:0,biggest:0,decisions:0,followed:0,
     vpipH:0,pfrH:0,aBets:0,aCalls:0,sdSeen:0,sdWon:0,evLost:0};
   state.gameId=Date.now();

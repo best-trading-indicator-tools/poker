@@ -3,7 +3,7 @@
    redacted state snapshots (each player only ever receives their own hole cards).
    Free signaling via the public PeerJS cloud; game data flows directly P2P. */
 let MP=null;
-const MP_V='mp3';   // protocol version — both sides must match
+const MP_V='mp4';   // protocol version — both sides must match
 function mpMaxPlayers(){ return typeof maxSetupPlayers==='function'?maxSetupPlayers():9; }
 /* STUN + free TURN relays: lets phones on cellular/strict NATs reach the host */
 const MP_ICE={config:{iceServers:[
@@ -271,7 +271,8 @@ function mpBecomeHost(peer,newId){
     conn.on('close',()=>mpHostDrop(conn));
   });
   newGame({numPlayers:ck.players.length,startBB:ck.cfg.startBB,startBlind:ck.cfg.startBlind,
-           ante:ck.cfg.ante,speed:ck.cfg.speed,koBonus:!!ck.cfg.koBonus,difficulty:ck.cfg.difficulty});
+           ante:ck.cfg.ante,speed:ck.cfg.speed,koBonus:!!ck.cfg.koBonus,difficulty:ck.cfg.difficulty,
+           tableScenario:ck.cfg.tableScenario,tableCustom:ck.cfg.tableCustom});
   ck.players.forEach((cp,i)=>{
     const q=state.players[i]; if(!q)return;
     q.name=cp.name; q.avatar=cp.avatar||q.avatar; q.chips=cp.chips; q.out=cp.out; q.place=cp.place||0; q.bank=cp.bank!=null?cp.bank:TT_BANK;
@@ -342,6 +343,7 @@ function mpStartGame(){
     difficulty:'medium',
     mpRemotes:MP.conns.map(c=>({name:c.name,seat:c.seat}))
   };
+  Object.assign(cfg,typeof selectedTableScenarioConfig==='function'?selectedTableScenarioConfig():{tableScenario:'balanced'});
   MP.conns.forEach(c=>{try{c.conn.send({t:'start',seat:c.seat});}catch(e){}});
   closeDialog($('mpLobby'));
   logLines=[];
@@ -400,7 +402,8 @@ function mpBroadcastCK(){
   if(!MP||MP.role!=='host'||!MP.started||!state)return;
   const d={mig:MP.mig||0,hostName:MP.myName,handNumNext:state.handNum+1,dealerIdx:state.dealerIdx,
     cfg:{numPlayers:state.players.length,startBB:state.cfg.startBB,startBlind:state.cfg.startBlind,
-         ante:state.cfg.ante,speed:state.cfg.speed,koBonus:!!state.cfg.koBonus,difficulty:state.cfg.difficulty},
+         ante:state.cfg.ante,speed:state.cfg.speed,koBonus:!!state.cfg.koBonus,difficulty:state.cfg.difficulty,
+         tableScenario:state.cfg.tableScenario,tableCustom:state.cfg.tableCustom},
     players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,
       ai:!q.isHuman&&!q.remote,style:q.style?q.style.id:null,bank:q.bank||0}))};
   MP.lastCK=d;
@@ -475,7 +478,8 @@ function mpSnapshotFor(seat){
     turnBank:!!state.turnBank,
     handOver:state.handOver,gameOver:state.gameOver,resultText:state.resultText||'',
     cfg:{numPlayers:state.cfg.numPlayers,speed:state.cfg.speed,ante:state.cfg.ante,
-         startBlind:state.cfg.startBlind,startBB:state.cfg.startBB,koBonus:!!state.cfg.koBonus,difficulty:state.cfg.difficulty,mpClient:true},
+         startBlind:state.cfg.startBlind,startBB:state.cfg.startBB,koBonus:!!state.cfg.koBonus,difficulty:state.cfg.difficulty,
+         tableScenario:state.cfg.tableScenario,tableCustom:state.cfg.tableCustom,mpClient:true},
     log:logLines.slice(-50)};
 }
 function mpBroadcast(){
