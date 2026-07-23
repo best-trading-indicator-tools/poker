@@ -3,7 +3,7 @@
    redacted state snapshots (each player only ever receives their own hole cards).
    Free signaling via the public PeerJS cloud; game data flows directly P2P. */
 let MP=null;
-const MP_V='mp4';   // protocol version — both sides must match
+const MP_V='mp5';   // protocol version — both sides must match
 function mpMaxPlayers(){ return typeof maxSetupPlayers==='function'?maxSetupPlayers():9; }
 /* STUN + free TURN relays: lets phones on cellular/strict NATs reach the host */
 const MP_ICE={config:{iceServers:[
@@ -276,7 +276,10 @@ function mpBecomeHost(peer,newId){
   ck.players.forEach((cp,i)=>{
     const q=state.players[i]; if(!q)return;
     q.name=cp.name; q.avatar=cp.avatar||q.avatar; q.chips=cp.chips; q.out=cp.out; q.place=cp.place||0; q.bank=cp.bank!=null?cp.bank:TT_BANK;
-    if(cp.ai){q.isHuman=false;q.remote=false;q.style=STYLES.find(s2=>s2.id===cp.style)||q.style;}
+    if(cp.ai){
+      q.isHuman=false;q.remote=false;q.style=STYLES.find(s2=>s2.id===cp.style)||q.style;
+      q.rangeTendencies=cp.rangeTendencies?{...cp.rangeTendencies}:q.rangeTendencies;
+    }
     else if(cp.name===myName){q.isHuman=true;q.remote=false;q.avatar='😎';}
     else{q.isHuman=false;q.remote=true;q.style=null;}
   });
@@ -405,7 +408,8 @@ function mpBroadcastCK(){
          ante:state.cfg.ante,speed:state.cfg.speed,koBonus:!!state.cfg.koBonus,difficulty:state.cfg.difficulty,
          tableScenario:state.cfg.tableScenario,tableCustom:state.cfg.tableCustom},
     players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,
-      ai:!q.isHuman&&!q.remote,style:q.style?q.style.id:null,bank:q.bank||0}))};
+      ai:!q.isHuman&&!q.remote,style:q.style?q.style.id:null,bank:q.bank||0,
+      rangeTendencies:q.rangeTendencies?{...q.rangeTendencies}:null}))};
   MP.lastCK=d;
   for(const c of MP.conns){try{c.conn.send({t:'ck',d});}catch(e){}}
 }
@@ -430,6 +434,7 @@ function mpSeatPending(){
       ai.name=q.name; ai.avatar='🙂'; ai.remote=true; ai.isHuman=false; ai.style=null;
       ai.chips=state.cfg.startBB*(state.cfg.startBlind||100);
       ai.rangeCap=1; ai.rangeFloor=0; ai.aggStreets=[]; ai.checkStreets=[]; ai.lineRead=''; ai.bank=TT_BANK;
+      ai.rangeTendencies=null;
     }else if(state.players.length<mpMaxPlayers()){
       i=state.players.length;
       state.players.push({i,name:q.name,avatar:'🙂',isHuman:false,remote:true,

@@ -192,7 +192,8 @@ function startHand(){
     const opp=liveStart.find(p=>p.i!==0);
     if(opp&&state.players[0].chips<opp.chips) state.rewardHeadsUpTrailed=true;
   }
-  state.board=[]; state.stage='preflop'; state._rangeComboInfoCache=Object.create(null); state._rangeHandClassCache=Object.create(null);
+  state.board=[]; state.stage='preflop'; state._rangeComboInfoCache=Object.create(null);
+  state._rangeHandClassCache=Object.create(null); state._rangeBoardTextureCache=Object.create(null);
   state.streetRaiseCount=0; state.preflopRaiseCount=0;
   state.deck=shuffle(makeDeck());
   for(const p of state.players){
@@ -302,14 +303,19 @@ function applyAction(p,type,amt){
   const effectiveStack=Math.min(p.chips+p.bet,lastAgg?(lastAgg.chips+lastAgg.bet):p.chips+p.bet);
   const postOrder=state.stage!=='preflop'&&typeof postflopOrder==='function'?postflopOrder().filter(q=>!q.allIn):[];
   const postIdx=postOrder.indexOf(p),actorsAfter=postIdx<0?0:postOrder.slice(postIdx+1).length;
+  const icmRead=typeof aiIcmPressure==='function'?aiIcmPressure(p):null;
   const rangeCtx={stage:state.stage,callAmt,cbBefore,playerBetBefore:p.bet,potBefore,
     streetPotBefore:Math.max(0,potBefore-streetBetsBefore),raiseSize:0,target:0,betRatio:0,
     raisesBefore,preflopRaisesBefore:state.preflopRaiseCount||0,
     facedRaiseSize:state.lastRaiseSize||0,lastAggPos:lastAgg?.pos||'',lastAggStyle:lastAgg?.style?.id||'',
     facedLine:lastAgg?.lineRead||'',actorsAfter,inPosition:state.stage!=='preflop'&&actorsAfter===0,
     activePlayers:inHand().length,bb:state.bb,sb:state.sb,stackTotalBefore:p.chips+p.bet,
-    effectiveStackBB:effectiveStack/Math.max(state.bb,1),
-    limpersBefore:state.stage==='preflop'?inHand().filter(q=>q!==p&&q.bet===state.bb&&q.i!==state.lastAggIdx).length:0,
+    effectiveStackBB:effectiveStack/Math.max(state.bb,1),potBB:potBefore/Math.max(state.bb,1),
+    spr:effectiveStack/Math.max(potBefore,state.bb),position:p.pos||'',
+    wasPreflopAggressor:state.pfAggIdx===p.i,priorAggStreets:(p.aggStreets||[]).slice(),
+    icmPressure:icmRead?.active?clamp((icmRead.callPremium||0)/.11,0,1):0,
+    facedBetRatio:callAmt>0?callAmt/Math.max(potBefore-callAmt,state.bb):0,
+    limpersBefore:state.stage==='preflop'?inHand().filter(q=>q!==p&&q.bet===state.bb&&q.i!==state.lastAggIdx&&(q.pos||'')!=='BB').length:0,
     callersAtLevel:inHand().filter(q=>q!==p&&q.i!==state.lastAggIdx&&q.bet===cbBefore).length,
     checkedBefore:state.stage==='preflop'?0:inHand().filter(q=>q!==p&&q.checkedStreet).length};
   if(typeof aiObserveAction==='function')aiObserveAction(p,type,rangeCtx);
@@ -320,7 +326,9 @@ function applyAction(p,type,amt){
     p.lastAct = callAmt<=0 ? 'Check' : (p.allIn?'All-in '+usd(p.bet):'Call '+usd(paid));
     sfx(callAmt<=0?'check':'chip');
     rangeCtx.betRatio=callAmt>0?callAmt/Math.max(rangeCtx.potBefore-callAmt,state.bb):0;
+    rangeCtx.facedBetRatio=rangeCtx.betRatio;
     rangeCtx.price=callAmt>0?callAmt/Math.max(rangeCtx.potBefore+callAmt,1):0;
+    rangeCtx.isAllIn=!!p.allIn;
     if(callAmt>0){
       narrowRange(p, state.stage==='preflop'?0.35:0.50);
       p.rangeFloor=(p.rangeFloor||0)*0.5;   // calling after checking: medium strength, weakness read fades
@@ -345,6 +353,7 @@ function applyAction(p,type,amt){
     rangeCtx.raiseOrdinal=raisesBefore+1;
     rangeCtx.actionPotRatio=rangeCtx.investment/Math.max(potBefore,state.bb);
     rangeCtx.raiseOverCurrent=cbBefore>0?target/cbBefore:0;
+    rangeCtx.isAllIn=!!p.allIn;
     if(raiseSize>=state.lastRaiseSize){
       state.lastRaiseSize=raiseSize;
       for(const q of state.players) if(q!==p&&!q.folded&&!q.allIn&&!q.out) q.acted=false;
@@ -805,7 +814,8 @@ function saveResume(){
       rewardKos:state.rewardKos||0, rewardWasHeadsUp:!!state.rewardWasHeadsUp,
       rewardHeadsUpTrailed:!!state.rewardHeadsUpTrailed,
       gameSeries:(gameSeries||[]).slice(),
-      players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,style:q.style?q.style.id:null})),
+      players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,
+        style:q.style?q.style.id:null,rangeTendencies:q.rangeTendencies?{...q.rangeTendencies}:null})),
       ...getMode().resumeFields(state)
     };
     if(!state.handOver&&state.stage){
@@ -823,6 +833,7 @@ function saveResume(){
           folded:q.folded, allIn:q.allIn, acted:q.acted, lastAct:q.lastAct||'',
           revealed:q.revealed, rangeCap:q.rangeCap, rangeFloor:q.rangeFloor,
           rangeModel:q.rangeModel?{...q.rangeModel}:null,
+          rangeTendencies:q.rangeTendencies?{...q.rangeTendencies}:null,
           checkedStreet:!!q.checkedStreet, aggStreets:(q.aggStreets||[]).slice(),
           checkStreets:(q.checkStreets||[]).slice(), lineRead:q.lineRead||'', bank:q.bank??TT_BANK
         }))
@@ -861,6 +872,7 @@ function restoreMidHand(mh){
     p.lastAct=q.lastAct||''; p.revealed=q.revealed;
     p.pos=q.pos||'';
     p.rangeCap=q.rangeCap??1; p.rangeFloor=q.rangeFloor??0;
+    p.rangeTendencies=q.rangeTendencies?{...q.rangeTendencies}:p.rangeTendencies;
     p.rangeModel=q.rangeModel?{...q.rangeModel}:null;
     if(!p.rangeModel&&typeof rangeModelInit==='function')rangeModelInit(p);
     p.checkedStreet=!!q.checkedStreet;
@@ -899,6 +911,7 @@ function applyResumeSnapshot(sv){
     const p=state.players[i]; if(!p)return;
     p.name=q.name; p.avatar=q.avatar; p.chips=q.chips; p.out=q.out; p.place=q.place||0;
     if(q.style) p.style=STYLES.find(s=>s.id===q.style)||p.style;
+    p.rangeTendencies=q.rangeTendencies?{...q.rangeTendencies}:p.rangeTendencies;
   });
   getMode().restoreFields(sv,state);
   buildSeats(); hideActions(); lastHand=null;

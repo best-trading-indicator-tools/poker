@@ -46,6 +46,39 @@ const result=vm.runInContext(`(()=>{
   const jamA5=rangePreflopSizingLikelihood(p,jamCtx,holes.A5s,rangeModelComboInfo(holes.A5s,[]));
   if(!(jamAA>jamA5))throw new Error('deep jam must favor premiums over blocker bluffs');
 
+  const isoCtx={...base,preflopRaisesBefore:0,raisesBefore:0,cbBefore:100,callAmt:100,
+    limpersBefore:1,callersAtLevel:0,effectiveStackBB:70,icmPressure:0};
+  if(rangePreflopNode(p,isoCtx)!=='limpedPot')throw new Error('limped pot node not recognized');
+  const isoTrail=rangeActionTrail({model:{history:[{street:'preflop',action:'raise',nodeType:'limpedPot',
+    targetBB:5,raiseOrdinal:1}]}});
+  if(!isoTrail.includes('Iso-raise 5 BB'))throw new Error('isolation raise mislabeled '+isoTrail);
+  const normalContinue=rangePreflopActionPolicy(p,{...base,preflopRaisesBefore:1,raisesBefore:1,
+    lastAggPos:'BTN',cbBefore:300,callAmt:300,effectiveStackBB:35,icmPressure:0},holes.A5s);
+  const icmContinue=rangePreflopActionPolicy(p,{...base,preflopRaisesBefore:1,raisesBefore:1,
+    lastAggPos:'BTN',cbBefore:300,callAmt:300,effectiveStackBB:35,icmPressure:1},holes.A5s);
+  if(!(icmContinue.call+icmContinue.raise<normalContinue.call+normalContinue.raise))
+    throw new Error('ICM must tighten marginal preflop continues');
+  const vsUtg=rangePreflopActionPolicy(p,{...base,preflopRaisesBefore:1,raisesBefore:1,
+    lastAggPos:'UTG',cbBefore:300,callAmt:300},holes.A5s);
+  const vsBtn=rangePreflopActionPolicy(p,{...base,preflopRaisesBefore:1,raisesBefore:1,
+    lastAggPos:'BTN',cbBefore:300,callAmt:300},holes.A5s);
+  if(!(vsBtn.call+vsBtn.raise>vsUtg.call+vsUtg.raise))
+    throw new Error('opener position must change the contextual continue range');
+  const rock=state.players[3],maniac=state.players[4];
+  rock.pos=maniac.pos='BTN';rock.style=STYLES.find(x=>x.id==='rock');maniac.style=STYLES.find(x=>x.id==='maniac');
+  const unopened={...base,callAmt:100,cbBefore:100,preflopRaisesBefore:0,raisesBefore:0,lastAggPos:''};
+  const rockTrash=rangePreflopActionPolicy(rock,unopened,holes.sevenTwo);
+  const maniacTrash=rangePreflopActionPolicy(maniac,unopened,holes.sevenTwo);
+  if(!(maniacTrash.raise>rockTrash.raise))
+    throw new Error('profile prior must change marginal opening frequency');
+
+  const learner=state.players[2];learner.style=STYLES.find(x=>x.id==='shark');
+  learner.rangeTendencies={hands:20,vpipHands:8,pfrHands:7,preActions:20,postActions:60,postRaises:45,postChecks:8,
+    faced:30,folds:8,calls:10,faceRaises:12,sizeN:30,sizeSum:27};
+  const fixedProfile=rangeModelStyle(learner,false),learnedProfile=rangeModelStyle(learner,true);
+  if(!(learnedProfile.raise>fixedProfile.raise&&learnedProfile.bluff>fixedProfile.bluff&&learnedProfile.size>fixedProfile.size))
+    throw new Error('observed aggression did not move the profile '+JSON.stringify({fixedProfile,learnedProfile}));
+
   state.stage='turn';state.board=[C(13,3),C(6,3),C(4,2),C(2,0)];
   const postCtx={stage:'turn',callAmt:0,cbBefore:0,betRatio:0,rangeCheckedTo:true,rangePriorPostChecks:1};
   const top=H(C(13,0),C(9,1)),air=H(C(9,0),C(8,1));
@@ -91,10 +124,34 @@ const result=vm.runInContext(`(()=>{
   if(Math.abs(massSum-1)>1e-9)throw new Error('matrix class probabilities not normalized');
   if(!(metrics.effective>0&&metrics.effective<=metrics.legal))throw new Error('invalid effective combo count');
   if(!rangeMatrixMetaHtml(info).includes('Qx ≈'))throw new Error('top-card probability missing from matrix summary');
+  if(!rangeMatrixMetaHtml(info).includes('Range entering Flop'))
+    throw new Error('matrix must disclose that villain has not acted on the new street');
+
+  state.stage='flop';state.board=[C(13,3),C(7,2),C(2,0)];
+  state._rangeComboInfoCache=Object.create(null);state._rangeBoardTextureCache=Object.create(null);
+  const featureVector=rangeComboInfoVector();
+  const setInfo=featureVector[rangeComboIndex(H(C(13,1),C(13,2)))];
+  const airInfo=featureVector[rangeComboIndex(H(C(8,1),C(3,2)))];
+  if(!(setInfo.relativeStrength>airInfo.relativeStrength&&setInfo.nutness>airInfo.nutness))
+    throw new Error('relative hand-strength percentile ordering failed');
+  const overbetCtx={stage:'flop',target:1250,actionPotRatio:1.25,betRatio:1.25,potBefore:1000,
+    playerBetBefore:0,stackTotalBefore:10000,effectiveStackBB:90,activePlayers:2,raisesBefore:0,
+    lineType:'cbet',posterior:true};
+  const valueOverbet=rangePostflopSizingLikelihood(p,overbetCtx,setInfo);
+  const airOverbet=rangePostflopSizingLikelihood(p,overbetCtx,airInfo);
+  if(!(valueOverbet>airOverbet))throw new Error('overbet sizing must favor polar value over weak air');
+
+  const monotone=[C(13,3),C(7,3),C(2,3)],nutClub=H(C(14,3),C(12,2)),noClub=H(C(14,0),C(12,2));
+  const nutBlockerInfo=rangeModelComboInfo(nutClub,monotone),noBlockerInfo=rangeModelComboInfo(noClub,monotone);
+  if(!nutBlockerInfo.nutFlushBlocker||!(nutBlockerInfo.bluffQuality>noBlockerInfo.bluffQuality))
+    throw new Error('nut-flush blocker feature missing');
+  const pairedBoard=[C(3,0),C(5,3),C(3,3),C(11,3)],boardPairAir=H(C(14,1),C(12,1));
+  if(handUsesHoleCards(boardPairAir,pairedBoard,evalBest(boardPairAir.concat(pairedBoard))))
+    throw new Error('board-only pair must not count as a private made hand');
 
   /* One 169-cell label can hide very different suit-specific outcomes. With an
      equal-weight AQs-only range on a three-club turn, exactly A♣Q♣ is a flush. */
-  const clubTurn=[C(3,0),C(5,3),C(3,3),C(11,3)],suitedWeights=new Array(1326).fill(0);
+  const clubTurn=pairedBoard,suitedWeights=new Array(1326).fill(0);
   for(let suit=0;suit<4;suit++)suitedWeights[rangeComboIndex(H(C(14,suit),C(12,suit)))]=.25;
   const suitedInfo={kind:'range',model:{v:2,weights:suitedWeights,history:[]},cap:1,floor:0,
     board:clubTurn,dead:[C(9,1),C(2,2)],list:HAND_ORDER.slice()};

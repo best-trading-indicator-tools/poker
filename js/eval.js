@@ -79,6 +79,22 @@ function evalBest(cards){
   }
   return best;
 }
+/* True when the named made-hand category is materially created or improved by
+   at least one hole card. Board-only pairs/trips/straights are not credited as
+   private made hands merely because a hole-card kicker plays. */
+function handUsesHoleCards(hole,board,scoreArg){
+  if(!hole||hole.length<2||!board||board.length<3)return false;
+  const score=scoreArg||evalBest(hole.concat(board)),category=score[0];
+  const hasRank=r=>hole.some(c=>c.r===r);
+  if(category===0)return false;
+  if(category===1)return hasRank(score[1]);
+  if(category===2)return hasRank(score[1])||hasRank(score[2]);
+  if(category===3)return hasRank(score[1]);
+  if(category===6)return hasRank(score[1])||hasRank(score[2]);
+  if(category===7)return hasRank(score[1]);
+  if(board.length<5)return true; // a straight/flush on flop or turn must use a hole card
+  return cmpScore(score,evalBest(board))>0;
+}
 function boardTwoPairKickerInfo(hole,board){
   if(!hole||!board||board.length!==5)return null;
   const boardScore=evalBest(board);

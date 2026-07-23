@@ -123,13 +123,81 @@ function aiOpenRaiseProb(p, d){
   if(sid==='shark') return Math.min(0.98,base+0.04);
   return base;
 }
-function rangeModelStyle(p){
-  const sid=aiEffectiveStyle(p)?.id||p.style?.id||'';
-  if(sid==='rock')return {open:0.72,call:0.72,trap:0.10,bluff:0.03};
-  if(sid==='station')return {open:1.25,call:1.45,trap:0.05,bluff:0.02};
-  if(sid==='shark')return {open:1.05,call:1.00,trap:0.24,bluff:0.18};
-  if(sid==='maniac')return {open:1.50,call:1.35,trap:0.08,bluff:0.28};
-  return {open:1,call:1,trap:0.10,bluff:0.08};
+const RANGE_PROFILE_PRIORS={
+  rock:{open:.72,call:.72,raise:.72,fold:1.18,trap:.10,bluff:.03,size:.55,vpip:.18,preAgg:.13,postAgg:.24,foldRate:.58,callRate:.28,checkRate:.68},
+  station:{open:1.25,call:1.45,raise:.78,fold:.78,trap:.05,bluff:.02,size:.55,vpip:.42,preAgg:.18,postAgg:.22,foldRate:.38,callRate:.48,checkRate:.72},
+  shark:{open:1.05,call:1.00,raise:1.22,fold:1.00,trap:.24,bluff:.18,size:.72,vpip:.28,preAgg:.24,postAgg:.46,foldRate:.49,callRate:.32,checkRate:.52},
+  maniac:{open:1.50,call:1.35,raise:1.55,fold:.66,trap:.08,bluff:.28,size:.90,vpip:.55,preAgg:.42,postAgg:.62,foldRate:.28,callRate:.35,checkRate:.34},
+  neutral:{open:1,call:1,raise:1,fold:1,trap:.10,bluff:.08,size:.66,vpip:.30,preAgg:.22,postAgg:.36,foldRate:.46,callRate:.36,checkRate:.55}
+};
+function rangeProfilePrior(p){
+  const sid=aiEffectiveStyle(p)?.id||p.style?.id||'neutral';
+  return RANGE_PROFILE_PRIORS[sid]||RANGE_PROFILE_PRIORS.neutral;
+}
+function rangeTendencyStatsEnsure(p){
+  const defaults={v:1,hands:0,vpipHands:0,pfrHands:0,lastHand:0,handVpip:false,handPfr:false,
+    preActions:0,postActions:0,postRaises:0,postChecks:0,
+    faced:0,folds:0,calls:0,faceRaises:0,sizeN:0,sizeSum:0};
+  if(!p.rangeTendencies||p.rangeTendencies.v!==1)
+    p.rangeTendencies=Object.assign(defaults,p.rangeTendencies||{});
+  return p.rangeTendencies;
+}
+function rangeSmoothStat(hits,n,prior,priorN){
+  return (Math.max(0,hits||0)+prior*priorN)/(Math.max(0,n||0)+priorN);
+}
+function rangeTendencyRead(p){
+  const prior=rangeProfilePrior(p),s=rangeTendencyStatsEnsure(p),priorN=20;
+  return {
+    sample:s.preActions+s.postActions,
+    confidence:clamp((s.preActions+s.postActions)/(s.preActions+s.postActions+priorN),0,1),
+    vpip:rangeSmoothStat(s.vpipHands,s.hands,prior.vpip,priorN),
+    preAgg:rangeSmoothStat(s.pfrHands,s.hands,prior.preAgg,priorN),
+    postAgg:rangeSmoothStat(s.postRaises,s.postActions,prior.postAgg,priorN),
+    foldRate:rangeSmoothStat(s.folds,s.faced,prior.foldRate,priorN),
+    callRate:rangeSmoothStat(s.calls,s.faced,prior.callRate,priorN),
+    checkRate:rangeSmoothStat(s.postChecks,s.postActions,prior.checkRate,priorN),
+    size:(s.sizeSum+prior.size*10)/(s.sizeN+10)
+  };
+}
+function rangeModelStyle(p,learned=false){
+  const prior=rangeProfilePrior(p),out={...prior};
+  if(!learned)return out;
+  const r=rangeTendencyRead(p);
+  out.open*=clamp(1+(r.vpip-prior.vpip)*1.25+(r.preAgg-prior.preAgg)*.70,.72,1.38);
+  out.call*=clamp(1+(r.callRate-prior.callRate)*1.35+(r.vpip-prior.vpip)*.55,.70,1.45);
+  out.raise*=clamp(1+(r.preAgg-prior.preAgg)*1.10+(r.postAgg-prior.postAgg)*.85,.68,1.48);
+  out.fold*=clamp(1+(r.foldRate-prior.foldRate)*1.20,.72,1.38);
+  out.bluff=clamp(out.bluff+(r.postAgg-prior.postAgg)*.65-(r.callRate-prior.callRate)*.18,.01,.42);
+  out.trap=clamp(out.trap+(r.checkRate-prior.checkRate)*.22,.02,.34);
+  out.size=clamp(r.size,.28,1.35);
+  out.sample=r.sample;out.confidence=r.confidence;
+  return out;
+}
+function rangeTendencyObserve(p,type,ctx){
+  if(!p)return;
+  const s=rangeTendencyStatsEnsure(p),pre=(ctx.stage||state.stage)==='preflop';
+  if(pre){
+    if(s.lastHand!==state.handNum){
+      s.hands++;s.lastHand=state.handNum;s.handVpip=false;s.handPfr=false;
+    }
+    s.preActions++;
+    const voluntary=type==='raise'||(type==='call'&&(ctx.callAmt||0)>0);
+    if(voluntary&&!s.handVpip){s.vpipHands++;s.handVpip=true;}
+    if(type==='raise'&&!s.handPfr){s.pfrHands++;s.handPfr=true;}
+  }else{
+    s.postActions++;
+    if(type==='raise')s.postRaises++;
+    else if(type==='call'&&(ctx.callAmt||0)<=0)s.postChecks++;
+    if((ctx.callAmt||0)>0){
+      s.faced++;
+      if(type==='fold')s.folds++;
+      else if(type==='call')s.calls++;
+      else if(type==='raise')s.faceRaises++;
+    }
+    if(type==='raise'&&(ctx.actionPotRatio||0)>0){
+      s.sizeN++;s.sizeSum+=clamp(ctx.actionPotRatio,0,2.5);
+    }
+  }
 }
 function rangeCardId(c){return c.s*13+(c.r-2);}
 function rangeComboIndex(hole){
@@ -139,7 +207,8 @@ function rangeComboIndex(hole){
 }
 function rangePosteriorPrior(){return new Array(1326).fill(1/1326);}
 function rangeModelInit(p){
-  const st=rangeModelStyle(p);
+  const st=rangeModelStyle(p,true);
+  rangeTendencyStatsEnsure(p);
   p.rangeModel={
     v:2,cap:1,floor:0,preCap:1,preFloor:0,strong:0,capped:0,passive:0,aggr:0,
     calls:0,raises:0,checks:0,limps:0,trap:st.trap,bluff:st.bluff,
@@ -157,21 +226,39 @@ function rangeModelSyncLegacy(p,m){
   const floor=clamp(Math.max(m.floor??0,p.rangeFloor??0),0,Math.min(0.45,cap*0.75));
   m.cap=cap; m.floor=floor; p.rangeCap=cap; p.rangeFloor=floor;
 }
+function rangePreflopNode(p,ctx={}){
+  const raises=Math.max(0,ctx.preflopRaisesBefore??ctx.raisesBefore??0);
+  const limpers=Math.max(0,ctx.limpersBefore||0),callers=Math.max(0,ctx.callersAtLevel||0);
+  if(raises===0)return limpers>0?'limpedPot':'open';
+  if(raises===1)return callers>0?'squeeze':'vsOpen';
+  if(raises===2)return 'vs3bet';
+  if(raises===3)return 'vs4bet';
+  return 'vs5bet';
+}
+function rangeNodeIcm(p,ctx={}){
+  if(Number.isFinite(ctx.icmPressure))return clamp(ctx.icmPressure,0,1);
+  const q=typeof aiIcmPressure==='function'?aiIcmPressure(p):null;
+  return q?.active?clamp((q.callPremium||0)/.11,0,1):0;
+}
 function rangeModelOpeningCap(p,ctx){
   const pos=p.pos||'';
-  const st=rangeModelStyle(p);
+  const st=ctx?._rangeStyle||rangeModelStyle(p,!!ctx?.posterior);
   const bucket=posBucket(pos||'BTN');
   let cap=(OPEN_THR[bucket]||0.20)*st.open;
   if(pos==='BB')cap=0.18*st.open;
-  if(ctx&&ctx.cbBefore>state.bb)cap=(/^(BB|SB|SB\/BTN)$/.test(pos)?0.12:0.085)*st.open;
-  else if(ctx&&ctx.cbBefore<=state.bb){
-    const limps=inHand().filter(q=>q!==p&&!q.allIn&&(q.pos||'')!=='BB'&&q.bet>=state.bb).length;
-    if(limps)cap+=Math.min(0.10,limps*0.025);
+  const node=rangePreflopNode(p,ctx||{});
+  if(node==='limpedPot'){
+    const limps=Math.max(1,ctx?.limpersBefore||1);
+    cap+=Math.min(.14,limps*.032);
   }
+  const depth=ctx?.effectiveStackBB||100;
+  if(depth<=15)cap*=/^(CO|BTN|SB|SB\/BTN|BB)$/.test(pos) ? .94 : .84;
+  else if(depth>=75&&/^(HJ|CO|BTN|SB|SB\/BTN)$/.test(pos))cap*=1.06;
+  cap*=1-rangeNodeIcm(p,ctx||{})*.10;
   return clamp(cap,0.04,0.82);
 }
 function rangeModelCallCap(p,ctx){
-  const st=rangeModelStyle(p);
+  const st=ctx?._rangeStyle||rangeModelStyle(p,!!ctx?.posterior);
   const pos=p.pos||'';
   if(!ctx||ctx.callAmt<=0)return pos==='BB'?0.72:1;
   if(ctx.cbBefore<=state.bb)return clamp((pos==='SB'?0.36:0.52)*st.call,0.16,0.82);
@@ -188,7 +275,12 @@ function rangePreflopShape(hole){
   const pair=hole[0].r===hole[1].r;
   const suited=hole[0].s===hole[1].s;
   const hi=Math.max(hole[0].r,hole[1].r),lo=Math.min(hole[0].r,hole[1].r);
-  return {code,pct:handPct[code]||1,pair,suited,connector:suited&&hi-lo<=2&&hi<=12,blocker:/^A[2345]s$/.test(code)};
+  const gap=pair?0:hi-lo-1,broadway=hi>=10&&lo>=10,ace=hi===14,wheelAce=ace&&lo<=5;
+  const connected=!pair&&gap<=1,connector=suited&&connected&&hi<=12;
+  const playability=clamp((pair ? .38 : 0)+(suited ? .27 : 0)+(connected ? .20 : 0)+
+    (broadway ? .18 : 0)+(wheelAce&&suited ? .16 : 0)-(gap>=4&&!ace ? .16 : 0),0,1);
+  return {code,pct:handPct[code]||1,pair,suited,hi,lo,gap,broadway,ace,wheelAce,connected,connector,
+    playability,blocker:wheelAce&&suited};
 }
 function rangePolicyNormalize(raw,legal){
   let total=0;const out={fold:0,check:0,call:0,raise:0};
@@ -233,25 +325,27 @@ function rangePreflopSizingLikelihood(p,ctx,hole,info){
   const premium=rangeSmoothInside(info.pct,ordinal>=4?0.018:ordinal===3?0.032:0.055,0.012);
   const short=(ctx.effectiveStackBB||100)<=22;
   let jamMix=short?0.30+premium*0.55:ordinal>=4?0.72+premium*0.24:ordinal===3?premium*0.34:premium*0.05;
-  if(/^A[2345]s$/.test(holeCode(hole))&&(ctx.effectiveStackBB||100)>45)jamMix*=0.20;
+  if(info.blocker&&(ctx.effectiveStackBB||100)>45)jamMix*=0.20;
   return clamp(normalLike*(1-jamMix)+jamLike*jamMix,0.01,1);
 }
 /* A pure preflop policy kernel shared by the hard bots and the range posterior.
    It explicitly separates open, 3-bet, 4-bet and 5-bet branches. */
 function rangePreflopActionPolicy(p,ctx,hole,knownInfo){
   const info=knownInfo||rangePreflopShape(hole),shape=info.code?info:rangePreflopShape(hole);
-  const st=rangeModelStyle(p),sid=p.style?.id||'',price=ctx.callAmt||0,free=price<=0;
+  const st=ctx._rangeStyle||rangeModelStyle(p,!!ctx.posterior),sid=p.style?.id||'',price=ctx.callAmt||0,free=price<=0;
   const raises=Math.max(0,ctx.preflopRaisesBefore??ctx.raisesBefore??0);
-  const raiseBB=(ctx.cbBefore||0)/Math.max(ctx.bb||state.bb||1,1);
+  const raiseBB=(ctx.cbBefore||0)/Math.max(ctx.bb||state.bb||1,1),node=rangePreflopNode(p,ctx);
+  const depth=ctx.effectiveStackBB||100,icm=rangeNodeIcm(p,ctx);
   if(raises===0){
     const cap=rangeModelOpeningCap(p,ctx);
     const inOpen=rangeSmoothInside(info.pct,cap,0.04);
-    let raiseMix=clamp(0.58+(sid==='maniac'?0.31:sid==='shark'?0.24:sid==='station'?-0.08:sid==='rock'?-0.20:0),0.18,0.97);
-    if((p.pos||'')==='BB'&&free)raiseMix*=ctx.limpersBefore?0.76:0.38;
+    let raiseMix=clamp(.70*st.raise,0.18,0.97);
+    if(node==='limpedPot')raiseMix*=clamp(.82+(1-shape.playability)*.14,.72,.96);
+    if((p.pos||'')==='BB'&&free)raiseMix*=node==='limpedPot'?0.76:0.38;
     const raise=inOpen*raiseMix;
     if(free)return rangePolicyNormalize({raise,check:1-raise},['check','raise']);
-    if((p.pos||'')!=='SB')return rangePolicyNormalize({raise,fold:1-raise},['fold','raise']);
-    const limpBonus=(shape.pair?0.10:0)+(shape.suited?0.08:0);
+    if(node!=='limpedPot'&&(p.pos||'')!=='SB')return rangePolicyNormalize({raise,fold:1-raise},['fold','raise']);
+    const limpBonus=shape.playability*(node==='limpedPot' ? .30 : .18);
     const play=clamp(inOpen+limpBonus*(1-inOpen),0.01,0.99);
     return rangePolicyNormalize({raise:play*raiseMix,call:play*(1-raiseMix),fold:1-play},['fold','call','raise']);
   }
@@ -264,6 +358,9 @@ function rangePreflopActionPolicy(p,ctx,hole,knownInfo){
     continueCap-=Math.max(0,raiseBB-2.2)*0.035;
     raiseValueCap=(early?0.055:steal?0.095:0.075)+(blind&&steal?0.015:0);
     callWidth=0.035;bluffMix+=early?0.10:steal?0.30:0.20;
+    if(node==='squeeze'){
+      continueCap*=.86;raiseValueCap*=.82;bluffMix+=(shape.suited&&shape.broadway)?.10:0;
+    }
   }else if(raises===2){
     continueCap=clamp(0.082-Math.max(0,raiseBB-8)*0.004,0.035,0.09);
     raiseValueCap=0.030;callWidth=0.018;bluffMix+=0.12;
@@ -274,44 +371,108 @@ function rangePreflopActionPolicy(p,ctx,hole,knownInfo){
   if(sid==='station')continueCap*=1.12;
   else if(sid==='rock')continueCap*=0.84;
   else if(sid==='maniac')continueCap*=1.18;
-  const continueP=clamp(rangeSmoothInside(info.pct,continueCap,callWidth),0.002,0.995);
+  continueCap*=clamp(st.call/st.fold,.66,1.42);
+  if(depth<=22)continueCap*=clamp(.90+(shape.pair||shape.broadway ? .12 : 0)-shape.playability*.05,.78,1.08);
+  else if(depth>=70)continueCap*=1+shape.playability*.10;
+  continueCap*=1-icm*(raises>=2 ? .22 : .14);
+  let continueP=clamp(rangeSmoothInside(info.pct,continueCap,callWidth),0.002,0.995);
+  continueP=clamp(continueP*(.92+shape.playability*.13),.002,.995);
   const value=rangeSmoothInside(info.pct,raiseValueCap,raises>=2?0.008:0.014);
   const polar=shape.blocker||(raises===1&&shape.connector&&steal);
   let polarFreq=polar?clamp(bluffMix*(raises>=2?0.48:0.85),0.01,0.58):0;
-  if(raises>=3&&shape.code!=='A5s')polarFreq*=0.10;
+  if(raises>=3&&!shape.blocker)polarFreq*=0.10;
   if(raiseBB>(raises===1?5.5:raises===2?15:35))polarFreq*=0.24;
-  let raiseMix=clamp(value*0.84+(1-value)*polarFreq,0.004,0.96);
+  let raiseMix=clamp((value*0.84+(1-value)*polarFreq)*st.raise,0.004,0.96);
   if(raises>=3&&value>0.5)raiseMix=Math.max(raiseMix,0.78);
+  if(icm>0)raiseMix=clamp(raiseMix*(1+icm*(value>.5 ? .12 : -.12)),.004,.98);
   const raise=continueP*raiseMix,call=continueP-raise;
   return rangePolicyNormalize({raise,call,fold:1-continueP},['fold','call','raise']);
 }
+function rangeBoardTexture(board){
+  if(!board||board.length<3)return {wetness:0,paired:false,maxSuit:0,connectedness:0,high:0};
+  const key=board.map(rangeCardId).sort((a,b)=>a-b).join('-');
+  if(!state._rangeBoardTextureCache)state._rangeBoardTextureCache=Object.create(null);
+  if(state._rangeBoardTextureCache[key])return state._rangeBoardTextureCache[key];
+  const rankCounts={},suitCounts=[0,0,0,0],ranks=new Set();
+  for(const c of board){rankCounts[c.r]=(rankCounts[c.r]||0)+1;suitCounts[c.s]++;ranks.add(c.r);}
+  if(ranks.has(14))ranks.add(1);
+  let maxWindow=0;
+  for(let lo=1;lo<=10;lo++){
+    let n=0;for(let r=lo;r<lo+5;r++)if(ranks.has(r))n++;
+    maxWindow=Math.max(maxWindow,n);
+  }
+  const maxSuit=Math.max(...suitCounts),paired=Object.values(rankCounts).some(n=>n>=2);
+  const trips=Object.values(rankCounts).some(n=>n>=3),connectedness=clamp((maxWindow-2)/3,0,1);
+  const flushiness=clamp((maxSuit-1)/3,0,1);
+  const wetness=clamp(connectedness*.48+flushiness*.42+(paired ? .10 : 0)+(trips ? .06 : 0),0,1);
+  const out={wetness,paired,trips,maxSuit,flushSuit:suitCounts.indexOf(maxSuit),connectedness,
+    high:Math.max(...board.map(c=>c.r)),rankCounts,suitCounts};
+  state._rangeBoardTextureCache[key]=out;
+  return out;
+}
+function rangeComboPotential(hole,board,score,usesHole,drawInfo){
+  const tex=rangeBoardTexture(board),d=drawInfo||{flush:false,oesd:false,gutshot:false};
+  const all=hole.concat(board),suitCounts=[0,0,0,0];
+  for(const c of all)suitCounts[c.s]++;
+  const nutFlushBlocker=hole.some(c=>c.r===14&&tex.suitCounts[c.s]>=2);
+  const flushBlocker=hole.reduce((n,c)=>n+(tex.suitCounts[c.s]>=2?1:0),0)/2;
+  const ranks=new Set(all.map(c=>c.r)),boardRanks=new Set(board.map(c=>c.r));
+  if(ranks.has(14))ranks.add(1);if(boardRanks.has(14))boardRanks.add(1);
+  let comboWindow=0,boardWindow=0,holeWindow=0;
+  for(let lo=1;lo<=10;lo++){
+    let n=0,b=0,h=0;
+    for(let r=lo;r<lo+5;r++){
+      if(ranks.has(r))n++;
+      if(boardRanks.has(r))b++;
+      if(hole.some(c=>c.r===r||(r===1&&c.r===14)))h++;
+    }
+    if(n>comboWindow||(n===comboWindow&&b>boardWindow)){comboWindow=n;boardWindow=b;holeWindow=h;}
+  }
+  const backdoorFlush=board.length===3&&!d.flush&&Math.max(...suitCounts)===3&&
+    hole.some(c=>tex.suitCounts[c.s]>0);
+  const backdoorStraight=board.length===3&&!d.oesd&&!d.gutshot&&comboWindow===3&&holeWindow>0&&boardWindow<3;
+  const straightBlocker=clamp((boardWindow>=3?holeWindow*.35:holeWindow*.15),0,1);
+  const redraw=usesHole&&(d.flush||d.oesd||d.gutshot);
+  const drawStrength=d.flush ? .44 : d.oesd ? .36 : d.gutshot ? .19 : 0;
+  const lowShowdown=score[0]===0||(!usesHole&&score[0]<=1);
+  const bluffQuality=clamp(drawStrength+(nutFlushBlocker ? .24 : 0)+flushBlocker*.10+straightBlocker*.12+
+    (backdoorFlush ? .10 : 0)+(backdoorStraight ? .07 : 0)-(lowShowdown ? 0 : .18),0,1);
+  return {texture:tex,nutFlushBlocker,flushBlocker,straightBlocker,backdoorFlush,backdoorStraight,
+    redraw,drawStrength,bluffQuality};
+}
 function rangePostflopActionPolicy(p,m,ctx,hole,info){
-  const st=rangeModelStyle(p),ratio=clamp(ctx.betRatio||0,0,2);
+  const st=ctx._rangeStyle||rangeModelStyle(p,!!ctx.posterior),facing=(ctx.callAmt||0)>0;
+  const ratio=clamp(facing?(ctx.facedBetRatio??ctx.betRatio??0):0,0,2.5);
   const made=info.made||0,draw=(ctx.stage||state.stage)==='river'?0:(info.draw||0);
-  const air=clamp(1-Math.max(made*1.35,draw*1.10),0,1),facing=(ctx.cbBefore||0)>0;
+  const relative=info.relativeStrength??made,showdown=clamp(Math.max(made,relative*.72),0,1);
+  const air=clamp(1-Math.max(showdown*1.22,draw*1.10),0,1);
+  const tex=info.texture||rangeBoardTexture(state.board||[]),bluffQ=info.bluffQuality??draw;
   const checkRaise=!!p.checkedStreet&&facing,multi=Math.max(1,(ctx.activePlayers||2)-1);
-  const line=ctx.lineType||'',facedLine=ctx.facedLine||'';
-  let value=made*(0.62+ratio*0.20)*(checkRaise?1.22:1);
-  let semi=draw*(0.44+st.bluff*0.55)*(facing?0.78:1);
-  let bluff=air*st.bluff*(facing?0.40:0.72)*(ratio>=0.85?0.62:1);
+  const line=ctx.lineType||'',facedLine=ctx.facedLine||'',spr=ctx.spr||8;
+  let value=showdown*(.48+relative*.34)*(checkRaise?1.18:1);
+  let semi=Math.max(draw,bluffQ*.72)*(.34+st.bluff*.65)*(facing ? .76 : 1);
+  let bluff=air*st.bluff*(.34+bluffQ*.82)*(facing ? .40 : .72)*(ratio>=.85 ? .62 : 1);
   if(multi>1){semi*=0.84;bluff*=Math.pow(0.62,multi-1);}
   if(ctx.inPosition&&!facing)bluff*=1.18;
   if(line==='cbet')bluff*=1.34;
   else if(line==='donk'){value*=1.15;bluff*=0.58;}
   else if(line==='checkraise'){value*=1.26;bluff*=0.52;}
-  let raise=0.012+value+semi+bluff;
+  if(tex.wetness>.62){semi*=1.10;bluff*=.86;value*=1.06;}
+  if(spr<=2.5&&relative>.72)value*=1.18;
+  let raise=(0.012+value+semi+bluff)*st.raise;
   if(facing){
-    const strength=Math.max(made,draw*0.90);
-    let call=0.012+strength*0.82+(made>=0.74?st.trap*0.20:0);
+    const strength=Math.max(showdown,draw*.90);
+    let call=(0.012+strength*.82+(made>=.74?st.trap*.20:0))*st.call;
     if(ratio>=0.70&&strength<0.35)call*=0.34;
     if(/^(donk|barrel2|barrel3|checkraise)$/.test(facedLine)&&strength<0.62)call*=0.72;
     if(multi>1&&strength<0.45)call*=Math.pow(0.78,multi-1);
-    const fold=0.10+air*0.86+(ratio>=0.70?Math.max(0,0.35-strength)*0.55:0);
+    const fold=(0.10+air*.86+(ratio>=.70?Math.max(0,.35-strength)*.55:0))*st.fold;
     return rangePolicyNormalize({raise,call,fold},['fold','call','raise']);
   }
   const medium=info.medium?1:0;
-  let check=0.12+air*0.74+medium*0.18+draw*0.38+made*0.10;
+  let check=.12+air*.74+medium*.18+draw*.38+made*.10;
   if(made>=0.62)check=0.035+st.trap*0.68+draw*0.18;
+  if(tex.wetness>.62&&relative>.55)check*=.88;
   const priorChecks=ctx.rangePriorPostChecks||0;
   const boardHit=info.boardHit??(state.board||[]).some(b=>hole.some(c=>c.r===b.r));
   const sid=p.style?.id||'',aggressive=/^(shark|maniac)$/.test(sid);
@@ -339,16 +500,36 @@ function rangePostflopActionPolicy(p,m,ctx,hole,info){
 function rangePostflopSizingLikelihood(p,ctx,info){
   if(!(ctx.target>0))return 1;
   const ratio=ctx.actionPotRatio||ctx.betRatio||0,stage=ctx.stage||state.stage;
-  const strong=(info.made||0)>=0.62,medium=(info.made||0)>=0.25&&!strong,draw=(info.draw||0)>0.20;
-  let expected=stage==='flop'?0.52:stage==='turn'?0.62:0.68;
-  if(strong)expected+=0.13;else if(medium)expected-=0.13;else if(draw)expected+=0.04;
-  if((ctx.raisesBefore||0)>0)expected+=0.24;
-  if((ctx.activePlayers||2)>2)expected+=Math.min(0.14,((ctx.activePlayers||2)-2)*0.06);
-  if((ctx.effectiveStackBB||100)<=18&&strong)expected=Math.max(expected,0.90);
-  const normal=rangeLogSizeKernel(Math.max(ratio,0.02),expected,0.42);
-  const polar=(strong||draw||((info.made||0)<0.18&&rangeModelStyle(p).bluff>0.10))?1:0.18;
-  const overbet=ratio>0.95?polar:1;
-  return clamp(normal*overbet,0.01,1);
+  const st=ctx._rangeStyle||rangeModelStyle(p,!!ctx.posterior),tex=info.texture||rangeBoardTexture(state.board||[]);
+  const relative=info.relativeStrength??info.made??0,strong=relative>=.78||(info.made||0)>=.74;
+  const medium=!strong&&(relative>=.38||(info.made||0)>=.25),draw=(info.draw||0)>.20;
+  const air=!strong&&!medium&&!draw,polar=strong||(air&&(info.bluffQuality||0)>=.22);
+  const streetScale=stage==='flop'?.92:stage==='turn'?1.02:stage==='river'?1.08:1;
+  const profileScale=clamp(st.size/.66,.68,1.55)*streetScale,raiseNode=(ctx.raisesBefore||0)>0;
+  const choices=[];
+  const add=(center,weight)=>{if(weight>0)choices.push([center*profileScale,weight]);};
+  if(raiseNode){
+    add(.55,medium ? .55 : .20);add(.80,strong ? .75 : draw ? .62 : .28);
+    add(1.10,polar ? .72 : .16);add(1.45,polar ? .38 : .05);
+  }else{
+    const cbet=(ctx.lineType||'')==='cbet';
+    add(.25,(cbet&&tex.wetness<.48 ? 1 : .48)+(medium ? .38 : 0));
+    add(.33,(cbet ? .82 : .52)+(medium ? .30 : 0));
+    add(.50,(draw ? .65 : .38)+(tex.wetness>.55 ? .26 : 0));
+    add(.66,(strong ? .78 : draw ? .52 : .25)+(ctx.activePlayers>2 ? .18 : 0));
+    add(.75,strong ? .68 : polar ? .45 : .18);
+    add(1.00,polar ? .62 : .10);
+    add(1.25,polar ? .38 : .035);add(1.50,polar ? .20 : .015);
+  }
+  const jamCenter=(ctx.stackTotalBefore-(ctx.playerBetBefore||0))/Math.max(ctx.potBefore||state.bb,1);
+  if(jamCenter>0)add(jamCenter,(ctx.effectiveStackBB||100)<=18
+    ?(strong ? .95 : draw ? .48 : .05):(strong ? .16 : .015));
+  let weighted=0,total=0;
+  for(const [center,weight] of choices){
+    weighted+=rangeLogSizeKernel(Math.max(ratio,.01),Math.max(center,.02),.27)*weight;
+    total+=weight;
+  }
+  return clamp(weighted/Math.max(total,1e-9),.008,1);
 }
 /* P(observed action | hypothetical combo, public state), normalized across every legal
    alternative. The posterior therefore follows prior × policy frequency, as solver ranges do. */
@@ -362,15 +543,43 @@ function rangeActionLikelihood(p,m,type,ctx,hole,knownInfo){
   return clamp(likelihood,0.00005,0.9999);
 }
 let RANGE_PREFLOP_META=null;
+function rangeSizeBucket(ratio){
+  if(!(ratio>0))return '';
+  if(ratio<=.29)return 'quarter';
+  if(ratio<=.41)return 'third';
+  if(ratio<=.58)return 'half';
+  if(ratio<=.71)return 'twoThirds';
+  if(ratio<=.86)return 'threeQuarters';
+  if(ratio<=1.12)return 'pot';
+  return 'overbet';
+}
 function rangeComboInfoVector(){
   const board=state.board||[];
-  const key=board.map(rangeCardId).join('-')||'pre';
+  const key=board.map(rangeCardId).sort((a,b)=>a-b).join('-')||'pre';
   if(key==='pre'&&RANGE_PREFLOP_META)return RANGE_PREFLOP_META;
   if(!state._rangeComboInfoCache)state._rangeComboInfoCache=Object.create(null);
   if(state._rangeComboInfoCache[key])return state._rangeComboInfoCache[key];
-  const out=[];
+  const out=[],dead=new Set(board.map(rangeCardId));
   for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++)
-    out.push(rangeModelComboInfo([FULL_DECK[i],FULL_DECK[j]],board));
+    out.push(dead.has(i)||dead.has(j)
+      ?{illegal:true,pct:1,made:0,draw:0,relativeStrength:0,bluffQuality:0}
+      :rangeModelComboInfo([FULL_DECK[i],FULL_DECK[j]],board));
+  if(board.length>=3){
+    const live=out.map((info,i)=>({info,i})).filter(x=>!x.info.illegal)
+      .sort((a,b)=>cmpScore(a.info.score,b.info.score));
+    for(let lo=0;lo<live.length;){
+      let hi=lo+1;
+      while(hi<live.length&&cmpScore(live[hi].info.score,live[lo].info.score)===0)hi++;
+      const percentile=live.length<=1?1:((lo+hi-1)/2)/(live.length-1);
+      for(let k=lo;k<hi;k++){
+        const info=live[k].info;
+        info.relativeStrength=percentile;
+        info.nutness=clamp((percentile-.82)/.18,0,1);
+        info.showdownValue=clamp(info.made*.48+percentile*.52,0,1);
+      }
+      lo=hi;
+    }
+  }
   if(key==='pre')RANGE_PREFLOP_META=out;
   state._rangeComboInfoCache[key]=out;
   return out;
@@ -379,6 +588,9 @@ function rangePosteriorApply(p,m,type,ctx){
   const dead=new Set((state.board||[]).map(rangeCardId));
   const infos=rangeComboInfoVector();
   const evidence=Object.assign({},ctx,{
+    posterior:true,
+    _rangeStyle:rangeModelStyle(p,true),
+    nodeType:(ctx.stage||state.stage)==='preflop'?rangePreflopNode(p,ctx):ctx.lineType||'postflop',
     rangePriorPostChecks:(m.history||[]).filter(x=>x.action==='check'&&x.street!=='preflop').length,
     rangeCheckedTo:(ctx.cbBefore||0)<=0&&((ctx.checkedBefore||0)>0||state.players.some(q=>q!==p&&!q.folded&&!q.out&&q.checkedStreet))
   });
@@ -398,6 +610,7 @@ function rangePosteriorApply(p,m,type,ctx){
   let sq=0;for(const w of next)sq+=w*w;
   m.effectiveCombos=Math.round(1/Math.max(sq,1/1326));
   if(!Array.isArray(m.history))m.history=[];
+  const actionRatio=ctx.actionPotRatio||0,tex=(state.board||[]).length>=3?rangeBoardTexture(state.board):null;
   m.history.push({street:ctx.stage||state.stage,action:type==='call'&&(ctx.callAmt||0)<=0?'check':type,
     callBB:Math.round(((ctx.callAmt||0)/Math.max(state.bb,1))*10)/10,
     betRatio:Math.round((ctx.betRatio||0)*100)/100,cbBB:Math.round(((ctx.cbBefore||0)/Math.max(state.bb,1))*10)/10,
@@ -405,6 +618,10 @@ function rangePosteriorApply(p,m,type,ctx){
     raisesBefore:ctx.raisesBefore||0,price:Math.round((ctx.price||0)*1000)/1000,
     lastAggPos:ctx.lastAggPos||'',effectiveStackBB:Math.round((ctx.effectiveStackBB||0)*10)/10,
     activePlayers:ctx.activePlayers||0,inPosition:!!ctx.inPosition,lineType:ctx.lineType||'',facedLine:ctx.facedLine||'',
+    nodeType:evidence.nodeType,limpersBefore:ctx.limpersBefore||0,callersAtLevel:ctx.callersAtLevel||0,
+    actionPotRatio:Math.round(actionRatio*100)/100,facedBetRatio:Math.round((ctx.facedBetRatio||0)*100)/100,
+    sizeBucket:rangeSizeBucket(actionRatio),spr:Math.round((ctx.spr||0)*10)/10,
+    icmPressure:Math.round((ctx.icmPressure||0)*100)/100,wetness:tex?Math.round(tex.wetness*100)/100:0,
     board:(state.board||[]).map(rangeCardId)});
   if(m.history.length>24)m.history.shift();
 }
@@ -420,6 +637,7 @@ function rangeModelApplyAction(p,type,ctx={}){
   const ratio=ctx.betRatio||0;
   const modelAction=type==='call'&&(ctx.callAmt||0)<=0?'check':type;
   rangePosteriorApply(p,m,type,ctx);
+  rangeTendencyObserve(p,type,ctx);
   m.lastAction=modelAction; m.lastStreet=state.stage; m.lastBetRatio=ratio;
   if(type==='fold'){rangeModelSyncLegacy(p,m);return;}
   if(pre){
@@ -472,22 +690,28 @@ function rangeModelApplyAction(p,type,ctx={}){
 }
 function rangeModelComboInfo(hole,board){
   const pct=handPct[holeCode(hole)]||1;
-  if(!board||board.length<3)return Object.assign(rangePreflopShape(hole),{pct,made:0,draw:0,medium:0,strong:0});
+  if(!board||board.length<3)return Object.assign(rangePreflopShape(hole),{pct,made:0,draw:0,medium:0,strong:0,
+    relativeStrength:clamp(1-pct,0,1),showdownValue:clamp(1-pct,0,1),bluffQuality:0});
   const score=evalBest(hole.concat(board));
   const boardMax=Math.max(...board.map(c=>c.r));
-  const topPair=score[0]===1&&score[1]===boardMax&&hole.some(c=>c.r===score[1]);
-  const overPair=score[0]===1&&hole[0].r===hole[1].r&&hole[0].r>boardMax;
-  let made=score[0]>=6?0.96:score[0]===5?0.88:score[0]===4?0.84:score[0]===3?0.74:
-    score[0]===2?0.62:(topPair||overPair)?0.50:score[0]===1?0.28:0.06;
-  let draw=0;
-  if(state.stage!=='river'&&typeof detectDraws==='function'){
-    const d=detectDraws(hole,board);
+  const usesHole=handUsesHoleCards(hole,board,score);
+  const topPair=usesHole&&score[0]===1&&score[1]===boardMax&&hole.some(c=>c.r===score[1]);
+  const overPair=usesHole&&score[0]===1&&hole[0].r===hole[1].r&&hole[0].r>boardMax;
+  const pairRank=usesHole&&score[0]===1?score[1]:0;
+  const underPair=!!(pairRank&&hole[0].r===hole[1].r&&pairRank<boardMax);
+  let made=!usesHole ? .05 : score[0]>=6 ? .96 : score[0]===5 ? .88 : score[0]===4 ? .84 : score[0]===3 ? .74 :
+    score[0]===2 ? .62 : (topPair||overPair) ? .50 : score[0]===1 ? .28 : .06;
+  let draw=0,d={flush:false,oesd:false,gutshot:false};
+  if(board.length<5&&typeof detectDraws==='function'){
+    d=detectDraws(hole,board);
     if(d.flush)draw=Math.max(draw,0.42);
     if(d.oesd)draw=Math.max(draw,0.34);
     else if(d.gutshot)draw=Math.max(draw,0.18);
   }
-  return {pct,made,draw,topPair,overPair,boardHit:board.some(b=>hole.some(c=>c.r===b.r)),
-    medium:made>=0.25&&made<0.62,strong:made>=0.62};
+  const potential=rangeComboPotential(hole,board,score,usesHole,d);
+  return {pct,score,made,draw,drawInfo:d,usesHole,topPair,overPair,underPair,
+    boardHit:board.some(b=>hole.some(c=>c.r===b.r)),relativeStrength:made,showdownValue:made,
+    medium:made>=0.25&&made<0.62,strong:made>=0.62,...potential};
 }
 function rangeModelComboWeight(model,hole,board,capArg,floorArg){
   const m=model||{};
@@ -928,11 +1152,15 @@ function aiThinRiverValueTarget(p,pot,d,spot){
 function aiCurrentRangeContext(p,callAmt,pot){
   const lastAgg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
   const effective=Math.min(p.chips+p.bet,lastAgg?(lastAgg.chips+lastAgg.bet):p.chips+p.bet);
+  const icm=aiIcmPressure(p);
   return {stage:state.stage,callAmt,cbBefore:state.currentBet,playerBetBefore:p.bet,potBefore:pot,
     raisesBefore:state.streetRaiseCount||0,preflopRaisesBefore:state.preflopRaiseCount||0,
     facedRaiseSize:state.lastRaiseSize||0,lastAggPos:lastAgg?.pos||'',lastAggStyle:lastAgg?.style?.id||'',
     bb:state.bb,sb:state.sb,stackTotalBefore:p.chips+p.bet,effectiveStackBB:effective/Math.max(state.bb,1),
-    limpersBefore:state.stage==='preflop'?inHand().filter(q=>q!==p&&q.bet===state.bb&&q.i!==state.lastAggIdx).length:0,
+    potBB:pot/Math.max(state.bb,1),spr:effective/Math.max(pot,state.bb),position:p.pos||'',
+    icmPressure:icm.active?clamp((icm.callPremium||0)/.11,0,1):0,
+    facedBetRatio:callAmt>0?callAmt/Math.max(pot-callAmt,state.bb):0,
+    limpersBefore:state.stage==='preflop'?inHand().filter(q=>q!==p&&q.bet===state.bb&&q.i!==state.lastAggIdx&&(q.pos||'')!=='BB').length:0,
     callersAtLevel:inHand().filter(q=>q!==p&&q.i!==state.lastAggIdx&&q.bet===state.currentBet).length,
     activePlayers:inHand().length};
 }

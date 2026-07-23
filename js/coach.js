@@ -1862,19 +1862,15 @@ function rangeComboDrawOrAir(hole,board){
 function rangeComboCurrentClass(hole,board){
   if(!board||board.length<3)return null;
   const score=evalBest(hole.concat(board)),category=score[0];
-  const hasRank=r=>hole.some(c=>c.r===r);
-  if(board.length===5){
-    const boardScore=evalBest(board);
-    if(cmpScore(score,boardScore)<=0)return 'boardOnly';
-  }
+  const usesHole=handUsesHoleCards(hole,board,score);
+  if(!usesHole)return category===1?rangeComboDrawOrAir(hole,board):category===0?rangeComboDrawOrAir(hole,board):'boardOnly';
   if(category===8)return 'fullHousePlus';
-  if(category===7)return hasRank(score[1])?'fullHousePlus':'boardOnly';
-  if(category===6)return hasRank(score[1])||hasRank(score[2])?'fullHousePlus':'boardOnly';
+  if(category===7||category===6)return 'fullHousePlus';
   if(category===5)return 'flush';
   if(category===4)return 'straight';
-  if(category===3)return hasRank(score[1])?'trips':'boardOnly';
-  if(category===2)return hasRank(score[1])||hasRank(score[2])?'twoPair':'boardOnly';
-  if(category===1)return hasRank(score[1])?'onePair':rangeComboDrawOrAir(hole,board);
+  if(category===3)return 'trips';
+  if(category===2)return 'twoPair';
+  if(category===1)return 'onePair';
   return rangeComboDrawOrAir(hole,board);
 }
 function rangeHandClassVector(board){
@@ -1963,14 +1959,31 @@ function rangeActionTrail(info){
   return history.map(h=>{
     const street=h.street==='preflop'?T('preflop'):h.street==='flop'?T('flop'):h.street==='turn'?T('turnSt'):T('riverSt');
     if(h.action==='raise'){
-      const size=h.targetBB?` ${h.targetBB} BB`:h.betRatio?` ${Math.round(h.betRatio*100)}% pot`:'';
-      if(h.street==='preflop')return `${h.raiseOrdinal===1?T('rangeOpen'):h.raiseOrdinal===2?'3-bet':h.raiseOrdinal===3?'4-bet':h.raiseOrdinal>=4?'5-bet':T('raiseW')}${size}`;
+      const size=h.targetBB?` ${h.targetBB} BB`:h.actionPotRatio?` ${Math.round(h.actionPotRatio*100)}% pot`:h.betRatio?` ${Math.round(h.betRatio*100)}% pot`:'';
+      if(h.street==='preflop'){
+        const action=h.nodeType==='limpedPot'?T('rangeIso'):h.nodeType==='squeeze'?T('rangeSqueeze'):
+          h.raiseOrdinal===1?T('rangeOpen'):h.raiseOrdinal===2?'3-bet':h.raiseOrdinal===3?'4-bet':h.raiseOrdinal>=4?'5-bet':T('raiseW');
+        return `${action}${size}`;
+      }
       return `${h.raisesBefore>0?T('raiseW'):T('betW')} ${street}${size}`;
     }
-    if(h.action==='check')return `${T('check')} ${street}`;
-    if(h.action==='call')return `${T('call')} ${h.callBB||''}${h.callBB?' BB ':''}${street}`;
+    if(h.action==='check')return h.street==='preflop'?`${T('rangeOption')} ${T('preflop')}`:`${T('check')} ${street}`;
+    if(h.action==='call'){
+      if(h.street==='preflop'&&h.nodeType==='open'&&(h.cbBB||0)<=1)return `${T('rangeLimp')} ${T('preflop')}`;
+      return `${T('call')} ${h.callBB||''}${h.callBB?' BB ':''}${street}`;
+    }
     return `${h.action} ${street}`;
   }).join(' → ');
+}
+function rangeCurrentStreet(info){
+  const n=(info.board||[]).length;
+  return n<3?'preflop':n===3?'flop':n===4?'turn':'river';
+}
+function rangeEnteringStreetHtml(info){
+  const current=rangeCurrentStreet(info),history=info.model?.history||[],last=history.at(-1);
+  if(current==='preflop'||last?.street===current)return '';
+  const street=current==='flop'?T('flop'):current==='turn'?T('turnSt'):T('riverSt');
+  return `<div class="range-line range-entering">${T('rangeEntering')(street)}</div>`;
 }
 function rangePct(w){
   return w>=0.001?Math.round(w*1000)/10:Math.round(w*10000)/100;
@@ -1998,6 +2011,7 @@ function rangeMatrixMetaHtml(info,controls=false,mode='density'){
   return `<div class="range-meta"><span>≈${metrics.effective} ${T('rangeEffective')}</span>`+
     (controls?`<span class="range-mode"><button data-range-mode="density" class="${mode==='density'?'on':''}">${T('rangeDensity')}</button><button data-range-mode="mass" class="${mode==='mass'?'on':''}">${T('rangeClassProb')}</button></span>`:`<span>${T('rangeDensity')}</span>`)+
     `</div>${trail?`<div class="range-line"><b>${T('rangeLine')}:</b> ${trail}</div>`:''}`+
+    rangeEnteringStreetHtml(info)+
     rangeCompositionHtml(metrics.composition)+
     (topCardMass?`<div class="range-line range-read"><b>${T('rangeTopCard')}:</b> ${topChar}x ≈ ${topCardPct}%</div>`:'')+
     (top?`<div class="range-line range-top"><b>${T('rangeTopHands')}:</b> ${top}</div>`:'');
