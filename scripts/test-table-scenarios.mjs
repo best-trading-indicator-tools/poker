@@ -74,9 +74,12 @@ const result=vm.runInContext(`(()=>{
   const raisedBlindDisplay=[bbs(state.sb),bbs(state.bb)];
   if(blindDisplay.join('/')!=='0.5 BB/1 BB')
     throw new Error('incorrect starting blind display '+blindDisplay.join('/'));
-  if(raisedBlindDisplay.join('/')!=='0.75 BB/1.5 BB')
-    throw new Error('blind display must rise from its starting-base unit '+raisedBlindDisplay.join('/'));
-  if(state.bb!==30)throw new Error('display change must not alter the live strategic BB');
+  if(raisedBlindDisplay.join('/')!=='1 BB/2 BB')
+    throw new Error('each blind level must double SB and BB '+raisedBlindDisplay.join('/'));
+  if(state.bb!==40||state.sb!==20)throw new Error('live tournament blinds did not double');
+  state.handNum=21;getMode().applyBlinds(state);
+  if(state.bb!==80||state.sb!==40||bbs(state.sb)!=='2 BB'||bbs(state.bb)!=='4 BB')
+    throw new Error('second blind step did not double again');
 
   return {actual,balanced,custom,fallback,randomIds,multiplayerBots:multiplayerBots.map(p=>p.style.id),
     blindDisplay,raisedBlindDisplay};

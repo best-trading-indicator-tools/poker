@@ -1,5 +1,6 @@
 /* ================= SIT & GO TOURNAMENT MODE ================= */
-const LEVELS=[100,150,200,300,400,600,800,1200,1600,2400,3200,4800,6400,9600,12800,19200,25600];
+/* Each tournament level doubles both blinds: 0.5/1 → 1/2 → 2/4 → 4/8… */
+const LEVELS=Array.from({length:17},(_,i)=>100*(2**i));
 const SPEED_HANDS={turbo:5,standard:10,slow:16};
 function koBonusAmount(state){
   const startBlind=state.cfg.startBlind||BASE_BB;
