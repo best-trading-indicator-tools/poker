@@ -1850,16 +1850,56 @@ function coachRangeChartInfo(villain,hero,difficultyApplies,difficulty){
     model:villain.rangeModel?Object.assign({},villain.rangeModel):null,cap,floor,
     board:state.board.slice(),dead:hero.hole.slice()};
 }
+function rangeComboDrawOrAir(hole,board){
+  if(board.length<5){
+    const draw=detectDraws(hole,board);
+    if(draw.flush||draw.oesd||draw.gutshot)return 'drawOnly';
+  }
+  return 'air';
+}
+/* Mutually exclusive current-hand bucket for one exact two-card combo. Rank-only
+   matrix cells cannot provide this because AQs, for example, merges four suits. */
+function rangeComboCurrentClass(hole,board){
+  if(!board||board.length<3)return null;
+  const score=evalBest(hole.concat(board)),category=score[0];
+  const hasRank=r=>hole.some(c=>c.r===r);
+  if(board.length===5){
+    const boardScore=evalBest(board);
+    if(cmpScore(score,boardScore)<=0)return 'boardOnly';
+  }
+  if(category===8)return 'fullHousePlus';
+  if(category===7)return hasRank(score[1])?'fullHousePlus':'boardOnly';
+  if(category===6)return hasRank(score[1])||hasRank(score[2])?'fullHousePlus':'boardOnly';
+  if(category===5)return 'flush';
+  if(category===4)return 'straight';
+  if(category===3)return hasRank(score[1])?'trips':'boardOnly';
+  if(category===2)return hasRank(score[1])||hasRank(score[2])?'twoPair':'boardOnly';
+  if(category===1)return hasRank(score[1])?'onePair':rangeComboDrawOrAir(hole,board);
+  return rangeComboDrawOrAir(hole,board);
+}
+function rangeHandClassVector(board){
+  if(!board||board.length<3)return null;
+  const key=board.map(c=>c.r*4+c.s).sort((a,b)=>a-b).join('-');
+  if(!state._rangeHandClassCache)state._rangeHandClassCache=Object.create(null);
+  if(state._rangeHandClassCache[key])return state._rangeHandClassCache[key];
+  const dead=new Set(board.map(c=>c.r*4+c.s)),out=[];
+  for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++)
+    out.push(dead.has(FULL_DECK[i].r*4+FULL_DECK[i].s)||dead.has(FULL_DECK[j].r*4+FULL_DECK[j].s)
+      ?null:rangeComboCurrentClass([FULL_DECK[i],FULL_DECK[j]],board));
+  state._rangeHandClassCache[key]=out;
+  return out;
+}
 function rangeMatrixMetrics(info){
   if(info._rangeMetrics)return info._rangeMetrics;
   const mass=Object.create(null),available=Object.create(null),comboWeights=[];
   if(info.kind!=='range'){
     for(const code of info.list||[]){mass[code]=1;available[code]=1;}
-    return info._rangeMetrics={mass,available,lift:mass,effective:(info.list||[]).length,legal:(info.list||[]).length};
+    return info._rangeMetrics={mass,available,lift:mass,composition:null,effective:(info.list||[]).length,legal:(info.list||[]).length};
   }
   const dead=new Set((info.board||[]).concat(info.dead||[]).map(c=>c.r*4+c.s));
-  let total=0,legal=0;
-  for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++){
+  const classVector=rangeHandClassVector(info.board||[]),composition=Object.create(null);
+  let total=0,legal=0,k=0;
+  for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++,k++){
     const a=FULL_DECK[i],b=FULL_DECK[j];
     if(dead.has(a.r*4+a.s)||dead.has(b.r*4+b.s))continue;
     const code=holeCode([a,b]);available[code]=(available[code]||0)+1;legal++;
@@ -1871,12 +1911,18 @@ function rangeMatrixMetrics(info){
     }
     if(w<=0)continue;
     mass[code]=(mass[code]||0)+w;total+=w;comboWeights.push(w);
+    if(classVector){
+      const bucket=classVector[k];
+      composition[bucket]=(composition[bucket]||0)+w;
+    }
   }
   if(total>0)for(const code of Object.keys(mass))mass[code]/=total;
+  if(total>0)for(const bucket of Object.keys(composition))composition[bucket]/=total;
   const lift=Object.create(null);
   for(const code of Object.keys(mass))lift[code]=(mass[code]/Math.max(available[code]||1,1))*legal;
   let sq=0;for(const w of comboWeights){const n=w/Math.max(total,1e-12);sq+=n*n;}
-  return info._rangeMetrics={mass,available,lift,effective:Math.round(1/Math.max(sq,1/Math.max(legal,1))),legal};
+  return info._rangeMetrics={mass,available,lift,composition:classVector?composition:null,
+    effective:Math.round(1/Math.max(sq,1/Math.max(legal,1))),legal};
 }
 function rangeMatrixMassMap(info){
   return rangeMatrixMetrics(info).mass;
@@ -1926,15 +1972,33 @@ function rangeActionTrail(info){
     return `${h.action} ${street}`;
   }).join(' → ');
 }
+function rangePct(w){
+  return w>=0.001?Math.round(w*1000)/10:Math.round(w*10000)/100;
+}
+function rangeCompositionHtml(composition){
+  if(!composition)return '';
+  const order=[
+    ['fullHousePlus','rangeFullHousePlus'],['flush','rangeMadeFlushes'],
+    ['straight','rangeStraights'],['trips','rangeTrips'],['twoPair','rangeTwoPair'],
+    ['onePair','rangeOnePair'],['drawOnly','rangeDrawOnly'],['air','rangeAir'],
+    ['boardOnly','rangeBoardOnly']
+  ];
+  const parts=order.filter(([bucket])=>(composition[bucket]||0)>0)
+    .map(([bucket,key])=>`${T(key)} ≈ ${rangePct(composition[bucket])}%`);
+  return parts.length
+    ?`<div class="range-line range-read range-composition"><b>${T('rangeComposition')}:</b> ${parts.join(' · ')}</div>`
+    :'';
+}
 function rangeMatrixMetaHtml(info,controls=false,mode='density'){
   if(info.kind!=='range')return '';
   const metrics=rangeMatrixMetrics(info),trail=rangeActionTrail(info),top=rangeMostLikelyCodes(info,5).join(' · ');
   const topRank=(info.board||[]).length?Math.max(...info.board.map(c=>c.r)):0,topChar=topRank?RANK_CH[topRank]:'',topCode=topRank?CODE_R[topRank]:'';
   const topCardMass=topCode?Object.keys(metrics.mass).reduce((s,code)=>s+(code.slice(0,2).includes(topCode)?metrics.mass[code]:0),0):0;
-  const topCardPct=topCardMass>=0.001?Math.round(topCardMass*1000)/10:Math.round(topCardMass*10000)/100;
+  const topCardPct=rangePct(topCardMass);
   return `<div class="range-meta"><span>≈${metrics.effective} ${T('rangeEffective')}</span>`+
     (controls?`<span class="range-mode"><button data-range-mode="density" class="${mode==='density'?'on':''}">${T('rangeDensity')}</button><button data-range-mode="mass" class="${mode==='mass'?'on':''}">${T('rangeClassProb')}</button></span>`:`<span>${T('rangeDensity')}</span>`)+
     `</div>${trail?`<div class="range-line"><b>${T('rangeLine')}:</b> ${trail}</div>`:''}`+
+    rangeCompositionHtml(metrics.composition)+
     (topCardMass?`<div class="range-line range-read"><b>${T('rangeTopCard')}:</b> ${topChar}x ≈ ${topCardPct}%</div>`:'')+
     (top?`<div class="range-line range-top"><b>${T('rangeTopHands')}:</b> ${top}</div>`:'');
 }

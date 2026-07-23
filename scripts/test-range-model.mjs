@@ -92,6 +92,21 @@ const result=vm.runInContext(`(()=>{
   if(!(metrics.effective>0&&metrics.effective<=metrics.legal))throw new Error('invalid effective combo count');
   if(!rangeMatrixMetaHtml(info).includes('Qx ≈'))throw new Error('top-card probability missing from matrix summary');
 
+  /* One 169-cell label can hide very different suit-specific outcomes. With an
+     equal-weight AQs-only range on a three-club turn, exactly A♣Q♣ is a flush. */
+  const clubTurn=[C(3,0),C(5,3),C(3,3),C(11,3)],suitedWeights=new Array(1326).fill(0);
+  for(let suit=0;suit<4;suit++)suitedWeights[rangeComboIndex(H(C(14,suit),C(12,suit)))]=.25;
+  const suitedInfo={kind:'range',model:{v:2,weights:suitedWeights,history:[]},cap:1,floor:0,
+    board:clubTurn,dead:[C(9,1),C(2,2)],list:HAND_ORDER.slice()};
+  const suitedMetrics=rangeMatrixMetrics(suitedInfo),suitedComposition=suitedMetrics.composition;
+  if(Math.abs((suitedMetrics.mass.AQs||0)-1)>1e-9)
+    throw new Error('AQs matrix cell should contain the whole test range');
+  if(Math.abs((suitedComposition.flush||0)-.25)>1e-9||Math.abs((suitedComposition.air||0)-.75)>1e-9)
+    throw new Error('exact-suit composition mismatch '+JSON.stringify(suitedComposition));
+  const suitedMeta=rangeMatrixMetaHtml(suitedInfo);
+  if(!suitedMeta.includes('Made flushes ≈ 25%')||!suitedMeta.includes('Air / bluff candidates ≈ 75%'))
+    throw new Error('exact hand mix missing from matrix summary '+suitedMeta);
+
   const k96=[C(13,1),C(9,2),C(6,1)],threes=H(C(3,0),C(3,2));
   const underpair=coachUnderpairRealization(threes,k96,.80,true,detectDraws(threes,k96));
   if(!underpair||underpair.overcards!==3||underpair.penalty<.08)

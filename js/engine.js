@@ -192,7 +192,7 @@ function startHand(){
     const opp=liveStart.find(p=>p.i!==0);
     if(opp&&state.players[0].chips<opp.chips) state.rewardHeadsUpTrailed=true;
   }
-  state.board=[]; state.stage='preflop'; state._rangeComboInfoCache=Object.create(null);
+  state.board=[]; state.stage='preflop'; state._rangeComboInfoCache=Object.create(null); state._rangeHandClassCache=Object.create(null);
   state.streetRaiseCount=0; state.preflopRaiseCount=0;
   state.deck=shuffle(makeDeck());
   for(const p of state.players){
