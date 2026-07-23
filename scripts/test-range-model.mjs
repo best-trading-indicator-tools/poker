@@ -196,6 +196,70 @@ const result=vm.runInContext(`(()=>{
   if(underpairDecision.rec!=='FOLD'||underpairDecision.underpairPen<.08||underpairDecision.evs.CALL>=0)
     throw new Error('33/K96 vs 80% c-bet must fold '+JSON.stringify({rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL}));
 
+  /* Four-flush turn: category-level "Ace-high flush" is misleading when the fifth
+     card is a three. Exact opponent combos and their continue policies must block
+     the automatic protection bet. */
+  newGame(cfg);
+  const flushHero=state.players[0],mia=state.players[1],viktor=state.players[2];
+  for(const x of state.players){
+    x.out=false;x.folded=x!==flushHero&&x!==mia&&x!==viktor;x.allIn=false;x.bet=0;x.totalBet=0;
+    x.acted=x.folded;x.checkedStreet=false;x.aggStreets=[];x.checkStreets=[];x.rangeCap=1;x.rangeFloor=0;x.lineRead='';
+  }
+  state.stage='turn';state.board=[C(10,2),C(12,2),C(14,2),C(11,2)];
+  state._rangeComboInfoCache=Object.create(null);state._rangeBoardTextureCache=Object.create(null);
+  state.bb=80;state.sb=40;state.ante=0;state.dealerIdx=state.players.at(-1).i;
+  state.currentBet=0;state.lastRaiseSize=80;state.lastAggIdx=-1;state.pfAggIdx=mia.i;
+  flushHero.pos='UTG';flushHero.hole=H(C(3,2),C(3,1));flushHero.chips=1400;flushHero.totalBet=320;flushHero.acted=false;
+  mia.pos='CO';mia.style=STYLES.find(x=>x.id==='rock');mia.chips=3850;mia.totalBet=320;mia.rangeCap=.27;rangeModelInit(mia);
+  viktor.pos='BTN';viktor.style=STYLES.find(x=>x.id==='station');viktor.chips=1620;viktor.totalBet=320;viktor.rangeCap=.27;rangeModelInit(viktor);
+  const savedFlushEquity=mcEquityR;mcEquityR=()=>.61;
+  const flushDecision=coachDecide(flushHero);
+  mcEquityR=savedFlushEquity;
+  if(flushDecision.rec!=='CHECK'||!flushDecision.flushInfo?.caution||flushDecision.flushInfo.higherCount!==7)
+    throw new Error('low four-flush hand must check '+JSON.stringify({rec:flushDecision.rec,flushInfo:flushDecision.flushInfo}));
+  if(!flushDecision.handDesc.includes('A-Q-J-10-3'))
+    throw new Error('flush description must expose the full five-card tuple '+flushDecision.handDesc);
+  const nutBoard=[C(13,2),C(9,2),C(4,2),C(2,2)],nutHero={...flushHero,hole:H(C(14,2),C(7,1))};
+  state.board=nutBoard;state._rangeComboInfoCache=Object.create(null);state._rangeBoardTextureCache=Object.create(null);
+  const nutFlushInfo=coachFlushRelativeStrength(nutHero,nutBoard,[
+    {cap:.27,floor:0,model:mia.rangeModel,villain:mia},
+    {cap:.27,floor:0,model:viktor.rangeModel,villain:viktor}
+  ],960);
+  if(!nutFlushInfo||nutFlushInfo.higherCount!==0||nutFlushInfo.caution)
+    throw new Error('nut flush must remain eligible for value '+JSON.stringify(nutFlushInfo));
+
+  /* Shallow flop bluff-catcher: profile looseness is already in the posterior equity.
+     It must not be added a second time as fixed Wild + hard/c-bet bonuses, and calling
+     off a large stack fraction must reduce underpair realization. */
+  newGame(cfg);
+  const shallowHero=state.players[0],daria=state.players[1];
+  for(const x of state.players){
+    x.out=false;x.folded=x!==shallowHero&&x!==daria;x.allIn=false;x.bet=0;x.totalBet=0;
+    x.acted=x.folded;x.checkedStreet=false;x.aggStreets=[];x.checkStreets=[];x.rangeCap=1;x.rangeFloor=0;x.lineRead='';
+  }
+  state.stage='flop';state.board=[C(3,1),C(11,1),C(9,0)];
+  state._rangeComboInfoCache=Object.create(null);state._rangeBoardTextureCache=Object.create(null);
+  state.bb=80;state.sb=40;state.ante=0;state.dealerIdx=shallowHero.i;
+  state.currentBet=400;state.lastRaiseSize=400;state.lastAggIdx=daria.i;state.pfAggIdx=daria.i;
+  shallowHero.pos='BTN';shallowHero.hole=H(C(5,2),C(5,1));shallowHero.chips=960;
+  shallowHero.bet=0;shallowHero.totalBet=200;shallowHero.acted=false;
+  daria.pos='CO';daria.style=STYLES.find(x=>x.id==='maniac');daria.chips=1280;
+  daria.bet=400;daria.totalBet=720;daria.rangeCap=.48;daria.lineRead='cbet';rangeModelInit(daria);
+  const savedShallowEquity=mcEquityR;mcEquityR=()=>.36;
+  const shallowDecision=coachDecide(shallowHero);
+  mcEquityR=savedShallowEquity;
+  const expectedModeledEq=.36-.05-shallowDecision.underpairPen;
+  if(shallowDecision.rec!=='FOLD'||shallowDecision.underpairInfo?.callFraction<.40||
+      shallowDecision.underpairInfo?.sprAfter>.50||shallowDecision.underpairPen<.09)
+    throw new Error('55/J93 shallow vs large Wild c-bet must fold '+JSON.stringify({
+      rec:shallowDecision.rec,eqAdj:shallowDecision.eqAdj,pen:shallowDecision.underpairPen,
+      info:shallowDecision.underpairInfo,odds:shallowDecision.odds
+    }));
+  if(Math.abs(shallowDecision.eqAdj-expectedModeledEq)>1e-9)
+    throw new Error('profile-aware posterior was counted twice '+JSON.stringify({
+      eqAdj:shallowDecision.eqAdj,expectedModeledEq
+    }));
+
   newGame(cfg);state.stage='preflop';state.board=[];state.bb=100;state.sb=50;state.currentBet=100;
   state.lastRaiseSize=100;state.streetRaiseCount=0;state.preflopRaiseCount=0;state.handLog=[];
   const opener=state.players[1],reraiser=state.players[2];
@@ -212,7 +276,14 @@ const result=vm.runInContext(`(()=>{
   if(ordinals.join(',')!=='1,2,3,4')throw new Error('action tree ordinals '+ordinals.join(','));
   return {policy,jamAA,jamA5,topCheck,airCheck,kingBeforeCheck,kingAfterCheck,
     effective:metrics.effective,legal:metrics.legal,underpair,withBackdoor,smallIp,
-    underpairDecision:{rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL},ordinals};
+    underpairDecision:{rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL},
+    flushDecision:{rec:flushDecision.rec,higher:flushDecision.flushInfo.higherCount,
+      danger:flushDecision.flushInfo.anyBetter,continued:flushDecision.flushInfo.aheadWhenContinued},
+    nutFlush:{higher:nutFlushInfo.higherCount,caution:nutFlushInfo.caution,
+      continued:nutFlushInfo.aheadWhenContinued},
+    shallowDecision:{rec:shallowDecision.rec,eqAdj:shallowDecision.eqAdj,pen:shallowDecision.underpairPen,
+      callFraction:shallowDecision.underpairInfo.callFraction,sprAfter:shallowDecision.underpairInfo.sprAfter},
+    ordinals};
 })()`,context);
 
 assert.ok(result);

@@ -107,11 +107,12 @@ function boardTwoPairKickerInfo(hole,board){
 }
 function handName(s){
   const nm=rankNm(s[1]),pl=rankPl(s[1]),pl2=rankPl(s[2]);
+  const flushRanks=s.slice(1,6).map(r=>RANK_CH[r]).join('-');
   if(lang==='fr') switch(s[0]){
     case 8: return s[1]===14?'une Quinte Flush Royale':`une Quinte Flush, hauteur ${nm}`;
     case 7: return `un Carré de ${pl}`;
     case 6: return `un Full, ${pl} par les ${pl2}`;
-    case 5: return `une Couleur, hauteur ${nm}`;
+    case 5: return `une Couleur, ${flushRanks}`;
     case 4: return `une Quinte, hauteur ${nm}`;
     case 3: return `un Brelan de ${pl}`;
     case 2: return `une Double Paire, ${pl} et ${pl2}`;
@@ -122,7 +123,7 @@ function handName(s){
     case 8: return s[1]===14?'Escalera Real':`Escalera de Color al ${nm}`;
     case 7: return `Póker de ${pl}`;
     case 6: return `Full de ${pl} y ${pl2}`;
-    case 5: return `Color al ${nm}`;
+    case 5: return `Color, ${flushRanks}`;
     case 4: return `Escalera al ${nm}`;
     case 3: return `Trío de ${pl}`;
     case 2: return `Doble Pareja, ${pl} y ${pl2}`;
@@ -133,7 +134,7 @@ function handName(s){
     case 8: return s[1]===14?'a Royal Flush':`a Straight Flush, ${nm} high`;
     case 7: return `Four of a Kind, ${pl}`;
     case 6: return `a Full House, ${pl} over ${pl2}`;
-    case 5: return `a Flush, ${nm} high`;
+    case 5: return `a Flush, ${flushRanks}`;
     case 4: return `a Straight, ${nm} high`;
     case 3: return `Three of a Kind, ${pl}`;
     case 2: return `Two Pair, ${pl} and ${pl2}`;

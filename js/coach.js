@@ -51,7 +51,8 @@ bigBet:r=>` This bet is ≈${r}% of the pot — bets that large are usually made
 gutWarn:' Chasing a 4-out gutshot into big bets is a long-term money leak — even when you hit, you may not get paid enough to cover all the misses (poor implied odds).',
 airWarn:' You have no made hand and no real draw — players who bet usually have at least a pair, and "pot-odds correct" calls with high cards are one of the biggest leaks in poker. The coach heavily discounts your raw win chance here.',
 weakDrawWarn:' You have no made hand and only a weak gutshot — those four outs are included in the equity, but this is not a strong draw like an open-ender or flush draw. The coach discounts it heavily against aggression.',
-underpairRealization:(n,pen,size,oop,backdoors)=>` Your pocket pair sits below ${n} distinct board rank${n>1?'s':''}. ${oop?'Out of position, ':''}facing a ${size}%-pot bet with more betting still possible, raw showdown equity overstates how often you can profitably reach the river. The coach removes about ${pen} equity points${backdoors?' after giving some credit to your backdoor possibilities':''}.`,
+underpairRealization:(n,pen,size,oop,backdoors,commit,spr)=>` Your pocket pair sits below ${n} distinct board rank${n>1?'s':''}. ${oop?'Out of position, ':''}facing a ${size}%-pot bet with more betting still possible, raw showdown equity overstates how often you can profitably reach the river.${commit>=25?` Calling also commits ${commit}% of your remaining stack and leaves an SPR of only ~${spr}, so the next barrel is highly leveraged.`:''} The coach removes about ${pen} equity points${backdoors?' after giving some credit to your backdoor possibilities':''}.`,
+fragileFlushCheck:(tuple,higher,danger,continued,n)=>` This is a low ${tuple} flush on a four-flush board, not a nut flush: ${higher} higher suited card${higher!==1?'s':''} remain available. Across ${n} opponent${n>1?'s':''}, the modeled chance that someone already has a better flush is about ${danger}; against hands willing to continue versus a real bet, this hand is ahead only about ${continued}. Check for pot control — betting folds too much worse and concentrates action in better flushes.`,
 rangeLikelyHands:(n,h)=>` ${n}'s most likely hand classes after the full action history: ${h}. Percentages are their normalized share of the current range, after known-card blockers — not a claim that one exact hand is certain.`,
 raiseVal:e=>`~${e} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Suggested postflop raise size: ${amt} (${bb}). The opponent's bet is about ${ratio}% pot, so use roughly ${x}x that bet: small bets can be raised much larger, while big bets and overbets usually only need about 2-3x.`,
@@ -128,7 +129,7 @@ briefVillain:(name,style,line)=>` vs ${name} (${style}) on a ${line} line.`,
 dirtyOutPairs:c=>` Dirty outs (${c}): pairing the board — helps everyone, not just you.`,
 dirtyOutFlush:c=>` Dirty outs (${c}): fourth card to a board flush — often gives an opponent the winning flush.`,
 profRock:` The bettor is the 🪨 Tight type — players like this almost never bluff big. Give this bet extra respect: without a strong hand yourself, folding is usually right.`,
-profManiac:` The bettor is the 🔥 Wild type — he bluffs so often that medium-strength hands go UP in value against him. You can call him down lighter than against anyone else.`,
+profManiac:` The bettor is the 🔥 Wild type — his range contains more bluffs, so medium-strength hands gain value. That wider range is already included in the equity estimate; call lighter only when the price and equity realization still support it.`,
 profStation:` The bettor is the 📞 Loose-passive type — he calls everything but almost never bets big without a real hand. His sudden aggression deserves respect.`,
 blockerAce:` You hold an Ace — a "blocker": since one of the four aces is in YOUR hand, it's less likely he holds the big ace-hands (like a pair of aces or top pair with an ace). That makes calling slightly better.`,
 blockerFlush:` You hold the ace of the flush suit — even without a flush yourself, that card means HE cannot have the best possible flush. A bluff-raise from you is also extra believable, because you could have the nut flush.`,
@@ -195,7 +196,8 @@ bigBet:r=>` Cette mise fait ≈${r}% du pot — des mises aussi grosses sont gé
 gutWarn:' Payer de grosses mises pour chasser un ventral à 4 outs est une fuite d’argent à long terme — même touché, vous ne serez pas assez payé pour couvrir tous les échecs (cotes implicites médiocres).',
 airWarn:' Vous n’avez ni main faite ni vrai tirage — celui qui mise a généralement au moins une paire, et les calls « corrects en cotes » avec hauteur sont l’une des plus grosses fuites du poker. Le coach décote fortement votre chance de gain ici.',
 weakDrawWarn:' Vous n’avez pas de main faite et seulement une gutshot faible — ces quatre outs sont inclus dans l’équité, mais ce n’est pas un gros tirage comme une quinte par les deux bouts ou une couleur. Le coach la décote fortement face à l’agression.',
-underpairRealization:(n,pen,size,oop,backdoors)=>` Votre paire servie est sous ${n} hauteur${n>1?'s':''} distincte${n>1?'s':''} du board. ${oop?'Hors de position, ':''}face à une mise de ${size}% du pot avec encore des décisions à venir, l’équité brute jusqu’au showdown surestime la fréquence à laquelle vous atteindrez la river de façon rentable. Le coach retire environ ${pen} points d’équité${backdoors?' après avoir accordé un peu de valeur à vos backdoors':''}.`,
+underpairRealization:(n,pen,size,oop,backdoors,commit,spr)=>` Votre paire servie est sous ${n} hauteur${n>1?'s':''} distincte${n>1?'s':''} du board. ${oop?'Hors de position, ':''}face à une mise de ${size}% du pot avec encore des décisions à venir, l’équité brute jusqu’au showdown surestime la fréquence à laquelle vous atteindrez la river de façon rentable.${commit>=25?` Le call engage aussi ${commit}% de votre tapis restant et laisse un SPR d’environ ${spr} seulement : le prochain barrel exercera une pression énorme.`:''} Le coach retire environ ${pen} points d’équité${backdoors?' après avoir accordé un peu de valeur à vos backdoors':''}.`,
+fragileFlushCheck:(tuple,higher,danger,continued,n)=>` C’est une petite couleur ${tuple} sur un board à quatre cartes de la même couleur, pas la couleur max : ${higher} carte${higher!==1?'s':''} assortie${higher!==1?'s restent':' reste'} disponible${higher!==1?'s':''} au-dessus. Contre ${n} adversaire${n>1?'s':''}, la probabilité modélisée que quelqu’un ait déjà une meilleure couleur est d’environ ${danger} ; face aux mains prêtes à continuer contre une vraie mise, cette main n’est devant qu’environ ${continued}. Checkez pour contrôler le pot : miser fait trop souvent coucher moins bien et concentre l’action sur les meilleures couleurs.`,
 rangeLikelyHands:(n,h)=>` Les classes de mains les plus probables de ${n} après toute l'action : ${h}. Les pourcentages représentent leur part normalisée de la range actuelle après les blockers connus — pas la certitude d'une main exacte.`,
 raiseVal:e=>`~${e} de chances de gain : vous êtes grand favori. Relancez pour la valeur et pour faire payer les tirages — caller laisse de l’argent sur la table.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Taille de relance postflop suggérée : ${amt} (${bb}). La mise adverse fait environ ${ratio}% du pot, donc utilisez environ ${x}x cette mise : les petites mises peuvent être relancées beaucoup plus cher, tandis que les grosses mises et overbets demandent souvent seulement 2-3x.`,
@@ -272,7 +274,7 @@ briefVillain:(name,style,line)=>` vs ${name} (${style}) sur une ligne ${line}.`,
 dirtyOutPairs:c=>` Outs sales (${c}) : pair le board — aide tout le monde, pas seulement vous.`,
 dirtyOutFlush:c=>` Outs sales (${c}) : 4e carte à une couleur au board — donne souvent la couleur gagnante à l'adversaire.`,
 profRock:` Le miseur est du type 🪨 Serré — ces joueurs ne bluffent presque jamais gros. Respectez cette mise : sans main forte, se coucher est généralement correct.`,
-profManiac:` Le miseur est du type 🔥 Fou — il bluffe si souvent que vos mains moyennes PRENNENT de la valeur contre lui. Vous pouvez le payer plus léger que n'importe qui d'autre.`,
+profManiac:` Le miseur est du type 🔥 Sauvage — sa range contient davantage de bluffs, donc vos mains moyennes gagnent de la valeur. Cette range élargie est déjà intégrée à l’équité estimée ; ne payez plus léger que si le prix et la réalisation d’équité le permettent encore.`,
 profStation:` Le miseur est du type 📞 Passif — il paie tout mais ne mise presque jamais gros sans une vraie main. Son agression soudaine mérite le respect.`,
 blockerAce:` Vous tenez un As — un « blocker » : comme l'un des quatre as est dans VOTRE main, il est moins probable qu'il ait les grosses mains à as (paire d'as, top paire avec as). Cela rend le call un peu meilleur.`,
 blockerFlush:` Vous tenez l'as de la couleur du board — même sans couleur vous-même, cette carte signifie qu'IL ne peut pas avoir la meilleure couleur possible. Et un bluff-raise de votre part devient très crédible.`,
@@ -339,7 +341,8 @@ bigBet:r=>` Esta apuesta es ≈${r}% del bote — apuestas tan grandes suelen se
 gutWarn:' Perseguir una escalera interna de 4 outs contra apuestas grandes es una fuga de dinero a largo plazo — incluso cuando ligas, no te pagan lo suficiente para cubrir todos los fallos (odds implícitas pobres).',
 airWarn:' No tienes mano hecha ni proyecto real — quien apuesta suele tener al menos una pareja, y las llamadas "correctas por odds" con carta alta son una de las mayores fugas del póker. El coach descuenta mucho tu probabilidad bruta aquí.',
 weakDrawWarn:' No tienes mano hecha y solo una gutshot débil — esos cuatro outs ya están incluidos en la equity, pero no es un proyecto fuerte como una escalera abierta o color. El coach la descuenta mucho frente a agresión.',
-underpairRealization:(n,pen,size,oop,backdoors)=>` Tu pareja de mano está por debajo de ${n} altura${n>1?'s':''} distinta${n>1?'s':''} de la mesa. ${oop?'Fuera de posición, ':''}ante una apuesta del ${size}% del bote y con más decisiones por venir, la equity bruta hasta el showdown exagera la frecuencia con la que llegarás al river de forma rentable. El coach resta unos ${pen} puntos de equity${backdoors?' después de dar algo de crédito a tus backdoors':''}.`,
+underpairRealization:(n,pen,size,oop,backdoors,commit,spr)=>` Tu pareja de mano está por debajo de ${n} altura${n>1?'s':''} distinta${n>1?'s':''} de la mesa. ${oop?'Fuera de posición, ':''}ante una apuesta del ${size}% del bote y con más decisiones por venir, la equity bruta hasta el showdown exagera la frecuencia con la que llegarás al river de forma rentable.${commit>=25?` Igualar también compromete el ${commit}% de tu stack restante y deja un SPR de apenas ~${spr}, así que el siguiente barrel tendrá mucha presión.`:''} El coach resta unos ${pen} puntos de equity${backdoors?' después de dar algo de crédito a tus backdoors':''}.`,
+fragileFlushCheck:(tuple,higher,danger,continued,n)=>` Es un color bajo ${tuple} en una mesa con cuatro cartas del mismo palo, no el color máximo: quedan ${higher} carta${higher!==1?'s':''} del palo por encima. Contra ${n} rival${n>1?'es':''}, la probabilidad modelada de que alguien ya tenga un color mejor es de aproximadamente ${danger}; frente a las manos dispuestas a continuar ante una apuesta real, esta mano solo va por delante cerca del ${continued}. Pasa para controlar el bote: apostar retira demasiadas manos peores y concentra la acción en colores mejores.`,
 rangeLikelyHands:(n,h)=>` Las clases de manos más probables de ${n} tras todo el historial: ${h}. Los porcentajes son su parte normalizada del rango actual después de los blockers conocidos, no la certeza de una mano exacta.`,
 raiseVal:e=>`~${e} de probabilidad: eres gran favorito. Sube por valor y para cobrar a los proyectos — solo igualar deja dinero sobre la mesa.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Tamaño de subida postflop sugerido: ${amt} (${bb}). La apuesta rival es aprox. ${ratio}% del bote, así que usa cerca de ${x}x esa apuesta: las apuestas pequeñas se pueden subir mucho más, mientras que apuestas grandes y overbets suelen necesitar solo 2-3x.`,
@@ -416,7 +419,7 @@ briefVillain:(name,style,line)=>` vs ${name} (${style}) en línea ${line}.`,
 dirtyOutPairs:c=>` Outs sucios (${c}): emparejan el board — ayuda a todos, no solo a ti.`,
 dirtyOutFlush:c=>` Outs sucios (${c}): 4ª carta a color en el board — a menudo le da el color ganador al rival.`,
 profRock:` El apostador es del tipo 🪨 Cerrado — estos jugadores casi nunca farolean fuerte. Respeta esta apuesta: sin una mano fuerte, retirarse suele ser lo correcto.`,
-profManiac:` El apostador es del tipo 🔥 Salvaje — farolea tanto que tus manos medias SUBEN de valor contra él. Puedes pagarle más ligero que a nadie.`,
+profManiac:` El apostador es del tipo 🔥 Salvaje — su rango contiene más faroles, así que las manos medias ganan valor. Ese rango más amplio ya está incluido en la equity estimada; paga más ligero solo si el precio y la realización de equity aún lo permiten.`,
 profStation:` El apostador es del tipo 📞 Pasivo — lo paga todo pero casi nunca apuesta fuerte sin mano real. Su agresión repentina merece respeto.`,
 blockerAce:` Tienes un As — un "blocker": como uno de los cuatro ases está en TU mano, es menos probable que él tenga las grandes manos con as (pareja de ases, top pair con as). Eso mejora un poco la llamada.`,
 blockerFlush:` Tienes el as del palo del color — aunque tú no tengas color, esa carta significa que ÉL no puede tener el mejor color posible. Y un farol-subida tuyo resulta muy creíble.`,
@@ -1021,8 +1024,9 @@ function underpairBackdoors(hole,board,draw){
 }
 /* Raw all-the-way equity overstates the value of an underpair when future barrels can
    force it off the hand. Scale that realization loss by board coverage, sizing,
-   position and remaining streets; genuine/frontdoor and runner-runner draws soften it. */
-function coachUnderpairRealization(hole,board,betRatio,actsFirst,draw){
+   position, remaining streets and how much of the effective stack this call commits;
+   genuine/frontdoor and runner-runner draws soften it. */
+function coachUnderpairRealization(hole,board,betRatio,actsFirst,draw,ctx={}){
   if(!hole||hole.length!==2||board.length<3||board.length>=5||hole[0].r!==hole[1].r)return null;
   const pairRank=hole[0].r,score=evalBest(hole.concat(board));
   if(score[0]!==1||score[1]!==pairRank)return null;
@@ -1032,6 +1036,18 @@ function coachUnderpairRealization(hole,board,betRatio,actsFirst,draw){
   let penalty=0.025+overRanks.length*0.012;
   penalty+=Math.min(Math.max(betRatio,0),1.25)*0.018;
   if(actsFirst)penalty+=0.012;
+  const callAmt=Math.max(0,ctx.callAmt||0),stackBefore=Math.max(callAmt,ctx.stackBefore||0);
+  const callFraction=stackBefore>0?callAmt/stackBefore:0;
+  const potAfter=Math.max(1,(ctx.pot||0)+callAmt);
+  const stackAfter=Math.max(0,stackBefore-callAmt);
+  const sprAfter=stackBefore>0?stackAfter/potAfter:null;
+  if(flop){
+    /* A call that consumes a large part of the remaining stack does not buy a cheap
+       showdown: it creates a tiny-SPR turn where another barrel is highly leveraged. */
+    penalty+=clamp(callFraction-0.15,0,0.70)*0.075;
+    if(sprAfter!==null&&sprAfter<1.5)penalty+=clamp(1.5-sprAfter,0,1.5)*0.018;
+    if(overRanks.length>=2&&betRatio>=0.65)penalty+=0.010;
+  }
   if(!flop)penalty*=0.58;
   if(bd.frontdoor)penalty*=0.25;
   else{
@@ -1039,8 +1055,90 @@ function coachUnderpairRealization(hole,board,betRatio,actsFirst,draw){
     if(bd.flush)penalty-=0.008;
     if(bd.straight)penalty-=0.006;
   }
-  penalty=clamp(penalty,0.01,0.11);
-  return {penalty,overcards:overRanks.length,backdoors:bd.flush||bd.straight||bd.frontdoor};
+  penalty=clamp(penalty,0.01,0.14);
+  return {penalty,overcards:overRanks.length,backdoors:bd.flush||bd.straight||bd.frontdoor,
+    callFraction,sprAfter};
+}
+/* A flush category alone is not enough to justify a value bet. On four-flush boards,
+   compare the exact five-card tuple with every legal combo in each opponent posterior,
+   then weight those combos by how often that profile would call or raise a 2/3-pot bet.
+   This estimates the range that gives action, not merely the range dealt before betting. */
+function coachFlushRelativeStrength(p,board,opponentRanges,pot,betRatio=0.66){
+  if(!p||!p.hole||board.length<3)return null;
+  const heroScore=evalBest(p.hole.concat(board));
+  if(!heroScore||heroScore[0]!==5)return null;
+  const suitCounts=[0,0,0,0];
+  for(const c of p.hole.concat(board))suitCounts[c.s]++;
+  const flushSuit=suitCounts.findIndex(n=>n>=5);
+  if(flushSuit<0)return null;
+  const boardSuitCount=board.filter(c=>c.s===flushSuit).length;
+  const dead=new Set(p.hole.concat(board).map(c=>c.r*4+c.s));
+  const higherRanks=[];
+  if(boardSuitCount>=4){
+    for(let r=2;r<=14;r++){
+      const suited={r,s:flushSuit},id=r*4+flushSuit;
+      if(dead.has(id))continue;
+      const filler=FULL_DECK.find(c=>c.s!==flushSuit&&!dead.has(c.r*4+c.s));
+      if(filler&&cmpScore(evalBest([suited,filler].concat(board)),heroScore)>0)higherRanks.push(r);
+    }
+  }
+  const ord=postflopOrder(),heroOrd=ord.indexOf(p);
+  const comboVector=typeof rangeComboInfoVector==='function'?rangeComboInfoVector():null;
+  let combinedContinue=0,combinedAheadContinue=0,combinedTieContinue=0;
+  let noBetterProbability=1;
+  const villains=[];
+  for(const range of opponentRanges||[]){
+    const villain=range.villain;
+    const dist=rangeDistribution(range,p.hole,board);
+    let total=0,better=0,worse=0,tie=0,continued=0,aheadContinued=0,tieContinued=0;
+    const villainOrd=villain?ord.indexOf(villain):-1;
+    const ctx={
+      stage:state.stage,callAmt:Math.round(Math.max(pot,1)*betRatio),
+      facedBetRatio:betRatio,betRatio,activePlayers:(opponentRanges||[]).length+1,
+      inPosition:villainOrd>=0&&heroOrd>=0?villainOrd>heroOrd:false,
+      facedLine:'lead',spr:villain?Math.max(0,villain.chips)/(Math.max(pot,1)*(1+betRatio)):8,
+      posterior:true,rangePriorPostChecks:(villain?.checkStreets||[]).length,
+      _rangeStyle:villain&&typeof rangeModelStyle==='function'?rangeModelStyle(villain,true):undefined
+    };
+    for(const combo of dist){
+      const hole=[combo.a,combo.b],score=evalBest(hole.concat(board));
+      const cmp=cmpScore(score,heroScore);
+      let continueWeight=cmp<0?0.18:cmp===0?0.55:0.90;
+      if(villain&&typeof rangePostflopActionPolicy==='function'&&typeof rangeModelComboInfo==='function'){
+        const comboInfo=comboVector&&typeof rangeComboIndex==='function'
+          ?comboVector[rangeComboIndex(hole)]:rangeModelComboInfo(hole,board);
+        const policy=rangePostflopActionPolicy(villain,villain.rangeModel||{},ctx,hole,comboInfo);
+        continueWeight=clamp((policy.call||0)+(policy.raise||0),0,1);
+      }
+      total+=combo.w;
+      if(cmp>0)better+=combo.w;
+      else if(cmp<0)worse+=combo.w;
+      else tie+=combo.w;
+      const cw=combo.w*continueWeight;
+      continued+=cw;
+      if(cmp<0)aheadContinued+=cw;
+      else if(cmp===0)tieContinued+=cw;
+    }
+    const betterShare=better/Math.max(total,1e-12);
+    noBetterProbability*=1-betterShare;
+    combinedContinue+=continued/Math.max(total,1e-12);
+    combinedAheadContinue+=aheadContinued/Math.max(total,1e-12);
+    combinedTieContinue+=tieContinued/Math.max(total,1e-12);
+    villains.push({name:villain?.name||'',better:betterShare,worse:worse/Math.max(total,1e-12),
+      tie:tie/Math.max(total,1e-12),continue:continued/Math.max(total,1e-12),
+      aheadWhenContinued:(aheadContinued+tieContinued*0.5)/Math.max(continued,1e-12)});
+  }
+  const aheadWhenContinued=(combinedAheadContinue+combinedTieContinue*0.5)/Math.max(combinedContinue,1e-12);
+  const anyBetter=1-noBetterProbability,opps=Math.max(1,(opponentRanges||[]).length);
+  const requiredContinueShare=opps>=2?0.62:0.55;
+  const caution=boardSuitCount>=4&&(
+    aheadWhenContinued<requiredContinueShare||
+    (higherRanks.length>=4&&anyBetter>=0.12)||
+    (opps>=2&&higherRanks.length>=3&&anyBetter>=0.08)
+  );
+  return {heroScore,tuple:heroScore.slice(1,6).map(r=>RANK_CH[r]).join('-'),
+    flushSuit,boardSuitCount,higherRanks,higherCount:higherRanks.length,
+    anyBetter,aheadWhenContinued,requiredContinueShare,caution,villains};
 }
 function realTwoPairOrBetter(score,hole){
   if(!score)return false;
@@ -1312,13 +1410,13 @@ function coachDecide(p){
     .map(q=>{
       let cap=clamp(q.rangeCap||1,0.03,1), floor=clamp(q.rangeFloor||0,0,0.25);
       if(difficultyApplies){const d=coachDifficultyRange(q,cap,floor,difficulty);cap=d.cap;floor=d.floor;}
-      return {cap,floor,model:difficultyApplies&&difficulty==='hard'?q.rangeModel:null};
+      return {cap,floor,model:difficultyApplies&&difficulty==='hard'?q.rangeModel:null,villain:q};
     })
     .sort((a,b)=>a.cap-b.cap).slice(0,4);
   const code=holeCode(p.hole), pr=handPct[code]||1;
   let eq,handDesc,drawRow='',extra=[];
   let eqAdj,airPen=0,underpairPen=0,underpairInfo=null;
-  let madeScore=null;
+  let madeScore=null,flushInfo=null;
   const tightOpps=oppCaps.filter(o=>o.cap<1).length;
   const weakOpps=oppCaps.filter(o=>o.floor>0).length;
   if(tightOpps>0) extra.push(C('rangesNote',tightOpps,Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)));
@@ -1334,6 +1432,7 @@ function coachDecide(p){
     const score=evalBest(p.hole.concat(state.board));
     madeScore=score;
     handDesc=handName(score);
+    flushInfo=coachFlushRelativeStrength(p,state.board,oppCaps,pot);
     extra.push(classifyMade(p.hole,state.board,score));
     /* draws (only before the river) */
     if(state.stage!=='river'){
@@ -1698,7 +1797,11 @@ function coachDecide(p){
     const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&strongMade;
     const leadStrongMade=!river&&checkedInFront===0&&opps<=2&&eq>=0.45&&strongMade;
     const protectTopPair=!river&&checkedInFront>0&&opps<=3&&eq>=0.48&&hasTopPairOrBetter(madeScore,p.hole,state.board);
-    if(eq>valueThresh||thinBoardKickerValue){
+    if(flushInfo&&flushInfo.caution){
+      rec='CHECK';
+      why.push(C('fragileFlushCheck',flushInfo.tuple,flushInfo.higherCount,
+        pct(flushInfo.anyBetter),pct(flushInfo.aheadWhenContinued),opps));
+    }else if(eq>valueThresh||thinBoardKickerValue){
       rec='RAISE';
       if(thinBoardKickerValue)smallStab=true;
       why.push(river?C('valRiver',pct(eq),opps):C('valBet',pct(eq),opps));
@@ -1739,12 +1842,16 @@ function coachDecide(p){
     /* WHO is betting, and WHAT LINE did they take? exploit the player, read the story */
     const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
     let exploitAdj=0;
+    const profileAlreadyModeled=!!(difficultyApplies&&difficulty==='hard'&&agg?.rangeModel&&
+      Array.isArray(agg.rangeModel.weights));
     if(agg&&agg.style&&!agg.folded){
-      if(agg.style.id==='rock'){exploitAdj=-0.04;extra.push(C('profRock'));}
-      else if(agg.style.id==='maniac'){exploitAdj=+0.05;extra.push(C('profManiac'));}
-      else if(agg.style.id==='station'){exploitAdj=-0.03;extra.push(C('profStation'));}
+      if(agg.style.id==='rock'){if(!profileAlreadyModeled)exploitAdj=-0.04;extra.push(C('profRock'));}
+      else if(agg.style.id==='maniac'){if(!profileAlreadyModeled)exploitAdj=+0.05;extra.push(C('profManiac'));}
+      else if(agg.style.id==='station'){if(!profileAlreadyModeled)exploitAdj=-0.03;extra.push(C('profStation'));}
     }
-    const diffAggAdj=difficultyApplies?coachDifficultyAggAdj(agg,betRatio,difficulty):0;
+    /* Hard-mode equity already samples the profile-aware posterior. Applying another
+       fixed Wild/c-bet bonus here would count the same looseness twice. */
+    const diffAggAdj=difficultyApplies&&!profileAlreadyModeled?coachDifficultyAggAdj(agg,betRatio,difficulty):0;
     if(agg&&agg.lineRead){
       if(agg.lineRead==='cbet')extra.push(C('lineCbet'));
       else if(agg.lineRead==='donk')extra.push(C('lineDonk'));
@@ -1766,14 +1873,18 @@ function coachDecide(p){
     const noMade=myScore[0]===0||(myScore[0]<=2&&!usesHole);
     const goodDraw=d&&(d.flush||d.oesd);
     airPen=(noMade&&!goodDraw)?0.15:0;
-    underpairInfo=coachUnderpairRealization(p.hole,state.board,betRatio,actsFirst,d);
+    underpairInfo=coachUnderpairRealization(p.hole,state.board,betRatio,actsFirst,d,{
+      callAmt,pot,stackBefore:p.chips
+    });
     underpairPen=underpairInfo?underpairInfo.penalty:0;
     eqAdj=eq-bigBetPen-airPen-underpairPen+exploitAdj+blockAdj+diffAggAdj;
     const edge=eqAdj-odds-posAdj-icmPrem;
     if(bigBetPen>=0.05) extra.push(C('bigBet',Math.round(betRatio*100)));
     if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
     if(airPen) extra.push(C(d&&d.gutshot?'weakDrawWarn':'airWarn'));
-    if(underpairInfo)extra.push(C('underpairRealization',underpairInfo.overcards,Math.round(underpairPen*100),Math.round(betRatio*100),actsFirst,underpairInfo.backdoors));
+    if(underpairInfo)extra.push(C('underpairRealization',underpairInfo.overcards,Math.round(underpairPen*100),
+      Math.round(betRatio*100),actsFirst,underpairInfo.backdoors,
+      Math.round(underpairInfo.callFraction*100),underpairInfo.sprAfter===null?'—':Math.round(underpairInfo.sprAfter*10)/10));
     extra.push(C('mentalMath',usd(callAmt),usd(pot+callAmt),pct(odds)));
     if(eqAdj>0.68+posAdj&&!drawOnly){
       rec='RAISE';
@@ -1836,7 +1947,7 @@ function coachDecide(p){
     RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
   };
   coachSpotBrief(p,extra,{eq,eqAdj,odds,callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
-  return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,odds,callAmt,pot,opps,pos,early,late,
+  return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,rangeCharts,code,spr,sprZone};
 }
 
