@@ -75,7 +75,17 @@ const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const fmt=n=>n.toLocaleString('en-US');
 /* money display: 100 BB = $2,000 -> 1 BB (100 chips) = $20 -> 1 chip = $0.20 */
 const usd=n=>'$'+fmt(Math.round(n/5));
-function bbs(n){const v=n/state.bb;return (v>=20?Math.round(v):Math.round(v*10)/10)+' BB';}
+/* Keep the table's secondary BB display anchored to the tournament's starting
+   big blind. Blind posts then visibly rise with the levels instead of always
+   reading 0.5/1 BB. Strategy calculations still use state.bb (the live level). */
+function displayBBBase(){
+  if(!state)return BASE_BB;
+  return Math.max(1,state.cfg?.startBlind||state.levels?.[0]||state.bb||BASE_BB);
+}
+function bbs(n){
+  const v=n/displayBBBase(),shown=v>=20?Math.round(v):Math.round(v*100)/100;
+  return shown+' BB';
+}
 const money=n=>usd(n)+' · '+bbs(n);
 
 /* ================= GAME STATE ================= */

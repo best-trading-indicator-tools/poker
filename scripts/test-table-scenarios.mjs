@@ -68,7 +68,18 @@ const result=vm.runInContext(`(()=>{
       if(total!==bots)throw new Error(id+' allocation '+bots+' -> '+total);
     }
   }
-  return {actual,balanced,custom,fallback,randomIds,multiplayerBots:multiplayerBots.map(p=>p.style.id)};
+  newGame({...base,tableScenario:'balanced'});
+  const blindDisplay=[bbs(state.sb),bbs(state.bb)];
+  state.handNum=11;getMode().applyBlinds(state);
+  const raisedBlindDisplay=[bbs(state.sb),bbs(state.bb)];
+  if(blindDisplay.join('/')!=='0.5 BB/1 BB')
+    throw new Error('incorrect starting blind display '+blindDisplay.join('/'));
+  if(raisedBlindDisplay.join('/')!=='0.75 BB/1.5 BB')
+    throw new Error('blind display must rise from its starting-base unit '+raisedBlindDisplay.join('/'));
+  if(state.bb!==30)throw new Error('display change must not alter the live strategic BB');
+
+  return {actual,balanced,custom,fallback,randomIds,multiplayerBots:multiplayerBots.map(p=>p.style.id),
+    blindDisplay,raisedBlindDisplay};
 })()`,context);
 
 assert.ok(result);
