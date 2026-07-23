@@ -74,15 +74,28 @@ const result=vm.runInContext(`(()=>{
   const raisedBlindDisplay=[bbs(state.sb),bbs(state.bb)];
   if(blindDisplay.join('/')!=='0.5 BB/1 BB')
     throw new Error('incorrect starting blind display '+blindDisplay.join('/'));
-  if(raisedBlindDisplay.join('/')!=='1 BB/2 BB')
-    throw new Error('each blind level must double SB and BB '+raisedBlindDisplay.join('/'));
+  if(raisedBlindDisplay.join('/')!=='0.5 BB/1 BB')
+    throw new Error('table amounts must use the current live BB '+raisedBlindDisplay.join('/'));
   if(state.bb!==40||state.sb!==20)throw new Error('live tournament blinds did not double');
   state.handNum=21;getMode().applyBlinds(state);
-  if(state.bb!==80||state.sb!==40||bbs(state.sb)!=='2 BB'||bbs(state.bb)!=='4 BB')
+  if(state.bb!==80||state.sb!==40||bbs(state.sb)!=='0.5 BB'||bbs(state.bb)!=='1 BB')
     throw new Error('second blind step did not double again');
+  const tournamentBlinds=[state.sb,state.bb];
+
+  newGame({...base,gameType:'cash',tableScenario:'balanced'});
+  const cashBlinds=[state.sb,state.bb];
+  state.handNum=999;getMode().applyBlinds(state);
+  if(state.sb!==cashBlinds[0]||state.bb!==cashBlinds[1])
+    throw new Error('cash-game blinds must remain fixed');
+  if(bbs(state.sb)!=='0.5 BB'||bbs(state.bb)!=='1 BB')
+    throw new Error('cash-game table amounts must use the current fixed BB');
+  state.bb=1000;
+  const screenshotExample=usd(2000)+' · '+bbs(2000);
+  if(screenshotExample!=='$400 · 2 BB')
+    throw new Error('current-BB conversion regression '+screenshotExample);
 
   return {actual,balanced,custom,fallback,randomIds,multiplayerBots:multiplayerBots.map(p=>p.style.id),
-    blindDisplay,raisedBlindDisplay};
+    blindDisplay,raisedBlindDisplay,tournamentBlinds,cashBlinds,screenshotExample};
 })()`,context);
 
 assert.ok(result);
