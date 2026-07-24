@@ -686,6 +686,81 @@ function finishHand(pause){
 
 /* ================= SOUND ================= */
 let audioCtx=null,soundOn=true;
+/* Every pack owns the complete soundscape, not only rare reward jingles. Keeping
+   cue data separate from WebAudio playback makes pack selection deterministic and
+   testable without a browser/audio device. Note tuple: frequency, delay, duration,
+   volume, oscillator type. */
+const SOUND_CUE_LIBRARY={
+  classic:{
+    preview:[[523,0,.08,.07,'sine'],[659,.08,.08,.07,'sine'],[784,.17,.14,.065,'sine']],
+    deal:[[950,0,.05,.045,'triangle']],
+    chip:[[1500,0,.04,.05,'square'],[1900,.05,.04,.04,'square']],
+    fold:[[220,0,.08,.045,'sine']],
+    check:[[480,0,.045,.04,'sine']],
+    tick:[[1150,0,.03,.09,'square'],[750,.05,.025,.05,'square']],
+    alert:[[660,0,.11,.06,'sine'],[880,.12,.11,.05,'sine']],
+    win:[[523,0,.12,.07,'sine'],[659,.12,.12,.07,'sine'],[784,.24,.22,.07,'sine']],
+    xp:[[880,0,.055,.055,'triangle'],[1174,.07,.07,.05,'triangle']],
+    bigwin:[[523,0,.09,.08,'sine'],[659,.09,.09,.08,'sine'],[784,.18,.12,.08,'sine'],[1046,.32,.18,.07,'sine']],
+    levelup:[[659,0,.08,.07,'sine'],[784,.08,.08,.07,'sine'],[988,.16,.08,.07,'sine'],[1318,.28,.2,.06,'sine']],
+    ko:[[220,0,.08,.08,'square'],[440,.1,.08,.07,'square'],[880,.22,.16,.06,'triangle']],
+    bounty:[[330,0,.07,.08,'square'],[659,.09,.07,.075,'square'],[988,.2,.1,.065,'triangle'],[1568,.35,.16,.055,'triangle']]
+  },
+  arcade:{
+    preview:[[659,0,.06,.07,'square'],[988,.07,.06,.07,'triangle'],[1318,.14,.07,.065,'triangle'],[1976,.25,.16,.055,'triangle']],
+    deal:[[1200,0,.04,.045,'triangle'],[1800,.045,.045,.035,'triangle']],
+    chip:[[1600,0,.035,.05,'square'],[2100,.04,.035,.045,'square'],[2600,.085,.04,.035,'triangle']],
+    fold:[[420,0,.07,.045,'sawtooth'],[280,.055,.06,.03,'sawtooth']],
+    check:[[720,0,.04,.045,'triangle'],[960,.045,.04,.035,'triangle']],
+    tick:[[1500,0,.025,.08,'square'],[1000,.04,.025,.055,'square']],
+    alert:[[784,0,.08,.06,'square'],[1174,.09,.1,.05,'triangle']],
+    win:[[659,0,.08,.07,'sine'],[988,.08,.08,.07,'sine'],[1318,.17,.1,.065,'triangle'],[1760,.3,.16,.055,'triangle']],
+    xp:[[784,0,.05,.05,'triangle'],[1174,.06,.055,.05,'triangle'],[1760,.13,.07,.045,'triangle']],
+    bigwin:[[523,0,.08,.08,'sine'],[784,.08,.08,.08,'sine'],[1046,.17,.1,.08,'sine'],[1568,.3,.18,.07,'sine']],
+    levelup:[[659,0,.07,.07,'sine'],[988,.08,.07,.07,'sine'],[1318,.16,.08,.065,'sine'],[1760,.28,.2,.055,'sine']],
+    ko:[[247,0,.07,.08,'square'],[494,.08,.08,.075,'square'],[988,.2,.12,.065,'triangle'],[1318,.34,.12,.05,'triangle']],
+    bounty:[[392,0,.055,.08,'square'],[784,.065,.055,.075,'square'],[1174,.14,.08,.065,'triangle'],[1760,.27,.15,.055,'triangle']]
+  },
+  retro:{
+    preview:[[262,0,.07,.075,'square'],[392,.08,.07,.07,'square'],[523,.16,.07,.065,'square'],[784,.27,.15,.055,'square']],
+    deal:[[880,0,.045,.045,'square'],[660,.05,.04,.035,'square']],
+    chip:[[1100,0,.035,.05,'square'],[880,.04,.035,.045,'square']],
+    fold:[[196,0,.08,.045,'square'],[147,.065,.055,.03,'square']],
+    check:[[330,0,.045,.045,'square']],
+    tick:[[1000,0,.025,.08,'square'],[500,.045,.025,.055,'square']],
+    alert:[[440,0,.09,.06,'square'],[660,.1,.09,.05,'square']],
+    win:[[262,0,.09,.07,'square'],[392,.1,.09,.07,'square'],[523,.2,.16,.06,'square']],
+    xp:[[1046,0,.05,.055,'square'],[1568,.06,.05,.045,'square']],
+    bigwin:[[392,0,.07,.08,'square'],[784,.08,.08,.075,'square'],[1174,.18,.12,.06,'square']],
+    levelup:[[523,0,.06,.07,'square'],[659,.07,.06,.07,'square'],[784,.14,.06,.07,'square'],[1046,.25,.18,.06,'square']],
+    ko:[[196,0,.08,.08,'square'],[392,.1,.08,.07,'square'],[784,.22,.14,.06,'square']],
+    bounty:[[330,0,.05,.08,'square'],[660,.07,.05,.075,'square'],[990,.14,.08,.06,'square'],[1320,.26,.14,.05,'square']]
+  },
+  casino:{
+    preview:[[1046,0,.045,.065,'triangle'],[1318,.055,.045,.065,'triangle'],[1760,.12,.06,.06,'triangle'],[2093,.24,.18,.05,'triangle']],
+    deal:[[1400,0,.035,.04,'triangle'],[2000,.045,.045,.035,'triangle']],
+    chip:[[2200,0,.03,.045,'triangle'],[2800,.04,.035,.04,'triangle'],[2400,.085,.035,.03,'triangle']],
+    fold:[[196,0,.09,.04,'sine']],
+    check:[[1046,0,.035,.04,'triangle'],[1318,.045,.04,.032,'triangle']],
+    tick:[[1760,0,.025,.075,'triangle'],[1320,.045,.025,.05,'triangle']],
+    alert:[[880,0,.08,.055,'triangle'],[1320,.09,.1,.05,'triangle']],
+    win:[[1046,0,.06,.065,'triangle'],[1318,.07,.06,.065,'triangle'],[1568,.14,.07,.06,'triangle'],[2093,.26,.17,.05,'triangle']],
+    xp:[[1760,0,.035,.045,'triangle'],[1396,.04,.035,.04,'triangle'],[1760,.09,.055,.045,'triangle']],
+    bigwin:[[1318,0,.04,.065,'triangle'],[1760,.06,.04,.065,'triangle'],[2093,.12,.08,.06,'triangle'],[2637,.25,.16,.055,'triangle']],
+    levelup:[[1046,0,.05,.065,'triangle'],[1318,.06,.05,.065,'triangle'],[1568,.12,.05,.065,'triangle'],[2093,.24,.18,.055,'triangle']],
+    ko:[[220,0,.08,.08,'square'],[880,.12,.05,.07,'triangle'],[1760,.2,.12,.055,'triangle']],
+    bounty:[[1760,0,.035,.055,'triangle'],[2093,.05,.04,.055,'triangle'],[2637,.11,.06,.05,'triangle'],[1760,.24,.16,.045,'triangle']]
+  }
+};
+function activeSoundPack(){
+  try{return typeof getRewardState==='function'?(getRewardState().equippedCosmetics?.soundPack||'classic'):'classic';}
+  catch(e){return 'classic';}
+}
+function soundCuePlan(kind,pack){
+  const selected=SOUND_CUE_LIBRARY[pack||activeSoundPack()]||SOUND_CUE_LIBRARY.classic;
+  const cue=selected[kind]||SOUND_CUE_LIBRARY.classic[kind]||[];
+  return cue.map(note=>note.slice());
+}
 function sfx(kind){
   if(!HAS_DOM||!soundOn||BENCH)return;
   try{
@@ -699,51 +774,7 @@ function sfx(kind){
       o.connect(g);g.connect(audioCtx.destination);
       o.start(t0+t);o.stop(t0+t+d);
     };
-    const rewardPack=()=>{
-      try{return typeof getRewardState==='function'?(getRewardState().equippedCosmetics?.soundPack||'classic'):'classic';}
-      catch(e){return 'classic';}
-    };
-    if(kind==='deal'){tone(950,0,0.05,0.045,'triangle');}
-    else if(kind==='chip'){tone(1500,0,0.04,0.05,'square');tone(1900,0.05,0.04,0.04,'square');}
-    else if(kind==='fold'){tone(220,0,0.08,0.045);}
-    else if(kind==='check'){tone(480,0,0.045,0.04);}
-    else if(kind==='tick'){tone(1150,0,0.03,0.09,'square');tone(750,0.05,0.025,0.05,'square');}
-    else if(kind==='alert'){tone(660,0,0.11,0.06);tone(880,0.12,0.11,0.05);}
-    else if(kind==='win'){tone(523,0,0.12,0.07);tone(659,0.12,0.12,0.07);tone(784,0.24,0.22,0.07);}
-    else if(kind==='xp'){
-      const p=rewardPack();
-      if(p==='retro'){tone(1046,0,0.05,0.055,'square');tone(1568,0.06,0.05,0.045,'square');}
-      else if(p==='arcade'){tone(784,0,0.05,0.05,'triangle');tone(1174,0.06,0.055,0.05,'triangle');tone(1760,0.13,0.07,0.045,'triangle');}
-      else if(p==='casino'){tone(1760,0,0.035,0.045,'triangle');tone(1396,0.04,0.035,0.04,'triangle');tone(1760,0.09,0.055,0.045,'triangle');}
-      else{tone(880,0,0.055,0.055,'triangle');tone(1174,0.07,0.07,0.05,'triangle');}
-    }
-    else if(kind==='bigwin'){
-      const p=rewardPack();
-      if(p==='retro'){tone(392,0,0.07,0.08,'square');tone(784,0.08,0.08,0.075,'square');tone(1174,0.18,0.12,0.06,'square');}
-      else if(p==='arcade'){tone(523,0,0.08,0.08);tone(784,0.08,0.08,0.08);tone(1046,0.17,0.1,0.08);tone(1568,0.3,0.18,0.07);}
-      else if(p==='casino'){tone(1318,0,0.04,0.065,'triangle');tone(1760,0.06,0.04,0.065,'triangle');tone(2093,0.12,0.08,0.06,'triangle');tone(2637,0.25,0.16,0.055,'triangle');}
-      else{tone(523,0,0.09,0.08);tone(659,0.09,0.09,0.08);tone(784,0.18,0.12,0.08);tone(1046,0.32,0.18,0.07);}
-    }
-    else if(kind==='levelup'){
-      const p=rewardPack();
-      if(p==='retro'){tone(523,0,0.06,0.07,'square');tone(659,0.07,0.06,0.07,'square');tone(784,0.14,0.06,0.07,'square');tone(1046,0.25,0.18,0.06,'square');}
-      else if(p==='arcade'){tone(659,0,0.07,0.07);tone(988,0.08,0.07,0.07);tone(1318,0.16,0.08,0.065);tone(1760,0.28,0.2,0.055);}
-      else if(p==='casino'){tone(1046,0,0.05,0.065,'triangle');tone(1318,0.06,0.05,0.065,'triangle');tone(1568,0.12,0.05,0.065,'triangle');tone(2093,0.24,0.18,0.055,'triangle');}
-      else{tone(659,0,0.08,0.07);tone(784,0.08,0.08,0.07);tone(988,0.16,0.08,0.07);tone(1318,0.28,0.2,0.06);}
-    }
-    else if(kind==='ko'){
-      const p=rewardPack();
-      if(p==='retro'){tone(196,0,0.08,0.08,'square');tone(392,0.1,0.08,0.07,'square');tone(784,0.22,0.14,0.06,'square');}
-      else if(p==='arcade'){tone(247,0,0.07,0.08,'square');tone(494,0.08,0.08,0.075,'square');tone(988,0.2,0.12,0.065,'triangle');tone(1318,0.34,0.12,0.05,'triangle');}
-      else if(p==='casino'){tone(220,0,0.08,0.08,'square');tone(880,0.12,0.05,0.07,'triangle');tone(1760,0.2,0.12,0.055,'triangle');}
-      else{tone(220,0,0.08,0.08,'square');tone(440,0.1,0.08,0.07,'square');tone(880,0.22,0.16,0.06,'triangle');}
-    }
-    else if(kind==='bounty'){
-      const p=rewardPack();
-      if(p==='retro'){tone(330,0,0.05,0.08,'square');tone(660,0.07,0.05,0.075,'square');tone(990,0.14,0.08,0.06,'square');tone(1320,0.26,0.14,0.05,'square');}
-      else if(p==='casino'){tone(1760,0,0.035,0.055,'triangle');tone(2093,0.05,0.04,0.055,'triangle');tone(2637,0.11,0.06,0.05,'triangle');tone(1760,0.24,0.16,0.045,'triangle');}
-      else{tone(330,0,0.07,0.08,'square');tone(659,0.09,0.07,0.075,'square');tone(988,0.2,0.1,0.065,'triangle');tone(1568,0.35,0.16,0.055,'triangle');}
-    }
+    for(const note of soundCuePlan(kind))tone(...note);
   }catch(e){}
 }
 

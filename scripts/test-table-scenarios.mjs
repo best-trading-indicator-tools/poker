@@ -94,8 +94,30 @@ const result=vm.runInContext(`(()=>{
   if(screenshotExample!=='$400 · 2 BB')
     throw new Error('current-BB conversion regression '+screenshotExample);
 
+  const soundKinds=['preview','deal','chip','fold','check','tick','alert','win','xp','bigwin','levelup','ko','bounty'];
+  const soundPacks=['classic','arcade','retro','casino'],soundSignatures={};
+  for(const pack of soundPacks){
+    soundSignatures[pack]={};
+    for(const kind of soundKinds){
+      const plan=soundCuePlan(kind,pack);
+      if(!Array.isArray(plan)||!plan.length||plan.some(note=>note.length!==5||note[0]<=0||note[2]<=0||note[3]<=0))
+        throw new Error('invalid '+pack+' '+kind+' cue '+JSON.stringify(plan));
+      soundSignatures[pack][kind]=JSON.stringify(plan);
+      if(pack!=='classic'&&soundSignatures[pack][kind]===JSON.stringify(soundCuePlan(kind,'classic')))
+        throw new Error(pack+' does not change '+kind);
+    }
+  }
+  const rewardSoundState=getRewardState();
+  rewardSoundState.unlockedCosmetics.soundPack=['classic','retro'];
+  rewardSoundState.equippedCosmetics.soundPack='retro';
+  localStorage.setItem('sg_poker_rewards_v1',JSON.stringify(rewardSoundState));
+  if(activeSoundPack()!=='retro')throw new Error('equipped sound pack is not used by playback');
+  if(!rewardKindDescription('soundPack').includes('all table and reward sounds'))
+    throw new Error('sound-pack UI still describes reward-only audio');
+
   return {actual,balanced,custom,fallback,randomIds,multiplayerBots:multiplayerBots.map(p=>p.style.id),
-    blindDisplay,raisedBlindDisplay,tournamentBlinds,cashBlinds,screenshotExample};
+    blindDisplay,raisedBlindDisplay,tournamentBlinds,cashBlinds,screenshotExample,
+    soundPacks:Object.fromEntries(soundPacks.map(pack=>[pack,soundKinds.length]))};
 })()`,context);
 
 assert.ok(result);

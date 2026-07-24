@@ -385,7 +385,7 @@ function rewardKindDescription(kind){
     :kind==='avatarFrame'?'Changes the border/glow around your player plate.'
     :kind==='emotePack'?'Changes the quick reactions available from the React button.'
     :kind==='winFx'?'Changes the visual punch for big wins, knockouts, and reward pops.'
-    :kind==='soundPack'?'Changes reward sounds for XP, level-ups, big pots, and KOs.'
+    :kind==='soundPack'?'Changes all table and reward sounds, including cards, chips, actions, wins, XP, big pots, and KOs.'
     :'Changes the table surface theme behind the cards and seats.';
 }
 function rewardCosmeticEffect(kind,id){
@@ -427,10 +427,10 @@ function rewardCosmeticEffect(kind,id){
       jackpot:'Largest casino-style reward glow.'
     },
     soundPack:{
-      classic:'Default reward sound set.',
-      arcade:'Brighter arcade-style reward sounds.',
-      retro:'Old-school square-wave reward sounds.',
-      casino:'Higher casino-style reward chimes.'
+      classic:'Default table and reward sound set.',
+      arcade:'Brighter arcade-style cards, actions, wins, and reward sounds.',
+      retro:'Old-school square-wave soundscape across the whole game.',
+      casino:'Higher casino-style table sounds and reward chimes.'
     }
   };
   return txt[kind]?.[id]||'Cosmetic-only unlock; it never changes poker odds.';
@@ -540,6 +540,7 @@ function renderRewardsRoom(){
   $('rewardBody').querySelectorAll('[data-reward-kind]').forEach(btn=>{
     btn.onclick=()=>{
       if(typeof equipCosmetic==='function'&&equipCosmetic(btn.dataset.rewardKind,btn.dataset.rewardId)){
+        if(btn.dataset.rewardKind==='soundPack'&&typeof sfx==='function')sfx('preview');
         applyRewardCosmetics();
         renderRewardTop();
         renderRewardsRoom();
