@@ -64,6 +64,8 @@ fourBetValue:(c,amt,bb)=>`You already raised and now face a 3-bet to ${amt} (${b
 fourBetBluff:(c,amt,bb)=>`You already raised and now face a 3-bet to ${amt} (${bb}). ${c} can be used as a selective 4-bet bluff here: your ace blocks AA/AK, the 3-bettor's range is wide, the size is still normal, and stacks are deep enough to fold if shoved on.`,
 fourBetCall:(c,e,o)=>`You already raised and now face a 3-bet. ${c} is strong enough to continue but does not want to build a 4-bet pot; call with ${e} equity versus a ${o} price.`,
 chartCallRaise:(c,e,o)=>`${c} is in the calling chart against this raise — strong enough to see a flop, not strong enough to re-raise. Your win chance (${e}) covers the price (${o}). Call, and play carefully if you miss the flop.`,
+pfContextCall:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} is a contextual call, not an automatic defend. Against a ${open} BB open at ${eff} BB effective, you will be ${pos>0?'in position':pos<0?'out of position':'without guaranteed last action'} after the flop${behind?`, with ${behind} player${behind>1?'s':''} still able to squeeze`:''}. Raw equity of ${raw} becomes about ${usable} after position, stack depth, implied/reverse-implied odds and the modeled ${sq}% squeeze risk; that still clears the adjusted ${need} requirement.`,
+pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} may look playable on a static chart, but this exact call is not profitable. Against a ${open} BB open at ${eff} BB effective, you will be ${pos>0?'in position':pos<0?'out of position':'without guaranteed last action'} after the flop${behind?`, and ${behind} player${behind>1?'s':''} can still squeeze`:''}. Raw equity of ${raw} falls to about ${usable} once realization, implied/reverse-implied odds and ${sq}% squeeze risk are counted, below the adjusted ${need} requirement — fold.`,
 chartIcmFold:(c,e,o)=>`${c} is normally a call here, but right now your simulated win chance (${e}) doesn't cover the price (${o}) once prize pressure and this raiser's range are counted. The chart is a guide — the math of THIS table says fold.`,
 chartFoldVs:c=>`${c} is in neither the re-raise nor the calling chart against this raise — solver ranges simply fold it. Calling raises with hands like this is one of the most expensive habits in poker.`,
 chartOpen:(c,p)=>`${c} is in the ${p} opening chart — a hand list taken from solver-computed ranges: raising it first-in from this seat is profitable in the long run. Come in raising, not limping.`,
@@ -209,6 +211,8 @@ fourBetValue:(c,amt,bb)=>`Vous avez déjà relancé et faites maintenant face à
 fourBetBluff:(c,amt,bb)=>`Vous avez déjà relancé et faites maintenant face à un 3-bet à ${amt} (${bb}). ${c} peut servir de bluff 4-bet sélectif : votre As bloque AA/AK, la range de 3-bet adverse est large, la taille reste normale et les tapis permettent encore de folder face à un shove.`,
 fourBetCall:(c,e,o)=>`Vous avez déjà relancé et faites maintenant face à un 3-bet. ${c} est assez forte pour continuer sans vouloir gonfler un pot 4-bet ; payez avec ${e} d'équité pour un prix de ${o}.`,
 chartCallRaise:(c,e,o)=>`${c} figure dans la charte de call contre cette relance — assez fort pour voir un flop, pas assez pour sur-relancer. Votre chance de gain (${e}) couvre le prix (${o}). Suivez, et jouez prudemment si vous ratez le flop.`,
+pfContextCall:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} est un call contextuel, pas une défense automatique. Face à une ouverture de ${open} BB avec ${eff} BB effectives, vous serez ${pos>0?'en position':pos<0?'hors position':'sans garantie de parler en dernier'} après le flop${behind?`, avec encore ${behind} joueur${behind>1?'s':''} capable${behind>1?'s':''} de squeeze`:''}. L'équité brute de ${raw} devient environ ${usable} après la position, la profondeur, les cotes implicites/inverses et le risque de squeeze modélisé à ${sq}% ; elle dépasse encore le seuil ajusté de ${need}.`,
+pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} peut sembler jouable dans une charte statique, mais ce call précis n'est pas rentable. Face à une ouverture de ${open} BB avec ${eff} BB effectives, vous serez ${pos>0?'en position':pos<0?'hors position':'sans garantie de parler en dernier'} après le flop${behind?`, et ${behind} joueur${behind>1?'s':''} peu${behind>1?'vent':'t'} encore squeeze`:''}. L'équité brute de ${raw} tombe à environ ${usable} après réalisation, cotes implicites/inverses et ${sq}% de risque de squeeze, sous le seuil ajusté de ${need} — couchez-vous.`,
 chartIcmFold:(c,e,o)=>`${c} serait normalement un call ici, mais votre chance de gain simulée (${e}) ne couvre pas le prix (${o}) une fois la pression des prix et la range de ce relanceur comptées. La charte est un guide — le calcul de CETTE table dit de se coucher.`,
 chartFoldVs:c=>`${c} ne figure ni dans la charte de 3-bet ni dans celle de call contre cette relance — les ranges solveur la couchent, tout simplement. Suivre des relances avec ce genre de main est l'une des habitudes les plus coûteuses du poker.`,
 chartOpen:(c,p)=>`${c} figure dans la charte d'ouverture ${p} — une liste de mains issue de ranges calculées par solveur : la relancer en premier depuis ce siège est rentable à long terme. Entrez en relançant, pas en limpant.`,
@@ -354,6 +358,8 @@ fourBetValue:(c,amt,bb)=>`Ya subiste y ahora afrontas un 3-bet a ${amt} (${bb}).
 fourBetBluff:(c,amt,bb)=>`Ya subiste y ahora afrontas un 3-bet a ${amt} (${bb}). ${c} puede usarse como farol selectivo de 4-bet: tu As bloquea AA/AK, el rango rival es amplio, el tamaño aún es normal y los stacks permiten retirarse ante un shove.`,
 fourBetCall:(c,e,o)=>`Ya subiste y ahora afrontas un 3-bet. ${c} es lo bastante fuerte para continuar, pero no quiere inflar un bote de 4-bet; iguala con ${e} de equity frente a un precio de ${o}.`,
 chartCallRaise:(c,e,o)=>`${c} está en la tabla de llamada contra esta subida — bastante fuerte para ver un flop, no tanto como para resubir. Tu probabilidad (${e}) cubre el precio (${o}). Iguala, y juega con cuidado si fallas el flop.`,
+pfContextCall:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} es una llamada contextual, no una defensa automática. Ante una apertura de ${open} BB con ${eff} BB efectivas, jugarás ${pos>0?'con posición':pos<0?'fuera de posición':'sin garantizar la última acción'} tras el flop${behind?`, con ${behind} jugador${behind>1?'es':''} todavía capaz${behind>1?'es':''} de hacer squeeze`:''}. La equity bruta de ${raw} queda en torno a ${usable} tras posición, profundidad, odds implícitas/inversas y el riesgo modelado de squeeze del ${sq}%; aún supera el requisito ajustado de ${need}.`,
+pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} puede parecer jugable en una tabla estática, pero esta llamada exacta no es rentable. Ante una apertura de ${open} BB con ${eff} BB efectivas, jugarás ${pos>0?'con posición':pos<0?'fuera de posición':'sin garantizar la última acción'} tras el flop${behind?`, y ${behind} jugador${behind>1?'es':''} todavía puede${behind>1?'n':''} hacer squeeze`:''}. La equity bruta de ${raw} baja a cerca de ${usable} al contar realización, odds implícitas/inversas y ${sq}% de riesgo de squeeze, por debajo del requisito ajustado de ${need}; retírate.`,
 chartIcmFold:(c,e,o)=>`${c} normalmente sería una llamada aquí, pero tu probabilidad simulada (${e}) no cubre el precio (${o}) contando la presión de premios y el rango de quien sube. La tabla es una guía — las cuentas de ESTA mesa dicen retirarse.`,
 chartFoldVs:c=>`${c} no está ni en la tabla de 3-bet ni en la de llamada contra esta subida — los rangos de solver simplemente la tiran. Igualar subidas con manos así es uno de los hábitos más caros del póker.`,
 chartOpen:(c,p)=>`${c} está en la tabla de apertura de ${p} — una lista de manos sacada de rangos calculados por solver: subirla primero desde este asiento es rentable a largo plazo. Entra subiendo, no de limp.`,
@@ -940,10 +946,11 @@ function boardTexture(board){
   return {paired,monotone,wet,flushDraw:monotone||twoTone,dry:!wet};
 }
 function coachSpotBrief(p,extra,ctx){
-  const {eq,eqAdj,odds,callAmt,pot,opps,pos,actsFirst,actsLast,airPen}=ctx;
+  const {eq,eqAdj,odds,needEq,callAmt,pot,opps,pos,actsFirst,actsLast,airPen}=ctx;
   const eqShow=pct(eqAdj!=null?eqAdj:eq);
   const ip=actsLast?'IP':actsFirst?'OOP':'mid';
-  let line=C('briefSpot',eqShow,callAmt>0?pct(odds):'—',callAmt>0?usd(callAmt):'—',usd(pot),pos||'—',ip,opps);
+  const needed=needEq==null?odds:needEq;
+  let line=C('briefSpot',eqShow,callAmt>0?pct(needed):'—',callAmt>0?usd(callAmt):'—',usd(pot),pos||'—',ip,opps);
   if(airPen>=0.1) line+=C('briefAir');
   const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
   if(agg&&callAmt>0&&state.stage!=='preflop'&&agg.lineRead)
@@ -1190,6 +1197,131 @@ function bbDefendChartFor(raiser,heroPos){
   const fc=chartFor('bbDefend',key);
   return fc&&fc.raise&&fc.call?{fc,label:rp,key,bbDefend:true}:null;
 }
+/* Generic preflop call model. A static rank chart is only the prior: the exact
+   open size, effective depth, postflop position and action still pending behind
+   hero decide how much of raw all-in equity can actually be realized. */
+function coachPreflopHandShape(hole){
+  const a=hole[0],b=hole[1],pair=a.r===b.r,suited=a.s===b.s;
+  const hi=Math.max(a.r,b.r),lo=Math.min(a.r,b.r),gap=pair?0:hi-lo-1;
+  const connected=!pair&&gap===0,oneGap=!pair&&gap===1,broadway=lo>=10;
+  const lowPair=pair&&hi<=9;
+  const suitedRun=suited&&(connected||oneGap)&&hi<=12;
+  const speculative=lowPair||suitedRun;
+  let playability=(pair ? .48 : 0)+(suited ? .22 : 0)+(connected ? .20 : oneGap ? .11 : 0)+
+    (broadway ? .18 : 0)+(hi===14 ? .08 : 0)-(gap>=4&&hi!==14 ? .12 : 0);
+  playability=clamp(playability,.16,.98);
+  let nutPotential=pair ? .48 : suited&&hi===14 ? .94 : suited&&broadway ? .82 :
+    suitedRun ? clamp(.52+(hi-7)*.045,.46,.74) : broadway ? .58 : suited ? .42 : .28;
+  if(pair&&hi>=10)nutPotential=.68;
+  return {pair,suited,hi,lo,gap,connected,oneGap,broadway,lowPair,suitedRun,
+    speculative,playability,nutPotential};
+}
+function coachPreflopSqueezeRisk(q,raiser,openBB,callers,difficulty){
+  const sid=q.style?.id||'neutral';
+  const base={rock:.028,station:.024,shark:.088,maniac:.10,neutral:.055}[sid]||.055;
+  let aggression=1;
+  if(typeof rangeModelStyle==='function'){
+    const learned=rangeModelStyle(q,true);
+    aggression=clamp(learned?.raise||1,.72,1.45);
+  }
+  let risk=base*aggression;
+  const openerPos=raiser?.pos||'';
+  if(/^(CO|BTN|SB|SB\/BTN)$/.test(openerPos))risk*=1.18;
+  else if(/^(UTG|UTG\+1|MP|MP\+1)$/.test(openerPos))risk*=.76;
+  if(/^(SB|BB)$/.test(q.pos||''))risk+=.012;
+  risk+=Math.min(.035,Math.max(0,callers)*.014);
+  const stackBB=(q.chips+q.bet)/Math.max(state.bb,1);
+  if(stackBB<=24)risk*=1.10;
+  if(openBB>3)risk*=clamp(1-(openBB-3)*.10,.58,1);
+  if(difficulty==='hard')risk*=1.06;
+  else if(difficulty==='easy')risk*=.88;
+  return clamp(risk,.008,.22);
+}
+function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,icmPrem,diffCallPad,difficulty){
+  const bb=Math.max(state.bb,1),shape=coachPreflopHandShape(p.hole);
+  const heroTotal=p.chips+p.bet,villainTotal=raiser?raiser.chips+raiser.bet:heroTotal;
+  const effBB=Math.min(heroTotal,villainTotal)/bb;
+  const openBB=state.currentBet/bb;
+  const position=actsLast?1:actsFirst?-1:0;
+  const callers=inHand().filter(q=>q!==p&&q!==raiser&&(q.allIn||q.bet>=state.currentBet)).length;
+  const behind=inHand().filter(q=>q!==p&&q!==raiser&&!q.allIn&&!q.acted&&q.bet<state.currentBet);
+  let noSqueeze=1;
+  const seatRisks=[];
+  for(const q of behind){
+    const risk=coachPreflopSqueezeRisk(q,raiser,openBB,callers,difficulty);
+    seatRisks.push({player:q,risk});noSqueeze*=1-risk;
+  }
+  let squeezeRisk=clamp(1-noSqueeze,0,.55);
+  const allInCall=callAmt>=p.chips;
+  const lockedShowdown=!!(raiser?.allIn&&!behind.length&&callers===0);
+  if(allInCall||lockedShowdown)squeezeRisk=0;
+
+  let realization=1;
+  if(!allInCall&&!lockedShowdown){
+    realization+=position>0 ? .03 : position<0 ? -.10 : -.045;
+    if(shape.speculative){
+      if(effBB<=22)realization-=.15;
+      else if(effBB<=32)realization-=.10;
+      else if(effBB<=45)realization-=.045;
+      else if(effBB>=80)realization+=.02;
+    }else if(effBB<=22&&(shape.broadway||shape.pair)){
+      realization+=.015;
+    }
+    const sizeExcess=Math.max(0,openBB-2.5);
+    realization-=Math.min(.20,sizeExcess*(.015+(shape.speculative ? .035 : .012)));
+    const callFraction=callAmt/Math.max(Math.min(heroTotal,villainTotal),1);
+    if(shape.speculative&&callFraction>.08)
+      realization-=Math.min(.10,(callFraction-.08)*.65);
+    realization-=callers*Math.max(.008,.026-shape.nutPotential*.018);
+    const villainStyle=typeof rangeModelStyle==='function'&&raiser?rangeModelStyle(raiser,true):null;
+    const postAgg=villainStyle?.postAgg||.36;
+    if(postAgg>.40&&shape.playability<.82)
+      realization-=position>0 ? .008 : position<0 ? .032 : .018;
+  }
+  realization=clamp(realization,.62,1.06);
+
+  let impliedCredit=0;
+  if(!allInCall&&!lockedShowdown&&effBB>=45&&(shape.speculative||shape.nutPotential>=.78)){
+    const deep=clamp((effBB-40)/80,0,1);
+    impliedCredit=(.004+.014*deep)*(position>0 ? 1.25 : position<0 ? .55 : .82);
+    if(raiser?.style?.id==='station')impliedCredit+=.003;
+    if(openBB>3.5)impliedCredit*=.55;
+  }
+  let reversePenalty=0;
+  if(shape.suited&&shape.hi<14)
+    reversePenalty=.0035+(1-shape.nutPotential)*.006+callers*.002;
+  else if(!shape.suited&&shape.broadway&&shape.hi<14)
+    reversePenalty=.004+callers*.002;
+  if(allInCall||lockedShowdown){impliedCredit=0;reversePenalty=0;realization=1;}
+
+  const rawContinue=handPct[holeCode(p.hole)]||1;
+  const continueVsSqueeze=rawContinue<=.055 ? .55 : rawContinue<=.10 ? .22 : rawContinue<=.16 ? .08 : .025;
+  const squeezePremium=squeezeRisk>0
+    ?clamp((squeezeRisk/Math.max(1-squeezeRisk,.45))*odds*(1-continueVsSqueeze),0,.14)
+    :0;
+  const realizedEq=clamp(eq*realization+impliedCredit-reversePenalty,0,.99);
+  /* A tougher opponent may change the posterior, but cannot make the mathematical
+     break-even price disappear. Only positive caution pads survive here. */
+  let policy=null,strategyPremium=0;
+  if(typeof rangePreflopActionPolicy==='function'){
+    policy=rangePreflopActionPolicy(p,{
+      stage:'preflop',callAmt,cbBefore:state.currentBet,playerBetBefore:p.bet,potBefore:pot,
+      raisesBefore:1,preflopRaisesBefore:1,facedRaiseSize:state.lastRaiseSize||state.bb,
+      lastAggPos:raiser?.pos||'',lastAggStyle:raiser?.style?.id||'',bb:state.bb,sb:state.sb,
+      stackTotalBefore:heroTotal,effectiveStackBB:effBB,position:p.pos||'',
+      icmPressure:clamp(icmPrem/.11,0,1),callersAtLevel:callers,limpersBefore:0,
+      activePlayers:inHand().length
+    },p.hole);
+    const support=(policy.call||0)+(policy.raise||0);
+    strategyPremium=clamp((.24-support)*.10,0,.025);
+  }
+  const requiredEq=clamp(odds+icmPrem+Math.max(0,diffCallPad)+squeezePremium+strategyPremium,0,.95);
+  const callEv=(realizedEq-requiredEq)*(pot+callAmt);
+  return {shape,effBB,openBB,position,callers,behindCount:behind.length,
+    seatRisks:seatRisks.map(x=>({name:x.player.name,pos:x.player.pos||'',profile:x.player.style?.id||'neutral',risk:x.risk})),
+    squeezeRisk,realization,impliedCredit,reversePenalty,squeezePremium,realizedEq,
+    strategyPremium,policy,requiredEq,callEv,profitable:callEv>=0,allInCall,lockedShowdown};
+}
 function coachSpr(p,callAmt,pot){
   const villains=inHand().filter(q=>q!==p);
   let eff=p.chips;
@@ -1395,7 +1527,16 @@ function coachDecide(p){
   const sims=BENCH?180:500;
   const callAmt=Math.min(state.currentBet-p.bet,p.chips);
   const pot=state.players.reduce((s,q)=>s+q.totalBet,0);
-  const opps=inHand().length-1;
+  const liveOpponents=inHand().filter(q=>q!==p);
+  /* Before players behind have responded to an open, do not pretend they have
+     already called and drag raw equity into a fictitious multiway showdown.
+     Their possible calls/3-bets are handled by the branch/squeeze model below. */
+  const committedPreflopOpponents=state.stage==='preflop'&&state.currentBet>state.bb
+    ?liveOpponents.filter(q=>q.i===state.lastAggIdx||q.allIn||
+      (q.acted&&q.bet>=state.currentBet)||(q.acted&&q.bet>state.bb))
+    :liveOpponents;
+  const equityOpponents=committedPreflopOpponents.length?committedPreflopOpponents:liveOpponents;
+  const opps=equityOpponents.length;
   const stackBB=(p.chips+p.bet)/state.bb;
   const difficulty=coachDifficulty();
   const difficultyApplies=coachDifficultyApplies(p,difficulty);
@@ -1406,7 +1547,7 @@ function coachDecide(p){
   const actsFirst=ordIdx===0, actsLast=ordIdx===ord.length-1&&ord.length>1;
 
   /* equity vs realistic RANGES (not random cards): caps from bets, floors from checks */
-  const oppCaps=inHand().filter(q=>q!==p)
+  const oppCaps=equityOpponents
     .map(q=>{
       let cap=clamp(q.rangeCap||1,0.03,1), floor=clamp(q.rangeFloor||0,0,0.25);
       if(difficultyApplies){const d=coachDifficultyRange(q,cap,floor,difficulty);cap=d.cap;floor=d.floor;}
@@ -1518,7 +1659,7 @@ function coachDecide(p){
   if(flags.icm&&icmPrem>=0.01) extra.push(C('icmNote',Math.round(icmPrem*100),aliveN,Math.min(PAYOUTS(state.cfg.numPlayers).length,aliveN)));
   if(flags.cashNote) extra.push(C('cashModeNote'));
 
-  let rec,why=[],chartInfo=null,rangeCharts=[],smallStab=false;
+  let rec,why=[],chartInfo=null,rangeCharts=[],smallStab=false,preflopCallInfo=null;
   if(state.stage==='preflop'){
     const bucket=posBucket(pos), prTxt='top ~'+Math.round(pr*100)+'%';
     const unopened=state.currentBet<=state.bb;
@@ -1675,7 +1816,24 @@ function coachDecide(p){
       if(!facing) facing=facingChartFor(raiser);
       const domCall=stackDominance(p);
       const diffCallPad=difficultyApplies?coachDifficultyCallPad(difficulty):0;
-      const stackCallOk=list=>isPair&&domCall.tier===2&&list.includes(code)&&callAmt>0&&eq>=odds+icmPrem+diffCallPad-0.05;
+      if(!facingReraise&&callAmt>0){
+        preflopCallInfo=coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,
+          actsFirst,actsLast,icmPrem,diffCallPad,difficulty);
+        eqAdj=preflopCallInfo.realizedEq;
+      }
+      const contextCallOk=()=>preflopCallInfo
+        ?preflopCallInfo.profitable
+        :eq>=odds+icmPrem+Math.max(0,diffCallPad);
+      const contextNearOk=margin=>preflopCallInfo
+        ?preflopCallInfo.realizedEq>=preflopCallInfo.requiredEq-margin
+        :eq>=odds+icmPrem+Math.max(0,diffCallPad)-margin;
+      const contextProse=key=>{
+        const x=preflopCallInfo;
+        return x?C(key,code,pct(eq),pct(x.realizedEq),pct(x.requiredEq),
+          Math.round(x.openBB*10)/10,Math.max(1,Math.round(x.effBB)),x.position,
+          x.behindCount,Math.round(x.squeezeRisk*100)):null;
+      };
+      const stackCallOk=list=>isPair&&domCall.tier===2&&list.includes(code)&&callAmt>0&&contextNearOk(.05);
       const setMineX=setMineMultiple(p,callAmt,raiser);
       const setMineOk=smallPair&&callAmt>0&&setMineX>=15;
       const setMineThin=smallPair&&callAmt>0&&setMineX<15;
@@ -1704,24 +1862,24 @@ function coachDecide(p){
           if(fc.raise.includes(code)){
             rec='RAISE';
             why.push(C('chartBb3bet',code,label));
-          }else if(fc.call.includes(code)&&eq>=odds+icmPrem+diffCallPad){
+          }else if(fc.call.includes(code)&&contextCallOk()){
             rec='CALL';
-            why.push(C('chartBbCall',code,label,pct(eq),pct(odds)));
+            why.push(contextProse('pfContextCall')||C('chartBbCall',code,label,pct(eq),pct(odds)));
           }else if(stackCallOk(fc.call)){
             rec='CALL';
             why.push(C('stackDomCall',code,Math.round(domCall.ratio*10)/10,pct(eq),pct(odds)));
           }else if(setMineOk){
             rec='CALL';
             why.push(C('pfSetMine',code,usd(callAmt),setMineX));
-          }else if(aliveN<=4&&pr<=shortCt&&eq>=odds+icmPrem+diffCallPad){
+          }else if(aliveN<=4&&pr<=shortCt&&contextCallOk()){
             rec='CALL';
-            why.push(C('pfCallRange',pos,Math.round(shortCt*100),code,prTxt,pct(eq),pct(odds)));
+            why.push(contextProse('pfContextCall')||C('pfCallRange',pos,Math.round(shortCt*100),code,prTxt,pct(eq),pct(odds)));
           }else if(setMineThin){
             rec='FOLD';
             why.push(C('pfSetMineFold',code,usd(callAmt),setMineX));
           }else if(fc.call.includes(code)){
             rec='FOLD';
-            why.push(C('chartIcmFold',code,pct(eq),pct(odds)));
+            why.push(contextProse('pfContextFold')||C('chartIcmFold',code,pct(eq),pct(odds)));
           }else{
             rec='FOLD';
             why.push(C('chartBbFold',code,label));
@@ -1731,24 +1889,24 @@ function coachDecide(p){
         if(fc.raise.includes(code)){
           rec='RAISE';
           why.push(C('chart3bet',code,vsEarlyR));
-        }else if(fc.call.includes(code)&&eq>=odds+icmPrem+diffCallPad){
+        }else if(fc.call.includes(code)&&contextCallOk()){
           rec='CALL';
-          why.push(C('chartCallRaise',code,pct(eq),pct(odds)));
+          why.push(contextProse('pfContextCall')||C('chartCallRaise',code,pct(eq),pct(odds)));
         }else if(stackCallOk(fc.call)){
           rec='CALL';
           why.push(C('stackDomCall',code,Math.round(domCall.ratio*10)/10,pct(eq),pct(odds)));
         }else if(setMineOk){
           rec='CALL';
           why.push(C('pfSetMine',code,usd(callAmt),setMineX));
-        }else if(aliveN<=4&&pr<=shortCt&&eq>=odds+icmPrem+diffCallPad){
+        }else if(aliveN<=4&&pr<=shortCt&&contextCallOk()){
           rec='CALL';
-          why.push(C('pfCallRange',pos,Math.round(shortCt*100),code,prTxt,pct(eq),pct(odds)));
+          why.push(contextProse('pfContextCall')||C('pfCallRange',pos,Math.round(shortCt*100),code,prTxt,pct(eq),pct(odds)));
         }else if(setMineThin){
           rec='FOLD';
           why.push(C('pfSetMineFold',code,usd(callAmt),setMineX));
         }else if(fc.call.includes(code)){
           rec='FOLD';
-          why.push(C('chartIcmFold',code,pct(eq),pct(odds)));
+          why.push(contextProse('pfContextFold')||C('chartIcmFold',code,pct(eq),pct(odds)));
         }else{
           rec='FOLD';
           why.push(C('chartFoldVs',code));
@@ -1759,9 +1917,9 @@ function coachDecide(p){
         if(pr<=0.05){
           rec='RAISE';
           why.push(C('pf3bet',code));
-        }else if(pr<=ct&&eq>=odds+icmPrem+diffCallPad){
+        }else if(pr<=ct&&contextCallOk()){
           rec='CALL';
-          why.push(C('pfCallRange',pos,Math.round(ct*100),code,prTxt,pct(eq),pct(odds)));
+          why.push(contextProse('pfContextCall')||C('pfCallRange',pos,Math.round(ct*100),code,prTxt,pct(eq),pct(odds)));
         }else if(setMineOk){
           rec='CALL';
           why.push(C('pfSetMine',code,usd(callAmt),setMineX));
@@ -1943,12 +2101,16 @@ function coachDecide(p){
   const evR=A=>FE*pot+(1-FE)*(eq*(pot+2*A)-A);             // raise A more chips
   const evs={
     FOLD:0,
-    CALL:Math.round(callAmt>0 ? eqAdj*(pot+callAmt)-callAmt : eq*pot),
+    CALL:Math.round(callAmt>0
+      ?(preflopCallInfo?preflopCallInfo.callEv:eqAdj*(pot+callAmt)-callAmt)
+      :eq*pot),
     RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
   };
-  coachSpotBrief(p,extra,{eq,eqAdj,odds,callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
+  coachSpotBrief(p,extra,{eq,eqAdj,odds,needEq:preflopCallInfo?.requiredEq,
+    callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
-          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,rangeCharts,code,spr,sprZone};
+          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,rangeCharts,code,spr,sprZone,
+          preflopCallInfo};
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */

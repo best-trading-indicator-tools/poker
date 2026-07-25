@@ -14,11 +14,13 @@ const context=vm.createContext({
   globalThis:null
 });
 context.globalThis=context;
+vm.runInContext(fs.readFileSync(path.join(ROOT,'charts.js'),'utf8'),context,{filename:'charts.js'});
 for(const file of files)vm.runInContext(fs.readFileSync(path.join(ROOT,'js',file),'utf8'),context,{filename:file});
 
 const result=vm.runInContext(`(()=>{
   const C=(r,s)=>({r,s}), H=(a,b)=>[a,b];
-  const holes={AA:H(C(14,0),C(14,1)),A5s:H(C(14,0),C(5,0)),A5o:H(C(14,0),C(5,1)),sevenTwo:H(C(7,0),C(2,1))};
+  const holes={AA:H(C(14,0),C(14,1)),A5s:H(C(14,0),C(5,0)),A5o:H(C(14,0),C(5,1)),
+    eightSeven:H(C(8,2),C(7,2)),sevenTwo:H(C(7,0),C(2,1))};
   const cfg={gameType:'sng',numPlayers:6,startBB:100,startBlind:100,ante:0,speed:'standard',difficulty:'hard',allAI:true};
   newGame(cfg);
   const p=state.players[1];p.pos='CO';p.style=STYLES.find(x=>x.id==='shark');
@@ -260,6 +262,83 @@ const result=vm.runInContext(`(()=>{
       eqAdj:shallowDecision.eqAdj,expectedModeledEq
     }));
 
+  /* A suited connector is not an automatic chart call. Exact open size,
+     postflop position, effective depth and players behind must change its EV. */
+  newGame({...cfg,gameType:'cash',startBlind:100,startBB:100});
+  const suitedHero=state.players[0],suitedOpener=state.players[1],deadBlind=state.players[2];
+  for(const x of state.players){
+    x.out=false;x.folded=x!==suitedHero&&x!==suitedOpener;x.allIn=false;x.bet=0;x.totalBet=0;
+    x.acted=true;x.checkedStreet=false;x.aggStreets=[];x.checkStreets=[];x.rangeCap=1;x.rangeFloor=0;x.lineRead='';
+  }
+  state.stage='preflop';state.board=[];state.bb=100;state.sb=50;state.ante=0;
+  state.dealerIdx=suitedOpener.i;state.currentBet=250;state.lastRaiseSize=150;
+  state.lastAggIdx=suitedOpener.i;state.pfAggIdx=suitedOpener.i;
+  state.streetRaiseCount=1;state.preflopRaiseCount=1;
+  suitedHero.pos='BB';suitedHero.hole=holes.eightSeven;suitedHero.chips=9900;
+  suitedHero.bet=100;suitedHero.totalBet=100;suitedHero.acted=false;
+  suitedOpener.pos='BTN';suitedOpener.style=STYLES.find(x=>x.id==='shark');suitedOpener.chips=9750;
+  suitedOpener.bet=250;suitedOpener.totalBet=250;rangeModelInit(suitedOpener);
+  deadBlind.totalBet=50;
+  const savedPreflopEquity=mcEquityR;mcEquityR=()=>.44;
+  const standardConnector=coachDecide(suitedHero);
+  if(standardConnector.rec!=='CALL'||!standardConnector.preflopCallInfo?.profitable||
+      standardConnector.preflopCallInfo.openBB!==2.5||standardConnector.evs.CALL<0||
+      !standardConnector.why[0]?.includes('contextual call'))
+    throw new Error('87s must remain a defend versus a standard BTN open '+JSON.stringify({
+      rec:standardConnector.rec,info:standardConnector.preflopCallInfo,evs:standardConnector.evs
+    }));
+  state.currentBet=500;state.lastRaiseSize=250;suitedOpener.chips=9500;
+  suitedOpener.bet=500;suitedOpener.totalBet=500;
+  const largeConnector=coachDecide(suitedHero);
+  mcEquityR=savedPreflopEquity;
+  if(largeConnector.rec!=='FOLD'||largeConnector.preflopCallInfo?.profitable||
+      largeConnector.evs.CALL>=0||largeConnector.preflopCallInfo?.realization>=standardConnector.preflopCallInfo.realization||
+      !largeConnector.why[0]?.includes('not profitable'))
+    throw new Error('87s must fold when the same range uses a 5 BB open '+JSON.stringify({
+      rec:largeConnector.rec,info:largeConnector.preflopCallInfo,evs:largeConnector.evs
+    }));
+  const deepIp=coachPreflopCallModel(suitedHero,suitedOpener,400,650,.44,400/1050,
+    false,true,0,0,'hard');
+  const deepOop=coachPreflopCallModel(suitedHero,suitedOpener,400,650,.44,400/1050,
+    true,false,0,0,'hard');
+  if(!(deepIp.realization>deepOop.realization))
+    throw new Error('true postflop position must improve equity realization');
+  const oldHeroChips=suitedHero.chips,oldOpenerChips=suitedOpener.chips;
+  suitedHero.chips=1900;suitedOpener.chips=1500;
+  state.currentBet=250;suitedOpener.bet=250;
+  const shallowConnector=coachPreflopCallModel(suitedHero,suitedOpener,150,400,.44,150/550,
+    false,true,0,0,'hard');
+  suitedHero.chips=oldHeroChips;suitedOpener.chips=oldOpenerChips;
+  if(!(shallowConnector.realization<standardConnector.preflopCallInfo.realization))
+    throw new Error('shallow stacks must reduce suited-connector realization');
+  const rockSqueeze=state.players[3],wildSqueeze=state.players[4];
+  rockSqueeze.style=STYLES.find(x=>x.id==='rock');rockSqueeze.pos='SB';rockSqueeze.chips=9900;
+  wildSqueeze.style=STYLES.find(x=>x.id==='maniac');wildSqueeze.pos='SB';wildSqueeze.chips=9900;
+  if(!(coachPreflopSqueezeRisk(wildSqueeze,suitedOpener,2.5,0,'hard')>
+      coachPreflopSqueezeRisk(rockSqueeze,suitedOpener,2.5,0,'hard')))
+    throw new Error('player profile must change squeeze risk');
+  state.currentBet=250;suitedOpener.bet=250;suitedOpener.totalBet=250;suitedOpener.chips=9750;
+  const noPlayersBehind=coachPreflopCallModel(suitedHero,suitedOpener,150,400,.44,150/550,
+    false,true,0,0,'hard');
+  rockSqueeze.folded=false;rockSqueeze.acted=false;rockSqueeze.bet=0;rockSqueeze.totalBet=0;
+  wildSqueeze.folded=false;wildSqueeze.acted=false;wildSqueeze.bet=0;wildSqueeze.totalBet=0;wildSqueeze.pos='BB';
+  const playersBehind=coachPreflopCallModel(suitedHero,suitedOpener,150,400,.44,150/550,
+    false,true,0,0,'hard');
+  if(playersBehind.behindCount!==2||playersBehind.squeezeRisk<=0||
+      !(playersBehind.requiredEq>noPlayersBehind.requiredEq))
+    throw new Error('players behind must add branch-weighted squeeze cost '+JSON.stringify(playersBehind));
+  let committedOppCount=0;
+  const savedBranchEquity=mcEquityR;
+  mcEquityR=(hole,board,ranges)=>{committedOppCount=ranges.length;return .44;};
+  const branchDecision=coachDecide(suitedHero);
+  mcEquityR=savedBranchEquity;
+  if(committedOppCount!==1||branchDecision.preflopCallInfo?.behindCount!==2||
+      !branchDecision.extra[0]?.includes(pct(branchDecision.preflopCallInfo.requiredEq)))
+    throw new Error('unacted players must be squeeze branches, not forced showdown opponents '+JSON.stringify({
+      committedOppCount,behind:branchDecision.preflopCallInfo?.behindCount
+    }));
+  rockSqueeze.folded=true;rockSqueeze.acted=true;wildSqueeze.folded=true;wildSqueeze.acted=true;
+
   newGame(cfg);state.stage='preflop';state.board=[];state.bb=100;state.sb=50;state.currentBet=100;
   state.lastRaiseSize=100;state.streetRaiseCount=0;state.preflopRaiseCount=0;state.handLog=[];
   const opener=state.players[1],reraiser=state.players[2];
@@ -283,6 +362,14 @@ const result=vm.runInContext(`(()=>{
       continued:nutFlushInfo.aheadWhenContinued},
     shallowDecision:{rec:shallowDecision.rec,eqAdj:shallowDecision.eqAdj,pen:shallowDecision.underpairPen,
       callFraction:shallowDecision.underpairInfo.callFraction,sprAfter:shallowDecision.underpairInfo.sprAfter},
+    suitedConnector:{
+      standard:{rec:standardConnector.rec,realized:standardConnector.preflopCallInfo.realizedEq,
+        need:standardConnector.preflopCallInfo.requiredEq,callEv:standardConnector.evs.CALL},
+      large:{rec:largeConnector.rec,realized:largeConnector.preflopCallInfo.realizedEq,
+        need:largeConnector.preflopCallInfo.requiredEq,callEv:largeConnector.evs.CALL},
+      deepIp:deepIp.realization,deepOop:deepOop.realization,shallow:shallowConnector.realization,
+      squeezeRisk:playersBehind.squeezeRisk,squeezeNeed:playersBehind.requiredEq,committedOppCount
+    },
     ordinals};
 })()`,context);
 
