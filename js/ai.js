@@ -1268,6 +1268,28 @@ function aiCanCallWithHand(p,betRatio,read,live){
   if(state.stage==='flop'&&q.overcards===1&&q.aceHigh)return live===2&&betRatio<=0.22;
   return false;
 }
+/* Pot commitment never makes sunk chips recoverable. It only removes arbitrary
+   profile/line safety margins when the remaining call is cheap and ends the
+   meaningful betting: exact equity and ICM still have to clear the price. */
+function aiPostflopCommitmentInfo(p,callAmt,pot,odds){
+  if(state.stage==='preflop'||callAmt<=0)
+    return {active:false,severe:false,riskPremiumCap:Infinity,priceOverridePremium:Infinity};
+  const stackNow=Math.max(0,p.chips),streetStart=stackNow+Math.max(0,p.bet);
+  const streetCommitted=streetStart>0?p.bet/streetStart:0;
+  const potAfter=Math.max(1,pot+callAmt);
+  const remaining=Math.max(0,stackNow-callAmt);
+  const sprAfter=remaining/potAfter;
+  const finalCall=callAmt>=stackNow-0.5;
+  const price=Number.isFinite(odds)?odds:callAmt/potAfter;
+  const active=price<=.22&&(finalCall||streetCommitted>=.50||sprAfter<=.25);
+  const severe=active&&price<=.16&&(finalCall||streetCommitted>=.65||sprAfter<=.12);
+  const icm=typeof aiIcmPressure==='function'?aiIcmPressure(p):{callPremium:0};
+  const icmPremium=icm.callPremium||0;
+  const riskPremiumCap=severe?.022+icmPremium*.75:.045+icmPremium*.85;
+  const priceOverridePremium=severe?.014+icmPremium*.75:.030+icmPremium*.85;
+  return {active,severe,finalCall,streetCommitted,sprAfter,price,icmPremium,
+    riskPremiumCap,priceOverridePremium};
+}
 function aiHardPostflopVsBet(p,eq,odds,callAmt,pot,d,st,pfAdj){
   if(d!=='hard'||state.stage==='preflop'||callAmt<=0)return null;
   const betRatio=callAmt/Math.max(pot-callAmt,state.bb||1);
@@ -1278,14 +1300,18 @@ function aiHardPostflopVsBet(p,eq,odds,callAmt,pot,d,st,pfAdj){
   const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
   const read=rangeModelRead(agg);
   const canCall=aiCanCallWithHand(p,betRatio,read,inHand().length);
+  const commitment=aiPostflopCommitmentInfo(p,callAmt,pot,odds);
+  let callPremium=clamp(.04-read.bluffy*.30+read.strong*.12,-.04,.18);
+  if(commitment.active)callPremium=Math.min(callPremium,commitment.riskPremiumCap);
+  const pricedIn=commitment.active&&eq>=odds+commitment.priceOverridePremium;
   const checkRaiseSpot=p.checkedStreet&&agg&&betRatio<=0.75;
   if(checkRaiseSpot&&(strongMade||strongDraw)&&Math.random()<clamp(0.34+st.raiseF+read.bluffy*0.45-read.strong*0.18,0.08,0.78))
     return {type:'raise',amount:betTarget(p,pot,Math.max(eq,strongMade?0.70:0.56),d)};
   if(strongMade&&eq>0.58&&betRatio<=0.75&&Math.random()<clamp(0.58+st.raiseF,0.25,0.88))
     return {type:'raise',amount:betTarget(p,pot,Math.max(eq,0.68),d)};
-  if(canCall&&!strongMade&&eq>=odds+0.04-read.bluffy*0.30+read.strong*0.12&&betRatio<=0.75)
+  if((canCall||pricedIn)&&!strongMade&&eq>=odds+callPremium&&betRatio<=0.75)
     return {type:'call'};
-  if(!canCall)return {type:'fold'};
+  if(!canCall&&!pricedIn)return {type:'fold'};
   if(betRatio>=0.75&&!strongMade&&!strongDraw&&eq<odds+0.045)return {type:'fold'};
   if(state.stage==='river'&&betRatio>=0.50&&score[0]<1&&eq<odds+0.06)return {type:'fold'};
   return null;
@@ -1360,7 +1386,9 @@ function aiDecide(p){
     if(stackBB>=80) st.size=Math.min(1.25, st.size+0.08);
   }
   const pfAdj=aiPostflopAdj(p, callAmt, pot);
-  const facingRaise=state.currentBet>state.bb*2;
+  const facingRaise=state.stage==='preflop'
+    ?state.currentBet>state.bb*2
+    :(state.streetRaiseCount||0)>0;
   const foldRaise=(base.foldRaise||0)+(base.id==='rock'&&facingRaise?0.08:0);
   const firstInPreflop=state.stage==='preflop'&&state.currentBet<=state.bb;
   const openRange=firstInPreflop&&handInOpenRange(p, press);
@@ -1431,7 +1459,10 @@ function aiDecide(p){
   const postBetRatio=state.stage==='preflop'?0:callAmt/Math.max(pot-callAmt,state.bb||1);
   const postAgg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
   const callHasHand=state.stage==='preflop'||aiCanCallWithHand(p,postBetRatio,rangeModelRead(postAgg),live);
-  if(callHasHand&&eq>=odds+margin) return {type:'call'};
+  const commitment=aiPostflopCommitmentInfo(p,callAmt,pot,odds);
+  const effectiveMargin=commitment.active?Math.min(margin,commitment.riskPremiumCap):margin;
+  if((callHasHand||commitment.active&&eq>=odds+commitment.priceOverridePremium)&&
+      eq>=odds+effectiveMargin) return {type:'call'};
   const bluffRaise=(base.id==='rock'||base.id==='station')?(d==='hard'?0.018:0)
     :((d==='hard'?0.07:0.02)+st.bluff)*pfAdj.bluffMult;
   const raiseFE=state.stage==='preflop'?0:aiEstimateFoldEquity(p,Math.max(state.bb,pot*0.55),pot,d);
@@ -1439,6 +1470,18 @@ function aiDecide(p){
   if(bluffRaise>0 && bluffQuality>=0.38 && raiseFE>0.30 && Math.random()<bluffRaise*bluffQuality && callAmt<pot*0.4 && state.stage!=='preflop')
     return {type:'raise',amount:betTarget(p,pot,0.7,d)};
   return {type:'fold'};
+}
+function aiCommitPostflopTarget(p,pot,target,d){
+  if(d!=='hard'||state.stage==='preflop')return target;
+  const maxTarget=p.bet+p.chips;
+  if(target>=maxTarget||p.chips<=0)return maxTarget;
+  const investment=Math.max(0,target-p.bet),remaining=Math.max(0,maxTarget-target);
+  const investedShare=investment/Math.max(p.chips,1);
+  const remainingSpr=remaining/Math.max(pot+investment,1);
+  /* A bet that uses most of the available stack and leaves less than 0.20 SPR
+     has no useful future sizing. Hard bots use the coherent polarized size now. */
+  if(investedShare>=.65&&remainingSpr<=.20)return maxTarget;
+  return target;
 }
 function betTarget(p,pot,eq,d){
   const hu=aiHeadsUpPressure(p);
@@ -1471,5 +1514,6 @@ function betTarget(p,pot,eq,d){
   const stackBB=(p.chips+p.bet)/Math.max(state.bb,1);
   if(eq>0.9 && Math.random()<0.35 && (state.stage!=='preflop'||stackBB<=18)) t=p.bet+p.chips;
   t=Math.round(t/state.sb)*state.sb;
-  return clamp(t, state.currentBet+state.lastRaiseSize, p.bet+p.chips);
+  t=clamp(t, state.currentBet+state.lastRaiseSize, p.bet+p.chips);
+  return aiCommitPostflopTarget(p,pot,t,d);
 }

@@ -349,6 +349,7 @@ const result=vm.runInContext(`(()=>{
       expensive:expensiveMultiway,shallow:shallowMultiway
     }));
   deadBlind.folded=true;deadBlind.acted=true;deadBlind.bet=0;deadBlind.totalBet=50;
+
   const rockSqueeze=state.players[3],wildSqueeze=state.players[4];
   rockSqueeze.style=STYLES.find(x=>x.id==='rock');rockSqueeze.pos='SB';rockSqueeze.chips=9900;
   wildSqueeze.style=STYLES.find(x=>x.id==='maniac');wildSqueeze.pos='SB';wildSqueeze.chips=9900;
@@ -376,6 +377,40 @@ const result=vm.runInContext(`(()=>{
       committedOppCount,behind:branchDecision.preflopCallInfo?.behindCount
     }));
   rockSqueeze.folded=true;rockSqueeze.acted=true;wildSqueeze.folded=true;wildSqueeze.acted=true;
+
+  /* A hard bot that has left a tiny stack behind must use the actual final
+     price, not stack several Tight/profile safety margins and overfold. */
+  newGame({...cfg,gameType:'cash',numPlayers:6,startBlind:100,startBB:100});
+  const committedRock=state.players[1],riverAgg=state.players[2];
+  for(const x of state.players){
+    x.out=false;x.folded=x!==committedRock&&x!==riverAgg;x.allIn=false;x.bet=0;x.totalBet=0;
+    x.acted=true;x.checkedStreet=false;x.aggStreets=[];x.checkStreets=[];x.rangeCap=1;x.rangeFloor=0;
+  }
+  state.stage='river';state.board=[C(13,0),C(9,1),C(6,2),C(2,3),C(11,0)];
+  state.currentBet=1600;state.lastRaiseSize=400;state.streetRaiseCount=1;
+  committedRock.style=STYLES.find(x=>x.id==='rock');committedRock.hole=H(C(9,2),C(8,3));
+  committedRock.chips=400;committedRock.bet=1200;committedRock.totalBet=3200;
+  riverAgg.chips=5000;riverAgg.bet=1600;riverAgg.totalBet=4400;
+  riverAgg.rangeModel={strong:.80,bluff:0,aggr:.10,capped:0};
+  state.lastAggIdx=riverAgg.i;
+  const committedOdds=400/8000;
+  const committedInfo=aiPostflopCommitmentInfo(committedRock,400,7600,committedOdds);
+  const committedDecision=aiHardPostflopVsBet(committedRock,.10,committedOdds,400,7600,'hard',
+    aiEffectiveStyle(committedRock),aiPostflopAdj(committedRock,400,7600));
+  committedRock.hole=H(C(8,2),C(7,3));
+  const hopelessDecision=aiHardPostflopVsBet(committedRock,.03,committedOdds,400,7600,'hard',
+    aiEffectiveStyle(committedRock),aiPostflopAdj(committedRock,400,7600));
+  if(!committedInfo.severe||committedInfo.streetCommitted!==.75||
+      committedDecision?.type!=='call'||hopelessDecision?.type!=='fold')
+    throw new Error('postflop commitment must respect cheap calls without forcing zero-equity bluff catches '+
+      JSON.stringify({committedInfo,committedDecision,hopelessDecision}));
+  committedRock.chips=1600;committedRock.bet=0;
+  const jamTarget=aiCommitPostflopTarget(committedRock,1600,1200,'hard');
+  const normalTarget=aiCommitPostflopTarget(committedRock,1600,700,'hard');
+  const mediumTarget=aiCommitPostflopTarget(committedRock,1600,1200,'medium');
+  if(jamTarget!==1600||normalTarget!==700||mediumTarget!==1200)
+    throw new Error('hard sizing must jam instead of leaving an unusable stack stub '+
+      JSON.stringify({jamTarget,normalTarget,mediumTarget}));
 
   newGame(cfg);state.stage='preflop';state.board=[];state.bb=100;state.sb=50;state.currentBet=100;
   state.lastRaiseSize=100;state.streetRaiseCount=0;state.preflopRaiseCount=0;state.handLog=[];
