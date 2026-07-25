@@ -1582,9 +1582,7 @@ function updateCoach(p){
   const {rec,coachT,evs,why,extra,handDesc,drawRow,eq,odds,callAmt,pot,opps,pos,early,late,
          actsFirst,actsLast,ordIdx,ordLen,M,mZone,icmPrem,spr,sprZone}=R;
   const flags=getMode().coachFlags||{};
-  let sizeRow='';
   if(rec==='RAISE'||rec==='ALLIN'){
-    sizeRow=`<div class="coach-row"><span>${T('sugSize')}</span><b>${usd(coachT)} (${bbs(coachT)})</b></div>`;
     /* pre-set the raise slider to the coach's size so R raises exactly this */
     if($('raiseCtl').style.visibility!=='hidden'){
       const sl=$('raiseSlider');
@@ -1607,7 +1605,6 @@ function updateCoach(p){
   const allReasons=[...why,...extra].map(s=>(s||'').trim()).filter(Boolean);
   const keyReason=allReasons.shift()||'';
   const priceMetric=callAmt>0?`${T('need')}${pct(odds)} · ${usd(callAmt)} → ${usd(pot)}`:'';
-  const sizingMetric=(rec==='RAISE'||rec==='ALLIN')?`${usd(coachT)} · ${bbs(coachT)}`:'';
   const impliedRow=R.impliedInfo
     ?`<div class="coach-row"><span>${T('impliedOdds')}</span><b>~${pct(R.impliedInfo.realisticNeed)} ${T('realisticNeed')}<br>${pct(R.impliedInfo.bestCaseNeed)} ${T('bestCaseNeed')} · ${usd(R.impliedInfo.maxFuture)} max</b></div>`:'';
   const effectiveRow=callAmt>0&&R.needEq!=null&&Math.abs(R.needEq-odds)>=.005
@@ -1626,7 +1623,6 @@ function updateCoach(p){
       coachMetric(T('yourHand'),handDesc,'wide')+
       coachMetric(T('winChance'),`~${pct(eq)} ${T('vs')} ${opps} ${opps===1?T('opp'):T('opps')}`,'emphasis')+
       coachMetric(T('potOdds'),priceMetric)+
-      coachMetric(T('sugSize'),sizingMetric,'wide emphasis')+
     `</div>`+
     (liveMathRows?`<div class="coach-live-math"><span class="coach-live-math-title">${coachMathLabel()}</span>${liveMathRows}</div>`:'')+
     (keyReason?`<div class="coach-key-reason"><span class="coach-key-reason-label">${coachReasonLabel()}</span>${keyReason}</div>`:'')+
