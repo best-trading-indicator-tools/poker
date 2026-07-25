@@ -20,7 +20,7 @@ for(const file of files)vm.runInContext(fs.readFileSync(path.join(ROOT,'js',file
 const result=vm.runInContext(`(()=>{
   const C=(r,s)=>({r,s}), H=(a,b)=>[a,b];
   const holes={AA:H(C(14,0),C(14,1)),A5s:H(C(14,0),C(5,0)),A5o:H(C(14,0),C(5,1)),
-    eightSeven:H(C(8,2),C(7,2)),sevenTwo:H(C(7,0),C(2,1))};
+    eightSeven:H(C(8,2),C(7,2)),KJo:H(C(13,0),C(11,1)),sevenTwo:H(C(7,0),C(2,1))};
   const cfg={gameType:'sng',numPlayers:6,startBB:100,startBlind:100,ante:0,speed:'standard',difficulty:'hard',allAI:true};
   newGame(cfg);
   const p=state.players[1];p.pos='CO';p.style=STYLES.find(x=>x.id==='shark');
@@ -311,6 +311,44 @@ const result=vm.runInContext(`(()=>{
   suitedHero.chips=oldHeroChips;suitedOpener.chips=oldOpenerChips;
   if(!(shallowConnector.realization<standardConnector.preflopCallInfo.realization))
     throw new Error('shallow stacks must reduce suited-connector realization');
+  /* Extra callers improve the price of hands that retain equity multiway, but
+     the credit must be generic, capped and unavailable for expensive/shallow entries. */
+  state.currentBet=250;suitedOpener.bet=250;suitedOpener.totalBet=250;
+  deadBlind.folded=false;deadBlind.acted=true;deadBlind.allIn=false;deadBlind.pos='CO';
+  deadBlind.bet=250;deadBlind.totalBet=250;deadBlind.chips=9750;
+  suitedHero.hole=holes.eightSeven;
+  const multiwayConnector=coachPreflopCallModel(suitedHero,suitedOpener,150,650,.31,150/800,
+    false,true,0,0,'hard');
+  suitedHero.hole=holes.KJo;
+  const multiwayOffsuitBroadway=coachPreflopCallModel(suitedHero,suitedOpener,150,650,.34,150/800,
+    false,true,0,0,'hard');
+  suitedHero.hole=holes.A5s;
+  const multiwaySuitedAce=coachPreflopCallModel(suitedHero,suitedOpener,150,650,.32,150/800,
+    false,true,0,0,'hard');
+  suitedHero.hole=holes.eightSeven;
+  if(multiwayConnector.callers!==1||multiwayConnector.multiwayImpliedCredit<=0||
+      !(multiwayConnector.multiwayRetention>multiwayOffsuitBroadway.multiwayRetention)||
+      !(multiwayConnector.callerRealizationCost<multiwayOffsuitBroadway.callerRealizationCost)||
+      !(multiwaySuitedAce.multiwayRetention>multiwayConnector.multiwayRetention)||
+      !(multiwaySuitedAce.multiwayReversePenalty<multiwayConnector.multiwayReversePenalty))
+    throw new Error('multiway retention must favor suited/nut-capable hands '+JSON.stringify({
+      connector:multiwayConnector,broadway:multiwayOffsuitBroadway,suitedAce:multiwaySuitedAce
+    }));
+  state.currentBet=500;suitedOpener.bet=500;suitedOpener.totalBet=500;
+  deadBlind.bet=500;deadBlind.totalBet=500;
+  const expensiveMultiway=coachPreflopCallModel(suitedHero,suitedOpener,400,1150,.29,400/1550,
+    false,true,0,0,'hard');
+  const savedHeroChips=suitedHero.chips,savedVillainChips=suitedOpener.chips;
+  state.currentBet=250;suitedOpener.bet=250;suitedOpener.totalBet=250;deadBlind.bet=250;deadBlind.totalBet=250;
+  suitedHero.chips=2400;suitedOpener.chips=2250;
+  const shallowMultiway=coachPreflopCallModel(suitedHero,suitedOpener,150,650,.31,150/800,
+    false,true,0,0,'hard');
+  suitedHero.chips=savedHeroChips;suitedOpener.chips=savedVillainChips;
+  if(expensiveMultiway.multiwayImpliedCredit!==0||shallowMultiway.multiwayImpliedCredit!==0)
+    throw new Error('large opens and shallow stacks must suppress multiway implied credit '+JSON.stringify({
+      expensive:expensiveMultiway,shallow:shallowMultiway
+    }));
+  deadBlind.folded=true;deadBlind.acted=true;deadBlind.bet=0;deadBlind.totalBet=50;
   const rockSqueeze=state.players[3],wildSqueeze=state.players[4];
   rockSqueeze.style=STYLES.find(x=>x.id==='rock');rockSqueeze.pos='SB';rockSqueeze.chips=9900;
   wildSqueeze.style=STYLES.find(x=>x.id==='maniac');wildSqueeze.pos='SB';wildSqueeze.chips=9900;

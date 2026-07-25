@@ -66,6 +66,7 @@ fourBetCall:(c,e,o)=>`You already raised and now face a 3-bet. ${c} is strong en
 chartCallRaise:(c,e,o)=>`${c} is in the calling chart against this raise — strong enough to see a flop, not strong enough to re-raise. Your win chance (${e}) covers the price (${o}). Call, and play carefully if you miss the flop.`,
 pfContextCall:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} is a contextual call, not an automatic defend. Against a ${open} BB open at ${eff} BB effective, you will be ${pos>0?'in position':pos<0?'out of position':'without guaranteed last action'} after the flop${behind?`, with ${behind} player${behind>1?'s':''} still able to squeeze`:''}. Raw equity of ${raw} becomes about ${usable} after position, stack depth, implied/reverse-implied odds and the modeled ${sq}% squeeze risk; that still clears the adjusted ${need} requirement.`,
 pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} may look playable on a static chart, but this exact call is not profitable. Against a ${open} BB open at ${eff} BB effective, you will be ${pos>0?'in position':pos<0?'out of position':'without guaranteed last action'} after the flop${behind?`, and ${behind} player${behind>1?'s':''} can still squeeze`:''}. Raw equity of ${raw} falls to about ${usable} once realization, implied/reverse-implied odds and ${sq}% squeeze risk are counted, below the adjusted ${need} requirement — fold.`,
+pfMultiwayValue:(c,n)=>`${n} caller${n>1?'s':''} improve the immediate price for ${c}. This hand retains its equity relatively well multiway and can make a strong disguised hand, so the coach gives it a small, capped implied-odds credit when stacks are deep enough. The benefit is not unlimited: every extra opponent still lowers raw equity and adds non-nut and reverse-implied-odds risk.`,
 chartIcmFold:(c,e,o)=>`${c} is normally a call here, but right now your simulated win chance (${e}) doesn't cover the price (${o}) once prize pressure and this raiser's range are counted. The chart is a guide — the math of THIS table says fold.`,
 chartFoldVs:c=>`${c} is in neither the re-raise nor the calling chart against this raise — solver ranges simply fold it. Calling raises with hands like this is one of the most expensive habits in poker.`,
 chartOpen:(c,p)=>`${c} is in the ${p} opening chart — a hand list taken from solver-computed ranges: raising it first-in from this seat is profitable in the long run. Come in raising, not limping.`,
@@ -213,6 +214,7 @@ fourBetCall:(c,e,o)=>`Vous avez déjà relancé et faites maintenant face à un 
 chartCallRaise:(c,e,o)=>`${c} figure dans la charte de call contre cette relance — assez fort pour voir un flop, pas assez pour sur-relancer. Votre chance de gain (${e}) couvre le prix (${o}). Suivez, et jouez prudemment si vous ratez le flop.`,
 pfContextCall:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} est un call contextuel, pas une défense automatique. Face à une ouverture de ${open} BB avec ${eff} BB effectives, vous serez ${pos>0?'en position':pos<0?'hors position':'sans garantie de parler en dernier'} après le flop${behind?`, avec encore ${behind} joueur${behind>1?'s':''} capable${behind>1?'s':''} de squeeze`:''}. L'équité brute de ${raw} devient environ ${usable} après la position, la profondeur, les cotes implicites/inverses et le risque de squeeze modélisé à ${sq}% ; elle dépasse encore le seuil ajusté de ${need}.`,
 pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} peut sembler jouable dans une charte statique, mais ce call précis n'est pas rentable. Face à une ouverture de ${open} BB avec ${eff} BB effectives, vous serez ${pos>0?'en position':pos<0?'hors position':'sans garantie de parler en dernier'} après le flop${behind?`, et ${behind} joueur${behind>1?'s':''} peu${behind>1?'vent':'t'} encore squeeze`:''}. L'équité brute de ${raw} tombe à environ ${usable} après réalisation, cotes implicites/inverses et ${sq}% de risque de squeeze, sous le seuil ajusté de ${need} — couchez-vous.`,
+pfMultiwayValue:(c,n)=>`${n} caller${n>1?'s':''} améliore${n>1?'nt':''} le prix immédiat pour ${c}. Cette main conserve relativement bien son équité en multiway et peut toucher une grosse main cachée : le coach lui accorde donc un petit crédit de cotes implicites, plafonné, si les tapis sont assez profonds. Le bénéfice n'est pas illimité : chaque adversaire supplémentaire réduit toujours l'équité brute et augmente les risques de main non max et de cotes implicites inverses.`,
 chartIcmFold:(c,e,o)=>`${c} serait normalement un call ici, mais votre chance de gain simulée (${e}) ne couvre pas le prix (${o}) une fois la pression des prix et la range de ce relanceur comptées. La charte est un guide — le calcul de CETTE table dit de se coucher.`,
 chartFoldVs:c=>`${c} ne figure ni dans la charte de 3-bet ni dans celle de call contre cette relance — les ranges solveur la couchent, tout simplement. Suivre des relances avec ce genre de main est l'une des habitudes les plus coûteuses du poker.`,
 chartOpen:(c,p)=>`${c} figure dans la charte d'ouverture ${p} — une liste de mains issue de ranges calculées par solveur : la relancer en premier depuis ce siège est rentable à long terme. Entrez en relançant, pas en limpant.`,
@@ -360,6 +362,7 @@ fourBetCall:(c,e,o)=>`Ya subiste y ahora afrontas un 3-bet. ${c} es lo bastante 
 chartCallRaise:(c,e,o)=>`${c} está en la tabla de llamada contra esta subida — bastante fuerte para ver un flop, no tanto como para resubir. Tu probabilidad (${e}) cubre el precio (${o}). Iguala, y juega con cuidado si fallas el flop.`,
 pfContextCall:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} es una llamada contextual, no una defensa automática. Ante una apertura de ${open} BB con ${eff} BB efectivas, jugarás ${pos>0?'con posición':pos<0?'fuera de posición':'sin garantizar la última acción'} tras el flop${behind?`, con ${behind} jugador${behind>1?'es':''} todavía capaz${behind>1?'es':''} de hacer squeeze`:''}. La equity bruta de ${raw} queda en torno a ${usable} tras posición, profundidad, odds implícitas/inversas y el riesgo modelado de squeeze del ${sq}%; aún supera el requisito ajustado de ${need}.`,
 pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} puede parecer jugable en una tabla estática, pero esta llamada exacta no es rentable. Ante una apertura de ${open} BB con ${eff} BB efectivas, jugarás ${pos>0?'con posición':pos<0?'fuera de posición':'sin garantizar la última acción'} tras el flop${behind?`, y ${behind} jugador${behind>1?'es':''} todavía puede${behind>1?'n':''} hacer squeeze`:''}. La equity bruta de ${raw} baja a cerca de ${usable} al contar realización, odds implícitas/inversas y ${sq}% de riesgo de squeeze, por debajo del requisito ajustado de ${need}; retírate.`,
+pfMultiwayValue:(c,n)=>`${n} caller${n>1?'s':''} mejora${n>1?'n':''} el precio inmediato para ${c}. Esta mano conserva relativamente bien su equity multiway y puede ligar una mano fuerte y escondida, así que el coach le concede un pequeño crédito de odds implícitas, limitado, si los stacks son suficientemente profundos. El beneficio no es ilimitado: cada rival adicional sigue reduciendo la equity bruta y añade riesgo de mano no máxima y odds implícitas inversas.`,
 chartIcmFold:(c,e,o)=>`${c} normalmente sería una llamada aquí, pero tu probabilidad simulada (${e}) no cubre el precio (${o}) contando la presión de premios y el rango de quien sube. La tabla es una guía — las cuentas de ESTA mesa dicen retirarse.`,
 chartFoldVs:c=>`${c} no está ni en la tabla de 3-bet ni en la de llamada contra esta subida — los rangos de solver simplemente la tiran. Igualar subidas con manos así es uno de los hábitos más caros del póker.`,
 chartOpen:(c,p)=>`${c} está en la tabla de apertura de ${p} — una lista de manos sacada de rangos calculados por solver: subirla primero desde este asiento es rentable a largo plazo. Entra subiendo, no de limp.`,
@@ -1216,6 +1219,37 @@ function coachPreflopHandShape(hole){
   return {pair,suited,hi,lo,gap,connected,oneGap,broadway,lowPair,suitedRun,
     speculative,playability,nutPotential};
 }
+/* How well a hand keeps realizing value after callers enter the pot. Raw equity
+   is still simulated against every committed player; this only models the
+   postflop playability and implied-odds part that all-in equity cannot express. */
+function coachPreflopMultiwayProfile(shape,callers,effBB,openBB,odds,position){
+  let retention;
+  if(shape.suited&&shape.hi===14)retention=.96;
+  else if(shape.lowPair)retention=.88;
+  else if(shape.suited&&shape.broadway)retention=.82;
+  else if(shape.pair)retention=.76;
+  else if(shape.suitedRun)retention=clamp(.66+(shape.hi-7)*.025,.64,.76);
+  else if(shape.suited)retention=.50;
+  else if(shape.broadway)retention=.25;
+  else if(shape.connected||shape.oneGap)retention=.34;
+  else retention=.18;
+
+  const count=Math.max(0,callers);
+  const callerRealizationCost=count*(.0015+.024*(1-retention));
+  const reverseImpliedPenalty=count*.004*(1-retention);
+  const cheapOpen=clamp((3.25-openBB)/.75,0,1);
+  const goodPrice=clamp((.34-odds)/.14,0,1);
+  const depth=clamp((effBB-35)/65,0,1);
+  const positionalFactor=position>0?1:position<0?.58:.78;
+  const impliedEligible=shape.lowPair||shape.suitedRun||(shape.suited&&shape.hi===14)||
+    (shape.suited&&shape.broadway);
+  const impliedCredit=impliedEligible&&count&&effBB>=45
+    ?Math.min(.015,Math.min(count,3)*.005*retention*cheapOpen*goodPrice*
+      (.55+.45*depth)*positionalFactor)
+    :0;
+  return {retention,callerRealizationCost,reverseImpliedPenalty,impliedCredit,
+    impliedEligible,cheapOpen,goodPrice,depth};
+}
 function coachPreflopSqueezeRisk(q,raiser,openBB,callers,difficulty){
   const sid=q.style?.id||'neutral';
   const base={rock:.028,station:.024,shark:.088,maniac:.10,neutral:.055}[sid]||.055;
@@ -1255,6 +1289,7 @@ function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,i
   const allInCall=callAmt>=p.chips;
   const lockedShowdown=!!(raiser?.allIn&&!behind.length&&callers===0);
   if(allInCall||lockedShowdown)squeezeRisk=0;
+  const multiway=coachPreflopMultiwayProfile(shape,callers,effBB,openBB,odds,position);
 
   let realization=1;
   if(!allInCall&&!lockedShowdown){
@@ -1272,7 +1307,7 @@ function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,i
     const callFraction=callAmt/Math.max(Math.min(heroTotal,villainTotal),1);
     if(shape.speculative&&callFraction>.08)
       realization-=Math.min(.10,(callFraction-.08)*.65);
-    realization-=callers*Math.max(.008,.026-shape.nutPotential*.018);
+    realization-=multiway.callerRealizationCost;
     const villainStyle=typeof rangeModelStyle==='function'&&raiser?rangeModelStyle(raiser,true):null;
     const postAgg=villainStyle?.postAgg||.36;
     if(postAgg>.40&&shape.playability<.82)
@@ -1287,11 +1322,12 @@ function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,i
     if(raiser?.style?.id==='station')impliedCredit+=.003;
     if(openBB>3.5)impliedCredit*=.55;
   }
-  let reversePenalty=0;
+  impliedCredit+=multiway.impliedCredit;
+  let reversePenalty=multiway.reverseImpliedPenalty;
   if(shape.suited&&shape.hi<14)
-    reversePenalty=.0035+(1-shape.nutPotential)*.006+callers*.002;
+    reversePenalty+=.0035+(1-shape.nutPotential)*.006;
   else if(!shape.suited&&shape.broadway&&shape.hi<14)
-    reversePenalty=.004+callers*.002;
+    reversePenalty+=.004;
   if(allInCall||lockedShowdown){impliedCredit=0;reversePenalty=0;realization=1;}
 
   const rawContinue=handPct[holeCode(p.hole)]||1;
@@ -1320,6 +1356,8 @@ function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,i
   return {shape,effBB,openBB,position,callers,behindCount:behind.length,
     seatRisks:seatRisks.map(x=>({name:x.player.name,pos:x.player.pos||'',profile:x.player.style?.id||'neutral',risk:x.risk})),
     squeezeRisk,realization,impliedCredit,reversePenalty,squeezePremium,realizedEq,
+    multiwayRetention:multiway.retention,callerRealizationCost:multiway.callerRealizationCost,
+    multiwayImpliedCredit:multiway.impliedCredit,multiwayReversePenalty:multiway.reverseImpliedPenalty,
     strategyPremium,policy,requiredEq,callEv,profitable:callEv>=0,allInCall,lockedShowdown};
 }
 function coachSpr(p,callAmt,pot){
@@ -1820,6 +1858,8 @@ function coachDecide(p){
         preflopCallInfo=coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,
           actsFirst,actsLast,icmPrem,diffCallPad,difficulty);
         eqAdj=preflopCallInfo.realizedEq;
+        if(preflopCallInfo.multiwayImpliedCredit>.001)
+          extra.push(C('pfMultiwayValue',code,preflopCallInfo.callers));
       }
       const contextCallOk=()=>preflopCallInfo
         ?preflopCallInfo.profitable
