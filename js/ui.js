@@ -1556,6 +1556,19 @@ function coachProseHtml(why,extra){
   if(!paras.length)return'';
   return`<div class="why">${paras.map(t=>`<p class="why-p">${t}</p>`).join('')}</div>`;
 }
+function coachDetailsLabel(){
+  return lang==='fr'?'Voir l’analyse complète':lang==='es'?'Ver análisis completo':'See full analysis';
+}
+function coachDecisionLabel(){
+  return lang==='fr'?'Action recommandée':lang==='es'?'Acción recomendada':'Recommended action';
+}
+function coachReasonLabel(){
+  return lang==='fr'?'Pourquoi':lang==='es'?'Por qué':'Why';
+}
+function coachMetric(label,value,cls=''){
+  if(!value)return'';
+  return `<div class="coach-metric ${cls}"><span>${label}</span><b>${value}</b></div>`;
+}
 
 function updateCoach(p){
   if(!HAS_DOM)return;
@@ -1585,14 +1598,14 @@ function updateCoach(p){
     (rangeCharts.length>1?`<div class="coach-range-tabs">${rangeCharts.map((x,i)=>`<button type="button" data-range-index="${i}" class="${i===0?'on':''}">${x.pos}</button>`).join('')}</div>`:'')+
     `<b id="coachRangeTitle">${rangeCharts[0].pos} — ${T('chartTitleRange')}</b><div id="coachRangeMeta">${rangeMatrixMetaHtml(rangeCharts[0])}</div><div id="coachRangeMatrix">${rangeMatrixCells(rangeCharts[0],R.code,true)}</div>${rangeMatrixLegend()}</div>`+
     `<button class="chart-link" id="chartViewBtn">${T('viewRange')}</button></div>`:'';
-  $('coachBody').innerHTML=
-    `<div class="rec ${rec}">${recLabel}</div>`+
-    `<div class="coach-row"><span>${T('yourHand')}</span><b>${handDesc}</b></div>`+
+  const allReasons=[...why,...extra].map(s=>(s||'').trim()).filter(Boolean);
+  const keyReason=allReasons.shift()||'';
+  const priceMetric=callAmt>0?`${T('need')}${pct(odds)} · ${usd(callAmt)} → ${usd(pot)}`:'';
+  const sizingMetric=(rec==='RAISE'||rec==='ALLIN')?`${usd(coachT)} · ${bbs(coachT)}`:'';
+  const detailRows=
     (pos?`<div class="coach-row"><span>${T('position')}</span><b>${pos}${early?' (early)':late?' (late)':''}</b></div>`:'')+
     (opps>0?`<div class="coach-row"><span>${state.stage==='preflop'?T('postflopOrder'):T('actingOrder')}</span><b>${actsFirst?T('firstToAct'):actsLast?T('lastToAct'):(ordIdx+1)+' '+T('ofN')+' '+ordLen}</b></div>`:'')+
-    `<div class="coach-row"><span>${T('winChance')}</span><b>~${pct(eq)} ${T('vs')} ${opps} ${opps>1?T('opps'):T('opp')}</b></div>`+
     drawRow+
-    (callAmt>0?`<div class="coach-row"><span>${T('potOdds')}</span><b>${T('need')}${pct(odds)} (${usd(callAmt)} &rarr; ${usd(pot)})</b></div>`:'')+
     (R.impliedInfo?`<div class="coach-row"><span>${T('impliedOdds')}</span><b>~${pct(R.impliedInfo.realisticNeed)} ${T('realisticNeed')}<br>${pct(R.impliedInfo.bestCaseNeed)} ${T('bestCaseNeed')} · ${usd(R.impliedInfo.maxFuture)} max</b></div>`:'')+
     sprRow+
     `<div class="coach-row"><span>${T('yourStack')}</span><b>${bbs(p.chips+p.bet)}</b></div>`+
@@ -1600,11 +1613,22 @@ function updateCoach(p){
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
     (callAmt>0&&R.needEq!=null&&Math.abs(R.needEq-odds)>=.005
       ?`<div class="coach-row"><span>${T('effectiveNeed')}</span><b>~${pct(R.needEq)}</b></div>`:'')+
-    sizeRow+
-    rangePanel+
-    (R.chartInfo&&!rangeCharts.length?`<button class="chart-link" id="chartViewBtn">${T('viewChart')}</button>`:'')+
-    coachProseHtml(why,extra)+
-    mixTip(rec,R);
+    coachProseHtml(allReasons,[]);
+  $('coachBody').innerHTML=
+    `<div class="coach-decision"><span class="coach-decision-label">${coachDecisionLabel()}</span><div class="rec ${rec}">${recLabel}</div></div>`+
+    `<div class="coach-glance">`+
+      coachMetric(T('yourHand'),handDesc,'wide')+
+      coachMetric(T('winChance'),`~${pct(eq)} ${T('vs')} ${opps}`,'emphasis')+
+      coachMetric(T('potOdds'),priceMetric)+
+      coachMetric(T('sugSize'),sizingMetric,'wide emphasis')+
+    `</div>`+
+    (keyReason?`<div class="coach-key-reason"><span class="coach-key-reason-label">${coachReasonLabel()}</span>${keyReason}</div>`:'')+
+    `<details class="coach-details"><summary>${coachDetailsLabel()}</summary><div class="coach-details-body">`+
+      detailRows+
+      rangePanel+
+      (R.chartInfo&&!rangeCharts.length?`<button class="chart-link" id="chartViewBtn">${T('viewChart')}</button>`:'')+
+      mixTip(rec,R)+
+    `</div></details>`;
   let activeChart=R.chartInfo;
   if(rangeCharts.length){
     activeChart=rangeCharts[0];
