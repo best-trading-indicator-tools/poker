@@ -27,6 +27,10 @@ log:"Log",lastHand:"Last hand",exportH:"Export history",nextHand:"Next hand ▶"
 waiting:"Advice appears here when it's your turn.",
 yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",draws:"Draws",outs:"Outs",unique:"unique",shared:"shared",countedOnce:"counted once",dirtyOuts:"Dirty outs",dirtyOutsInfoLbl:"What is a dirty out?",dirtyOutsInfo:"A dirty (tainted) out completes your draw on paper but often doesn't win the pot — e.g. it pairs the board (helping everyone) or is the 4th card to a board flush that gives an opponent the winning flush. Use clean outs for your odds.",potOdds:"Pot odds",impliedOdds:"Implied odds",realisticNeed:"realistic need",bestCaseNeed:"best case",effectiveNeed:"Effective call threshold",effectiveNeedNote:"Minimum usable equity after position, opponent range and tournament pressure.",preflopRank:p=>`Preflop rank: top ~${p}% of starting hands`,lowerStronger:"lower is stronger",yourStack:"Your stack",sugSize:"Suggested size",
 firstToAct:"first to act (OOP)",lastToAct:"last to act (IP)",ofN:"of",need:"need ",vs:"vs",opp:"opponent",opps:"opponents",
+beginnerMath:(raw,usable,need,enough)=>`In plain English: you win about ${raw} times out of 100 before adjustments. After position and risk, the coach counts about ${usable} usable wins. A call needs ${need} out of 100 — ${enough?'enough to continue':'not enough, so folding saves chips'}.`,
+beginnerFree:"In plain English: checking costs no chips. You keep your hand alive and see what develops without making the pot bigger.",
+beginnerAgg:"In plain English: your win chance is only part of a bet or raise. Opponents may fold immediately (fold equity), and weaker hands may still call.",
+beginnerOpenFold:"In plain English: no chips are required yet, but this starting hand is too weak to enter profitably from this seat. Folding preserves your stack.",
 thisGame:"THIS GAME",lifetime:"LIFETIME",handsPW:"Hands played / won",net:"Net",biggestPot:"Biggest pot won",vpipPfr:"VPIP / PFR",aggF:"Aggression factor",wonSd:"Won at showdown",evLeak:"EV leaked vs coach",coachFollowed:"Coach followed",followedCoach:"followed coach",coachSaid:"coach said",youChose:"you chose",
 recFOLD:"FOLD",recCHECK:"CHECK",recCALL:"CALL",recRAISETO:"RAISE TO",recBET:"BET",recALLIN:"ALL-IN",
 zoneG:"🟢 comfortable",zoneY:"🟡 fight for pots",zoneO:"🟠 shove-or-fold soon",zoneR:"🔴 all-in or fold",
@@ -98,6 +102,10 @@ log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",nextHand
 waiting:"Les conseils apparaissent ici quand c'est votre tour.",
 yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",draws:"Tirages",outs:"Outs",unique:"uniques",shared:"communs",countedOnce:"comptés une fois",dirtyOuts:"Outs sales",dirtyOutsInfoLbl:"Qu'est-ce qu'un out sale ?",dirtyOutsInfo:"Un out sale complète votre tirage sur le papier mais ne gagne souvent pas le pot — ex. il pair le board (aide tout le monde) ou est la 4e carte d'une couleur au board qui donne la couleur gagnante à l'adversaire. Comptez les outs propres pour vos cotes.",potOdds:"Cote du pot",impliedOdds:"Cotes implicites",realisticNeed:"seuil réaliste",bestCaseNeed:"meilleur cas",effectiveNeed:"Seuil effectif du call",effectiveNeedNote:"Équité utilisable minimale après position, range adverse et pression du tournoi.",preflopRank:p=>`Classement préflop : top ~${p}% des mains de départ`,lowerStronger:"plus bas = plus fort",yourStack:"Votre tapis",sugSize:"Taille suggérée",
 firstToAct:"premier à parler (OOP)",lastToAct:"dernier à parler (IP)",ofN:"sur",need:"requis ",vs:"vs",opp:"adversaire",opps:"adversaires",
+beginnerMath:(raw,usable,need,enough)=>`En clair : vous gagnez environ ${raw} fois sur 100 avant ajustements. Après la position et les risques, le coach compte environ ${usable} gains utilisables. Un call en exige ${need} sur 100 — ${enough?'assez pour continuer':'pas assez, donc se coucher économise des jetons'}.`,
+beginnerFree:"En clair : checker ne coûte aucun jeton. Vous gardez votre main en vie et voyez la suite sans grossir le pot.",
+beginnerAgg:"En clair : votre chance de gagner n’est qu’une partie d’un bet ou d’une relance. Les adversaires peuvent se coucher immédiatement (fold equity), et des mains moins bonnes peuvent payer.",
+beginnerOpenFold:"En clair : aucun jeton supplémentaire n’est encore requis, mais cette main est trop faible pour entrer rentablement depuis cette position. Se coucher préserve votre tapis.",
 thisGame:"CETTE PARTIE",lifetime:"GLOBAL",handsPW:"Mains jouées / gagnées",net:"Net",biggestPot:"Plus gros pot gagné",vpipPfr:"VPIP / PFR",aggF:"Facteur d'agression",wonSd:"Gagné à l'abattage",evLeak:"EV perdue vs coach",coachFollowed:"Coach suivi",followedCoach:"coach suivi",coachSaid:"le coach a dit",youChose:"vous avez choisi",
 recFOLD:"SE COUCHER",recCHECK:"PAROLE",recCALL:"SUIVRE",recRAISETO:"RELANCER À",recBET:"MISER",recALLIN:"TAPIS",
 zoneG:"🟢 confortable",zoneY:"🟡 battez-vous pour les pots",zoneO:"🟠 bientôt tapis-ou-couché",zoneR:"🔴 tapis ou couché",
@@ -169,6 +177,10 @@ log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",nextHand:"Si
 waiting:"Los consejos aparecen aquí cuando es tu turno.",
 yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",draws:"Proyectos",outs:"Outs",unique:"únicos",shared:"compartidos",countedOnce:"contados una vez",dirtyOuts:"Outs sucios",dirtyOutsInfoLbl:"¿Qué es un out sucio?",dirtyOutsInfo:"Un out sucio completa tu proyecto en papel pero a menudo no gana el bote — p. ej. empareja el board (ayuda a todos) o es la 4ª carta a color en el board que le da el color ganador al rival. Cuenta los outs limpios para tus odds.",potOdds:"Odds del bote",impliedOdds:"Odds implícitas",realisticNeed:"umbral realista",bestCaseNeed:"mejor caso",effectiveNeed:"Umbral efectivo del call",effectiveNeedNote:"Equidad útil mínima tras posición, rango rival y presión del torneo.",preflopRank:p=>`Rango preflop: top ~${p}% de las manos iniciales`,lowerStronger:"más bajo = más fuerte",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
 firstToAct:"primero en hablar (OOP)",lastToAct:"último en hablar (IP)",ofN:"de",need:"necesitas ",vs:"vs",opp:"rival",opps:"rivales",
+beginnerMath:(raw,usable,need,enough)=>`En claro: ganas unas ${raw} veces de cada 100 antes de ajustes. Tras posición y riesgo, el coach cuenta unas ${usable} victorias útiles. Igualar exige ${need} de cada 100 — ${enough?'suficiente para continuar':'insuficiente, así que retirarse ahorra fichas'}.`,
+beginnerFree:"En claro: pasar no cuesta fichas. Mantienes viva la mano y ves qué ocurre sin agrandar el bote.",
+beginnerAgg:"En claro: tu probabilidad de ganar es solo una parte de apostar o subir. Los rivales pueden retirarse de inmediato (fold equity), y manos peores aún pueden pagar.",
+beginnerOpenFold:"En claro: todavía no hacen falta más fichas, pero esta mano es demasiado débil para entrar con beneficio desde esta posición. Retirarse conserva tu stack.",
 thisGame:"ESTA PARTIDA",lifetime:"GLOBAL",handsPW:"Manos jugadas / ganadas",net:"Neto",biggestPot:"Mayor bote ganado",vpipPfr:"VPIP / PFR",aggF:"Factor de agresión",wonSd:"Ganadas en showdown",evLeak:"EV perdido vs coach",coachFollowed:"Coach seguido",followedCoach:"coach seguido",coachSaid:"el coach dijo",youChose:"tú elegiste",
 recFOLD:"RETIRARSE",recCHECK:"PASAR",recCALL:"IGUALAR",recRAISETO:"SUBIR A",recBET:"APOSTAR",recALLIN:"ALL-IN",
 zoneG:"🟢 cómodo",zoneY:"🟡 pelea por los botes",zoneO:"🟠 pronto all-in o fold",zoneR:"🔴 all-in o retirarse",
@@ -1610,6 +1622,11 @@ function updateCoach(p){
   const effectiveRow=callAmt>0&&R.needEq!=null&&Math.abs(R.needEq-odds)>=.005
     ?`<div class="coach-row"><span>${T('effectiveNeed')}</span><b>~${pct(R.needEq)}<small class="coach-row-note">${T('effectiveNeedNote')}</small></b></div>`:'';
   const liveMathRows=drawRow+impliedRow+sprRow+effectiveRow;
+  const usableEq=R.eqAdj==null?eq:R.eqAdj;
+  const decisionNeed=R.needEq==null?odds:R.needEq;
+  const beginnerRead=callAmt>0
+    ?T('beginnerMath')(Math.round(eq*100),Math.round(usableEq*100),Math.round(decisionNeed*100),usableEq>=decisionNeed)
+    :(rec==='CHECK'?T('beginnerFree'):rec==='FOLD'?T('beginnerOpenFold'):T('beginnerAgg'));
   const detailRows=
     (pos?`<div class="coach-row"><span>${T('position')}</span><b>${pos}${early?' (early)':late?' (late)':''}</b></div>`:'')+
     (opps>0?`<div class="coach-row"><span>${state.stage==='preflop'?T('postflopOrder'):T('actingOrder')}</span><b>${actsFirst?T('firstToAct'):actsLast?T('lastToAct'):(ordIdx+1)+' '+T('ofN')+' '+ordLen}</b></div>`:'')+
@@ -1624,6 +1641,7 @@ function updateCoach(p){
       coachMetric(T('winChance'),`~${pct(eq)} ${T('vs')} ${opps} ${opps===1?T('opp'):T('opps')}`,'emphasis')+
       coachMetric(T('potOdds'),priceMetric)+
     `</div>`+
+    `<div class="coach-beginner-read"><span>💡</span><p>${beginnerRead}</p></div>`+
     (liveMathRows?`<div class="coach-live-math"><span class="coach-live-math-title">${coachMathLabel()}</span>${liveMathRows}</div>`:'')+
     (keyReason?`<div class="coach-key-reason"><span class="coach-key-reason-label">${coachReasonLabel()}</span>${keyReason}</div>`:'')+
     `<details class="coach-details"><summary>${coachDetailsLabel()}</summary><div class="coach-details-body">`+
