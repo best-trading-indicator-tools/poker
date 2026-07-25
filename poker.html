@@ -259,8 +259,8 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #banner{margin-top:10px;font-size:15px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.7);min-height:22px;}
 #nextHandBtn{margin-top:8px;background:var(--gold);color:#1a1408;border:none;border-radius:8px;padding:7px 18px;font-weight:700;cursor:pointer;font-size:13px;}
 
-.card{position:relative;width:54px;height:76px;border-radius:7px;
-  background:linear-gradient(160deg,#fffefa 0%,#f6f2e9 70%,#eee9db 100%);
+.card{position:relative;width:54px;height:76px;border-radius:7px;opacity:1;
+  background:linear-gradient(160deg,#fffefa 0%,#f6f2e9 70%,#eee9db 100%);background-color:#fffefa;
   color:#22232a;box-shadow:0 3px 8px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.07),inset 0 1px 0 rgba(255,255,255,.9);
   user-select:none;}
 .card .ix{position:absolute;top:4px;left:5px;display:flex;flex-direction:column;align-items:center;line-height:1;font-weight:800;font-size:15px;}
@@ -294,7 +294,9 @@ body.frame-crown .seat.human .plate{border-color:#f7d779;box-shadow:0 0 22px rgb
 .card.small .pip{font-size:21px;}
 .card.small.back::after{inset:3px;}
 
-.seat{position:absolute;width:150px;margin-left:-75px;margin-top:-46px;text-align:center;transition:opacity .3s;}
+.seat{position:absolute;z-index:4;width:150px;margin-left:-75px;margin-top:-46px;text-align:center;opacity:1;transition:opacity .3s;}
+.seat:not(.folded):not(.busted){opacity:1!important;}
+.seat.active{z-index:5;opacity:1!important;}
 .seat .hole{display:flex;gap:4px;justify-content:center;min-height:58px;margin-bottom:4px;}
 .seat .hole .card{transform:rotate(-3deg);}
 .seat .hole .card+.card{transform:rotate(3deg);margin-left:-6px;}
