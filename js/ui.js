@@ -1421,7 +1421,7 @@ function render(winners){
     const lls=document.body.classList.contains('lls');
     $('act'+p.i).textContent=(lls&&/^(SB|BB) /.test(p.lastAct))?'':p.lastAct;
     const hole=$('hole'+p.i);
-    if(p.out||p.folded||p.hole.length===0) setHTML(hole,'');
+    if(p.hole.length===0) setHTML(hole,'');
     else if(p.isHuman) setHTML(hole,p.hole.map(c=>cardHTML(c,false,true)).join(''));
     else if(p.revealed) setHTML(hole,p.hole.map(c=>cardHTML(c,true,'flip')).join(''));
     else setHTML(hole,backHTML(true,true)+backHTML(true,true));
