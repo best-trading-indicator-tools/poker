@@ -433,6 +433,15 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
 #rewardOv{position:fixed;inset:0;background:rgba(8,10,14,.85);display:flex;align-items:center;justify-content:center;z-index:65;}
 .reward-card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 28px;width:760px;max-width:94vw;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);}
 .reward-card h2{font-size:18px;margin-bottom:12px;color:var(--gold);}
+.academy-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;width:720px;max-width:94vw;max-height:90vh;overflow:auto;}
+.academy-card h2,.academy-card h3{color:var(--gold);margin-bottom:12px}.academy-progress{color:var(--dim);font-size:12px;margin-bottom:10px}
+.academy-spot{font-size:16px;line-height:1.55;margin:14px 0}.academy-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.academy-options button,.academy-cat,#academyNext,#academyAgain{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:9px;padding:11px;cursor:pointer}
+.academy-options button.correct{border-color:#62d68a;background:rgba(98,214,138,.16)}.academy-options button.wrong{border-color:#e2574c;background:rgba(226,87,76,.15)}
+.academy-explain{margin:14px 0;padding:12px;border-radius:9px;background:rgba(255,255,255,.04)}.academy-explain.ok b{color:#62d68a}.academy-explain.no b{color:#f08a82}
+.academy-explain p{margin-top:6px;line-height:1.45}.academy-cats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.academy-cat{text-align:left}.academy-cat.on{border-color:var(--gold)}.academy-cat b,.academy-cat span{display:block}.academy-cat span{font-size:10px;color:var(--dim);margin-top:3px}
+.academy-score{font-size:38px;color:#62d68a;font-weight:900;margin:15px 0}
 #rewardCloseTop{position:absolute;top:14px;right:16px;width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);font-size:22px;line-height:1;cursor:pointer;}
 #rewardCloseTop:hover{border-color:var(--gold);color:var(--gold);}
 .reward-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
@@ -942,9 +951,10 @@ body.fl #chipPreview{display:none!important;}
         <button id="startBtn">Deal me in</button>
         <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
         <button id="reviewBtn" class="hidden">&#128202; Session review</button>
+        <button id="academyBtn">🎓 Poker Academy</button>
       </div>
       <div class="setup-side">
-        <div id="mpSec" class="sng-only">
+        <div id="mpSec">
           <h3 id="mpTitle">👥 Play with friends</h3>
           <div id="mpSub">Invite friends with a link — free, no accounts</div>
           <input id="mpName" maxlength="14" placeholder="Your name">
@@ -989,6 +999,7 @@ body.fl #chipPreview{display:none!important;}
     </select>
     <button id="sndBtn" title="Sound on/off" style="background:none;border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer;font-size:14px;">🔊</button>
     <button id="quitBtn">Quit</button>
+    <button id="sitOutBtn" class="hidden">Sit out</button>
   </div>
   <div id="tableWrap">
     <aside id="coach" class="open">
@@ -1052,6 +1063,15 @@ body.fl #chipPreview{display:none!important;}
     <div class="rp-nav"><button id="rpPrevS">&#8249; street</button><span id="rpStreetLbl"></span><button id="rpNextS">street &#8250;</button></div>
     <div id="rpBody"></div>
     <button id="rpClose">Close</button>
+    <button id="rpPractice" type="button">Practise this spot</button>
+  </div>
+</div>
+
+<div id="academyOv" class="hidden" aria-hidden="true">
+  <div class="academy-card" role="document">
+    <h2 id="academyTitle">🎓 Poker Academy</h2>
+    <div id="academyBody"></div>
+    <button id="academyClose" type="button">Close</button>
   </div>
 </div>
 
@@ -1087,6 +1107,7 @@ body.fl #chipPreview{display:none!important;}
     <h2 id="mpLobbyTitle">Room</h2>
     <div id="mpLobbyCode"></div>
     <div id="mpVerTag" style="font-size:10px;color:var(--dim);margin:-8px 0 8px;"></div>
+    <p id="mpFairness" style="font-size:11px;color:var(--dim);line-height:1.4;margin:8px 0;">🔒 Cards use Web Crypto and hole cards are redacted per player. The host remains authoritative, so friendly rooms are secure-by-design but not cryptographically provable.</p>
     <button id="mpCopy">Copy invite link</button>
     <div id="mpList"></div>
     <label id="mpFillWrap" style="font-size:13px;color:var(--dim);display:flex;gap:8px;align-items:center;justify-content:center;cursor:pointer;">
@@ -1142,6 +1163,7 @@ body.fl #chipPreview{display:none!important;}
   <script src="js/modes/cash.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/rewards.js"></script>
+  <script src="js/academy.js"></script>
   <script src="js/coach.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/mp.js"></script>
@@ -1155,7 +1177,8 @@ if(HAS_DOM && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol
 /* ---------- exports for node testing ---------- */
 if(typeof module!=='undefined'&&module.exports){
   module.exports={
-    makeDeck,shuffle,evalFive,evalSeven,cmpScore,handName,chen,mcEquity,
+    makeDeck,shuffle,setGameSeed,gameRandomUint32,gameRandomInt,
+    evalFive,evalSeven,cmpScore,handName,chen,mcEquity,
     newGame,startHand,getState:()=>state,
     setFast(){AI_DELAY_MIN=0;AI_DELAY_MAX=1;RUNOUT_DELAY=1;SHOWDOWN_PAUSE=2;FOLDWIN_PAUSE=2;}
   };

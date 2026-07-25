@@ -1,0 +1,285 @@
+{
+ "exported": "2026-06-10T08:47:26.078Z",
+ "lifetimeStats": {
+  "hands": 2,
+  "won": 0,
+  "net": -10000,
+  "biggest": 0,
+  "decisions": 6,
+  "followed": 3
+ },
+ "handCount": 2,
+ "hands": [
+  {
+   "t": "2026-06-10T08:46:28.359Z",
+   "hand": 1,
+   "level": 1,
+   "blindsUSD": [
+    10,
+    20
+   ],
+   "anteUSD": 0,
+   "board": [],
+   "players": [
+    {
+     "name": "You",
+     "cards": [
+      "8s",
+      "2c"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Daria",
+     "cards": [
+      "9s",
+      "Kd"
+     ],
+     "folded": false,
+     "won": true
+    },
+    {
+     "name": "Ivan",
+     "cards": [
+      "10s",
+      "3h"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Nora",
+     "cards": [
+      "3c",
+      "4d"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Phil",
+     "cards": [
+      "9h",
+      "10h"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Selma",
+     "cards": [
+      "7s",
+      "Ks"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Doyle",
+     "cards": [
+      "4s",
+      "Qh"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Mia",
+     "cards": [
+      "10d",
+      "6h"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Viktor",
+     "cards": [
+      "6c",
+      "7d"
+     ],
+     "folded": true,
+     "won": false
+    }
+   ],
+   "myNetUSD": -10,
+   "myDecisions": [
+    {
+     "stage": "preflop",
+     "rec": "FOLD",
+     "action": "fold",
+     "followed": true
+    }
+   ],
+   "result": "Daria wins $20 · 1 BB (everyone folded)",
+   "actions": [
+    "— Hand #1 · blinds $10/$20 —",
+    "Ivan: Fold",
+    "Nora: Fold",
+    "Phil: Fold",
+    "Selma: Fold",
+    "Doyle: Fold",
+    "Mia: Fold",
+    "Viktor: Fold",
+    "You: Fold",
+    "Daria wins $20 · 1 BB (everyone folded)"
+   ]
+  },
+  {
+   "t": "2026-06-10T08:47:07.009Z",
+   "hand": 2,
+   "level": 1,
+   "blindsUSD": [
+    10,
+    20
+   ],
+   "anteUSD": 0,
+   "board": [
+    "2d",
+    "10s",
+    "8s",
+    "7h",
+    "Qd"
+   ],
+   "players": [
+    {
+     "name": "You",
+     "cards": [
+      "As",
+      "10d"
+     ],
+     "folded": false,
+     "won": false
+    },
+    {
+     "name": "Daria",
+     "cards": [
+      "4c",
+      "Ks"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Ivan",
+     "cards": [
+      "4d",
+      "6s"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Nora",
+     "cards": [
+      "4s",
+      "3c"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Phil",
+     "cards": [
+      "8h",
+      "5s"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Selma",
+     "cards": [
+      "7c",
+      "8c"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Doyle",
+     "cards": [
+      "Qc",
+      "10c"
+     ],
+     "folded": true,
+     "won": false
+    },
+    {
+     "name": "Mia",
+     "cards": [
+      "Jc",
+      "Js"
+     ],
+     "folded": false,
+     "won": true
+    },
+    {
+     "name": "Viktor",
+     "cards": [
+      "Kd",
+      "3d"
+     ],
+     "folded": true,
+     "won": false
+    }
+   ],
+   "myNetUSD": -1990,
+   "myDecisions": [
+    {
+     "stage": "preflop",
+     "rec": "RAISE",
+     "action": "raise",
+     "followed": true
+    },
+    {
+     "stage": "preflop",
+     "rec": "CALL",
+     "action": "call",
+     "followed": true
+    },
+    {
+     "stage": "flop",
+     "rec": "RAISE",
+     "action": "call",
+     "followed": false
+    },
+    {
+     "stage": "turn",
+     "rec": "RAISE",
+     "action": "call",
+     "followed": false
+    },
+    {
+     "stage": "river",
+     "rec": "RAISE",
+     "action": "call",
+     "followed": false
+    }
+   ],
+   "result": "Mia wins $4,010 · 201 BB with a Pair of Jacks",
+   "actions": [
+    "— Hand #2 · blinds $10/$20 —",
+    "Nora: Fold",
+    "Phil: Fold",
+    "Selma: Fold",
+    "Doyle: Fold",
+    "Mia: Call $20",
+    "Viktor: Fold",
+    "You: Raise to $40",
+    "Daria: Fold",
+    "Ivan: Fold",
+    "Mia: Raise to $140",
+    "You: Call $100",
+    "Mia: Raise to $280",
+    "You: Call $280",
+    "Mia: Raise to $780",
+    "You: Call $780",
+    "Mia: All-in $800",
+    "You: All-in $790",
+    "Mia wins $4,010 · 201 BB — a Pair of Jacks"
+   ]
+  }
+ ]
+}

@@ -18,10 +18,43 @@ const RANK_PL = {2:'Deuces',3:'Threes',4:'Fours',5:'Fives',6:'Sixes',7:'Sevens',
 const FULL_DECK = [];
 for (let s=0;s<4;s++) for (let r=2;r<=14;r++) FULL_DECK.push({r,s});
 
+/* Card/room randomness uses a cryptographically secure default. Tests and
+   reproducible bug reports can opt into a deterministic 32-bit seed. */
+let GAME_RNG_SEED=null;
+function hashSeed(seed){
+  const text=String(seed),bytes=typeof TextEncoder!=='undefined'
+    ?new TextEncoder().encode(text):Array.from(text,c=>c.charCodeAt(0)&255);
+  let h=2166136261;
+  for(const b of bytes){h^=b;h=Math.imul(h,16777619);}
+  return h>>>0||0x6d2b79f5;
+}
+function setGameSeed(seed){GAME_RNG_SEED=seed==null?null:hashSeed(seed);}
+function gameRandomUint32(){
+  if(GAME_RNG_SEED!=null){
+    let x=GAME_RNG_SEED>>>0;
+    x^=x<<13;x^=x>>>17;x^=x<<5;
+    GAME_RNG_SEED=x>>>0;
+    return GAME_RNG_SEED;
+  }
+  const cryptoObj=globalThis.crypto;
+  if(cryptoObj&&typeof cryptoObj.getRandomValues==='function'){
+    const out=new Uint32Array(1);cryptoObj.getRandomValues(out);return out[0];
+  }
+  /* Old local-file browsers without Web Crypto still work, but modern browsers
+     and Node use the secure branch above. */
+  return Math.floor(Math.random()*0x100000000)>>>0;
+}
+function gameRandomInt(maxExclusive){
+  const max=Math.floor(maxExclusive);
+  if(!(max>0&&max<=0x100000000))throw new RangeError('invalid random range');
+  const limit=Math.floor(0x100000000/max)*max;
+  let n;do{n=gameRandomUint32();}while(n>=limit);
+  return n%max;
+}
 function makeDeck(){ return FULL_DECK.slice(); }
 function shuffle(a){
   const d=a.slice();
-  for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]];}
+  for(let i=d.length-1;i>0;i--){const j=gameRandomInt(i+1);[d[i],d[j]]=[d[j],d[i]];}
   return d;
 }
 

@@ -28,7 +28,8 @@ if(HAS_DOM && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol
 /* ---------- exports for node testing ---------- */
 if(typeof module!=='undefined'&&module.exports){
   module.exports={
-    makeDeck,shuffle,evalFive,evalSeven,cmpScore,handName,chen,mcEquity,
+    makeDeck,shuffle,setGameSeed,gameRandomUint32,gameRandomInt,
+    evalFive,evalSeven,cmpScore,handName,chen,mcEquity,
     newGame,startHand,getState:()=>state,
     setFast(){AI_DELAY_MIN=0;AI_DELAY_MAX=1;RUNOUT_DELAY=1;SHOWDOWN_PAUSE=2;FOLDWIN_PAUSE=2;}
   };
@@ -45,7 +46,7 @@ const MODULE_RANGES = {
   'ui.js': [[718, 888], [2347, 2680], [3172, 3624], [4203, 4474]],
 };
 
-const LOAD_ORDER = ['eval.js', 'modes/registry.js', 'modes/tournament.js', 'modes/cash.js', 'engine.js', 'rewards.js', 'coach.js', 'ai.js', 'mp.js', 'ui.js'];
+const LOAD_ORDER = ['eval.js', 'modes/registry.js', 'modes/tournament.js', 'modes/cash.js', 'engine.js', 'rewards.js', 'academy.js', 'coach.js', 'ai.js', 'mp.js', 'ui.js'];
 
 function readLines() {
   const html = fs.readFileSync(HTML, 'utf8');

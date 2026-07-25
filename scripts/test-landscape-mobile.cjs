@@ -4,14 +4,35 @@
  * Run: npm run test:landscape
  */
 const { chromium } = require('playwright');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
-const BASE = process.argv[2] || 'http://127.0.0.1:8123/poker.html';
+const EXTERNAL_BASE = process.argv[2] || '';
 const VIEWPORT = { width: 844, height: 390 };
 
 (async () => {
+  let server=null;
+  let base=EXTERNAL_BASE;
+  if(!base){
+    const root=path.resolve(__dirname,'..');
+    server=http.createServer((req,res)=>{
+      const rel=decodeURIComponent((req.url||'/').split('?')[0]);
+      const file=path.resolve(root,'.'+(rel==='/'?'/poker.html':rel));
+      if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}
+      fs.readFile(file,(err,data)=>{
+        if(err){res.writeHead(404).end();return;}
+        const ext=path.extname(file);
+        const type=ext==='.html'?'text/html':ext==='.js'?'text/javascript':ext==='.json'?'application/json':ext==='.svg'?'image/svg+xml':'application/octet-stream';
+        res.writeHead(200,{'Content-Type':type});res.end(data);
+      });
+    });
+    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+    base=`http://127.0.0.1:${server.address().port}/poker.html`;
+  }
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: VIEWPORT });
-  await page.goto(BASE, { waitUntil: 'networkidle' });
+  await page.goto(base, { waitUntil: 'networkidle' });
   await page.evaluate(() => { if (typeof updateOrient === 'function') updateOrient(); });
   await page.click('#startBtn');
   await page.waitForSelector('.seat.human .hole .card', { timeout: 10000 });
@@ -64,5 +85,6 @@ const VIEWPORT = { width: 844, height: 390 };
   console.log(JSON.stringify(metrics, null, 2));
   await page.screenshot({ path: '/tmp/poker-landscape-mobile.png' });
   await browser.close();
+  if(server)await new Promise(resolve=>server.close(resolve));
   process.exit(metrics.pass ? 0 : 1);
 })();

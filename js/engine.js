@@ -83,6 +83,7 @@ const money=n=>usd(n)+' · '+bbs(n);
 let state=null;
 
 function newGame(cfg){
+  if(Object.prototype.hasOwnProperty.call(cfg,'seed'))setGameSeed(cfg.seed);
   cfg.gameType=cfg.gameType||'sng';
   cfg.tableScenario=normalizeTableScenario(cfg.tableScenario);
   const startBlind=cfg.startBlind||BASE_BB;
@@ -124,12 +125,12 @@ function newGame(cfg){
   state.gameDecisions=[];   // EV blunders this game
   state.gameHands=[];       // replayable hands this game
   gameSeries=[];            // hero stack per hand (history graph)
-  state.dealerIdx=Math.floor(Math.random()*cfg.numPlayers);
+  state.dealerIdx=gameRandomInt(cfg.numPlayers);
   return state;
 }
 
-const alive =()=>state.players.filter(p=>!p.out);
-const inHand=()=>state.players.filter(p=>!p.out&&!p.folded);
+const alive =()=>state.players.filter(p=>!p.out&&!p.sittingOut);
+const inHand=()=>state.players.filter(p=>!p.out&&!p.sittingOut&&!p.folded);
 /* fast-forward when the human is no longer involved in decisions this hand */
 const fastFwd=()=>!state.cfg.allAI&&!state.cfg.mpRemotes&&(state.players[0].folded||state.players[0].out);
 function nextSeat(from,pred){
@@ -175,6 +176,9 @@ function assignPositions(sbIdx){
 function startHand(){
   if(state.gameOver) return;
   mpSeatPending();    // late multiplayer joiners get dealt in now
+  for(const p of state.players){
+    if(p.pendingSitOut!=null){p.sittingOut=!!p.pendingSitOut;p.pendingSitOut=null;}
+  }
   /* open table: alone at a bot-free multiplayer table — wait for players, then deal */
   if(MP&&MP.role==='host'&&alive().length<2){
     showBanner(T('mpWaitingPlayers'));
@@ -198,7 +202,7 @@ function startHand(){
   state.streetRaiseCount=0; state.preflopRaiseCount=0;
   state.deck=shuffle(makeDeck());
   for(const p of state.players){
-    p.hole=[]; p.folded=p.out; p.allIn=false; p.bet=0; p.totalBet=0;
+    p.hole=[]; p.folded=p.out||p.sittingOut; p.allIn=false; p.bet=0; p.totalBet=0;
     p.acted=false; p.lastAct=''; p.revealed=false; p.rangeCap=1; p.rangeFloor=0; p.checkedStreet=false;p.aiPlan=null;
     p.aggStreets=[]; p.checkStreets=[]; p.lineRead=''; p.rangeModel=null;
   }
@@ -296,6 +300,9 @@ function applyAction(p,type,amt){
   if(p.bankInUse){p.bank=Math.max(0,(p.bank||0)-(Date.now()-p.bankInUse));p.bankInUse=0;state.turnBank=false;}
   const callAmt=Math.max(0,Math.min(state.currentBet-p.bet,p.chips));
   if(type==='fold'&&callAmt<=0) type='call'; // checking is the only legal zero-price fold alternative
+  /* A short all-in increases the price but does not reopen raising for players
+     who already acted. A full raise resets their acted flag below. */
+  if(type==='raise'&&p.acted)type='call';
   const cbBefore=state.currentBet;   // bet level BEFORE this action (for line reading)
   const potBefore=state.players.reduce((s,q)=>s+q.totalBet,0);
   const streetBetsBefore=state.players.reduce((s,q)=>s+q.bet,0);
@@ -507,41 +514,11 @@ function showdown(){
   for(const p of live) p.revealed=true;
   const scores=new Map();
   for(const p of live) scores.set(p,evalSeven(p.hole.concat(state.board)));
-  // side pots by contribution level
-  const lvls=[...new Set(state.players.filter(p=>p.totalBet>0).map(p=>p.totalBet))].sort((a,b)=>a-b);
-  let prev=0;
-  const winnings=new Map();
-  state.lastPotAwards=[];
-  let mainWinners=[];
-  for(const lvl of lvls){
-    let amt=0;
-    const contributorIds=[];
-    for(const p of state.players) amt+=Math.max(0,Math.min(p.totalBet,lvl)-prev);
-    for(const p of state.players){
-      if(Math.max(0,Math.min(p.totalBet,lvl)-prev)>0) contributorIds.push(p.i);
-    }
-    let elig=live.filter(p=>p.totalBet>=lvl);
-    if(elig.length===0) elig=live; // safety (shouldn't occur after refunds)
-    let best=null,winners=[];
-    for(const p of elig){
-      const s=scores.get(p);
-      if(!best||cmpScore(s,best)>0){best=s;winners=[p];}
-      else if(cmpScore(s,best)===0)winners.push(p);
-    }
-    const share=Math.floor(amt/winners.length);
-    const rem=amt-share*winners.length;
-    const seatOrd=seatOrderFromDealer();
-    winners.sort((a,b)=>seatOrd.indexOf(a.i)-seatOrd.indexOf(b.i));
-    for(let wi=0;wi<winners.length;wi++){
-      const w=winners[wi];
-      const add=share+(wi<rem?1:0);
-      w.chips+=add;
-      winnings.set(w,(winnings.get(w)||0)+add);
-    }
-    state.lastPotAwards.push({winnerIds:winners.map(w=>w.i),contributorIds});
-    mainWinners=winners;
-    prev=lvl;
-  }
+  const awards=settleShowdownPots(state.players,live,scores,state.dealerIdx);
+  const winnings=awards.winnings;
+  state.lastPotAwards=awards.pots;
+  const mainWinners=awards.mainWinners;
+  for(const [w,amt] of winnings)w.chips+=amt;
   for(const p of state.players) p.totalBet=0;
   const parts=[];
   for(const [w,amt] of winnings){
@@ -556,6 +533,47 @@ function showdown(){
   render([...winnings.keys()]);
   setTimeout(()=>animatePotToWinner([...winnings.keys()]),300);
   finishHand(SHOWDOWN_PAUSE);
+}
+
+/* Pure side-pot settlement: calculates awards without mutating stacks. Keeping
+   this independent makes the hardest poker accounting rules deterministic and
+   directly testable. */
+function settleShowdownPots(players,live,scores,dealerIdx){
+  const lvls=[...new Set(players.filter(p=>p.totalBet>0).map(p=>p.totalBet))].sort((a,b)=>a-b);
+  let prev=0;
+  const winnings=new Map();
+  const pots=[];
+  let mainWinners=[];
+  for(const lvl of lvls){
+    let amt=0;
+    const contributorIds=[];
+    for(const p of players) amt+=Math.max(0,Math.min(p.totalBet,lvl)-prev);
+    for(const p of players){
+      if(Math.max(0,Math.min(p.totalBet,lvl)-prev)>0) contributorIds.push(p.i);
+    }
+    let elig=live.filter(p=>p.totalBet>=lvl);
+    if(elig.length===0) elig=live; // safety (shouldn't occur after refunds)
+    let best=null,winners=[];
+    for(const p of elig){
+      const s=scores.get(p);
+      if(!best||cmpScore(s,best)>0){best=s;winners=[p];}
+      else if(cmpScore(s,best)===0)winners.push(p);
+    }
+    const share=Math.floor(amt/winners.length);
+    const rem=amt-share*winners.length;
+    const seatOrd=[];
+    for(let k=1;k<=players.length;k++)seatOrd.push((dealerIdx+k)%players.length);
+    winners.sort((a,b)=>seatOrd.indexOf(a.i)-seatOrd.indexOf(b.i));
+    for(let wi=0;wi<winners.length;wi++){
+      const w=winners[wi];
+      const add=share+(wi<rem?1:0);
+      winnings.set(w,(winnings.get(w)||0)+add);
+    }
+    pots.push({amount:amt,winnerIds:winners.map(w=>w.i),contributorIds});
+    mainWinners=winners;
+    prev=lvl;
+  }
+  return {winnings,pots,mainWinners};
 }
 
 function rewardHeroTrashHand(){

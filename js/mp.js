@@ -3,7 +3,7 @@
    redacted state snapshots (each player only ever receives their own hole cards).
    Free signaling via the public PeerJS cloud; game data flows directly P2P. */
 let MP=null;
-const MP_V='mp5';   // protocol version — both sides must match
+const MP_V='mp6';   // protocol version — both sides must match
 function mpMaxPlayers(){ return typeof maxSetupPlayers==='function'?maxSetupPlayers():9; }
 /* STUN + free TURN relays: lets phones on cellular/strict NATs reach the host */
 const MP_ICE={config:{iceServers:[
@@ -20,7 +20,7 @@ function mpLoadLib(cb){
   document.head.appendChild(s);
 }
 function mpStatus(t){const el=$('mpStatus');el.classList.remove('hidden');el.textContent=t;}
-function mpCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<6;i++)c+=A[Math.floor(Math.random()*A.length)];return c;}
+function mpCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';for(let i=0;i<6;i++)c+=A[gameRandomInt(A.length)];return c;}
 function mpName(){const v=($('mpName').value||'').trim();if(!v){mpStatus(T('mpNeedName'));return null;}try{localStorage.setItem('sg_poker_mpname',v);}catch(e){}return v;}
 
 function mpCreate(){
@@ -124,6 +124,12 @@ function mpHostData(conn,d){
     applyAction(p,d.type==='raise'?'raise':d.type==='fold'?'fold':'call',+d.amount||0);
     state.turnIdx=(p.i+1)%state.players.length;
     promptNext();
+  }else if(d.t==='sitout'){
+    const rec=MP.conns.find(c=>c.conn===conn);
+    if(!rec||rec.seat==null||!state)return;
+    mpSetSeatSitting(rec.seat,!!d.value);
+  }else if(d.t==='rematch'){
+    if(state&&state.gameOver)mpRematch();
   }else if(d.t==='chat'){
     const rec=MP.conns.find(c=>c.conn===conn);
     mpChatAll((rec?rec.name:'?'),(''+d.x).slice(0,200));
@@ -141,11 +147,12 @@ function mpClientData(d){
   if(!MP)return;
   if(d.t==='lobby'){MP.names=d.names;mpRosterRender(d.names);}
   else if(d.t==='start'){
-    MP.seat=d.seat; MP.spectator=false; gameSeries=[]; MP.lastHand=null;
+    MP.seat=d.seat; MP.spectator=false; MP.ended=false; gameSeries=[]; MP.lastHand=null;
     closeDialog($('mpLobby'));
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
     $('chatBtn').classList.remove('hidden');showEmoteBtn();
+    $('sitOutBtn').classList.remove('hidden');
     hideActions(); updateOrient();
   }
   else if(d.t==='st'){mpApplySnapshot(d.s);}
@@ -163,6 +170,7 @@ function mpClientData(d){
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
     $('chatBtn').classList.remove('hidden');showEmoteBtn();
+    $('sitOutBtn').classList.remove('hidden');
     hideActions(); updateOrient();
     showBanner(T('mpWaitNext'));
   }
@@ -270,12 +278,12 @@ function mpBecomeHost(peer,newId){
     conn.on('data',d=>mpHostData(conn,d));
     conn.on('close',()=>mpHostDrop(conn));
   });
-  newGame({numPlayers:ck.players.length,startBB:ck.cfg.startBB,startBlind:ck.cfg.startBlind,
+  newGame({numPlayers:ck.players.length,gameType:ck.cfg.gameType||'sng',startBB:ck.cfg.startBB,startBlind:ck.cfg.startBlind,
            ante:ck.cfg.ante,speed:ck.cfg.speed,koBonus:!!ck.cfg.koBonus,difficulty:ck.cfg.difficulty,
            tableScenario:ck.cfg.tableScenario,tableCustom:ck.cfg.tableCustom});
   ck.players.forEach((cp,i)=>{
     const q=state.players[i]; if(!q)return;
-    q.name=cp.name; q.avatar=cp.avatar||q.avatar; q.chips=cp.chips; q.out=cp.out; q.place=cp.place||0; q.bank=cp.bank!=null?cp.bank:TT_BANK;
+    q.name=cp.name; q.avatar=cp.avatar||q.avatar; q.chips=cp.chips; q.out=cp.out; q.place=cp.place||0; q.bank=cp.bank!=null?cp.bank:TT_BANK;q.sittingOut=!!cp.sittingOut;
     if(cp.ai){
       q.isHuman=false;q.remote=false;q.style=STYLES.find(s2=>s2.id===cp.style)||q.style;
       q.rangeTendencies=cp.rangeTendencies?{...cp.rangeTendencies}:q.rangeTendencies;
@@ -339,10 +347,11 @@ function mpStartGame(){
   const total=fill?Math.max(humans,Math.min(cap,Math.max(want,humans))):humans;
   const cfg={
     numPlayers:total,
-    gameType:'sng',
+    gameType:typeof setupGameType!=='undefined'?setupGameType:'sng',
     startBB:+$('startBB').value, startBlind:+$('startBlind').value,
-    ante:+$('anteSel').value, speed:document.querySelector('input[name=speed]:checked').value,
-    koBonus:$('koBonusChk').checked,
+    ante:(typeof setupGameType!=='undefined'&&setupGameType==='cash')?0:+$('anteSel').value,
+    speed:document.querySelector('input[name=speed]:checked').value,
+    koBonus:(typeof setupGameType!=='undefined'&&setupGameType==='cash')?false:$('koBonusChk').checked,
     difficulty:'medium',
     mpRemotes:MP.conns.map(c=>({name:c.name,seat:c.seat}))
   };
@@ -353,12 +362,44 @@ function mpStartGame(){
   $('setup').classList.add('hidden');
   $('game').classList.remove('hidden');
   $('chatBtn').classList.remove('hidden');showEmoteBtn();
+  $('sitOutBtn').classList.remove('hidden');
   newGame(cfg);
   state.players[0].name=MP.myName;   // host plays under their chosen name
   buildSeats(); hideActions(); lastHand=null;
   $('coachFeed').classList.add('hidden');
   renderStats(); updateOrient();
   setTimeout(startHand,600);
+}
+function mpSetSeatSitting(seat,value){
+  if(!state||!state.players[seat])return;
+  const p=state.players[seat];
+  p.pendingSitOut=!!value;
+  if(value&&!state.handOver&&!p.folded){
+    p.folded=true;p.lastAct='Sitting out';
+    if(state.turnIdx===p.i){state.turnIdx=(p.i+1)%state.players.length;promptNext();}
+  }
+  mpChatAll('🪑',`${p.name} ${value?'will sit out':'will return'} next hand`);
+  mpBroadcast();
+}
+function mpToggleSitOut(){
+  if(!MP||!state)return;
+  const me=state.players[0],value=!(me.sittingOut||me.pendingSitOut);
+  if(MP.role==='host')mpSetSeatSitting(0,value);
+  else try{MP.conn.send({t:'sitout',value});}catch(e){}
+  const b=$('sitOutBtn');if(b)b.textContent=value?'Sit back in':'Sit out';
+}
+function mpRequestRematch(){
+  if(!MP)return;
+  if(MP.role==='host')mpRematch();
+  else try{MP.conn.send({t:'rematch'});}catch(e){}
+}
+function mpRematch(){
+  if(!MP||MP.role!=='host'||!state)return;
+  const old=state,cfg={...old.cfg,mpRemotes:MP.conns.map(c=>({name:c.name,seat:c.seat}))};
+  MP.ended=false;MP.lastCK=null;
+  MP.conns.forEach(c=>{try{c.conn.send({t:'start',seat:c.seat,rematch:true});}catch(e){}});
+  closeDialog($('overlay'));newGame(cfg);state.players[0].name=MP.myName;
+  buildSeats();hideActions();renderStats();setTimeout(startHand,600);
 }
 /* multiplayer turn timer: 25s to act, then your personal TIME BANK (60s per tournament)
    kicks in automatically for the big decisions; only then auto check/fold */
@@ -404,11 +445,11 @@ function armTurnTimer(p){
 function mpBroadcastCK(){
   if(!MP||MP.role!=='host'||!MP.started||!state)return;
   const d={mig:MP.mig||0,hostName:MP.myName,handNumNext:state.handNum+1,dealerIdx:state.dealerIdx,
-    cfg:{numPlayers:state.players.length,startBB:state.cfg.startBB,startBlind:state.cfg.startBlind,
+    cfg:{numPlayers:state.players.length,gameType:state.cfg.gameType,startBB:state.cfg.startBB,startBlind:state.cfg.startBlind,
          ante:state.cfg.ante,speed:state.cfg.speed,koBonus:!!state.cfg.koBonus,difficulty:state.cfg.difficulty,
          tableScenario:state.cfg.tableScenario,tableCustom:state.cfg.tableCustom},
     players:state.players.map(q=>({name:q.name,avatar:q.avatar,chips:q.chips,out:q.out,place:q.place||0,
-      ai:!q.isHuman&&!q.remote,style:q.style?q.style.id:null,bank:q.bank||0,
+      ai:!q.isHuman&&!q.remote,style:q.style?q.style.id:null,bank:q.bank||0,sittingOut:!!q.sittingOut,
       rangeTendencies:q.rangeTendencies?{...q.rangeTendencies}:null}))};
   MP.lastCK=d;
   for(const c of MP.conns){try{c.conn.send({t:'ck',d});}catch(e){}}
@@ -467,7 +508,7 @@ function mpSnapshotFor(seat){
     players[rot(q.i)]={i:rot(q.i),name:q.name,avatar:q.avatar,
       isHuman:seat>=0&&q.i===seat,remote:false,chips:q.chips,bet:q.bet,totalBet:q.totalBet,
       folded:q.folded,out:q.out,allIn:q.allIn,acted:q.acted,lastAct:q.lastAct,
-      revealed:q.revealed,place:q.place||0,pos:q.pos,style:q.style||null,bank:q.bank||0,
+      revealed:q.revealed,place:q.place||0,pos:q.pos,style:q.style||null,bank:q.bank||0,sittingOut:!!q.sittingOut,
       rangeCap:q.rangeCap,rangeFloor:q.rangeFloor,checkedStreet:q.checkedStreet,
       aggStreets:q.aggStreets||[],checkStreets:q.checkStreets||[],lineRead:q.lineRead||'',
       hole:((seat>=0&&q.i===seat)||q.revealed)?q.hole:(q.hole||[]).map(()=>({r:2,s:0,hid:1}))};
@@ -482,7 +523,7 @@ function mpSnapshotFor(seat){
     turnLeft:state.turnDeadline?Math.max(0,state.turnDeadline-Date.now()):0,
     turnBank:!!state.turnBank,
     handOver:state.handOver,gameOver:state.gameOver,resultText:state.resultText||'',
-    cfg:{numPlayers:state.cfg.numPlayers,speed:state.cfg.speed,ante:state.cfg.ante,
+    cfg:{numPlayers:state.cfg.numPlayers,gameType:state.cfg.gameType,speed:state.cfg.speed,ante:state.cfg.ante,
          startBlind:state.cfg.startBlind,startBB:state.cfg.startBB,koBonus:!!state.cfg.koBonus,difficulty:state.cfg.difficulty,
          tableScenario:state.cfg.tableScenario,tableCustom:state.cfg.tableCustom,mpClient:true},
     log:logLines.slice(-50)};
