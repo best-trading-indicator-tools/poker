@@ -2614,7 +2614,6 @@ function initUI(){
       localStorage.removeItem('sg_poker_history');
       localStorage.removeItem('sg_poker_resume');
       localStorage.removeItem('sg_poker_games');
-      localStorage.removeItem('sg_poker_academy_v1');
       if(typeof resetRewards==='function') resetRewards();
     }catch(e){}
     Object.assign(lifeStats,{hands:0,won:0,net:0,biggest:0,decisions:0,followed:0});
@@ -2657,14 +2656,6 @@ function initUI(){
   $('rpPrevS').onclick=()=>{rpStreet--;rpRender();};
   $('rpNextS').onclick=()=>{rpStreet++;rpRender();};
   $('rpJump').onsubmit=e=>{e.preventDefault();jumpReplayToHand($('rpHandInput').value);};
-  $('academyBtn').onclick=()=>academyOpen();
-  $('academyClose').onclick=()=>closeDialog($('academyOv'));
-  $('academyOv').onclick=e=>{if(e.target.id==='academyOv')closeDialog($('academyOv'));};
-  $('rpPractice').onclick=()=>{
-    const arr=rpAll||(state&&state.gameHands)||[];
-    const hand=arr[rpHandIdx];
-    closeDialog($('replayOv'));academyReplayHand(hand);
-  };
   $('rpHandInput').oninput=e=>e.target.setCustomValidity('');
   $('coachChk').onchange=e=>setCoach(e.target.checked);
   $('coachToggle').onclick=()=>setCoach(!$('coachChk').checked);

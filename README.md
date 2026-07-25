@@ -19,7 +19,6 @@ Game logic is split from `poker.html` into six modules (shared global scope, loa
 | `js/modes/tournament.js` | Sit & Go rules: blind ladder, antes, elimination |
 | `js/modes/cash.js` | Cash game rules: fixed blinds, auto-rebuy, session P&L |
 | `js/engine.js` | Shared NLHE core: game state, hand flow (`startHand`, `applyAction`, showdown/side pots), sound/haptics/chip animations, resume snapshots |
-| `js/academy.js` | Poker Academy drills, leak-driven practice, replay-a-spot questions, mastery persistence |
 | `js/coach.js` | Preflop charts, `mcEquityR`, GTO mini-solver (CFR), `coachDecide`, ICM, coach prose (EN/FR/ES) |
 | `js/ai.js` | AI profiles (`STYLES`), `aiDecide`, range/equity reads |
 | `js/mp.js` | PeerJS multiplayer, host migration, public checkpoints, P2P snapshots |
@@ -39,7 +38,6 @@ Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel s
 
 ## Features
 
-- **Poker Academy**: focused drills for preflop opens, facing raises, c-bet defense, multiway pots, river calls, push/fold, and pot odds. Recommends the player's largest saved leak, tracks category mastery, and turns a replayed decision into a fresh practice question.
 - **Engine confidence suite**: Web Crypto card shuffling by default, opt-in seeded dealing for reproducible bug reports, pure/tested side-pot settlement, and one-command `npm test` coverage for engine rules, ranges, scenarios, and rendered mobile layout.
 - **Multiplayer 2.0**: Sit & Go or cash tables, sit-out/sit-back-in, same-room rematches, reconnect/host migration checkpoints, and an explicit fairness disclosure.
 - **👥 Multiplayer with friends (P2P, no server)**: create a room, share the invite link (your address bar IS the link), friends join from any browser — host-authoritative WebRTC with free signaling, each player receives only their own hole cards. Open a table alone and play starts when friends arrive; start vs AI bots and friends replace them as they join; late joiners spectate live until dealt in next hand. Built-in chat, auto-start at N players, **host migration** (host dies → another player takes over from a public checkpoint), seat+chips reconnect, version handshake, connection self-test. 100% free, nothing to install or maintain
