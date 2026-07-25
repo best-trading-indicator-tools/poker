@@ -1618,7 +1618,7 @@ function updateCoach(p){
     `<div class="coach-decision"><span class="coach-decision-label">${coachDecisionLabel()}</span><div class="rec ${rec}">${recLabel}</div></div>`+
     `<div class="coach-glance">`+
       coachMetric(T('yourHand'),handDesc,'wide')+
-      coachMetric(T('winChance'),`~${pct(eq)} ${T('vs')} ${opps}`,'emphasis')+
+      coachMetric(T('winChance'),`~${pct(eq)} ${T('vs')} ${opps} ${opps===1?T('opp'):T('opps')}`,'emphasis')+
       coachMetric(T('potOdds'),priceMetric)+
       coachMetric(T('sugSize'),sizingMetric,'wide emphasis')+
     `</div>`+
