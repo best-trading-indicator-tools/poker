@@ -68,7 +68,7 @@ youWin:"You win the tournament!",playAgain:"Play again",
 youWinSub:(n,h)=>`Outlasted ${n} opponents over ${h} hands.`,
 bustedTitle:p=>`Busted in ${p} place`,bustedSub:h=>`Survived ${h} hands. Run it back?`,
 evTotal:"📉 Total EV leaked",deviations:"deviations",cleanGame:"No EV leaked vs the coach — clean game! 🎯",smallerLeaks:"smaller leaks",
-handNavP:"‹ hand",handNavN:"hand ›",streetNavP:"‹ street",streetNavN:"street ›",close:"Close",replayTitle:"Hand replay",
+handNavP:"‹ hand",handNavN:"hand ›",streetNavP:"‹ street",streetNavN:"street ›",jumpHand:"Go to hand",jumpGo:"Go",handNotFound:n=>`Hand #${n} is not available in this session.`,close:"Close",replayTitle:"Hand replay",
 won:"won",foldedTag:"folded",showdown:"showdown",fullHand:"Full hand",preflop:"Preflop",flop:"Flop",turnSt:"Turn",riverSt:"River",noHands:"No completed hand yet this game.",
 ord:n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}},
 fr:{sub:"Tournoi de Texas Hold'em No-Limit contre l'IA",subCash:"Cash game Texas Hold'em No-Limit contre l'IA",modeLbl:"Mode de jeu",modeSng:"Sit & Go",modeCash:"Cash game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
@@ -139,7 +139,7 @@ youWin:"Vous remportez le tournoi !",playAgain:"Rejouer",
 youWinSub:(n,h)=>`Vous avez survécu à ${n} adversaires en ${h} mains.`,
 bustedTitle:p=>`Éliminé à la ${p} place`,bustedSub:h=>`${h} mains jouées. On remet ça ?`,
 evTotal:"📉 EV totale perdue",deviations:"écarts",cleanGame:"Aucune EV perdue face au coach — partie parfaite ! 🎯",smallerLeaks:"autres fuites mineures",
-handNavP:"‹ main",handNavN:"main ›",streetNavP:"‹ rue",streetNavN:"rue ›",close:"Fermer",replayTitle:"Revoir la main",
+handNavP:"‹ main",handNavN:"main ›",streetNavP:"‹ rue",streetNavN:"rue ›",jumpHand:"Aller à la main",jumpGo:"Aller",handNotFound:n=>`La main nº ${n} n'est pas disponible dans cette session.`,close:"Fermer",replayTitle:"Revoir la main",
 won:"gagné",foldedTag:"couché",showdown:"abattage",fullHand:"Main complète",preflop:"Pré-flop",flop:"Flop",turnSt:"Turn",riverSt:"River",noHands:"Aucune main terminée pour cette partie.",
 ord:n=>n===1?'1re':n+'e'},
 es:{sub:"Torneo de Texas Hold'em No-Limit contra la IA",subCash:"Cash game Texas Hold'em No-Limit contra la IA",modeLbl:"Modo de juego",modeSng:"Sit & Go",modeCash:"Cash game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
@@ -210,7 +210,7 @@ youWin:"¡Ganas el torneo!",playAgain:"Jugar de nuevo",
 youWinSub:(n,h)=>`Sobreviviste a ${n} rivales en ${h} manos.`,
 bustedTitle:p=>`Eliminado en ${p} lugar`,bustedSub:h=>`Aguantaste ${h} manos. ¿Otra vez?`,
 evTotal:"📉 EV total perdido",deviations:"desviaciones",cleanGame:"Sin EV perdido frente al coach — ¡partida perfecta! 🎯",smallerLeaks:"fugas menores",
-handNavP:"‹ mano",handNavN:"mano ›",streetNavP:"‹ calle",streetNavN:"calle ›",close:"Cerrar",replayTitle:"Repetición",
+handNavP:"‹ mano",handNavN:"mano ›",streetNavP:"‹ calle",streetNavN:"calle ›",jumpHand:"Ir a la mano",jumpGo:"Ir",handNotFound:n=>`La mano n.º ${n} no está disponible en esta sesión.`,close:"Cerrar",replayTitle:"Repetición",
 won:"ganó",foldedTag:"retirado",showdown:"showdown",fullHand:"Mano completa",preflop:"Pre-flop",flop:"Flop",turnSt:"Turn",riverSt:"River",noHands:"Aún no hay manos terminadas en esta partida.",
 ord:n=>n+'º'}};
 try{lang=localStorage.getItem('sg_poker_lang')||'en';}catch(e){}
@@ -1724,6 +1724,32 @@ function renderStats(){
 /* ---------- hand replayer: browse hands (this game or saved history), step through streets ---------- */
 let rpHandIdx=0, rpStreet=99, rpAll=null;
 const STREET_NM=['Preflop','Flop','Turn','River'];
+function findReplayHandIndex(hands,value,currentIdx=0){
+  const wanted=Number(value);
+  if(!Array.isArray(hands)||!Number.isInteger(wanted))return -1;
+  const matches=[];
+  hands.forEach((h,i)=>{if(Number(h&&h.hand)===wanted)matches.push(i);});
+  if(!matches.length)return -1;
+  return matches.reduce((best,i)=>
+    Math.abs(i-currentIdx)<Math.abs(best-currentIdx)?i:best,matches[0]);
+}
+function jumpReplayToHand(value){
+  const arr=rpAll||(state&&state.gameHands)||[];
+  const input=$('rpHandInput');
+  const idx=findReplayHandIndex(arr,value,rpHandIdx);
+  if(idx<0){
+    if(input){
+      input.setCustomValidity(T('handNotFound')(value));
+      input.reportValidity();
+    }
+    return false;
+  }
+  if(input)input.setCustomValidity('');
+  rpHandIdx=idx;
+  rpStreet=99;
+  rpRender();
+  return true;
+}
 function parseCardCode(code){
   return {r:+(RANK_CH_INV[code.slice(0,-1)]||2), s:Math.max(0,'shdc'.indexOf(code.slice(-1)))};
 }
@@ -1735,6 +1761,7 @@ function rpRender(){
   if(!arr.length){
     $('rpHandLbl').textContent='—'; $('rpStreetLbl').textContent='—';
     ['rpPrevH','rpNextH','rpPrevS','rpNextS'].forEach(id=>$(id).disabled=true);
+    $('rpHandInput').value=''; $('rpHandInput').disabled=true; $('rpGoH').disabled=true;
     body.innerHTML=`<p style="color:var(--dim);font-size:13px;margin-bottom:14px;">${T('noHands')}</p>`;
     return;
   }
@@ -1753,6 +1780,16 @@ function rpRender(){
   const net=e.myNet!=null?e.myNet:0;
   const when=rpAll&&e.t?` · ${new Date(e.t).toLocaleDateString()} ${new Date(e.t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`:'';
   $('rpHandLbl').textContent=`${T('hand')}#${e.hand} (${rpHandIdx+1}/${arr.length}) · ${net>=0?'+':'−'}${usd(Math.abs(net))}${when}`;
+  const handNumbers=arr.map(h=>Number(h&&h.hand)).filter(Number.isFinite);
+  const currentHand=Number.isFinite(Number(e.hand))?Number(e.hand):rpHandIdx+1;
+  const handMin=handNumbers.length?Math.min(...handNumbers):1;
+  const handMax=handNumbers.length?Math.max(...handNumbers):arr.length;
+  const jumpInput=$('rpHandInput');
+  jumpInput.disabled=false; $('rpGoH').disabled=arr.length<2;
+  jumpInput.min=String(handMin);
+  jumpInput.max=String(handMax);
+  jumpInput.value=String(currentHand);
+  jumpInput.setCustomValidity('');
   const stNames=[T('preflop'),T('flop'),T('turnSt'),T('riverSt')];
   $('rpStreetLbl').textContent=segs.length===1&&e.board.length?T('fullHand'):(stNames[rpStreet]||T('preflop'));
   $('rpPrevH').disabled=rpHandIdx<=0; $('rpNextH').disabled=rpHandIdx>=arr.length-1;
@@ -2288,6 +2325,7 @@ function applyLang(){
   set('foldBtn','fold'); set('prMin','min'); set('prHalf','halfPot'); set('prPot','pot'); set('prMax','allin');
   set('rpClose','close'); set('rpTitle','replayTitle'); set('ovBtn','playAgain'); set('chartClose','close');
   set('rpPrevH','handNavP'); set('rpNextH','handNavN'); set('rpPrevS','streetNavP'); set('rpNextS','streetNavN');
+  set('rpJumpLbl','jumpHand'); set('rpGoH','jumpGo');
   const af=$('actFab'); if(af)af.textContent=T('actMenu');
   const ch=$('coach').querySelector('h3'); if(ch)ch.textContent=T('liveCoach');
   const w=$('coachBody').querySelector('.waiting'); if(w)w.textContent=T('waiting');
@@ -2589,6 +2627,8 @@ function initUI(){
   $('rpNextH').onclick=()=>{rpHandIdx++;rpStreet=99;rpRender();};
   $('rpPrevS').onclick=()=>{rpStreet--;rpRender();};
   $('rpNextS').onclick=()=>{rpStreet++;rpRender();};
+  $('rpJump').onsubmit=e=>{e.preventDefault();jumpReplayToHand($('rpHandInput').value);};
+  $('rpHandInput').oninput=e=>e.target.setCustomValidity('');
   $('coachChk').onchange=e=>setCoach(e.target.checked);
   $('coachToggle').onclick=()=>setCoach(!$('coachChk').checked);
   $('coachClose').onclick=()=>setCoach(false);

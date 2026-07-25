@@ -115,9 +115,20 @@ const result=vm.runInContext(`(()=>{
   if(!rewardKindDescription('soundPack').includes('all table and reward sounds'))
     throw new Error('sound-pack UI still describes reward-only audio');
 
+  const replayHands=[{hand:4},{hand:8},{hand:12},{hand:4}];
+  const replayJumps={
+    first4:findReplayHandIndex(replayHands,4,0),
+    nearest4:findReplayHandIndex(replayHands,4,3),
+    eight:findReplayHandIndex(replayHands,'8',0),
+    missing:findReplayHandIndex(replayHands,9,0),
+    decimal:findReplayHandIndex(replayHands,8.5,0)
+  };
+  if(JSON.stringify(replayJumps)!==JSON.stringify({first4:0,nearest4:3,eight:1,missing:-1,decimal:-1}))
+    throw new Error('hand-number replay jump regression '+JSON.stringify(replayJumps));
+
   return {actual,balanced,custom,fallback,randomIds,multiplayerBots:multiplayerBots.map(p=>p.style.id),
     blindDisplay,raisedBlindDisplay,tournamentBlinds,cashBlinds,screenshotExample,
-    soundPacks:Object.fromEntries(soundPacks.map(pack=>[pack,soundKinds.length]))};
+    soundPacks:Object.fromEntries(soundPacks.map(pack=>[pack,soundKinds.length])),replayJumps};
 })()`,context);
 
 assert.ok(result);
@@ -128,6 +139,10 @@ for(const scenario of ['balanced','tight','loose','aggressive','wild','random','
   assert.match(html,new RegExp(`<option value=["']${scenario}["']`),`missing scenario option ${scenario}`);
 assert.match(html,/id="koBonusInfoBtn"[^>]*aria-expanded="false"/,'KO info button must start collapsed');
 assert.match(html,/id="koBonusInfo" class="hidden sng-only"/,'KO info content must start hidden');
+for(const id of ['rpJump','rpJumpLbl','rpHandInput','rpGoH'])
+  assert.match(html,new RegExp(`id=["']${id}["']`),`missing replay jump control ${id}`);
+assert.match(html,/id="rpHandInput"[^>]*type="number"[^>]*required/,
+  'replay jump must use a required numeric input');
 const uiSource=fs.readFileSync(path.join(ROOT,'js','ui.js'),'utf8');
 assert.match(uiSource,/classList\.toggle\('setup-mode-hidden',cash\)/,
   'Sit & Go mode visibility must not remove the KO disclosure hidden state');
