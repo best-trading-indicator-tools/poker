@@ -1690,7 +1690,9 @@ function coachDecide(p){
   if(difficultyApplies) extra.push(C(difficulty==='hard'?'diffHard':'diffEasy'));
   if(state.stage==='preflop'){
     eq=mcEquityR(p.hole,[],oppCaps,sims);
-    handDesc=`${RANK_CH[p.hole[0].r]}${SUIT_CH[p.hole[0].s]} ${RANK_CH[p.hole[1].r]}${SUIT_CH[p.hole[1].s]} — ${code}, top ~${Math.round(pr*100)}%`;
+    const preflopPct=Math.round(pr*100);
+    handDesc=`${RANK_CH[p.hole[0].r]}${SUIT_CH[p.hole[0].s]} ${RANK_CH[p.hole[1].r]}${SUIT_CH[p.hole[1].s]} — ${code}`+
+      `<small class="coach-metric-note">${T('preflopRank')(preflopPct)} · ${T('lowerStronger')}</small>`;
   }else{
     eq=mcEquityR(p.hole,state.board,oppCaps,sims);
     const score=evalBest(p.hole.concat(state.board));
