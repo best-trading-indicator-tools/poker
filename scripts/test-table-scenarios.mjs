@@ -126,4 +126,9 @@ for(const id of ['tableScenarioSel','tableScenarioPreview','tableCustom','tableR
   assert.match(html,new RegExp(`id=["']${id}["']`),`missing setup control ${id}`);
 for(const scenario of ['balanced','tight','loose','aggressive','wild','random','custom'])
   assert.match(html,new RegExp(`<option value=["']${scenario}["']`),`missing scenario option ${scenario}`);
+assert.match(html,/id="koBonusInfoBtn"[^>]*aria-expanded="false"/,'KO info button must start collapsed');
+assert.match(html,/id="koBonusInfo" class="hidden sng-only"/,'KO info content must start hidden');
+const uiSource=fs.readFileSync(path.join(ROOT,'js','ui.js'),'utf8');
+assert.match(uiSource,/classList\.toggle\('setup-mode-hidden',cash\)/,
+  'Sit & Go mode visibility must not remove the KO disclosure hidden state');
 console.log(JSON.stringify(result,null,2));

@@ -2220,7 +2220,9 @@ function refreshTableScenarioSetup(numPlayers){
 function updateSetupMode(gameType){
   if(!HAS_DOM)return;
   const cash=gameType==='cash';
-  document.querySelectorAll('#setup .sng-only').forEach(el=>el.classList.toggle('hidden',cash));
+  /* Mode visibility must not reuse the disclosure's `hidden` class: doing so used
+     to expand the KO explanation whenever Sit & Go controls were revealed. */
+  document.querySelectorAll('#setup .sng-only').forEach(el=>el.classList.toggle('setup-mode-hidden',cash));
   const title=$('setupTitle');
   const sub=$('setupSub');
   if(title) title.textContent=T(cash?'titleCash':'titleSng');
@@ -2531,7 +2533,10 @@ function initUI(){
     $('resetInfoBtn').setAttribute('aria-expanded',hidden?'false':'true');
   };
   $('timerInfoBtn').onclick=()=>$('timerInfo').classList.toggle('hidden');
-  $('koBonusInfoBtn').onclick=()=>$('koBonusInfo').classList.toggle('hidden');
+  $('koBonusInfoBtn').onclick=()=>{
+    const hidden=$('koBonusInfo').classList.toggle('hidden');
+    $('koBonusInfoBtn').setAttribute('aria-expanded',hidden?'false':'true');
+  };
   wireCoachInfoTips();
   $('resetBtn').onclick=()=>{
     if(!confirm(T('resetConfirm')))return;
