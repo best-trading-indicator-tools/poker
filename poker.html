@@ -198,11 +198,12 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 
 /* ---------- GAME ---------- */
 #game{height:100%;display:flex;flex-direction:column;}
-#topbar{display:flex;align-items:center;gap:18px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);font-size:13px;color:var(--dim);overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+#topbar{display:flex;align-items:center;gap:clamp(8px,1vw,18px);padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);font-size:13px;color:var(--dim);overflow:hidden;flex-wrap:nowrap;}
 #topbar::-webkit-scrollbar{display:none;}
 #topbar>span,#topbar>label,#topbar>button,#topbar>select{flex:0 0 auto;white-space:nowrap;}
 #topbar b{color:var(--text);font-weight:600;}
-#quitBtn{margin-left:auto;flex-shrink:0;background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:12px;}
+#quitBtn{margin-left:auto;flex-shrink:0;background:var(--panel);border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:12px;position:relative;z-index:4;}
+#sitOutBtn{flex:0 0 auto;background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:12px;white-space:nowrap;}
 .ko-top{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;background:rgba(255,255,255,.025);}
 .ko-top b{border-radius:999px;padding:1px 7px;font-size:10px;font-weight:900;letter-spacing:.3px;}
 .ko-top b.on{background:rgba(98,214,138,.18);color:#62d68a;}
@@ -217,6 +218,27 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 @keyframes rewardButtonHint{0%,68%,100%{transform:translateY(0);box-shadow:inset 0 0 0 1px rgba(255,255,255,.03),0 0 14px rgba(230,180,60,.08);}74%{transform:translateY(-1px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 0 22px rgba(230,180,60,.24);}82%{transform:translateY(0);}}
 @keyframes rewardCtaHint{0%,72%,100%{transform:translateX(0);}82%{transform:translateX(2px);}}
 #quitBtn:hover{color:var(--text);border-color:var(--dim);}
+#sitOutBtn:hover{color:var(--text);border-color:var(--dim);}
+
+@media(max-width:1700px){
+  #topbar{font-size:12px;padding-inline:12px;}
+  #tNextWrap{display:none;}
+  #tRewards .reward-next{display:none;}
+}
+@media(max-width:1500px){
+  #tAnteWrap,#tKoWrap{display:none;}
+  #tRewards .reward-pct{display:none;}
+  #topbar .tb-touch{padding-inline:4px;margin-inline:-4px;}
+}
+@media(max-width:1320px){
+  #tRewards,#tDiffWrap{display:none;}
+}
+@media(max-width:1160px){
+  #tLevelWrap{display:none;}
+  #autoNextLbl{display:none;}
+  #topbar{gap:8px;padding-inline:10px;}
+  #topbar .tb-touch{min-height:34px;}
+}
 
 #tableWrap{flex:1;position:relative;padding:14px;display:flex;gap:14px;min-height:0;}
 #coach{width:310px;flex-shrink:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;overflow-y:auto;}
@@ -1054,15 +1076,15 @@ body.fl #chipPreview{display:none!important;}
 
 <div id="game" class="hidden">
   <div id="topbar">
-    <span class="tb-sng-only">Level <b id="tLevel">1</b></span>
-    <span>Blinds <b id="tBlinds">50/100</b></span>
+    <span id="tLevelWrap" class="tb-sng-only">Level <b id="tLevel">1</b></span>
+    <span id="tBlindsWrap">Blinds <b id="tBlinds">50/100</b></span>
     <span id="tAnteWrap" class="tb-sng-only">Ante <b id="tAnte">0</b></span>
-    <span class="tb-opt">Hand <b id="tHand">1</b></span>
+    <span id="tHandWrap" class="tb-opt">Hand <b id="tHand">1</b></span>
     <span class="tb-opt tb-sng-only" id="tNextWrap">Blinds up in <b id="tNext">6</b> hands</span>
     <span class="tb-opt tb-sng-only ko-top" id="tKoWrap">🎯 KO bonus <b id="tKoBonus">OFF</b></span>
     <span id="tPnLWrap" class="hidden tb-opt">Session <b id="tPnLVal">+$0</b></span>
     <button id="tRewards" class="tb-opt" type="button"></button>
-    <span>AI: <b id="tDiff">Medium</b></span>
+    <span id="tDiffWrap">AI: <b id="tDiff">Medium</b></span>
     <label class="tb-touch">
       <input type="checkbox" id="autoNext" checked aria-labelledby="autoNextLbl">
       <span id="autoNextLbl">Auto next hand</span>
@@ -1075,8 +1097,8 @@ body.fl #chipPreview{display:none!important;}
       <option value="en">EN</option><option value="fr">FR</option><option value="es">ES</option>
     </select>
     <button id="sndBtn" title="Sound on/off" style="background:none;border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer;font-size:14px;">🔊</button>
-    <button id="quitBtn">Quit</button>
     <button id="sitOutBtn" class="hidden">Sit out</button>
+    <button id="quitBtn">Quit</button>
   </div>
   <div id="tableWrap">
     <aside id="coach" class="open">
