@@ -1411,8 +1411,11 @@ function render(winners){
   if(caEl) caEl.classList.toggle('has-board',state.board.length>0);
   for(const p of state.players){
     const seat=$('seat'+p.i); if(!seat)continue;
-    seat.classList.toggle('active', !state.handOver&&state.turnIdx===p.i&&!p.folded&&!p.out&&!p.allIn&&inHand().length>1);
-    seat.classList.toggle('folded', p.folded&&!p.out);
+    const isActing=!state.handOver&&state.turnIdx===p.i&&!p.out&&!p.allIn&&inHand().length>1;
+    const cardsLive=!p.folded&&!p.out||isActing;
+    seat.classList.toggle('active',isActing);
+    seat.classList.toggle('cards-live',cardsLive);
+    seat.classList.toggle('folded',p.folded&&!p.out&&!isActing);
     seat.classList.toggle('busted', p.out);
     seat.classList.toggle('winner', !!(winners&&winners.includes(p)));
     seat.classList.toggle('revealed', !!p.revealed&&!p.isHuman&&!p.folded&&!p.out&&p.hole.length>0);
