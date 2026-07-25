@@ -30,7 +30,15 @@ body{background:var(--bg);color:var(--text);overflow:hidden;}
 .setup-layout{display:grid;grid-template-columns:minmax(430px,1fr) minmax(280px,340px) minmax(220px,260px);gap:28px;align-items:start;}
 .setup-main,.setup-side,.setup-actions{min-width:0;}
 .setup-side,.setup-actions{border-left:1px solid rgba(255,255,255,.10);padding-left:28px;}
-.setup-actions{position:sticky;top:24px;display:flex;flex-direction:column;gap:10px;padding-top:1px;}
+.setup-actions{position:sticky;top:24px;padding-top:1px;}
+.setup-action-card{position:relative;overflow:hidden;padding:18px;border:1px solid rgba(232,182,76,.36);border-radius:16px;background:linear-gradient(155deg,rgba(232,182,76,.12),rgba(255,255,255,.025) 42%,rgba(9,12,17,.22));box-shadow:0 16px 34px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.05);}
+.setup-action-card::after{content:"";position:absolute;width:150px;height:150px;right:-85px;top:-90px;border-radius:50%;background:rgba(232,182,76,.13);filter:blur(2px);pointer-events:none;}
+.setup-actions-head{position:relative;z-index:1;display:flex;align-items:center;gap:11px;margin-bottom:17px;}
+.setup-actions-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:12px;background:linear-gradient(145deg,#f4c85e,#b77a13);color:#251703;font-size:23px;box-shadow:0 7px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.55);}
+.setup-actions-head strong{display:block;color:var(--text);font-size:16px;line-height:1.2;margin-bottom:3px;}
+.setup-actions-head small{display:block;color:var(--dim);font-size:10.5px;line-height:1.35;}
+.setup-action-buttons{position:relative;z-index:1;display:flex;flex-direction:column;gap:9px;}
+.setup-action-divider{height:1px;margin:3px 0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);}
 .setup-card h1{font-size:25px;margin-bottom:4px;letter-spacing:.3px;}
 .setup-card .sub{color:var(--dim);font-size:13px;margin-bottom:26px;}
 .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
@@ -47,7 +55,10 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 .seg button{background:var(--panel2);border:none;color:var(--dim);padding:8px 16px;font-size:14px;cursor:pointer;font-weight:600;}
 .seg button.on{background:var(--gold);color:#1a1408;}
 #startBtn{width:100%;margin-top:8px;background:var(--gold);color:#1a1408;font-size:16px;font-weight:700;border:none;border-radius:10px;padding:13px;cursor:pointer;}
-.setup-actions #startBtn,.setup-actions #resumeBtn,.setup-actions #reviewBtn{margin-top:0;min-height:52px;}
+.setup-actions #startBtn,.setup-actions #resumeBtn,.setup-actions #reviewBtn{margin-top:0;min-height:50px;}
+.setup-actions #startBtn{background:linear-gradient(135deg,#f3c75c,#dca632);box-shadow:0 9px 20px rgba(196,138,27,.2),inset 0 1px 0 rgba(255,255,255,.48);}
+.setup-actions #resumeBtn{background:rgba(232,182,76,.08);border-color:rgba(232,182,76,.62);}
+.setup-actions #reviewBtn{background:rgba(255,255,255,.025);}
 #startBtn:hover{filter:brightness(1.08);}
 #startBtn:disabled{opacity:.48;cursor:not-allowed;filter:none;}
 .table-scenario-preview{margin:-8px 0 20px;padding:14px 16px;border:1px solid rgba(232,182,76,.32);border-radius:10px;background:rgba(232,182,76,.06);}
@@ -774,7 +785,9 @@ body.fl #chipPreview{display:none!important;}
 @media(min-width:1025px) and (max-width:1120px){
   .setup-card{padding:32px;width:calc(100vw - 40px);}
   .setup-layout{grid-template-columns:minmax(430px,1fr) minmax(290px,340px);}
-  .setup-actions{grid-column:1/-1;position:static;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-left:0;border-top:1px solid rgba(255,255,255,.10);padding:22px 0 0;}
+  .setup-actions{grid-column:1/-1;position:static;border-left:0;border-top:1px solid rgba(255,255,255,.10);padding:22px 0 0;}
+  .setup-action-card{display:grid;grid-template-columns:minmax(220px,.8fr) repeat(3,minmax(0,1fr));gap:12px;align-items:center;}
+  .setup-actions-head{margin:0}.setup-action-buttons{display:contents}.setup-action-divider{display:none;}
 }
 
 /* ================= MOBILE / TOUCH =================
@@ -1020,9 +1033,18 @@ body.fl #chipPreview{display:none!important;}
         <p id="resetInfo"></p>
       </div>
       <div class="setup-actions">
-        <button id="startBtn">Deal me in</button>
-        <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
-        <button id="reviewBtn" class="hidden">&#128202; Session review</button>
+        <div class="setup-action-card">
+          <div class="setup-actions-head">
+            <span class="setup-actions-icon">♠</span>
+            <div><strong id="quickPlayTitle">Ready to play?</strong><small id="quickPlaySub">Start a fresh table or continue where you left off.</small></div>
+          </div>
+          <div class="setup-action-buttons">
+            <button id="startBtn">Deal me in</button>
+            <div class="setup-action-divider"></div>
+            <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
+            <button id="reviewBtn" class="hidden">&#128202; Session review</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -7,6 +7,7 @@ tableStyle:"Table style",tableBalanced:"Balanced mix",tableTight:"Tight table",t
 tableDescBalanced:"A varied table containing every opponent personality.",tableDescTight:"A disciplined table that enters fewer pots and gives large bets more credit.",tableDescLoose:"A sticky table that sees more flops and calls with wider ranges.",tableDescAggressive:"A pressure-heavy table with frequent steals, c-bets and raises.",tableDescWild:"A volatile table with very wide ranges, larger bets and more bluffs.",tableDescRandom:"Every bot receives an independently randomized personality.",tableDescCustom:"Choose the exact number of bots for every personality.",
 profileRock:"Tight",profileStation:"Loose",profileShark:"Aggressive",profileManiac:"Wild",tableRandomLine:n=>`${n} bot${n!==1?'s':''} · roles rerolled when the game starts`,tableCustomTotal:(n,t)=>`${n} of ${t} bot roles assigned`,tableCustomInvalid:t=>`Assign exactly ${t} bot role${t!==1?'s':''} to start.`,
 deal:"Deal me in",startCash:"Sit down",resume:"▶ Resume tournament",resumeMid:"▶ Resume mid-hand",resumeCash:"▶ Resume cash session",review:"📊 Session review",
+quickPlayTitle:"Ready to play?",quickPlaySub:"Start a fresh table or continue where you left off.",
 sessionPnL:"Session",cashSessionEnd:"Session complete",cashSessionSub:(h,r,pnl)=>`${h} hands · ${r} rebuy${r!==1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} net`,
 cashRebuy:b=>`Rebuy for ${b}`,
 revTitle:"Session review",revWinRate:"Win rate",revITM:"In the money",revAvgFinish:"Avg finish",
@@ -82,6 +83,7 @@ tableStyle:"Style de table",tableBalanced:"Mix équilibré",tableTight:"Table se
 tableDescBalanced:"Une table variée avec toutes les personnalités adverses.",tableDescTight:"Une table disciplinée qui joue moins de pots et respecte davantage les grosses mises.",tableDescLoose:"Une table collante qui voit plus de flops et suit avec des ranges plus larges.",tableDescAggressive:"Une table sous pression avec beaucoup de steals, c-bets et relances.",tableDescWild:"Une table volatile avec des ranges très larges, de grosses mises et davantage de bluffs.",tableDescRandom:"Chaque bot reçoit une personnalité tirée indépendamment au hasard.",tableDescCustom:"Choisissez le nombre exact de bots pour chaque personnalité.",
 profileRock:"Serré",profileStation:"Loose",profileShark:"Agressif",profileManiac:"Sauvage",tableRandomLine:n=>`${n} bot${n>1?'s':''} · profils retirés au sort au lancement`,tableCustomTotal:(n,t)=>`${n} rôle${n>1?'s':''} attribué${n>1?'s':''} sur ${t}`,tableCustomInvalid:t=>`Attribuez exactement ${t} rôle${t>1?'s':''} de bot pour commencer.`,
 deal:"Distribuez !",startCash:"S'asseoir",resume:"▶ Reprendre le tournoi",resumeMid:"▶ Reprendre la main en cours",resumeCash:"▶ Reprendre la session cash",review:"📊 Bilan des sessions",
+quickPlayTitle:"Prêt à jouer ?",quickPlaySub:"Lancez une nouvelle table ou reprenez là où vous étiez.",
 sessionPnL:"Session",cashSessionEnd:"Session terminée",cashSessionSub:(h,r,pnl)=>`${h} mains · ${r} rebuy${r>1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} net`,
 cashRebuy:b=>`Rebuy pour ${b}`,
 revTitle:"Bilan des sessions",revWinRate:"Taux de victoire",revITM:"Dans l'argent",revAvgFinish:"Place moyenne",
@@ -157,6 +159,7 @@ tableStyle:"Estilo de mesa",tableBalanced:"Mezcla equilibrada",tableTight:"Mesa 
 tableDescBalanced:"Una mesa variada con todas las personalidades rivales.",tableDescTight:"Una mesa disciplinada que juega menos botes y respeta más las apuestas grandes.",tableDescLoose:"Una mesa pegajosa que ve más flops e iguala con rangos más amplios.",tableDescAggressive:"Una mesa de mucha presión, con robos, c-bets y subidas frecuentes.",tableDescWild:"Una mesa volátil con rangos muy amplios, apuestas mayores y más faroles.",tableDescRandom:"Cada bot recibe una personalidad elegida independientemente al azar.",tableDescCustom:"Elige el número exacto de bots de cada personalidad.",
 profileRock:"Cerrado",profileStation:"Loose",profileShark:"Agresivo",profileManiac:"Salvaje",tableRandomLine:n=>`${n} bot${n!==1?'s':''} · perfiles sorteados al empezar`,tableCustomTotal:(n,t)=>`${n} de ${t} roles de bot asignados`,tableCustomInvalid:t=>`Asigna exactamente ${t} rol${t!==1?'es':''} de bot para empezar.`,
 deal:"¡Reparte!",startCash:"Sentarse",resume:"▶ Reanudar torneo",resumeMid:"▶ Reanudar mano en curso",resumeCash:"▶ Reanudar sesión cash",review:"📊 Resumen de sesiones",
+quickPlayTitle:"¿Listo para jugar?",quickPlaySub:"Empieza una mesa nueva o continúa donde lo dejaste.",
 sessionPnL:"Sesión",cashSessionEnd:"Sesión terminada",cashSessionSub:(h,r,pnl)=>`${h} manos · ${r} rebuy${r!==1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} neto`,
 cashRebuy:b=>`Rebuy por ${b}`,
 revTitle:"Resumen de sesiones",revWinRate:"Tasa de victorias",revITM:"En premios",revAvgFinish:"Puesto medio",
@@ -2345,6 +2348,7 @@ function applyLang(){
   if($('tableRoleManiac'))$('tableRoleManiac').textContent='🔥 '+T('profileManiac');
   refreshTableScenarioSetup(+$('pCount').textContent||2);
   set('startBtn',setupGameType==='cash'?'startCash':'deal'); set('resumeBtn','resume'); set('reviewBtn','review');
+  set('quickPlayTitle','quickPlayTitle');set('quickPlaySub','quickPlaySub');
   set('revTitle','revTitle'); set('revAllHands','revAllHands'); set('revClose','close');
   ['revFilterAll','revFilterCash','revFilterSng'].forEach(id=>set(id,id));
   set('resetLbl','resetData'); set('resetInfo','resetInfo');
