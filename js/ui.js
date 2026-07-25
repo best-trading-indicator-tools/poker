@@ -1565,6 +1565,9 @@ function coachDecisionLabel(){
 function coachReasonLabel(){
   return lang==='fr'?'Pourquoi':lang==='es'?'Por qué':'Why';
 }
+function coachMathLabel(){
+  return lang==='fr'?'Calculs en direct':lang==='es'?'Cálculos en vivo':'Live math';
+}
 function coachMetric(label,value,cls=''){
   if(!value)return'';
   return `<div class="coach-metric ${cls}"><span>${label}</span><b>${value}</b></div>`;
@@ -1602,17 +1605,17 @@ function updateCoach(p){
   const keyReason=allReasons.shift()||'';
   const priceMetric=callAmt>0?`${T('need')}${pct(odds)} · ${usd(callAmt)} → ${usd(pot)}`:'';
   const sizingMetric=(rec==='RAISE'||rec==='ALLIN')?`${usd(coachT)} · ${bbs(coachT)}`:'';
+  const impliedRow=R.impliedInfo
+    ?`<div class="coach-row"><span>${T('impliedOdds')}</span><b>~${pct(R.impliedInfo.realisticNeed)} ${T('realisticNeed')}<br>${pct(R.impliedInfo.bestCaseNeed)} ${T('bestCaseNeed')} · ${usd(R.impliedInfo.maxFuture)} max</b></div>`:'';
+  const effectiveRow=callAmt>0&&R.needEq!=null&&Math.abs(R.needEq-odds)>=.005
+    ?`<div class="coach-row"><span>${T('effectiveNeed')}</span><b>~${pct(R.needEq)}</b></div>`:'';
+  const liveMathRows=drawRow+impliedRow+sprRow+effectiveRow;
   const detailRows=
     (pos?`<div class="coach-row"><span>${T('position')}</span><b>${pos}${early?' (early)':late?' (late)':''}</b></div>`:'')+
     (opps>0?`<div class="coach-row"><span>${state.stage==='preflop'?T('postflopOrder'):T('actingOrder')}</span><b>${actsFirst?T('firstToAct'):actsLast?T('lastToAct'):(ordIdx+1)+' '+T('ofN')+' '+ordLen}</b></div>`:'')+
-    drawRow+
-    (R.impliedInfo?`<div class="coach-row"><span>${T('impliedOdds')}</span><b>~${pct(R.impliedInfo.realisticNeed)} ${T('realisticNeed')}<br>${pct(R.impliedInfo.bestCaseNeed)} ${T('bestCaseNeed')} · ${usd(R.impliedInfo.maxFuture)} max</b></div>`:'')+
-    sprRow+
     `<div class="coach-row"><span>${T('yourStack')}</span><b>${bbs(p.chips+p.bet)}</b></div>`+
     (showM?`<div class="coach-row"><span>M-ratio</span><b>M = ${M>99?'99+':Math.round(M)} · ${T('zone'+mZone)}</b></div>`:'')+
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
-    (callAmt>0&&R.needEq!=null&&Math.abs(R.needEq-odds)>=.005
-      ?`<div class="coach-row"><span>${T('effectiveNeed')}</span><b>~${pct(R.needEq)}</b></div>`:'')+
     coachProseHtml(allReasons,[]);
   $('coachBody').innerHTML=
     `<div class="coach-decision"><span class="coach-decision-label">${coachDecisionLabel()}</span><div class="rec ${rec}">${recLabel}</div></div>`+
@@ -1622,6 +1625,7 @@ function updateCoach(p){
       coachMetric(T('potOdds'),priceMetric)+
       coachMetric(T('sugSize'),sizingMetric,'wide emphasis')+
     `</div>`+
+    (liveMathRows?`<div class="coach-live-math"><span class="coach-live-math-title">${coachMathLabel()}</span>${liveMathRows}</div>`:'')+
     (keyReason?`<div class="coach-key-reason"><span class="coach-key-reason-label">${coachReasonLabel()}</span>${keyReason}</div>`:'')+
     `<details class="coach-details"><summary>${coachDetailsLabel()}</summary><div class="coach-details-body">`+
       detailRows+
