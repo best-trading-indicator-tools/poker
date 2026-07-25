@@ -7,7 +7,7 @@ madeBoardPair:' — careful: that pair sits entirely on the board, so every oppo
 madeOverpair:' — an overpair, very strong.',madeUnderPair:' — a pocket pair below the top board card.',madeTopPair:' — top pair, solid.',
 madeTwoPair:(a,b)=>` — real two pair (${a} and ${b}), strong enough to bet when checked to.`,
 madeNotTop:r=>` — not top pair; anyone holding a ${r} is ahead of you.`,
-drawFlush:o=>`flush draw (9 outs, ≈${o})`,drawOESD:o=>`open-ended straight draw (8 outs, ≈${o})`,drawGut:o=>`gutshot straight draw (4 outs, ≈${o})`,
+drawFlush:(n,o)=>`flush draw (${n} outs, ≈${o})`,drawOESD:(n,o)=>`open-ended straight draw (${n} outs, ≈${o})`,drawGut:(n,o)=>`gutshot straight draw (${n} outs, ≈${o})`,
 drawBaked:' Your draw is already baked into the win-chance number — hitting it would likely give you the best hand.',
 warnFlush:' Three of one suit are on the board — be wary of opponents holding a flush.',
 warnPaired:' The board is paired, so full houses and trips are possible.',
@@ -56,8 +56,9 @@ fragileFlushCheck:(tuple,higher,danger,continued,n)=>` This is a low ${tuple} fl
 rangeLikelyHands:(n,h)=>` ${n}'s most likely hand classes after the full action history: ${h}. Percentages are their normalized share of the current range, after known-card blockers — not a claim that one exact hand is certain.`,
 raiseVal:e=>`~${e} to win is a strong favorite. Raise for value and to charge draws — flat calling leaves money on the table.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Suggested postflop raise size: ${amt} (${bb}). The opponent's bet is about ${ratio}% pot, so use roughly ${x}x that bet: small bets can be raised much larger, while big bets and overbets usually only need about 2-3x.`,
-callOk:(amt,pt,o,e,disc,ea)=>`The call costs ${amt} to win a ${pt} pot, so you need ${o} equity to break even. You have ~${e}${disc?` (counted as ~${ea} after discounts)`:''} — calling is profitable long-term, but raising would risk too much with a non-premium hand.`,
-foldAdv:(o,amt,pt,ea,resp)=>`You need ${o} equity to call (${amt} into ${pt}) but only have ~${ea}${resp?' once the size of this bet is respected':''}. Every chip you put in here loses value — fold and wait for a better spot.`,
+callOk:(amt,pt,o,e,disc,ea,need)=>`The call costs ${amt} to win a ${pt} pot, so the immediate price needs ${o} equity. After position, prize pressure and realistic implied odds, the effective requirement is ~${need}; you have ~${e}${disc?` (counted as ~${ea} after hand-strength discounts)`:''}. Calling is profitable long-term, but raising would risk too much with a non-premium hand.`,
+foldAdv:(o,amt,pt,ea,resp,need)=>`The immediate price needs ${o} equity to call (${amt} into ${pt}). After position, prize pressure and realistic implied odds, the effective requirement is ~${need}, but your usable equity is only ~${ea}${resp?' once this bet size is respected':''}. Fold and wait for a better spot.`,
+impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Implied odds: the immediate price needs ${now}. With about ${hit} to hit a clean out and up to ${max} still available behind, the coach conservatively credits about ${future} of future payment; that lowers the realistic break-even price to ~${real}. The absolute best case is ${best} if every remaining chip is paid${reverse?' — but the non-nut draw also carries reverse-implied-odds risk, so that best case is not used':''}.`,
 chart3bet:(c,e)=>`${c} is in the re-raise (3-bet) chart against ${e?'an early-position raiser':'a late-position raiser'} — solver ranges re-raise these hands instead of just calling: the big pairs for value, and hands like A5s as "blocker bluffs" (your ace makes his monster hands less likely). Flat-calling would let players behind you in cheaply.`,
 fourBetFold:(c,amt,bb,eff,read)=>`This is not a 3-bet spot: you already raised and now face a 3-bet to ${amt} (${bb}). ${c} is not strong enough to continue${read?' against this large/tight line':''}. The ace blocker can make it an occasional 4-bet bluff against a normal, wide 3-bet when stacks are deep, but at ${eff} BB effective this sizing commits too much — fold.`,
 fourBetValue:(c,amt,bb)=>`You already raised and now face a 3-bet to ${amt} (${bb}). ${c} belongs to the value 4-bet range; with this much already in the middle, use a committed raise rather than an awkward size that leaves a tiny stack behind.`,
@@ -155,7 +156,7 @@ madeBoardPair:' — attention : cette paire est entièrement sur le board, tous 
 madeOverpair:' — une overpair, très forte.',madeUnderPair:' — une paire servie sous la plus haute carte du board.',madeTopPair:' — top paire, solide.',
 madeTwoPair:(a,b)=>` — vraie double paire (${a} et ${b}), assez forte pour miser quand on checke jusqu’à vous.`,
 madeNotTop:r=>` — pas la top paire ; quiconque détient un ${r} est devant vous.`,
-drawFlush:o=>`tirage couleur (9 outs, ≈${o})`,drawOESD:o=>`tirage quinte par les deux bouts (8 outs, ≈${o})`,drawGut:o=>`tirage quinte ventral (4 outs, ≈${o})`,
+drawFlush:(n,o)=>`tirage couleur (${n} outs, ≈${o})`,drawOESD:(n,o)=>`tirage quinte par les deux bouts (${n} outs, ≈${o})`,drawGut:(n,o)=>`tirage quinte ventral (${n} outs, ≈${o})`,
 drawBaked:' Votre tirage est déjà intégré dans la chance de gain — le toucher vous donnerait probablement la meilleure main.',
 warnFlush:' Trois cartes d’une même couleur sur le board — méfiez-vous d’une couleur adverse.',
 warnPaired:' Le board est apparié : full et brelans sont possibles.',
@@ -204,8 +205,9 @@ fragileFlushCheck:(tuple,higher,danger,continued,n)=>` C’est une petite couleu
 rangeLikelyHands:(n,h)=>` Les classes de mains les plus probables de ${n} après toute l'action : ${h}. Les pourcentages représentent leur part normalisée de la range actuelle après les blockers connus — pas la certitude d'une main exacte.`,
 raiseVal:e=>`~${e} de chances de gain : vous êtes grand favori. Relancez pour la valeur et pour faire payer les tirages — caller laisse de l’argent sur la table.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Taille de relance postflop suggérée : ${amt} (${bb}). La mise adverse fait environ ${ratio}% du pot, donc utilisez environ ${x}x cette mise : les petites mises peuvent être relancées beaucoup plus cher, tandis que les grosses mises et overbets demandent souvent seulement 2-3x.`,
-callOk:(amt,pt,o,e,disc,ea)=>`Le call coûte ${amt} pour gagner un pot de ${pt} : il vous faut ${o} d’équité pour être à l’équilibre. Vous avez ~${e}${disc?` (compté ~${ea} après décotes)`:''} — caller est rentable à long terme, mais relancer risquerait trop avec une main non premium.`,
-foldAdv:(o,amt,pt,ea,resp)=>`Il vous faut ${o} d’équité pour payer (${amt} dans ${pt}) mais vous n’avez que ~${ea}${resp?' une fois la taille de cette mise respectée':''}. Chaque jeton investi ici perd de la valeur — couchez-vous et attendez un meilleur spot.`,
+callOk:(amt,pt,o,e,disc,ea,need)=>`Le call coûte ${amt} pour gagner un pot de ${pt} : le prix immédiat demande ${o} d'équité. Après la position, la pression des prix et les cotes implicites réalistes, le seuil effectif est d'environ ${need} ; vous avez ~${e}${disc?` (compté ~${ea} après les décotes liées à la main)`:''}. Caller est rentable à long terme, mais relancer risquerait trop avec une main non premium.`,
+foldAdv:(o,amt,pt,ea,resp,need)=>`Le prix immédiat demande ${o} d'équité pour payer (${amt} dans ${pt}). Après la position, la pression des prix et les cotes implicites réalistes, le seuil effectif monte à ~${need}, mais votre équité utilisable n'est que de ~${ea}${resp?' une fois cette taille de mise respectée':''}. Couchez-vous et attendez un meilleur spot.`,
+impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Cotes implicites : le prix immédiat demande ${now}. Avec environ ${hit} de chances de toucher un out propre et jusqu'à ${max} encore disponible derrière, le coach crédite prudemment environ ${future} de paiement futur ; le seuil réaliste descend ainsi à ~${real}. Le meilleur cas absolu serait ${best} si tous les jetons restants étaient payés${reverse?' — mais le tirage non max comporte aussi des cotes implicites inverses, donc ce meilleur cas n\'est pas utilisé':''}.`,
 chart3bet:(c,e)=>`${c} figure dans la charte de sur-relance (3-bet) contre ${e?'un relanceur en début de parole':'un relanceur en fin de parole'} — les ranges solveur sur-relancent ces mains au lieu de suivre : les grosses paires pour la valeur, et des mains comme A5s en « bluff à blocker » (votre as rend ses monstres moins probables). Suivre laisserait entrer les joueurs derrière à bas prix.`,
 fourBetFold:(c,amt,bb,eff,read)=>`Ce n'est pas un spot de 3-bet : vous avez déjà relancé et faites maintenant face à un 3-bet à ${amt} (${bb}). ${c} n'est pas assez forte pour continuer${read?' contre cette ligne grosse/serrée':''}. Le bloqueur As peut servir de bluff 4-bet occasionnel contre un 3-bet normal et large avec des tapis profonds, mais à ${eff} BB effectives cette taille engage trop de jetons — couchez-vous.`,
 fourBetValue:(c,amt,bb)=>`Vous avez déjà relancé et faites maintenant face à un 3-bet à ${amt} (${bb}). ${c} appartient à la range de 4-bet pour valeur ; avec autant de jetons déjà au milieu, utilisez une relance engagée plutôt qu'une taille bancale qui laisse un tout petit tapis.`,
@@ -303,7 +305,7 @@ madeBoardPair:' — cuidado: esa pareja está entera en la mesa, todos tus rival
 madeOverpair:' — una overpair, muy fuerte.',madeUnderPair:' — una pareja de mano por debajo de la carta más alta de la mesa.',madeTopPair:' — top pair, sólida.',
 madeTwoPair:(a,b)=>` — doble pareja real (${a} y ${b}), bastante fuerte para apostar cuando pasan hasta ti.`,
 madeNotTop:r=>` — no es top pair; cualquiera con un ${r} va por delante de ti.`,
-drawFlush:o=>`proyecto de color (9 outs, ≈${o})`,drawOESD:o=>`proyecto de escalera abierta (8 outs, ≈${o})`,drawGut:o=>`proyecto de escalera interna (4 outs, ≈${o})`,
+drawFlush:(n,o)=>`proyecto de color (${n} outs, ≈${o})`,drawOESD:(n,o)=>`proyecto de escalera abierta (${n} outs, ≈${o})`,drawGut:(n,o)=>`proyecto de escalera interna (${n} outs, ≈${o})`,
 drawBaked:' Tu proyecto ya está incluido en la probabilidad de ganar — completarlo te daría probablemente la mejor mano.',
 warnFlush:' Hay tres cartas del mismo palo en la mesa — cuidado con un color rival.',
 warnPaired:' La mesa está emparejada: son posibles fulls y tríos.',
@@ -352,8 +354,9 @@ fragileFlushCheck:(tuple,higher,danger,continued,n)=>` Es un color bajo ${tuple}
 rangeLikelyHands:(n,h)=>` Las clases de manos más probables de ${n} tras todo el historial: ${h}. Los porcentajes son su parte normalizada del rango actual después de los blockers conocidos, no la certeza de una mano exacta.`,
 raiseVal:e=>`~${e} de probabilidad: eres gran favorito. Sube por valor y para cobrar a los proyectos — solo igualar deja dinero sobre la mesa.`,
 postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Tamaño de subida postflop sugerido: ${amt} (${bb}). La apuesta rival es aprox. ${ratio}% del bote, así que usa cerca de ${x}x esa apuesta: las apuestas pequeñas se pueden subir mucho más, mientras que apuestas grandes y overbets suelen necesitar solo 2-3x.`,
-callOk:(amt,pt,o,e,disc,ea)=>`La llamada cuesta ${amt} para ganar un bote de ${pt}: necesitas ${o} de equidad para no perder. Tienes ~${e}${disc?` (contado como ~${ea} tras descuentos)`:''} — igualar es rentable a largo plazo, pero subir arriesgaría demasiado con una mano no premium.`,
-foldAdv:(o,amt,pt,ea,resp)=>`Necesitas ${o} de equidad para igualar (${amt} en ${pt}) pero solo tienes ~${ea}${resp?' una vez respetado el tamaño de esta apuesta':''}. Cada ficha que pongas aquí pierde valor — retírate y espera un mejor momento.`,
+callOk:(amt,pt,o,e,disc,ea,need)=>`La llamada cuesta ${amt} para ganar un bote de ${pt}: el precio inmediato exige ${o} de equity. Tras posición, presión de premios y odds implícitas realistas, el requisito efectivo es ~${need}; tienes ~${e}${disc?` (contado como ~${ea} después de los descuentos de la mano)`:''}. Igualar es rentable a largo plazo, pero subir arriesgaría demasiado con una mano no premium.`,
+foldAdv:(o,amt,pt,ea,resp,need)=>`El precio inmediato exige ${o} de equity para igualar (${amt} en ${pt}). Tras posición, presión de premios y odds implícitas realistas, el requisito efectivo es ~${need}, pero tu equity utilizable es solo ~${ea}${resp?' una vez respetado este tamaño de apuesta':''}. Retírate y espera un mejor momento.`,
+impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Odds implícitas: el precio inmediato exige ${now}. Con cerca de ${hit} de ligar un out limpio y hasta ${max} aún disponibles detrás, el coach acredita prudentemente unos ${future} de pago futuro; así, el umbral realista baja a ~${real}. El mejor caso absoluto sería ${best} si se pagaran todas las fichas restantes${reverse?' — pero el proyecto no máximo también tiene riesgo de odds implícitas inversas, así que no se usa ese mejor caso':''}.`,
 chart3bet:(c,e)=>`${c} está en la tabla de resubida (3-bet) contra ${e?'quien sube desde posición temprana':'quien sube desde posición tardía'} — los rangos de solver resuben estas manos en vez de solo igualar: las parejas grandes por valor, y manos como A5s como "farol con blocker" (tu as hace menos probables sus monstruos). Solo igualar dejaría entrar barato a los de detrás.`,
 fourBetFold:(c,amt,bb,eff,read)=>`Este no es un spot de 3-bet: ya subiste y ahora afrontas un 3-bet a ${amt} (${bb}). ${c} no es lo bastante fuerte para continuar${read?' contra esta línea grande/cerrada':''}. El bloqueo del As puede servir como farol de 4-bet ocasional contra un 3-bet normal y amplio con stacks profundos, pero con ${eff} BB efectivas este tamaño compromete demasiado — retírate.`,
 fourBetValue:(c,amt,bb)=>`Ya subiste y ahora afrontas un 3-bet a ${amt} (${bb}). ${c} pertenece al rango de 4-bet por valor; con tanto dinero ya en medio, usa una subida comprometida en vez de un tamaño incómodo que deje un stack diminuto.`,
@@ -795,12 +798,22 @@ function findDrawOuts(hole,board){
   const known=new Set(hole.concat(board).map(c=>c.r*4+c.s));
   const made=evalBest(hole.concat(board));
   const flush=[], straight=[];
+  const makesStraight=cards=>{
+    const ranks=new Set(cards.map(c=>c.r));
+    if(ranks.has(14))ranks.add(1);
+    for(let lo=1;lo<=10;lo++){
+      let complete=true;
+      for(let r=lo;r<lo+5;r++)if(!ranks.has(r)){complete=false;break;}
+      if(complete)return true;
+    }
+    return false;
+  };
   for(const c of FULL_DECK){
     if(known.has(c.r*4+c.s))continue;
     const all=hole.concat(board).concat([c]);
     const sc=evalBest(all);
     if(made[0]<5&&sc[0]>=5&&(hole[0].s===c.s||hole[1].s===c.s)) flush.push(c);
-    if(made[0]<4&&sc[0]>=4) straight.push(c);
+    if(made[0]<4&&makesStraight(all)) straight.push(c);
   }
   const sort=(a,b)=>a.r-b.r||a.s-b.s;
   flush.sort(sort); straight.sort(sort);
@@ -839,6 +852,78 @@ function splitCleanDirtyOuts(hole,board,cards){
     if(why) dirty.push({card:c,why}); else clean.push(c);
   }
   return {clean,dirty};
+}
+function drawHitChance(outCount,unknownCount,streets){
+  const n=clamp(outCount,0,unknownCount),u=Math.max(1,unknownCount);
+  if(!n)return 0;
+  if(streets<=1||u<=1)return n/u;
+  return 1-((u-n)/u)*((u-n-1)/Math.max(1,u-1));
+}
+function coachDrawOutInfo(hole,board,draw=null){
+  const d=draw||detectDraws(hole,board),outs=findDrawOuts(hole,board);
+  const flush=d.flush?outs.flush:[],straight=d.oesd||d.gutshot?outs.straight:[];
+  const flushKeys=new Set(flush.map(c=>c.r*4+c.s));
+  const overlap=straight.filter(c=>flushKeys.has(c.r*4+c.s));
+  const unique=[],seen=new Set();
+  for(const c of flush.concat(straight)){
+    const k=c.r*4+c.s;if(seen.has(k))continue;seen.add(k);unique.push(c);
+  }
+  const split=splitCleanDirtyOuts(hole,board,unique);
+  const unknown=52-hole.length-board.length,streets=board.length===3?2:1;
+  const suitCounts=[0,0,0,0];for(const c of hole.concat(board))suitCounts[c.s]++;
+  const flushSuit=suitCounts.findIndex((n,s)=>n===4&&hole.some(c=>c.s===s));
+  let higherFlushThreats=0;
+  if(d.flush&&flushSuit>=0){
+    const heroHigh=Math.max(...hole.filter(c=>c.s===flushSuit).map(c=>c.r));
+    const known=new Set(hole.concat(board).map(c=>c.r*4+c.s));
+    higherFlushThreats=FULL_DECK.filter(c=>c.s===flushSuit&&c.r>heroHigh&&!known.has(c.r*4+c.s)).length;
+  }
+  return {draw:d,flush,straight,overlap,unique,clean:split.clean,dirty:split.dirty,
+    unknown,streets,flushChance:drawHitChance(flush.length,unknown,streets),
+    straightChance:drawHitChance(straight.length,unknown,streets),
+    uniqueHitChance:drawHitChance(unique.length,unknown,streets),
+    cleanHitChance:drawHitChance(split.clean.length,unknown,streets),
+    higherFlushThreats};
+}
+/* Conservative postflop implied-odds estimate. It never assumes the full stack
+   will be paid: visibility of the draw, position, line, profile and non-nut risk
+   determine a capped future payment, which is then converted into EV credit. */
+function coachPostflopImpliedOdds(p,callAmt,pot,drawInfo,actsFirst,actsLast,icmPrem){
+  if(state.stage==='river'||callAmt<=0||!drawInfo||!drawInfo.clean.length)return null;
+  const villains=inHand().filter(q=>q!==p&&!q.allIn);
+  const heroBehind=Math.max(0,p.chips-callAmt);
+  if(!villains.length||heroBehind<=0)return null;
+  const maxFuture=villains.reduce((sum,q)=>sum+Math.min(heroBehind,Math.max(0,q.chips)),0);
+  if(maxFuture<=0)return null;
+  const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:villains[0];
+  let payRate=.42;
+  payRate*=actsLast ? .86 : actsFirst ? .62 : .74;
+  if(drawInfo.draw.flush&&drawInfo.draw.oesd)payRate*=.68;
+  else if(drawInfo.draw.flush)payRate*=.72;
+  else if(drawInfo.draw.oesd)payRate*=.86;
+  else payRate*=.74;
+  const sid=agg?.style?.id;
+  payRate*=sid==='station' ? 1.12 : sid==='maniac' ? 1.04 : sid==='rock' ? .78 : .95;
+  if(/^(barrel2|barrel3|donk|checkraise)$/.test(agg?.lineRead||''))payRate*=1.12;
+  else if(agg?.lineRead==='cbet')payRate*=.88;
+  if(villains.length>1)payRate*=Math.pow(.82,villains.length-1);
+  if(drawInfo.higherFlushThreats>0)payRate*=clamp(1-drawInfo.higherFlushThreats*.12,.58,.92);
+  payRate*=1-clamp(icmPrem*3,0,.35);
+  payRate=clamp(payRate,.08,.62);
+  const uncappedFuture=maxFuture*payRate;
+  const finalPot=Math.max(1,pot+callAmt);
+  const maxCreditFuture=drawInfo.cleanHitChance>0
+    ?finalPot*.06/drawInfo.cleanHitChance
+    :0;
+  const futureChips=Math.min(uncappedFuture,maxCreditFuture);
+  const equityCredit=clamp(drawInfo.cleanHitChance*futureChips/finalPot,0,.06);
+  return {
+    maxFuture,futureChips,payRate,equityCredit,hitChance:drawInfo.cleanHitChance,
+    immediateNeed:callAmt/finalPot,
+    realisticNeed:callAmt/(finalPot+futureChips),
+    bestCaseNeed:callAmt/(finalPot+maxFuture),
+    reverseRisk:drawInfo.higherFlushThreats>0||drawInfo.dirty.length>0
+  };
 }
 function classifyLeakSpot(callAmt,opps){
   const st=state.stage;
@@ -986,7 +1071,7 @@ function coachMicroLesson(R,action){
   const recLbl={FOLD:T('recFOLD'),CHECK:T('recCHECK'),CALL:T('recCALL'),RAISE:T('recRAISETO').trim(),ALLIN:T('recALLIN')}[rec]||rec;
   const youLbl=type==='raise'?T('raiseW').toUpperCase():T(type).toUpperCase();
   const eqShow=pct(R.eqAdj!=null?R.eqAdj:R.eq);
-  const need=pct(R.odds||0);
+  const need=pct(R.needEq??R.odds??0);
   if(rec==='FOLD'&&type==='fold')return'';
   if((rec==='CALL'||rec==='CHECK')&&type==='call')return'';
   if((rec==='RAISE'||rec==='ALLIN')&&type==='raise')return'';
@@ -1595,7 +1680,7 @@ function coachDecide(p){
   const code=holeCode(p.hole), pr=handPct[code]||1;
   let eq,handDesc,drawRow='',extra=[];
   let eqAdj,airPen=0,underpairPen=0,underpairInfo=null;
-  let madeScore=null,flushInfo=null;
+  let madeScore=null,flushInfo=null,drawInfo=null,impliedInfo=null;
   const tightOpps=oppCaps.filter(o=>o.cap<1).length;
   const weakOpps=oppCaps.filter(o=>o.floor>0).length;
   if(tightOpps>0) extra.push(C('rangesNote',tightOpps,Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)));
@@ -1616,27 +1701,29 @@ function coachDecide(p){
     /* draws (only before the river) */
     if(state.stage!=='river'){
       const d=detectDraws(p.hole,state.board);
-      const streets=state.stage==='flop'?2:1;
       const dr=[];
-      const outs=findDrawOuts(p.hole,state.board);
-      if(d.flush) dr.push(C('drawFlush',pct(Math.min(0.9,9*0.02*streets+0.02))));
-      if(d.oesd) dr.push(C('drawOESD',pct(8*0.02*streets+0.02)));
-      else if(d.gutshot) dr.push(C('drawGut',pct(4*0.02*streets+0.01)));
+      drawInfo=coachDrawOutInfo(p.hole,state.board,d);
+      if(d.flush) dr.push(C('drawFlush',drawInfo.flush.length,pct(drawInfo.flushChance)));
+      if(d.oesd) dr.push(C('drawOESD',drawInfo.straight.length,pct(drawInfo.straightChance)));
+      else if(d.gutshot) dr.push(C('drawGut',drawInfo.straight.length,pct(drawInfo.straightChance)));
       if(dr.length){
         drawRow=`<div class="coach-row"><span>${T('draws')}</span><b>${dr.join('<br>')}</b></div>`;
-        const outCards=d.flush&&d.oesd?[...outs.flush,...outs.straight]
-          :d.flush?outs.flush:d.oesd||d.gutshot?outs.straight:[];
+        const outCards=drawInfo.unique;
         const outTxt=formatOutList(outCards);
         if(outTxt){
-          const split=splitCleanDirtyOuts(p.hole,state.board,outCards);
-          const cleanTxt=formatOutList(split.clean);
-          const dirtyTxt=formatOutList(split.dirty.map(x=>x.card));
-          if(cleanTxt) drawRow+=`<div class="coach-row"><span>${T('outs')}</span><b>${cleanTxt}</b></div>`;
+          const cleanTxt=formatOutList(drawInfo.clean);
+          const dirtyTxt=formatOutList(drawInfo.dirty.map(x=>x.card));
+          const overlapTxt=formatOutList(drawInfo.overlap);
+          const outSummary=`${drawInfo.unique.length} ${T('unique')}`+
+            (drawInfo.overlap.length?` · ${drawInfo.overlap.length} ${T('shared')}`:'');
+          if(cleanTxt) drawRow+=`<div class="coach-row"><span>${T('outs')}</span><b>${outSummary}<br>${cleanTxt}</b></div>`;
+          if(overlapTxt)
+            drawRow+=`<div class="coach-row"><span>${T('shared')}</span><b>${overlapTxt} · ${T('countedOnce')}</b></div>`;
           if(dirtyTxt){
             drawRow+=`<div class="coach-row coach-row-dirty"><span>${T('dirtyOuts')}<button type="button" class="coach-info-btn" aria-expanded="false" aria-label="${T('dirtyOutsInfoLbl')}">&#8505;</button></span><b>${dirtyTxt}</b></div>`+
               `<p class="coach-info-tip hidden">${T('dirtyOutsInfo')}</p>`;
-            const pairs=split.dirty.filter(x=>x.why==='pairs').map(x=>x.card);
-            const fl=split.dirty.filter(x=>x.why==='flush').map(x=>x.card);
+            const pairs=drawInfo.dirty.filter(x=>x.why==='pairs').map(x=>x.card);
+            const fl=drawInfo.dirty.filter(x=>x.why==='flush').map(x=>x.card);
             if(pairs.length) extra.push(C('dirtyOutPairs',formatOutList(pairs)));
             if(fl.length) extra.push(C('dirtyOutFlush',formatOutList(fl)));
           }
@@ -1695,8 +1782,15 @@ function coachDecide(p){
   /* ICM prize pressure: extra win-chance this call needs because busting costs prize equity */
   const icmPrem=flags.icm&&callAmt>0&&aliveN>2?icmPremium(p,callAmt,pot):0;
   if(flags.icm&&icmPrem>=0.01) extra.push(C('icmNote',Math.round(icmPrem*100),aliveN,Math.min(PAYOUTS(state.cfg.numPlayers).length,aliveN)));
+  impliedInfo=coachPostflopImpliedOdds(p,callAmt,pot,drawInfo,actsFirst,actsLast,icmPrem);
+  if(impliedInfo)extra.push(C('impliedOddsNote',pct(impliedInfo.immediateNeed),
+    pct(impliedInfo.realisticNeed),pct(impliedInfo.bestCaseNeed),usd(Math.round(impliedInfo.futureChips)),
+    usd(impliedInfo.maxFuture),pct(impliedInfo.hitChance),impliedInfo.reverseRisk));
   if(flags.cashNote) extra.push(C('cashModeNote'));
 
+  let decisionNeed=state.stage==='preflop'
+    ?clamp(odds+icmPrem,0,.95)
+    :clamp(odds+posAdj+icmPrem-(impliedInfo?.equityCredit||0),0,.95);
   let rec,why=[],chartInfo=null,rangeCharts=[],smallStab=false,preflopCallInfo=null;
   if(state.stage==='preflop'){
     const bucket=posBucket(pos), prTxt='top ~'+Math.round(pr*100)+'%';
@@ -1858,6 +1952,7 @@ function coachDecide(p){
         preflopCallInfo=coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,
           actsFirst,actsLast,icmPrem,diffCallPad,difficulty);
         eqAdj=preflopCallInfo.realizedEq;
+        decisionNeed=preflopCallInfo.requiredEq;
         if(preflopCallInfo.multiwayImpliedCredit>.001)
           extra.push(C('pfMultiwayValue',code,preflopCallInfo.callers));
       }
@@ -2076,7 +2171,7 @@ function coachDecide(p){
     });
     underpairPen=underpairInfo?underpairInfo.penalty:0;
     eqAdj=eq-bigBetPen-airPen-underpairPen+exploitAdj+blockAdj+diffAggAdj;
-    const edge=eqAdj-odds-posAdj-icmPrem;
+    const edge=eqAdj-decisionNeed;
     if(bigBetPen>=0.05) extra.push(C('bigBet',Math.round(betRatio*100)));
     if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
     if(airPen) extra.push(C(d&&d.gutshot?'weakDrawWarn':'airWarn'));
@@ -2089,10 +2184,11 @@ function coachDecide(p){
       why.push(C('raiseVal',pct(eq)));
     }else if(edge>=0){
       rec='CALL';
-      why.push(C('callOk',usd(callAmt),usd(pot),pct(odds),pct(eq),!!(bigBetPen||airPen||underpairPen),pct(eqAdj)));
+      why.push(C('callOk',usd(callAmt),usd(pot),pct(odds),pct(eq),
+        !!(bigBetPen||airPen||underpairPen),pct(eqAdj),pct(decisionNeed)));
     }else{
       rec='FOLD';
-      why.push(C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),!!bigBetPen));
+      why.push(C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),!!bigBetPen,pct(decisionNeed)));
     }
   }
   /* Every live opponent gets a matrix. Current aggressor first, then checked/acted players. */
@@ -2142,15 +2238,16 @@ function coachDecide(p){
   const evs={
     FOLD:0,
     CALL:Math.round(callAmt>0
-      ?(preflopCallInfo?preflopCallInfo.callEv:eqAdj*(pot+callAmt)-callAmt)
+      ?(preflopCallInfo?preflopCallInfo.callEv:
+        eqAdj*(pot+callAmt)-callAmt+(impliedInfo?.hitChance||0)*(impliedInfo?.futureChips||0))
       :eq*pot),
     RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
   };
-  coachSpotBrief(p,extra,{eq,eqAdj,odds,needEq:preflopCallInfo?.requiredEq,
+  coachSpotBrief(p,extra,{eq,eqAdj,odds,needEq:callAmt>0?decisionNeed:null,
     callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,rangeCharts,code,spr,sprZone,
-          preflopCallInfo};
+          preflopCallInfo,drawInfo,impliedInfo,needEq:decisionNeed};
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */

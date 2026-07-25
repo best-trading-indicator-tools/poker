@@ -230,6 +230,52 @@ const result=vm.runInContext(`(()=>{
   if(!nutFlushInfo||nutFlushInfo.higherCount!==0||nutFlushInfo.caution)
     throw new Error('nut flush must remain eligible for value '+JSON.stringify(nutFlushInfo));
 
+  /* Q♣3♣ on K♣ T♠ 7♦ J♣ has 9 flush outs and 8 straight outs, but A♣/9♣
+     overlap: the UI and implied-odds model must use 15 unique outs, not 17. */
+  const comboDrawHero=H(C(12,3),C(3,3));
+  const comboDrawBoard=[C(13,3),C(10,0),C(7,2),C(11,3)];
+  const comboDrawInfo=coachDrawOutInfo(comboDrawHero,comboDrawBoard);
+  if(!comboDrawInfo.draw.flush||!comboDrawInfo.draw.oesd||
+      comboDrawInfo.flush.length!==9||comboDrawInfo.straight.length!==8||
+      comboDrawInfo.overlap.length!==2||comboDrawInfo.unique.length!==15||
+      comboDrawInfo.clean.length!==15||comboDrawInfo.higherFlushThreats!==1||
+      Math.abs(comboDrawInfo.cleanHitChance-15/46)>1e-12)
+    throw new Error('combo draw outs must be deduplicated exactly '+JSON.stringify(comboDrawInfo));
+  newGame({...cfg,numPlayers:6});
+  const impliedHero=state.players[0],impliedAgg=state.players[1];
+  for(const x of state.players){
+    x.out=false;x.folded=x!==impliedHero&&x!==impliedAgg;x.allIn=false;x.bet=0;x.totalBet=0;
+    x.acted=x.folded;x.checkedStreet=false;x.aggStreets=[];x.checkStreets=[];x.rangeCap=1;x.rangeFloor=0;
+  }
+  state.stage='turn';state.board=comboDrawBoard.slice();state.dealerIdx=impliedAgg.i;
+  state.bb=160;state.sb=80;state.currentBet=640;state.lastRaiseSize=640;state.lastAggIdx=impliedAgg.i;
+  impliedHero.pos='BB';impliedHero.hole=comboDrawHero;impliedHero.chips=1910;impliedHero.totalBet=360;impliedHero.acted=false;
+  impliedAgg.pos='BTN';impliedAgg.style=STYLES.find(x=>x.id==='shark');impliedAgg.chips=750;
+  impliedAgg.bet=640;impliedAgg.totalBet=1000;impliedAgg.lineRead='barrel2';
+  const comboImplied=coachPostflopImpliedOdds(impliedHero,640,1360,comboDrawInfo,true,false,.10);
+  if(!comboImplied||comboImplied.maxFuture!==750||!comboImplied.reverseRisk||
+      !(comboImplied.bestCaseNeed<comboImplied.realisticNeed&&comboImplied.realisticNeed<.32)||
+      !(comboImplied.equityCredit>0&&comboImplied.equityCredit<.06))
+    throw new Error('realistic implied odds must be capped by stack, payment and reverse risk '+
+      JSON.stringify(comboImplied));
+  const adjustedFoldText=CPROSE.en.foldAdv('32%','$640','$1,360','38%',true,'44%');
+  if(!adjustedFoldText.includes('44%')||!adjustedFoldText.includes('38%'))
+    throw new Error('fold explanation must compare usable equity with the adjusted threshold '+adjustedFoldText);
+  impliedAgg.rangeCap=.11;impliedAgg.aggStreets=['flop','turn'];rangeModelInit(impliedAgg);
+  impliedAgg.lineRead='barrel2';state.pfAggIdx=impliedAgg.i;state.streetRaiseCount=1;
+  const savedComboEquity=mcEquityR,savedIcmPremium=icmPremium;
+  mcEquityR=()=>.43;icmPremium=()=>.10;
+  const comboDecision=coachDecide(impliedHero);
+  mcEquityR=savedComboEquity;icmPremium=savedIcmPremium;
+  if(comboDecision.rec!=='FOLD'||comboDecision.drawInfo?.unique.length!==15||
+      !comboDecision.impliedInfo||comboDecision.needEq<=comboDecision.odds||
+      !comboDecision.drawRow.includes('15 unique')||!comboDecision.drawRow.includes('2 shared')||
+      !comboDecision.why[0]?.includes(pct(comboDecision.needEq))||
+      !comboDecision.why[0]?.includes(pct(comboDecision.eqAdj)))
+    throw new Error('combo-draw coach panel must show unique outs, implied odds and adjusted fold threshold '+
+      JSON.stringify({rec:comboDecision.rec,drawRow:comboDecision.drawRow,implied:comboDecision.impliedInfo,
+        need:comboDecision.needEq,odds:comboDecision.odds,eqAdj:comboDecision.eqAdj,why:comboDecision.why}));
+
   /* Shallow flop bluff-catcher: profile looseness is already in the posterior equity.
      It must not be added a second time as fixed Wild + hard/c-bet bonuses, and calling
      off a large stack fraction must reduce underpair realization. */

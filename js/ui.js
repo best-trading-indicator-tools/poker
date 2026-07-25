@@ -25,7 +25,7 @@ fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"B
 actMenu:"◀ Menu",actTurn:"◀ Your turn",
 log:"Log",lastHand:"Last hand",exportH:"Export history",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",
 waiting:"Advice appears here when it's your turn.",
-yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",draws:"Draws",outs:"Outs",dirtyOuts:"Dirty outs",dirtyOutsInfoLbl:"What is a dirty out?",dirtyOutsInfo:"A dirty (tainted) out completes your draw on paper but often doesn't win the pot — e.g. it pairs the board (helping everyone) or is the 4th card to a board flush that gives an opponent the winning flush. Use clean outs for your odds.",potOdds:"Pot odds",yourStack:"Your stack",sugSize:"Suggested size",
+yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",draws:"Draws",outs:"Outs",unique:"unique",shared:"shared",countedOnce:"counted once",dirtyOuts:"Dirty outs",dirtyOutsInfoLbl:"What is a dirty out?",dirtyOutsInfo:"A dirty (tainted) out completes your draw on paper but often doesn't win the pot — e.g. it pairs the board (helping everyone) or is the 4th card to a board flush that gives an opponent the winning flush. Use clean outs for your odds.",potOdds:"Pot odds",impliedOdds:"Implied odds",realisticNeed:"realistic need",bestCaseNeed:"best case",effectiveNeed:"Effective call threshold",yourStack:"Your stack",sugSize:"Suggested size",
 firstToAct:"first to act (OOP)",lastToAct:"last to act (IP)",ofN:"of",need:"need ",vs:"vs",opp:"opp",opps:"opps",
 thisGame:"THIS GAME",lifetime:"LIFETIME",handsPW:"Hands played / won",net:"Net",biggestPot:"Biggest pot won",vpipPfr:"VPIP / PFR",aggF:"Aggression factor",wonSd:"Won at showdown",evLeak:"EV leaked vs coach",coachFollowed:"Coach followed",followedCoach:"followed coach",coachSaid:"coach said",youChose:"you chose",
 recFOLD:"FOLD",recCHECK:"CHECK",recCALL:"CALL",recRAISETO:"RAISE TO",recBET:"BET",recALLIN:"ALL-IN",
@@ -96,7 +96,7 @@ fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer �
 actMenu:"◀ Menu",actTurn:"◀ À vous",
 log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",
 waiting:"Les conseils apparaissent ici quand c'est votre tour.",
-yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",draws:"Tirages",outs:"Outs",dirtyOuts:"Outs sales",dirtyOutsInfoLbl:"Qu'est-ce qu'un out sale ?",dirtyOutsInfo:"Un out sale complète votre tirage sur le papier mais ne gagne souvent pas le pot — ex. il pair le board (aide tout le monde) ou est la 4e carte d'une couleur au board qui donne la couleur gagnante à l'adversaire. Comptez les outs propres pour vos cotes.",potOdds:"Cote du pot",yourStack:"Votre tapis",sugSize:"Taille suggérée",
+yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",draws:"Tirages",outs:"Outs",unique:"uniques",shared:"communs",countedOnce:"comptés une fois",dirtyOuts:"Outs sales",dirtyOutsInfoLbl:"Qu'est-ce qu'un out sale ?",dirtyOutsInfo:"Un out sale complète votre tirage sur le papier mais ne gagne souvent pas le pot — ex. il pair le board (aide tout le monde) ou est la 4e carte d'une couleur au board qui donne la couleur gagnante à l'adversaire. Comptez les outs propres pour vos cotes.",potOdds:"Cote du pot",impliedOdds:"Cotes implicites",realisticNeed:"seuil réaliste",bestCaseNeed:"meilleur cas",effectiveNeed:"Seuil effectif du call",yourStack:"Votre tapis",sugSize:"Taille suggérée",
 firstToAct:"premier à parler (OOP)",lastToAct:"dernier à parler (IP)",ofN:"sur",need:"requis ",vs:"vs",opp:"adv.",opps:"adv.",
 thisGame:"CETTE PARTIE",lifetime:"GLOBAL",handsPW:"Mains jouées / gagnées",net:"Net",biggestPot:"Plus gros pot gagné",vpipPfr:"VPIP / PFR",aggF:"Facteur d'agression",wonSd:"Gagné à l'abattage",evLeak:"EV perdue vs coach",coachFollowed:"Coach suivi",followedCoach:"coach suivi",coachSaid:"le coach a dit",youChose:"vous avez choisi",
 recFOLD:"SE COUCHER",recCHECK:"PAROLE",recCALL:"SUIVRE",recRAISETO:"RELANCER À",recBET:"MISER",recALLIN:"TAPIS",
@@ -167,7 +167,7 @@ fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",
 actMenu:"◀ Menú",actTurn:"◀ Tu turno",
 log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",
 waiting:"Los consejos aparecen aquí cuando es tu turno.",
-yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",draws:"Proyectos",outs:"Outs",dirtyOuts:"Outs sucios",dirtyOutsInfoLbl:"¿Qué es un out sucio?",dirtyOutsInfo:"Un out sucio completa tu proyecto en papel pero a menudo no gana el bote — p. ej. empareja el board (ayuda a todos) o es la 4ª carta a color en el board que le da el color ganador al rival. Cuenta los outs limpios para tus odds.",potOdds:"Odds del bote",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
+yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",draws:"Proyectos",outs:"Outs",unique:"únicos",shared:"compartidos",countedOnce:"contados una vez",dirtyOuts:"Outs sucios",dirtyOutsInfoLbl:"¿Qué es un out sucio?",dirtyOutsInfo:"Un out sucio completa tu proyecto en papel pero a menudo no gana el bote — p. ej. empareja el board (ayuda a todos) o es la 4ª carta a color en el board que le da el color ganador al rival. Cuenta los outs limpios para tus odds.",potOdds:"Odds del bote",impliedOdds:"Odds implícitas",realisticNeed:"umbral realista",bestCaseNeed:"mejor caso",effectiveNeed:"Umbral efectivo del call",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
 firstToAct:"primero en hablar (OOP)",lastToAct:"último en hablar (IP)",ofN:"de",need:"necesitas ",vs:"vs",opp:"rival",opps:"rivales",
 thisGame:"ESTA PARTIDA",lifetime:"GLOBAL",handsPW:"Manos jugadas / ganadas",net:"Neto",biggestPot:"Mayor bote ganado",vpipPfr:"VPIP / PFR",aggF:"Factor de agresión",wonSd:"Ganadas en showdown",evLeak:"EV perdido vs coach",coachFollowed:"Coach seguido",followedCoach:"coach seguido",coachSaid:"el coach dijo",youChose:"tú elegiste",
 recFOLD:"RETIRARSE",recCHECK:"PASAR",recCALL:"IGUALAR",recRAISETO:"SUBIR A",recBET:"APOSTAR",recALLIN:"ALL-IN",
@@ -1593,10 +1593,13 @@ function updateCoach(p){
     `<div class="coach-row"><span>${T('winChance')}</span><b>~${pct(eq)} ${T('vs')} ${opps} ${opps>1?T('opps'):T('opp')}</b></div>`+
     drawRow+
     (callAmt>0?`<div class="coach-row"><span>${T('potOdds')}</span><b>${T('need')}${pct(odds)} (${usd(callAmt)} &rarr; ${usd(pot)})</b></div>`:'')+
+    (R.impliedInfo?`<div class="coach-row"><span>${T('impliedOdds')}</span><b>~${pct(R.impliedInfo.realisticNeed)} ${T('realisticNeed')}<br>${pct(R.impliedInfo.bestCaseNeed)} ${T('bestCaseNeed')} · ${usd(R.impliedInfo.maxFuture)} max</b></div>`:'')+
     sprRow+
     `<div class="coach-row"><span>${T('yourStack')}</span><b>${bbs(p.chips+p.bet)}</b></div>`+
     (showM?`<div class="coach-row"><span>M-ratio</span><b>M = ${M>99?'99+':Math.round(M)} · ${T('zone'+mZone)}</b></div>`:'')+
     (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
+    (callAmt>0&&R.needEq!=null&&Math.abs(R.needEq-odds)>=.005
+      ?`<div class="coach-row"><span>${T('effectiveNeed')}</span><b>~${pct(R.needEq)}</b></div>`:'')+
     sizeRow+
     rangePanel+
     (R.chartInfo&&!rangeCharts.length?`<button class="chart-link" id="chartViewBtn">${T('viewChart')}</button>`:'')+
@@ -1627,7 +1630,7 @@ function updateCoach(p){
     const cb=$('chartViewBtn');
     if(cb) cb.onclick=()=>showChartMatrix(activeChart,R.code);
   }
-  coachRecNow={rec,stage:state.stage,evs,eq,eqAdj:R.eqAdj??eq,odds,callAmt,pot,airPen:R.airPen||0};
+  coachRecNow={rec,stage:state.stage,evs,eq,eqAdj:R.eqAdj??eq,odds,needEq:R.needEq,callAmt,pot,airPen:R.airPen||0};
 
   /* GTO mini-solver: heads-up postflop spots */
   if(state.stage!=='preflop'){
