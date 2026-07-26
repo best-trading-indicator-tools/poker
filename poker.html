@@ -26,11 +26,11 @@ body{background:var(--bg);color:var(--text);overflow:hidden;}
 
 /* ---------- SETUP ---------- */
 #setup{height:100%;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 0;}
-.setup-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:36px 42px;width:min(1380px,calc(100vw - 48px));box-shadow:0 24px 60px rgba(0,0,0,.5);}
-.setup-layout{display:grid;grid-template-columns:minmax(430px,1fr) minmax(220px,260px) minmax(280px,340px);grid-template-areas:"main actions side";gap:28px;align-items:start;}
-.setup-main,.setup-side,.setup-actions{min-width:0;}
-.setup-main{grid-area:main}.setup-actions{grid-area:actions}.setup-side{grid-area:side}
-.setup-side,.setup-actions{border-left:1px solid rgba(255,255,255,.10);padding-left:28px;}
+.setup-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:36px 42px;width:min(1180px,calc(100vw - 48px));box-shadow:0 24px 60px rgba(0,0,0,.5);}
+.setup-layout{display:grid;grid-template-columns:minmax(480px,1fr) minmax(340px,420px);grid-template-areas:"main actions";gap:34px;align-items:start;}
+.setup-main,.setup-actions{min-width:0;}
+.setup-main{grid-area:main}.setup-actions{grid-area:actions}
+.setup-actions{border-left:1px solid rgba(255,255,255,.10);padding-left:34px;}
 .setup-actions{position:sticky;top:24px;padding-top:1px;}
 .setup-action-card{position:relative;overflow:hidden;padding:18px;border:1px solid rgba(232,182,76,.36);border-radius:16px;background:linear-gradient(155deg,rgba(232,182,76,.12),rgba(255,255,255,.025) 42%,rgba(9,12,17,.22));box-shadow:0 16px 34px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.05);}
 .setup-action-card::after{content:"";position:absolute;width:150px;height:150px;right:-85px;top:-90px;border-radius:50%;background:rgba(232,182,76,.13);filter:blur(2px);pointer-events:none;}
@@ -97,7 +97,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #ovBlunders .bl-more{font-size:11px;color:var(--dim);text-align:center;padding-top:6px;}
 /* multiplayer: lobby + chat */
 #mpSec{margin-top:18px;border:1px solid rgba(230,180,60,.38);background:linear-gradient(180deg,rgba(230,180,60,.08),rgba(230,180,60,.02));border-radius:14px;padding:14px;}
-.setup-side #mpSec{margin-top:0;}
+.setup-actions #mpSec{margin-top:18px;}
 #mpSec h3{font-size:17px;font-weight:800;color:var(--gold);margin-bottom:3px;letter-spacing:.3px;}
 #mpSub{font-size:11.5px;color:var(--dim);margin-bottom:11px;}
 #mpName{width:100%;margin-bottom:8px;background:#10141b;border:1px solid var(--line);border-radius:9px;color:var(--text);padding:10px 11px;font-size:13.5px;box-sizing:border-box;}
@@ -806,14 +806,6 @@ body.fl #raiseBtn .act-label{font-size:11.5px;margin-right:0;}
 body.fl #raiseBtn .act-amount{font-size:12.5px;}
 body.fl #chipPreview{display:none!important;}
 
-@media(min-width:1025px) and (max-width:1120px){
-  .setup-card{padding:32px;width:calc(100vw - 40px);}
-  .setup-layout{grid-template-columns:minmax(430px,1fr) minmax(290px,340px);grid-template-areas:"main side" "actions actions";}
-  .setup-actions{grid-column:1/-1;position:static;border-left:0;border-top:1px solid rgba(255,255,255,.10);padding:22px 0 0;}
-  .setup-action-card{display:grid;grid-template-columns:minmax(220px,.8fr) repeat(3,minmax(0,1fr));gap:12px;align-items:center;}
-  .setup-actions-head{margin:0}.setup-action-buttons{display:contents}.setup-action-divider{display:none;}
-}
-
 /* ================= MOBILE / TOUCH =================
    applies to phones AND any portrait screen up to 1024px (large phones, iPad,
    narrow browser windows) — desktop-sized seats never fit a portrait table */
@@ -823,10 +815,9 @@ body.fl #chipPreview{display:none!important;}
   #setup{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;}
   .setup-card{display:block;width:auto;max-width:94vw;padding:24px 22px;margin:max(10px,env(safe-area-inset-top)) auto max(24px,env(safe-area-inset-bottom));}
   .setup-layout{display:flex;flex-direction:column;}
-  .setup-main{order:1}.setup-actions{order:2}.setup-side{order:3}
-  .setup-side,.setup-actions{position:static;border-left:0;padding-left:0;width:100%;}
+  .setup-main{order:1}.setup-actions{order:2}
+  .setup-actions{position:static;border-left:0;padding-left:0;width:100%;}
   .setup-actions{margin-top:4px;}
-  .setup-side #mpSec{margin-top:18px;}
   .setup-card h1{font-size:21px;}
   .radios label,.seg button,select{font-size:13px;}
   /* breathing room between row labels and their controls on small screens */
@@ -1038,19 +1029,6 @@ body.fl #chipPreview{display:none!important;}
           <div id="tableCustomStatus" class="hidden"></div>
         </div>
       </div>
-      <div class="setup-side">
-        <div id="mpSec">
-          <h3 id="mpTitle">👥 Play with friends</h3>
-          <div id="mpSub">Invite friends with a link — free, no accounts</div>
-          <input id="mpName" maxlength="14" placeholder="Your name">
-          <div id="mpRow">
-            <button id="mpCreate">Create room</button>
-            <input id="mpCode" maxlength="8" placeholder="CODE">
-            <button id="mpJoinBtn">Join</button>
-          </div>
-          <p id="mpStatus" class="hidden"></p>
-        </div>
-      </div>
       <div class="setup-actions">
         <div class="setup-action-card">
           <div class="setup-actions-head">
@@ -1069,6 +1047,17 @@ body.fl #chipPreview{display:none!important;}
           <button id="resetInfoBtn" aria-label="What does this do?" aria-expanded="true">&#8505;&#65039;</button>
         </div>
         <p id="resetInfo"></p>
+        <div id="mpSec">
+          <h3 id="mpTitle">👥 Play with friends</h3>
+          <div id="mpSub">Invite friends with a link — free, no accounts</div>
+          <input id="mpName" maxlength="14" placeholder="Your name">
+          <div id="mpRow">
+            <button id="mpCreate">Create room</button>
+            <input id="mpCode" maxlength="8" placeholder="CODE">
+            <button id="mpJoinBtn">Join</button>
+          </div>
+          <p id="mpStatus" class="hidden"></p>
+        </div>
       </div>
     </div>
   </div>
