@@ -141,7 +141,10 @@ suitedConn:` Hands like this (suited and connected) play better than their raw r
 scFlatMulti:(c,n)=>`${c} is a speculative suited connector, not a hand that wants to build a big pot into ${n} limper${n>1?'s':''}/callers. Take the cheap price and try to flop a strong draw or hidden made hand; if you miss, be ready to let it go.`,
 scFoldEarly:c=>`${c} is a speculative suited connector, but too many players can still wake up behind you. Without late position or dead money to attack, do not force a big raise — fold and wait for a cleaner spot.`,
 drawMwCheck:n=>`This is mostly a draw in a multiway pot (${n} opponents). Semi-bluffing works best heads-up or against capped ranges; with several players still in, take the free card instead of building a pot you may not win.`,
-gtoSolving:'⚖️ Running GTO solve…',gtoUnavail:'GTO solve unavailable for this spot.',gtoFail:'GTO solve failed for this spot.',
+gtoSolving:'⚖️ Running GTO solve…',gtoUnavail:r=>r==='allin'
+  ?'⚖️ No GTO solve needed: a player is already all-in, so there are no more betting decisions to model. The coach advice and equity estimate still apply.'
+  :'⚖️ GTO mix not shown: the estimated range is too narrow to divide into enough reliable solver groups. The coach still uses range equity and pot math for its recommendation.',
+gtoFail:'⚖️ The optional GTO calculation hit a technical error. The main coach recommendation still works and uses range equity, pot odds and position.',
 gtoMulti:n=>'⚖️ GTO solving applies heads-up only (like commercial solvers). With '+n+' opponents, advice uses range-equity math.',
 gtoNote:'Equilibrium of your range vs theirs on this exact board. Abstractions: current street only, 66%-pot + all-in sizings, 8 strength buckets, check-down rollouts. Directionally GTO — not solver-exact.',
 mixTitle:'🎭 Mix it up (optional)',
@@ -290,7 +293,10 @@ suitedConn:` Ce genre de main (assortie et connectée) joue mieux que son classe
 scFlatMulti:(c,n)=>`${c} est une main spéculative assortie/connectée, pas une main qui veut grossir le pot contre ${n} limper${n>1?'s':''}/caller${n>1?'s':''}. Prenez le prix pas cher et cherchez un gros tirage ou une main cachée ; si le flop rate, lâchez facilement.`,
 scFoldEarly:c=>`${c} est une main spéculative assortie/connectée, mais trop de joueurs peuvent encore se réveiller derrière vous. Sans position tardive ni dead money à attaquer, ne forcez pas une grosse relance — couchez et attendez un spot plus propre.`,
 drawMwCheck:n=>`C'est surtout un tirage dans un pot multiway (${n} adversaires). Les semi-bluffs marchent mieux en heads-up ou contre des ranges plafonnées ; avec plusieurs joueurs encore là, prenez la carte gratuite au lieu de grossir un pot que vous ne gagnerez pas toujours.`,
-gtoSolving:'⚖️ Calcul GTO en cours…',gtoUnavail:'Calcul GTO indisponible pour ce spot.',gtoFail:'Échec du calcul GTO pour ce spot.',
+gtoSolving:'⚖️ Calcul GTO en cours…',gtoUnavail:r=>r==='allin'
+  ?'⚖️ Aucun calcul GTO nécessaire : un joueur est déjà à tapis, donc il ne reste plus de décision de mise à modéliser. Le conseil du coach et l’estimation d’équité restent valides.'
+  :'⚖️ Mix GTO non affiché : la range estimée est trop étroite pour former assez de groupes fiables. Le coach utilise toujours l’équité contre la range et les cotes du pot.',
+gtoFail:'⚖️ Le calcul GTO optionnel a rencontré une erreur technique. Le conseil principal reste disponible et utilise l’équité, les cotes du pot et la position.',
 gtoMulti:n=>'⚖️ Le calcul GTO ne s’applique qu’en tête-à-tête (comme les solveurs commerciaux). Avec '+n+' adversaires, le conseil repose sur l’équité contre les ranges.',
 gtoNote:'Équilibre de votre range contre la sienne sur ce board exact. Abstractions : rue courante seulement, mises 66% pot + tapis, 8 niveaux de force, rollouts en check-down. Directionnellement GTO — pas exact au solveur près.',
 mixTitle:'🎭 Variez votre jeu (optionnel)',
@@ -439,7 +445,10 @@ suitedConn:` Manos así (del mismo palo y conectadas) juegan mejor que su rankin
 scFlatMulti:(c,n)=>`${c} es una mano especulativa suited/conectada, no una mano que quiera inflar el bote contra ${n} limper${n>1?'s':''}/caller${n>1?'s':''}. Toma el precio barato y busca un proyecto fuerte o una mano escondida; si fallas el flop, suelta fácil.`,
 scFoldEarly:c=>`${c} es una mano especulativa suited/conectada, pero demasiados jugadores aún pueden despertar detrás. Sin posición tardía ni dinero muerto claro que atacar, no fuerces una subida grande — retírate y espera un spot más limpio.`,
 drawMwCheck:n=>`Esto es sobre todo un proyecto en un bote multiway (${n} rivales). El semi-bluff funciona mejor heads-up o contra rangos limitados; con varios jugadores dentro, toma la carta gratis en vez de inflar un bote que quizá no ganes.`,
-gtoSolving:'⚖️ Calculando GTO…',gtoUnavail:'Cálculo GTO no disponible para esta situación.',gtoFail:'Falló el cálculo GTO en esta situación.',
+gtoSolving:'⚖️ Calculando GTO…',gtoUnavail:r=>r==='allin'
+  ?'⚖️ No hace falta cálculo GTO: un jugador ya está all-in, así que no quedan decisiones de apuesta que modelar. El consejo y la estimación de equity siguen siendo válidos.'
+  :'⚖️ No se muestra mezcla GTO: el rango estimado es demasiado estrecho para crear suficientes grupos fiables. El coach sigue usando equity contra rango y odds del bote.',
+gtoFail:'⚖️ El cálculo GTO opcional encontró un error técnico. La recomendación principal sigue funcionando con equity, odds del bote y posición.',
 gtoMulti:n=>'⚖️ El cálculo GTO solo aplica mano a mano (como los solvers comerciales). Con '+n+' rivales, el consejo usa equidad contra rangos.',
 gtoNote:'Equilibrio de tu rango contra el suyo en esta mesa exacta. Abstracciones: solo la calle actual, apuestas de 66% del bote + all-in, 8 niveles de fuerza, rollouts de check-down. Direccionalmente GTO — no exacto a nivel solver.',
 mixTitle:'🎭 Varía tu juego (opcional)',
@@ -650,7 +659,8 @@ function gtoSolve(opt){
   const NB=8;
   const villCombos=combosInRange(clamp(villCap,0.03,1),board,heroHand,opt.villFloor||0);
   const heroCombos=combosInRange(clamp(Math.max(heroCap,0.15),0.03,1),board,[]);
-  if(villCombos.length<NB*2||heroCombos.length<NB*2||eff<=0) return null;
+  if(eff<=0) return {unavailable:'allin'};
+  if(villCombos.length<NB*2||heroCombos.length<NB*2) return {unavailable:'range'};
   const bucketize=(combos)=>{
     const scored=combos.map(c=>({c,v:comboStrength(c,board)})).sort((x,y)=>x.v-y.v);
     const B=Array.from({length:NB},()=>[]);

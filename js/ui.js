@@ -1696,7 +1696,7 @@ function updateCoach(p){
             heroCap:p.rangeCap||1, villCap:villain.rangeCap||1, villFloor:villain.rangeFloor||0,
             heroHand:p.hole, villFirst:!villain.acted
           });
-          if(!res){box.textContent=C('gtoUnavail');return;}
+          if(!res||res.unavailable){box.textContent=C('gtoUnavail',res?.unavailable||'range');return;}
           const best=res.actions.reduce((a,b)=>b.freq>a.freq?b:a);
           box.innerHTML='<h4>⚖️ GTO MIX (CFR, abstracted)</h4>'+
             res.actions.map(a=>`<div class="grow${a===best?' top':''}"><span>${a.name}</span><span>${Math.round(a.freq*100)}%</span><span>EV ${a.ev>=0?'+':'−'}${usd(Math.abs(Math.round(a.ev)))}</span></div>`).join('')+
