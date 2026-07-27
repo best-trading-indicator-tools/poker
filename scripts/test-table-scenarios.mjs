@@ -177,4 +177,6 @@ assert.match(uiSource,/evs:coachRecNow\.evs\?\{FOLD:/,
   'saved decisions must retain their table-time counterfactual EV snapshot');
 assert.match(uiSource,/id="rpCounterfactual"/,
   'replayer must render the counterfactual explorer');
+assert.match(uiSource,/coachIcmHtml\(R\.icmInfo\)/,
+  'Live Coach must render the dedicated ICM explanation when tournament value changes a decision');
 console.log(JSON.stringify(result,null,2));

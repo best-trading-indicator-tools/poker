@@ -93,6 +93,10 @@ thisGame:"THIS GAME",lifetime:"LIFETIME",handsPW:"Hands played / won",net:"Net",
 recFOLD:"FOLD",recCHECK:"CHECK",recCALL:"CALL",recRAISETO:"RAISE TO",recBET:"BET",recALLIN:"ALL-IN",
 zoneG:"🟢 comfortable",zoneY:"🟡 fight for pots",zoneO:"🟠 shove-or-fold soon",zoneR:"🔴 all-in or fold",
 prizeP:"Prize pressure",extraNeeded:"extra needed",
+icmTitle:"Tournament value (ICM)",icmImpact:"This call is worth more than chip odds alone because losing chips can end or damage your tournament.",
+icmPlayers:(left,paid)=>`${left} players remain · ${paid} paid place${paid!==1?'s':''}`,icmStackRank:(rank,left)=>`Stack rank: ${rank} of ${left}`,
+icmRisk:p=>`This call risks ${p}% of your stack`,icmCovered:"The bettor covers you: losing can eliminate you.",icmCovers:"You cover the bettor: you survive a loss with chips behind.",
+icmThreshold:(chip,icm,extra)=>`Pot odds need ${chip}%. ICM raises the break-even point to ${icm}% (+${extra}%).`,
 benchRun:"🧪 Coach benchmark",
 mpTitle:"👥 Play with friends",mpSub:"Invite friends with a link — free, no accounts",mpNamePh:"Your name",mpCreate:"Create room",mpJoinB:"Join",mpCodePh:"CODE",
 mpLobbyTitle:"Room",mpCopy:"📋 Copy invite link",mpCopied:"✓ Copied — send it to your friends",
@@ -228,6 +232,10 @@ thisGame:"CETTE PARTIE",lifetime:"GLOBAL",handsPW:"Mains jouées / gagnées",net
 recFOLD:"SE COUCHER",recCHECK:"PAROLE",recCALL:"SUIVRE",recRAISETO:"RELANCER À",recBET:"MISER",recALLIN:"TAPIS",
 zoneG:"🟢 confortable",zoneY:"🟡 battez-vous pour les pots",zoneO:"🟠 bientôt tapis-ou-couché",zoneR:"🔴 tapis ou couché",
 prizeP:"Pression des prix",extraNeeded:"requis en plus",
+icmTitle:"Valeur du tournoi (ICM)",icmImpact:"Ce call vaut plus que son simple calcul en jetons, car perdre des jetons peut éliminer ou fortement handicaper votre tournoi.",
+icmPlayers:(left,paid)=>`${left} joueurs restants · ${paid} place${paid!==1?'s':''} payée${paid!==1?'s':''}`,icmStackRank:(rank,left)=>`Classement des tapis : ${rank}e sur ${left}`,
+icmRisk:p=>`Ce call risque ${p} % de votre tapis`,icmCovered:"Le relanceur vous couvre : perdre peut vous éliminer.",icmCovers:"Vous couvrez le relanceur : vous conserverez des jetons si vous perdez.",
+icmThreshold:(chip,icm,extra)=>`La cote du pot exige ${chip} %. L’ICM monte le seuil de rentabilité à ${icm} % (+${extra} %).`,
 benchRun:"🧪 Benchmark du coach",
 mpTitle:"👥 Jouer entre amis",mpSub:"Invitez vos amis avec un lien — gratuit, sans compte",mpNamePh:"Votre prénom",mpCreate:"Créer un salon",mpJoinB:"Rejoindre",mpCodePh:"CODE",
 mpLobbyTitle:"Salon",mpCopy:"📋 Copier le lien d'invitation",mpCopied:"✓ Copié — envoyez-le à vos amis",
@@ -363,6 +371,10 @@ thisGame:"ESTA PARTIDA",lifetime:"GLOBAL",handsPW:"Manos jugadas / ganadas",net:
 recFOLD:"RETIRARSE",recCHECK:"PASAR",recCALL:"IGUALAR",recRAISETO:"SUBIR A",recBET:"APOSTAR",recALLIN:"ALL-IN",
 zoneG:"🟢 cómodo",zoneY:"🟡 pelea por los botes",zoneO:"🟠 pronto all-in o fold",zoneR:"🔴 all-in o retirarse",
 prizeP:"Presión de premios",extraNeeded:"extra necesario",
+icmTitle:"Valor del torneo (ICM)",icmImpact:"Esta igualada vale más que su simple cálculo en fichas, porque perder fichas puede eliminarte o dañar mucho tu torneo.",
+icmPlayers:(left,paid)=>`${left} jugadores restantes · ${paid} puesto${paid!==1?'s':''} pagado${paid!==1?'s':''}`,icmStackRank:(rank,left)=>`Posición por stack: ${rank} de ${left}`,
+icmRisk:p=>`Esta igualada arriesga el ${p}% de tu stack`,icmCovered:"El apostador te cubre: perder puede eliminarte.",icmCovers:"Cubres al apostador: conservarás fichas si pierdes.",
+icmThreshold:(chip,icm,extra)=>`Las odds exigen ${chip}%. El ICM eleva el umbral al ${icm}% (+${extra}%).`,
 benchRun:"🧪 Benchmark del coach",
 mpTitle:"👥 Jugar con amigos",mpSub:"Invita a tus amigos con un enlace — gratis, sin cuentas",mpNamePh:"Tu nombre",mpCreate:"Crear sala",mpJoinB:"Entrar",mpCodePh:"CÓDIGO",
 mpLobbyTitle:"Sala",mpCopy:"📋 Copiar enlace de invitación",mpCopied:"✓ Copiado — envíalo a tus amigos",
@@ -2286,6 +2298,17 @@ function coachConfidenceHtml(R){
   return `<div class="coach-confidence"><span class="coach-confidence-icon">${c.icon}</span><div>`+
     `<b>${T('confidenceTitle')(c.source,c.level)}</b><span>${c.note}</span></div></div>`;
 }
+function coachIcmHtml(info){
+  if(!info)return '';
+  const pctRound=n=>Math.round(n*100);
+  const coverage=info.covered?T('icmCovered'):info.covers?T('icmCovers'):'';
+  return `<section class="coach-icm"><span class="coach-icm-title">💰 ${T('icmTitle')}</span>`+
+    `<p>${T('icmImpact')}</p><div class="coach-icm-grid">`+
+    `<div class="coach-icm-chip">${T('icmPlayers')(info.players,info.paid)}<br>${T('icmStackRank')(info.rank,info.players)}</div>`+
+    `<div class="coach-icm-chip">${T('icmRisk')(pctRound(info.riskPct))}${coverage?`<br>${coverage}`:''}</div>`+
+    `<div class="coach-icm-chip coach-icm-threshold">${T('icmThreshold')(pctRound(info.chipNeed),pctRound(info.icmNeed),pctRound(info.premium))}</div>`+
+    `</div></section>`;
+}
 
 function updateCoach(p){
   if(!HAS_DOM)return;
@@ -2331,7 +2354,6 @@ function updateCoach(p){
     (opps>0?`<div class="coach-row"><span>${state.stage==='preflop'?T('postflopOrder'):T('actingOrder')}</span><b>${actsFirst?T('firstToAct'):actsLast?T('lastToAct'):(ordIdx+1)+' '+T('ofN')+' '+ordLen}</b></div>`:'')+
     `<div class="coach-row"><span>${T('yourStack')}</span><b>${bbs(p.chips+p.bet)}</b></div>`+
     (showM?`<div class="coach-row"><span>M-ratio</span><b>M = ${M>99?'99+':Math.round(M)} · ${T('zone'+mZone)}</b></div>`:'')+
-    (icmPrem>=0.01?`<div class="coach-row"><span>💰 ${T('prizeP')}</span><b>+${Math.round(icmPrem*100)}% ${T('extraNeeded')}</b></div>`:'')+
     coachProseHtml(allReasons,[]);
   $('coachBody').innerHTML=
     `<div class="coach-decision"><span class="coach-decision-label">${coachDecisionLabel()}</span><div class="rec ${rec}">${recLabel}</div></div>`+
@@ -2342,6 +2364,7 @@ function updateCoach(p){
     `</div>`+
     coachConfidenceHtml(R)+
     `<div class="coach-beginner-read"><span>💡</span><p>${beginnerRead}</p></div>`+
+    coachIcmHtml(R.icmInfo)+
     (liveMathRows?`<div class="coach-live-math"><span class="coach-live-math-title">${coachMathLabel()}</span>${liveMathRows}</div>`:'')+
     (keyReason?`<div class="coach-key-reason"><span class="coach-key-reason-label">${coachReasonLabel()}</span>${keyReason}</div>`:'')+
     `<details class="coach-details"><summary>${coachDetailsLabel()}</summary><div class="coach-details-body">`+

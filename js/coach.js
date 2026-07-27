@@ -101,7 +101,7 @@ stackDomNote:(r,c,n)=>` You have ~${r}× the largest stack and cover ${c} of ${n
 stackDomIso:(c,p,r)=>`${c} is outside the standard ${p} chart, but with ~${r}× the table's biggest stack you can iso-raise as a pressure play — shorter stacks can't gamble back easily. Raise, don't call.`,
 stackDomCall:(c,r,e,o)=>`${c} is a chart defend and you are the clear chip leader (~${r}× the next stack). The raw sim is close (${e} vs ${o} price), and the call is small relative to your stack, so continue instead of over-folding to short-stack pressure.`,
 stackDomFoldHint:` Your stack edge makes an iso-raise possible here, but this hand is still too weak even for that line. Fold — patience preserves your advantage.`,
-icmNote:(x,left,paid)=>` 💰 Prize pressure: ${paid} place${paid>1?'s':''} get paid and ${left} player${left>1?'s are':' is'} left. In a tournament, chips you might LOSE are worth more than chips you might WIN — going broke costs you your shot at the prizes. So this call needs an extra ~${x}% win chance on top of the normal pot math. Near the bubble, when in doubt: fold and let the others bust each other.`,
+icmNote:(x,left,paid)=>` 💰 Tournament value: ${paid} place${paid>1?'s':''} get paid and ${left} player${left>1?'s are':' is'} left. Chips you might lose are worth more than chips you might win, so this call needs an extra ~${x}% win chance on top of the normal pot math.`,
 lineCbet:` His flop bet is a routine "continuation bet" — players who raised before the flop bet again on almost any flop, good or bad. It tells us very little, so his range is barely narrowed for it.`,
 lineBarrel:n=>` He has now bet ${n===3?'THREE streets in a row (flop, turn and river)':'two streets in a row'} — most players don't keep firing like that without a real hand. His range is read much tighter.`,
 lineDonk:` He bet INTO the player who raised before the flop (a "donk bet") — an unusual move that's usually either a sneaky monster or a wild bluff. To be safe, it's read as strength.`,
@@ -253,7 +253,7 @@ stackDomNote:(r,c,n)=>` Vous avez ~${r}× le plus gros tapis et couvrez ${c} sur
 stackDomIso:(c,p,r)=>`${c} n'est pas dans la charte ${p} standard, mais avec ~${r}× le plus gros tapis vous pouvez iso-relancer pour faire pression — les courts ne peuvent pas vous contrer facilement. Relancez, ne suivez pas.`,
 stackDomCall:(c,r,e,o)=>`${c} est une défense de charte et vous êtes énorme chip leader (~${r}× le tapis suivant). La simulation brute est proche (${e} vs prix ${o}) et le call coûte peu par rapport à votre stack : continuez plutôt que de trop folder face à la pression des short stacks.`,
 stackDomFoldHint:` Votre avantage de tapis rend une iso possible, mais cette main reste trop faible même pour ça. Couchez — la patience préserve votre avantage.`,
-icmNote:(x,left,paid)=>` 💰 Pression des prix : ${paid} place${paid>1?'s sont payées':' est payée'} et il reste ${left} joueur${left>1?'s':''}. En tournoi, les jetons que vous risquez de PERDRE valent plus que ceux que vous pouvez GAGNER — sauter vous coûte votre chance de prix. Ce call demande donc ~${x}% de chances de gain EN PLUS du calcul normal du pot. Près de la bulle, dans le doute : couchez-vous et laissez les autres s'éliminer.`,
+icmNote:(x,left,paid)=>` 💰 Valeur du tournoi : ${paid} place${paid>1?'s sont payées':' est payée'} et il reste ${left} joueur${left>1?'s':''}. Les jetons risqués valent plus que les jetons gagnés ; ce call demande donc ~${x}% de chances de gain en plus du calcul normal du pot.`,
 lineCbet:` Sa mise au flop est un « continuation bet » de routine — celui qui a relancé avant le flop remise sur presque n'importe quel flop, bon ou mauvais. Cela ne nous apprend presque rien : sa range n'est guère resserrée.`,
 lineBarrel:n=>` Il vient de miser ${n===3?'TROIS rues d\'affilée (flop, turn et river)':'deux rues d\'affilée'} — la plupart des joueurs ne continuent pas à tirer ainsi sans une vraie main. Sa range est lue beaucoup plus serrée.`,
 lineDonk:` Il a misé CONTRE le relanceur pré-flop (un « donk bet ») — un coup inhabituel : en général soit un monstre déguisé, soit un gros bluff. Par prudence, on le lit comme de la force.`,
@@ -405,7 +405,7 @@ stackDomNote:(r,c,n)=>` Tienes ~${r}× el stack más grande y cubres a ${c} de $
 stackDomIso:(c,p,r)=>`${c} no está en la tabla ${p} estándar, pero con ~${r}× el mayor stack puedes iso-subir como presión — los cortos no pueden devolverte la apuesta fácilmente. Sube, no pagues.`,
 stackDomCall:(c,r,e,o)=>`${c} es una defensa de tabla y eres claro chip leader (~${r}× el siguiente stack). La simulación bruta está cerca (${e} vs precio ${o}) y el call es pequeño frente a tu stack, así que continúa en vez de foldear demasiado ante presión de short stacks.`,
 stackDomFoldHint:` Tu ventaja de stack hace posible un iso, pero esta mano sigue siendo demasiado débil incluso para eso. Retírate — la paciencia conserva tu ventaja.`,
-icmNote:(x,left,paid)=>` 💰 Presión de premios: se paga${paid>1?'n':''} ${paid} puesto${paid>1?'s':''} y quedan ${left} jugador${left>1?'es':''}. En un torneo, las fichas que puedes PERDER valen más que las que puedes GANAR — quedarte sin fichas te cuesta tu opción a premio. Esta llamada necesita ~${x}% extra de probabilidad además del cálculo normal del bote. Cerca de la burbuja, ante la duda: retírate y deja que los demás se eliminen.`,
+icmNote:(x,left,paid)=>` 💰 Valor del torneo: se paga${paid>1?'n':''} ${paid} puesto${paid>1?'s':''} y quedan ${left} jugador${left>1?'es':''}. Las fichas arriesgadas valen más que las ganadas, así que esta igualada necesita ~${x}% extra además del cálculo normal del bote.`,
 lineCbet:` Su apuesta en el flop es una "apuesta de continuación" rutinaria — quien subió antes del flop vuelve a apostar en casi cualquier flop, bueno o malo. Dice muy poco, así que su rango apenas se estrecha.`,
 lineBarrel:n=>` Ya ha apostado ${n===3?'TRES calles seguidas (flop, turn y river)':'dos calles seguidas'} — la mayoría no sigue disparando así sin una mano real. Su rango se lee mucho más estrecho.`,
 lineDonk:` Apostó CONTRA quien subió antes del flop (un "donk bet") — una jugada rara: suele ser un monstruo disimulado o un farol salvaje. Por seguridad, se lee como fuerza.`,
@@ -1515,6 +1515,26 @@ function icmPremium(p,callAmt,pot){
     return clamp(raw*bubbleFactor*riskFactor*coverFactor,0,0.25);
   }catch(e){return 0;}
 }
+function icmDecisionContext(p,callAmt,pot,premium){
+  if(isCashGame()||callAmt<=0||premium<.005)return null;
+  const live=alive();
+  const pay=PAYOUTS(state.cfg.numPlayers);
+  if(live.length<=2||pay.length<=1)return null;
+  const stacks=live.map(q=>({p:q,total:q.chips+q.bet})).sort((a,b)=>b.total-a.total);
+  const rank=stacks.findIndex(x=>x.p===p)+1;
+  const aggressor=state.lastAggIdx>=0?state.players[state.lastAggIdx]:null;
+  const heroTotal=p.chips+p.bet;
+  const villainTotal=aggressor&&!aggressor.out?aggressor.chips+aggressor.bet:0;
+  return {
+    players:live.length,paid:Math.min(pay.length,live.length),rank,
+    riskPct:callAmt/Math.max(heroTotal,1),
+    covered:!!aggressor&&villainTotal>=heroTotal,
+    covers:!!aggressor&&heroTotal>villainTotal,
+    chipNeed:callAmt/Math.max(pot+callAmt,1),
+    icmNeed:clamp(callAmt/Math.max(pot+callAmt,1)+premium,0,.95),
+    premium
+  };
+}
 
 /* postflop acting order (SB first): who talks before/after the hero */
 function postflopOrder(){
@@ -1794,7 +1814,7 @@ function coachDecide(p){
 
   /* ICM prize pressure: extra win-chance this call needs because busting costs prize equity */
   const icmPrem=flags.icm&&callAmt>0&&aliveN>2?icmPremium(p,callAmt,pot):0;
-  if(flags.icm&&icmPrem>=0.01) extra.push(C('icmNote',Math.round(icmPrem*100),aliveN,Math.min(PAYOUTS(state.cfg.numPlayers).length,aliveN)));
+  const icmInfo=flags.icm?icmDecisionContext(p,callAmt,pot,icmPrem):null;
   impliedInfo=coachPostflopImpliedOdds(p,callAmt,pot,drawInfo,actsFirst,actsLast,icmPrem);
   if(impliedInfo)extra.push(C('impliedOddsNote',pct(impliedInfo.immediateNeed),
     pct(impliedInfo.realisticNeed),pct(impliedInfo.bestCaseNeed),usd(Math.round(impliedInfo.futureChips)),
@@ -2259,7 +2279,7 @@ function coachDecide(p){
   coachSpotBrief(p,extra,{eq,eqAdj,odds,needEq:callAmt>0?decisionNeed:null,
     callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
-          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,chartInfo,rangeCharts,code,spr,sprZone,
+          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,icmInfo,chartInfo,rangeCharts,code,spr,sprZone,
           preflopCallInfo,drawInfo,impliedInfo,needEq:decisionNeed};
 }
 

@@ -269,12 +269,15 @@ const result=vm.runInContext(`(()=>{
   mcEquityR=savedComboEquity;icmPremium=savedIcmPremium;
   if(comboDecision.rec!=='FOLD'||comboDecision.drawInfo?.unique.length!==15||
       !comboDecision.impliedInfo||comboDecision.needEq<=comboDecision.odds||
+      !comboDecision.icmInfo||comboDecision.icmInfo.premium!==.10||
+      !(comboDecision.icmInfo.icmNeed>comboDecision.icmInfo.chipNeed)||
       !comboDecision.drawRow.includes('15 unique')||!comboDecision.drawRow.includes('2 shared')||
       !comboDecision.why[0]?.includes(pct(comboDecision.needEq))||
       !comboDecision.why[0]?.includes(pct(comboDecision.eqAdj)))
     throw new Error('combo-draw coach panel must show unique outs, implied odds and adjusted fold threshold '+
       JSON.stringify({rec:comboDecision.rec,drawRow:comboDecision.drawRow,implied:comboDecision.impliedInfo,
-        need:comboDecision.needEq,odds:comboDecision.odds,eqAdj:comboDecision.eqAdj,why:comboDecision.why}));
+        need:comboDecision.needEq,odds:comboDecision.odds,eqAdj:comboDecision.eqAdj,
+        icmInfo:comboDecision.icmInfo,why:comboDecision.why}));
 
   /* Shallow flop bluff-catcher: profile looseness is already in the posterior equity.
      It must not be added a second time as fixed Wild + hard/c-bet bonuses, and calling
