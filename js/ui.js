@@ -22,6 +22,16 @@ leakPfOpen:"Preflop opens",leakPfFace:"Facing raises",leakCbet:"C-bet defense",l
 revIntro:"Find the decisions costing you the most, spot repeated habits, and replay the exact hands.",
 revFocusTitle:"What to work on next",revFocusSub:"Prioritized by total EV lost and repetition. A frequent small mistake can matter more than one dramatic hand.",
 revFocusRank:n=>`Priority ${n}`,revTimes:n=>`${n} time${n!==1?'s':''}`,revAvgLoss:"average loss",
+planTitle:"Your adaptive improvement plan",planSub:"Your three highest-impact skills, recalculated after every session and practice drill.",planNoData:"Finish a session with coach decisions to generate your first personalized plan.",
+planMastery:"Mastery",planEvidence:n=>`${n} decision${n!==1?'s':''} measured`,planEarly:"Early signal",planReliable:"Reliable sample",
+planStatusFocus:"Focus now",planStatusBuilding:"Building",planStatusStrong:"Nearly mastered",
+planTrendUp:n=>`↑ Improved ${n} points recently`,planTrendDown:n=>`↓ Down ${n} points recently`,planTrendFlat:"→ Stable recently",
+planDrillResult:(s,t)=>`Last drill: ${s}/${t}`,planPracticeSaved:"This result now counts toward your mastery score.",
+planLessonPfOpen:"Build a cleaner opening range by position. Enter fewer weak hands early and apply pressure with stronger hands late.",
+planLessonPfFace:"Before calling a raise, compare the price with usable—not raw—equity, position and players still able to re-raise.",
+planLessonCbet:"Defend c-bets according to board texture, bet size and future-street playability—not just whether you paired.",
+planLessonMultiway:"Tighten up as more opponents enter. One-pair hands and weak draws lose value quickly in multiway pots.",
+planLessonRiver:"On the river, count the value hands and credible bluffs. Do not pay simply because your hand was strong earlier.",
 revDecisionsTitle:"Costliest decisions",revDecisionsSub:"Filter your mistakes, then open the exact hand to understand the action in context.",
 revSpot:"Spot",revStreet:"Street",revPeriod:"Sessions",revAny:"All",revRecent10:"Latest 10",revRecent25:"Latest 25",
 revReplayHand:"Replay hand",revNoDecisions:"No mistakes match these filters. Try a broader filter or play another session.",
@@ -135,6 +145,16 @@ leakPfOpen:"Ouvertures préflop",leakPfFace:"Face aux relances",leakCbet:"Défen
 revIntro:"Repérez les décisions qui vous coûtent le plus, les erreurs répétées et rejouez les mains exactes.",
 revFocusTitle:"Prochain axe de travail",revFocusSub:"Priorisé selon l'EV totale perdue et la répétition. Une petite erreur fréquente peut coûter plus qu'une main spectaculaire.",
 revFocusRank:n=>`Priorité ${n}`,revTimes:n=>`${n} fois`,revAvgLoss:"perte moyenne",
+planTitle:"Votre plan de progression adaptatif",planSub:"Vos trois compétences prioritaires, recalculées après chaque session et chaque entraînement.",planNoData:"Terminez une session avec des décisions du coach pour générer votre premier plan personnalisé.",
+planMastery:"Maîtrise",planEvidence:n=>`${n} décision${n!==1?'s':''} mesurée${n!==1?'s':''}`,planEarly:"Signal précoce",planReliable:"Échantillon fiable",
+planStatusFocus:"À travailler",planStatusBuilding:"En progression",planStatusStrong:"Presque maîtrisé",
+planTrendUp:n=>`↑ Progression récente de ${n} points`,planTrendDown:n=>`↓ Baisse récente de ${n} points`,planTrendFlat:"→ Stable récemment",
+planDrillResult:(s,t)=>`Dernier drill : ${s}/${t}`,planPracticeSaved:"Ce résultat compte maintenant dans votre score de maîtrise.",
+planLessonPfOpen:"Construisez une range d'ouverture propre selon la position : moins de mains faibles tôt, davantage de pression avec de bonnes mains en position tardive.",
+planLessonPfFace:"Avant de payer une relance, comparez le prix à l'équité réellement utilisable, puis ajoutez la position et les joueurs pouvant encore sur-relancer.",
+planLessonCbet:"Défendez les c-bets selon la texture du board, la taille de mise et la jouabilité des streets suivantes — pas seulement parce que vous avez touché.",
+planLessonMultiway:"Resserrez votre range quand plusieurs adversaires entrent. Une paire et les tirages faibles perdent vite de la valeur en multiway.",
+planLessonRiver:"À la rivière, comptez les mains de value et les bluffs crédibles. Ne payez pas uniquement parce que votre main était forte plus tôt.",
 revDecisionsTitle:"Décisions les plus coûteuses",revDecisionsSub:"Filtrez vos erreurs puis ouvrez la main exacte pour revoir toute l'action.",
 revSpot:"Spot",revStreet:"Street",revPeriod:"Sessions",revAny:"Tous",revRecent10:"10 dernières",revRecent25:"25 dernières",
 revReplayHand:"Rejouer la main",revNoDecisions:"Aucune erreur ne correspond à ces filtres. Élargissez-les ou jouez une nouvelle session.",
@@ -248,6 +268,16 @@ leakPfOpen:"Aperturas preflop",leakPfFace:"Frente a subidas",leakCbet:"Defensa c
 revIntro:"Encuentra las decisiones que más te cuestan, detecta errores repetidos y reproduce las manos exactas.",
 revFocusTitle:"Qué trabajar ahora",revFocusSub:"Priorizado por EV total perdido y repetición. Un error pequeño y frecuente puede importar más que una mano espectacular.",
 revFocusRank:n=>`Prioridad ${n}`,revTimes:n=>`${n} vez${n!==1?'es':''}`,revAvgLoss:"pérdida media",
+planTitle:"Tu plan de mejora adaptativo",planSub:"Tus tres habilidades prioritarias, recalculadas después de cada sesión y práctica.",planNoData:"Termina una sesión con decisiones del coach para generar tu primer plan personalizado.",
+planMastery:"Dominio",planEvidence:n=>`${n} decisión${n!==1?'es':''} medida${n!==1?'s':''}`,planEarly:"Señal inicial",planReliable:"Muestra fiable",
+planStatusFocus:"Prioridad actual",planStatusBuilding:"Mejorando",planStatusStrong:"Casi dominado",
+planTrendUp:n=>`↑ Mejora reciente de ${n} puntos`,planTrendDown:n=>`↓ Bajada reciente de ${n} puntos`,planTrendFlat:"→ Estable recientemente",
+planDrillResult:(s,t)=>`Última práctica: ${s}/${t}`,planPracticeSaved:"Este resultado ya cuenta para tu puntuación de dominio.",
+planLessonPfOpen:"Construye un rango de apertura limpio por posición: menos manos débiles temprano y más presión con buenas manos en posiciones tardías.",
+planLessonPfFace:"Antes de igualar una subida, compara el precio con la equity realmente utilizable, la posición y los jugadores que aún pueden resubir.",
+planLessonCbet:"Defiende c-bets según la textura, el tamaño y la jugabilidad futura, no solo porque conectaste algo.",
+planLessonMultiway:"Cierra tu rango cuando entran más rivales. Las parejas y proyectos débiles pierden valor rápidamente en botes multiway.",
+planLessonRiver:"En el river, cuenta las manos de valor y los faroles creíbles. No pagues solo porque tu mano era fuerte antes.",
 revDecisionsTitle:"Decisiones más costosas",revDecisionsSub:"Filtra tus errores y abre la mano exacta para revisar la acción completa.",
 revSpot:"Situación",revStreet:"Calle",revPeriod:"Sesiones",revAny:"Todas",revRecent10:"Últimas 10",revRecent25:"Últimas 25",
 revReplayHand:"Repetir mano",revNoDecisions:"Ningún error coincide con estos filtros. Amplía los filtros o juega otra sesión.",
@@ -411,21 +441,79 @@ function reviewFilteredGames(games){
   const lim=revDecisionPeriod==='all'?games.length:Number(revDecisionPeriod)||25;
   return games.slice(0,lim);
 }
+const IMPROVEMENT_STORE='sg_poker_improvement_v1';
+const PLAN_LESSON_KEYS={
+  pf_open:'planLessonPfOpen',pf_face_raise:'planLessonPfFace',cbet_def:'planLessonCbet',
+  multiway:'planLessonMultiway',river_call:'planLessonRiver'
+};
+function loadImprovementProgress(){
+  try{
+    const value=JSON.parse(localStorage.getItem(IMPROVEMENT_STORE)||'{}');
+    return value&&typeof value==='object'?value:{};
+  }catch(e){return {};}
+}
+function recordImprovementPractice(spot,score,total){
+  if(!LEAK_LABEL[spot]||!total)return;
+  const progress=loadImprovementProgress();
+  const attempts=Array.isArray(progress[spot])?progress[spot]:[];
+  attempts.push({t:Date.now(),score:Math.max(0,Number(score)||0),total:Math.max(1,Number(total)||1)});
+  progress[spot]=attempts.slice(-30);
+  try{localStorage.setItem(IMPROVEMENT_STORE,JSON.stringify(progress));}catch(e){}
+}
+function adaptiveSpotAccuracy(rows,spot){
+  const selected=rows.filter(d=>classifyLeakSpotRetro(d)===spot);
+  return selected.length?Math.round(selected.filter(d=>d.followed===true).length/selected.length*100):null;
+}
+function adaptivePlanRows(games){
+  const rows=analyticsSamples(games);
+  const recentRows=analyticsSamples(games.slice(0,10));
+  const previousRows=analyticsSamples(games.slice(10,20));
+  const progress=loadImprovementProgress();
+  return LEAK_ORDER.map(spot=>{
+    const decisions=rows.filter(d=>classifyLeakSpotRetro(d)===spot);
+    const mistakes=decisions.filter(d=>d.followed===false||(d.evLoss||0)>0);
+    const ev=mistakes.reduce((sum,d)=>sum+(d.evLoss||0),0);
+    const attempts=Array.isArray(progress[spot])?progress[spot]:[];
+    const drillTotal=attempts.reduce((sum,a)=>sum+(Number(a.total)||0),0);
+    const drillCorrect=attempts.reduce((sum,a)=>sum+(Number(a.score)||0),0);
+    const gameCorrect=decisions.filter(d=>d.followed===true).length;
+    const evidence=decisions.length+drillTotal;
+    const mastery=evidence?Math.round((gameCorrect+drillCorrect)/evidence*100):0;
+    const recent=adaptiveSpotAccuracy(recentRows,spot);
+    const previous=adaptiveSpotAccuracy(previousRows,spot);
+    const recentN=recentRows.filter(d=>classifyLeakSpotRetro(d)===spot).length;
+    const previousN=previousRows.filter(d=>classifyLeakSpotRetro(d)===spot).length;
+    const trend=recentN>=3&&previousN>=3?recent-previous:null;
+    const latest=attempts.length?attempts[attempts.length-1]:null;
+    return {spot,n:decisions.length,mistakes:mistakes.length,ev,evidence,mastery,trend,latest,
+      priority:ev*2+mistakes.length*Math.max(1,100-mastery)};
+  }).filter(r=>r.mistakes>0)
+    .sort((a,b)=>b.priority-a.priority||b.ev-a.ev||a.mastery-b.mastery)
+    .slice(0,3);
+}
 function renderReviewFocus(games){
-  const totals={};
-  reviewDecisions(reviewFilteredGames(games)).forEach(d=>{
-    const r=totals[d.spot]||(totals[d.spot]={spot:d.spot,n:0,ev:0});
-    r.n++;r.ev+=d.evLoss||0;
-  });
-  const rows=Object.values(totals).filter(r=>LEAK_LABEL[r.spot]).sort((a,b)=>b.ev-a.ev).slice(0,3);
-  if(!rows.length)return '';
-  return `<h3 class="rev-section-title">${T('revFocusTitle')}</h3>`+
-    `<p class="rev-section-sub">${T('revFocusSub')}</p><div class="rev-focus">`+
-    rows.map((r,i)=>`<div class="rev-focus-card"><div class="rev-focus-rank">${T('revFocusRank')(i+1)}</div>`+
-      `<b>${T(LEAK_LABEL[r.spot])}</b><span>${T('revTimes')(r.n)} · ${T('revAvgLoss')} −${usd(Math.round(r.ev/r.n))}</span>`+
+  const rows=adaptivePlanRows(reviewFilteredGames(games));
+  if(!rows.length)return `<div class="adaptive-plan"><h3 class="rev-section-title">🎯 ${T('planTitle')}</h3>`+
+    `<p class="rev-section-sub">${T('planSub')}</p><div class="rev-empty">${T('planNoData')}</div></div>`;
+  return `<div class="adaptive-plan"><h3 class="rev-section-title">🎯 ${T('planTitle')}</h3>`+
+    `<p class="rev-section-sub">${T('planSub')}</p><div class="rev-focus">`+
+    rows.map((r,i)=>{
+      const practiceCount=practiceSavedSpots(r.spot).length;
+      const status=r.mastery>=80?T('planStatusStrong'):r.mastery>=60?T('planStatusBuilding'):T('planStatusFocus');
+      const trend=r.trend==null?'':r.trend>=5?T('planTrendUp')(r.trend):r.trend<=-5?T('planTrendDown')(Math.abs(r.trend)):T('planTrendFlat');
+      return `<div class="rev-focus-card adaptive-plan-card"><div class="rev-focus-rank">${T('revFocusRank')(i+1)} · ${status}</div>`+
+      `<b>${T(LEAK_LABEL[r.spot])}</b>`+
+      `<div class="plan-mastery"><span>${T('planMastery')}</span><strong>${r.mastery}%</strong></div>`+
+      `<div class="plan-progress"><i style="width:${r.mastery}%"></i></div>`+
+      `<span class="plan-evidence">${T('planEvidence')(r.evidence)} · ${T(r.evidence>=10?'planReliable':'planEarly')}</span>`+
+      `<p class="plan-lesson">${T(PLAN_LESSON_KEYS[r.spot])}</p>`+
+      `<span>${T('revTimes')(r.mistakes)} · ${T('revAvgLoss')} −${usd(Math.round(r.ev/Math.max(r.mistakes,1)))}</span>`+
       `<span class="rev-focus-ev">−${usd(r.ev)} EV</span>`+
-      (practiceSavedSpots(r.spot).length?`<button type="button" class="rev-practice-btn" data-practice-spot="${r.spot}">${T('revPractice')(practiceSavedSpots(r.spot).length)}</button>`:'')+
-      `</div>`).join('')+`</div>`;
+      (trend?`<span class="plan-trend ${r.trend>=5?'pos':r.trend<=-5?'neg':''}">${trend}</span>`:'')+
+      (r.latest?`<span class="plan-last-drill">${T('planDrillResult')(r.latest.score,r.latest.total)}</span>`:'')+
+      (practiceCount?`<button type="button" class="rev-practice-btn" data-practice-spot="${r.spot}" data-practice-source="adaptive">${T('revPractice')(practiceCount)}</button>`:'')+
+      `</div>`;
+    }).join('')+`</div></div>`;
 }
 function analyticsSamples(games){
   if(!games.length)return [];
@@ -543,7 +631,7 @@ function renderReviewDecisions(games){
 }
 function wireReviewDecisionTools(games){
   const wirePractice=()=>$('revFocus').querySelectorAll('[data-practice-spot]').forEach(btn=>{
-    btn.onclick=()=>startScenarioPractice(btn.dataset.practiceSpot);
+    btn.onclick=()=>startScenarioPractice(btn.dataset.practiceSpot,btn.dataset.practiceSource||'');
   });
   const rerender=()=>{
     $('revFocus').innerHTML=renderReviewFocus(games);
@@ -558,7 +646,7 @@ function wireReviewDecisionTools(games){
     rerender();
   };
 }
-let practiceQueue=[],practiceIndex=0,practiceScore=0,practiceAnswered=false;
+let practiceQueue=[],practiceIndex=0,practiceScore=0,practiceAnswered=false,practiceSource='',practiceSpot='';
 function practiceSavedSpots(spot){
   const games=loadGames().filter(g=>!g.mp);
   const hist=loadHandHistory();
@@ -629,10 +717,10 @@ function renderPracticeSpot(){
     $('practiceNext').classList.remove('hidden');
   });
 }
-function startScenarioPractice(spot){
+function startScenarioPractice(spot,source=''){
   practiceQueue=practiceSavedSpots(spot);
   if(!practiceQueue.length)return;
-  practiceIndex=0;practiceScore=0;
+  practiceIndex=0;practiceScore=0;practiceSource=source;practiceSpot=spot;
   $('practiceTitle').textContent=T('practiceTitle');
   $('practiceSub').textContent=T('practiceSub');
   $('practiceClose').textContent=T('practiceClose');
@@ -645,8 +733,10 @@ function advanceScenarioPractice(){
   if(practiceIndex<practiceQueue.length-1){
     practiceIndex++;renderPracticeSpot();return;
   }
+  if(practiceSource==='adaptive')recordImprovementPractice(practiceSpot,practiceScore,practiceQueue.length);
   $('practiceProgress').textContent='';
-  $('practiceBody').innerHTML=`<div class="practice-result good">${T('practiceDone')(practiceScore,practiceQueue.length)}</div>`;
+  $('practiceBody').innerHTML=`<div class="practice-result good">${T('practiceDone')(practiceScore,practiceQueue.length)}`+
+    (practiceSource==='adaptive'?`<div class="plan-practice-saved">${T('planPracticeSaved')}</div>`:'')+`</div>`;
   $('practiceNext').classList.add('hidden');
 }
 function scenarioCode(c){return `${RANK_CH[c.r]}${'shdc'[c.s]}`;}
@@ -807,7 +897,7 @@ function scenarioShare(){
 }
 function scenarioStartDrill(s){
   const board=s.board.map(parseCardCode),used=new Set(board.map(c=>c.r*4+c.s)),deck=FULL_DECK.filter(c=>!used.has(c.r*4+c.s));
-  practiceQueue=[];
+  practiceQueue=[];practiceSource='';practiceSpot='';
   for(let i=0;i<10;i++){
     const shuffled=shuffle(deck),hole=shuffled.slice(0,2).map(scenarioCode),variant={...s,hole};
     const r=scenarioAnalyzeData(variant,260);
@@ -3285,6 +3375,7 @@ function initUI(){
       localStorage.removeItem('sg_poker_resume');
       localStorage.removeItem('sg_poker_games');
       localStorage.removeItem('sg_poker_scenarios');
+      localStorage.removeItem(IMPROVEMENT_STORE);
     }catch(e){}
     Object.assign(lifeStats,{hands:0,won:0,net:0,biggest:0,decisions:0,followed:0});
     applyRewardCosmetics();

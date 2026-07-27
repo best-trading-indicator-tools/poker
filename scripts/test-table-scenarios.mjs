@@ -126,9 +126,26 @@ const result=vm.runInContext(`(()=>{
   if(JSON.stringify(replayJumps)!==JSON.stringify({first4:0,nearest4:3,eight:1,missing:-1,decimal:-1}))
     throw new Error('hand-number replay jump regression '+JSON.stringify(replayJumps));
 
+  const planGames=[{gameId:'plan-1',t:Date.now(),decisions:[]}];
+  localStorage.setItem('sg_poker_history',JSON.stringify([
+    {gameId:'plan-1',hand:1,myDecisions:[
+      {spot:'pf_open',followed:false,evLoss:100},{spot:'pf_open',followed:true,evLoss:0},
+      {spot:'river_call',followed:false,evLoss:300}
+    ]}
+  ]));
+  const planBefore=adaptivePlanRows(planGames);
+  if(planBefore.length!==2||planBefore[0].spot!=='river_call'||planBefore[1].mastery!==50)
+    throw new Error('adaptive plan priority/mastery regression '+JSON.stringify(planBefore));
+  recordImprovementPractice('pf_open',4,5);
+  const planAfter=adaptivePlanRows(planGames);
+  const pfAfter=planAfter.find(r=>r.spot==='pf_open');
+  if(!pfAfter||pfAfter.mastery!==71||pfAfter.evidence!==7||pfAfter.latest.score!==4)
+    throw new Error('adaptive practice persistence regression '+JSON.stringify(pfAfter));
+
   return {actual,balanced,custom,fallback,randomIds,multiplayerBots:multiplayerBots.map(p=>p.style.id),
     blindDisplay,raisedBlindDisplay,tournamentBlinds,cashBlinds,screenshotExample,
-    soundPacks:Object.fromEntries(soundPacks.map(pack=>[pack,soundKinds.length])),replayJumps};
+    soundPacks:Object.fromEntries(soundPacks.map(pack=>[pack,soundKinds.length])),replayJumps,
+    adaptivePlan:{priority:planBefore.map(r=>r.spot),masteryBefore:planBefore[1].mastery,masteryAfter:pfAfter.mastery}};
 })()`,context);
 
 assert.ok(result);
