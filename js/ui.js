@@ -35,6 +35,16 @@ confidenceChart:"Preflop chart",confidenceMath:"Exact pot math + equity simulati
 confidenceChartNote:"Based on the position and stack-depth chart used for this exact preflop branch.",
 confidenceMathNote:"Pot odds are exact; equity and future action use simulations and estimated opponent ranges.",
 confidenceHeuristicNote:"Multiway ranges and future actions require broader assumptions, so treat the recommendation as directional.",
+analyticsTitle:"Advanced leak analytics",analyticsSub:"Every coach decision is grouped by context. Accuracy means how often your action matched the coach.",
+analyticsPosition:"By position",analyticsStreet:"By street",analyticsDepth:"By stack depth",analyticsPotType:"By pot type",
+analyticsDecisions:n=>`${n} decision${n!==1?'s':''}`,analyticsAccuracy:"accuracy",analyticsRecent:"Latest 10 sessions",analyticsPrevious:"Previous 10",
+analyticsNoData:"Play a few new hands to unlock contextual analytics. Older decisions still appear in the basic leak finder.",
+analyticsSample:"Treat groups below 10 decisions as early signals, not established leaks.",
+analyticsWorst:(name,ev,n)=>`Your largest measured leak is <b>${name}</b>: −${ev} EV across ${n} decisions.`,
+analyticsFrequent:(name,pct,n)=>`Your lowest coach-match rate is <b>${name}</b>: ${pct}% across ${n} decisions.`,
+analyticsTrendUp:n=>`Coach-match accuracy improved by <b>${n} points</b> versus the previous 10 sessions.`,
+analyticsTrendDown:n=>`Coach-match accuracy fell by <b>${n} points</b> versus the previous 10 sessions.`,
+potUnopened:"Unopened / limped",potSingle:"Single-raised pot",potThreeBet:"3-bet+ pot",potMultiway:"Multiway pot",
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
 resetData:"Clear saved data",resetInfo:"Deletes lifetime stats, hand history, session reviews and any unfinished game you could resume. Your Rewards level, XP, unlocks, equipped cosmetics and language choice are kept. This can't be undone.",resetConfirm:"Delete all stats, hand history, session reviews and unfinished games? Rewards level and progress will be kept.",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Quit this tournament?",quitCash:"Leave the table?",
@@ -127,6 +137,16 @@ confidenceChart:"Charte préflop",confidenceMath:"Calcul du pot exact + simulati
 confidenceChartNote:"Basé sur la charte de position et de profondeur utilisée pour cette branche préflop précise.",
 confidenceMathNote:"Les cotes du pot sont exactes ; l'équité et l'action future utilisent des simulations et des ranges adverses estimées.",
 confidenceHeuristicNote:"Les ranges multiway et les actions futures demandent plus d'hypothèses : considérez ce conseil comme directionnel.",
+analyticsTitle:"Analyse avancée des leaks",analyticsSub:"Chaque décision du coach est regroupée par contexte. La précision indique à quelle fréquence votre action correspond au coach.",
+analyticsPosition:"Par position",analyticsStreet:"Par street",analyticsDepth:"Par profondeur",analyticsPotType:"Par type de pot",
+analyticsDecisions:n=>`${n} décision${n!==1?'s':''}`,analyticsAccuracy:"de précision",analyticsRecent:"10 dernières sessions",analyticsPrevious:"10 précédentes",
+analyticsNoData:"Jouez quelques nouvelles mains pour débloquer l'analyse contextuelle. Les anciennes décisions restent dans le leak finder.",
+analyticsSample:"Les groupes de moins de 10 décisions sont des signaux précoces, pas encore des leaks établis.",
+analyticsWorst:(name,ev,n)=>`Votre leak mesuré principal est <b>${name}</b> : −${ev} EV sur ${n} décisions.`,
+analyticsFrequent:(name,pct,n)=>`Votre plus faible correspondance au coach est <b>${name}</b> : ${pct}% sur ${n} décisions.`,
+analyticsTrendUp:n=>`La précision face au coach progresse de <b>${n} points</b> par rapport aux 10 sessions précédentes.`,
+analyticsTrendDown:n=>`La précision face au coach baisse de <b>${n} points</b> par rapport aux 10 sessions précédentes.`,
+potUnopened:"Pot non ouvert / limpé",potSingle:"Pot relancé",potThreeBet:"Pot 3-bet+",potMultiway:"Pot multiway",
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
 resetData:"Effacer les données sauvegardées",resetInfo:"Supprime les statistiques globales, l’historique des mains, les bilans de sessions et toute partie en cours à reprendre. Votre niveau Rewards, XP, éléments débloqués, cosmétiques équipés et choix de langue sont conservés. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l’historique, les bilans de sessions et les parties en cours ? Le niveau et la progression Rewards seront conservés.",resetDone:"✓ Effacé",
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter ce tournoi ?",quitCash:"Quitter la table ?",
@@ -219,6 +239,16 @@ confidenceChart:"Tabla preflop",confidenceMath:"Cálculo exacto del bote + simul
 confidenceChartNote:"Basado en la tabla de posición y profundidad usada para esta rama preflop exacta.",
 confidenceMathNote:"Las odds del bote son exactas; la equity y la acción futura usan simulaciones y rangos rivales estimados.",
 confidenceHeuristicNote:"Los rangos multiway y las acciones futuras requieren más supuestos; interpreta el consejo como direccional.",
+analyticsTitle:"Análisis avanzado de fugas",analyticsSub:"Cada decisión del coach se agrupa por contexto. La precisión indica con qué frecuencia tu acción coincidió con el coach.",
+analyticsPosition:"Por posición",analyticsStreet:"Por calle",analyticsDepth:"Por profundidad",analyticsPotType:"Por tipo de bote",
+analyticsDecisions:n=>`${n} decisión${n!==1?'es':''}`,analyticsAccuracy:"de precisión",analyticsRecent:"Últimas 10 sesiones",analyticsPrevious:"10 anteriores",
+analyticsNoData:"Juega algunas manos nuevas para desbloquear el análisis contextual. Las decisiones antiguas siguen en el buscador de fugas.",
+analyticsSample:"Los grupos con menos de 10 decisiones son señales iniciales, no fugas confirmadas.",
+analyticsWorst:(name,ev,n)=>`Tu mayor fuga medida es <b>${name}</b>: −${ev} EV en ${n} decisiones.`,
+analyticsFrequent:(name,pct,n)=>`Tu menor coincidencia con el coach es <b>${name}</b>: ${pct}% en ${n} decisiones.`,
+analyticsTrendUp:n=>`La precisión mejoró <b>${n} puntos</b> frente a las 10 sesiones anteriores.`,
+analyticsTrendDown:n=>`La precisión bajó <b>${n} puntos</b> frente a las 10 sesiones anteriores.`,
+potUnopened:"Bote sin abrir / limpeado",potSingle:"Bote subido",potThreeBet:"Bote 3-bet+",potMultiway:"Bote multiway",
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
 resetData:"Borrar datos guardados",resetInfo:"Elimina estadísticas globales, historial de manos, resúmenes de sesiones y cualquier partida sin terminar. Se conservan tu nivel Rewards, XP, desbloqueos, cosméticos equipados e idioma. No se puede deshacer.",resetConfirm:"¿Borrar estadísticas, historial, resúmenes de sesiones y partidas sin terminar? El nivel y progreso Rewards se conservarán.",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Salir de este torneo?",quitCash:"¿Dejar la mesa?",
@@ -363,6 +393,79 @@ function renderReviewFocus(games){
       `<span class="rev-focus-ev">−${usd(r.ev)} EV</span>`+
       (practiceSavedSpots(r.spot).length?`<button type="button" class="rev-practice-btn" data-practice-spot="${r.spot}">${T('revPractice')(practiceSavedSpots(r.spot).length)}</button>`:'')+
       `</div>`).join('')+`</div>`;
+}
+function analyticsSamples(games){
+  if(!games.length)return [];
+  const ids=new Set(games.map(g=>String(g.gameId??'')));
+  const hist=loadHandHistory();
+  const rows=[];
+  hist.forEach(h=>{
+    if(ids.size&&!ids.has(String(h.gameId??'')))return;
+    (h.myDecisions||[]).forEach(d=>rows.push({...d,gameId:h.gameId,hand:h.hand,t:h.t}));
+  });
+  if(rows.length)return rows;
+  games.forEach(g=>(g.decisions||[]).forEach(d=>rows.push({...d,gameId:g.gameId,t:g.t})));
+  return rows;
+}
+function analyticsAccuracy(rows){
+  return rows.length?Math.round(rows.filter(d=>d.followed).length/rows.length*100):0;
+}
+function analyticsGroups(rows,keyFn,labelFn){
+  const map={};
+  rows.forEach(d=>{
+    const key=keyFn(d);
+    if(!key)return;
+    const r=map[key]||(map[key]={key,label:labelFn(key),n:0,followed:0,ev:0});
+    r.n++;if(d.followed)r.followed++;r.ev+=d.evLoss||0;
+  });
+  return Object.values(map).map(r=>({...r,accuracy:Math.round(r.followed/r.n*100)}));
+}
+function analyticsDepthKey(d){
+  const bb=Number(d.stackBB);
+  if(!Number.isFinite(bb)||bb<=0)return '';
+  return bb<10?'under10':bb<25?'10to24':bb<50?'25to49':'50plus';
+}
+function analyticsDepthLabel(k){
+  return k==='under10'?'< 10 BB':k==='10to24'?'10–24 BB':k==='25to49'?'25–49 BB':'50+ BB';
+}
+function analyticsPotLabel(k){
+  return T(k==='unopened'?'potUnopened':k==='singleRaised'?'potSingle':k==='threeBet'?'potThreeBet':'potMultiway');
+}
+function renderAnalyticsDimension(title,rows){
+  if(!rows.length)return '';
+  return `<div class="rev-dim"><h4>${title}</h4>`+
+    rows.sort((a,b)=>b.ev-a.ev||b.n-a.n).map(r=>`<div class="rev-dim-row"><span>${r.label}</span>`+
+      `<small>${r.n} · ${r.accuracy}%</small><b class="${r.ev>0?'neg':''}">${r.ev>0?'−'+usd(r.ev):'$0'}</b></div>`).join('')+`</div>`;
+}
+function renderAdvancedAnalytics(games){
+  const samples=analyticsSamples(games);
+  if(!samples.length)return `<h3 class="rev-section-title">${T('analyticsTitle')}</h3><div class="rev-empty">${T('analyticsNoData')}</div>`;
+  const positions=analyticsGroups(samples,d=>d.pos||'',k=>k);
+  const streets=analyticsGroups(samples,d=>d.stage||'',reviewStreetLabel);
+  const depths=analyticsGroups(samples,analyticsDepthKey,analyticsDepthLabel);
+  const pots=analyticsGroups(samples,d=>d.potType||'',analyticsPotLabel);
+  const hasDimensions=positions.length||streets.length||depths.length||pots.length;
+  const candidates=[...positions,...streets,...depths,...pots];
+  const worst=candidates.filter(r=>r.n>=3&&r.ev>0).sort((a,b)=>b.ev-a.ev)[0];
+  const frequent=candidates.filter(r=>r.n>=5).sort((a,b)=>a.accuracy-b.accuracy||b.n-a.n)[0];
+  const latestGames=games.slice(0,10),previousGames=games.slice(10,20);
+  const latest=analyticsSamples(latestGames),previous=analyticsSamples(previousGames);
+  const latestAcc=analyticsAccuracy(latest),previousAcc=analyticsAccuracy(previous);
+  const delta=latest.length&&previous.length?latestAcc-previousAcc:0;
+  const insights=[];
+  if(worst)insights.push(T('analyticsWorst')(worst.label,usd(worst.ev),worst.n));
+  if(frequent&&(!worst||frequent.key!==worst.key))insights.push(T('analyticsFrequent')(frequent.label,frequent.accuracy,frequent.n));
+  if(delta>0)insights.push(T('analyticsTrendUp')(delta));
+  else if(delta<0)insights.push(T('analyticsTrendDown')(Math.abs(delta)));
+  return `<div class="rev-analytics"><h3 class="rev-section-title">${T('analyticsTitle')}</h3>`+
+    `<p class="rev-section-sub">${T('analyticsSub')}</p>`+
+    (insights.length?`<div class="rev-insights">${insights.slice(0,2).map(x=>`<div class="rev-insight">${x}</div>`).join('')}</div>`:'')+
+    (latest.length&&previous.length?`<div class="rev-trend"><div class="rev-trend-block"><span>${T('analyticsPrevious')}</span><b>${previousAcc}%</b></div>`+
+      `<span class="rev-trend-arrow">→</span><div class="rev-trend-block"><span>${T('analyticsRecent')}</span><b class="${delta>=0?'pos':'neg'}">${latestAcc}% ${delta?`(${delta>0?'+':''}${delta})`:''}</b></div></div>`:'')+
+    (hasDimensions?`<div class="rev-dim-grid">${renderAnalyticsDimension(T('analyticsPosition'),positions)}${renderAnalyticsDimension(T('analyticsStreet'),streets)}`+
+      `${renderAnalyticsDimension(T('analyticsDepth'),depths)}${renderAnalyticsDimension(T('analyticsPotType'),pots)}</div>`:
+      `<div class="rev-empty">${T('analyticsNoData')}</div>`)+
+    `<p class="rev-sample-note">${T('analyticsSample')}</p></div>`;
 }
 function reviewStreetLabel(stage){
   return T(stage==='turn'?'turnSt':stage==='river'?'riverSt':stage)||stage;
@@ -2231,9 +2334,12 @@ function humanAct(type,amount){
     }
     const opps=inHand().length-1;
     const spot=typeof classifyLeakSpot==='function'?classifyLeakSpot(callNow,opps):classifyLeakSpotRetro({stage:state.stage,action:type});
+    const potType=opps>=2?'multiway':(state.preflopRaiseCount||0)>=2?'threeBet'
+      :(state.preflopRaiseCount||0)>=1?'singleRaised':'unopened';
     const decisionContext={stage:state.stage,rec:r,action:type,followed,evLoss,spot,opps,
       pos:coachRecNow.pos||'',confidenceKind:coachRecNow.confidenceKind||'heuristic',
       pot:coachRecNow.pot,callAmt:coachRecNow.callAmt,eq:coachRecNow.eq,needEq:coachRecNow.needEq,
+      stackBB:state.bb>0?Math.round((p.chips+p.bet)/state.bb*10)/10:0,potType,
       logIndex:(state.handLog||[]).length};
     state.humanDecisions.push(decisionContext);
     if(evLoss>0&&state.sessStats){
@@ -2389,6 +2495,7 @@ function showSessionReview(){
   $('revSpark').innerHTML=n>=2?evSparklineSVG(games.slice().reverse()):'';
   $('revRewards').innerHTML=renderRewardReview();
   $('revFocus').innerHTML=renderReviewFocus(games);
+  $('revAnalytics').innerHTML=renderAdvancedAnalytics(games);
   $('revLeaks').innerHTML=renderRevLeaks(games.slice().reverse());
   $('revDecisionTools').innerHTML=renderReviewDecisionTools();
   renderReviewDecisions(games);

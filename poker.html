@@ -520,6 +520,23 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
 .rev-hand-btn{border:1px solid rgba(232,182,76,.55);background:rgba(232,182,76,.08);color:var(--gold);border-radius:7px;padding:6px 9px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .rev-hand-btn:hover{background:rgba(232,182,76,.16);}
 .rev-empty{border:1px dashed var(--line);border-radius:10px;padding:14px;color:var(--dim);font-size:12px;line-height:1.45;}
+.rev-analytics{margin-bottom:16px;}
+.rev-insights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:11px;}
+.rev-insight{border:1px solid rgba(113,181,224,.3);background:rgba(65,139,190,.07);border-radius:10px;padding:11px 12px;font-size:12px;line-height:1.45;color:#cbd8e5;}
+.rev-insight b{color:#8fd0f8;}
+.rev-trend{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:11px 12px;margin-bottom:11px;}
+.rev-trend-block span{display:block;color:var(--dim);font-size:10.5px;}
+.rev-trend-block b{display:block;font-size:15px;margin-top:2px;}
+.rev-trend-arrow{color:var(--gold);font-size:18px;}
+.rev-dim-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+.rev-dim{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:10px 11px;}
+.rev-dim h4{font-size:12px;color:var(--gold);margin-bottom:7px;}
+.rev-dim-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px;padding:5px 0;border-top:1px solid rgba(255,255,255,.055);font-size:11px;}
+.rev-dim-row:first-of-type{border-top:0;}
+.rev-dim-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rev-dim-row small{color:var(--dim);white-space:nowrap;}
+.rev-dim-row b{white-space:nowrap;}
+.rev-sample-note{margin-top:9px;color:var(--dim);font-size:11px;line-height:1.4;}
 .leak-h3{font-size:13px;margin-bottom:8px;color:var(--text);}
 .leak-none{color:var(--dim);font-size:12px;margin-bottom:8px;}
 .leak-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:var(--panel2);}
@@ -574,6 +591,7 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
   .rev-controls{grid-template-columns:1fr;}
   .rev-decision{grid-template-columns:1fr;}
   .rev-decision-actions{justify-content:space-between;}
+  .rev-insights,.rev-dim-grid{grid-template-columns:1fr;}
   .practice-actions{grid-template-columns:1fr 1fr;}
 }
 
@@ -1229,6 +1247,7 @@ body.fl #chipPreview{display:none!important;}
     <div id="revSpark"></div>
     <div id="revRewards"></div>
     <div id="revFocus"></div>
+    <div id="revAnalytics"></div>
     <div id="revLeaks"></div>
     <div id="revDecisionTools"></div>
     <div id="revDecisions"></div>
