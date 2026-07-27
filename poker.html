@@ -56,7 +56,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 .seg button{background:var(--panel2);border:none;color:var(--dim);padding:8px 16px;font-size:14px;cursor:pointer;font-weight:600;}
 .seg button.on{background:var(--gold);color:#1a1408;}
 #startBtn{width:100%;margin-top:8px;background:var(--gold);color:#1a1408;font-size:16px;font-weight:700;border:none;border-radius:10px;padding:13px;cursor:pointer;}
-.setup-actions #startBtn,.setup-actions #resumeBtn,.setup-actions #reviewBtn{margin-top:0;min-height:50px;}
+.setup-actions #startBtn,.setup-actions #resumeBtn,.setup-actions #reviewBtn,.setup-actions #scenarioBtn{margin-top:0;min-height:50px;}
 .setup-actions #startBtn{background:linear-gradient(135deg,#f3c75c,#dca632);box-shadow:0 9px 20px rgba(196,138,27,.2),inset 0 1px 0 rgba(255,255,255,.48);}
 .setup-actions #resumeBtn{background:rgba(232,182,76,.08);border-color:rgba(232,182,76,.62);}
 .setup-actions #reviewBtn{background:rgba(255,255,255,.025);}
@@ -86,6 +86,8 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);cursor:poin
 #benchOut{margin-top:8px;font-size:12px;line-height:1.55;color:var(--text);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;padding:9px 11px;}
 #resumeBtn:hover,#reviewBtn:hover{background:rgba(230,180,60,.12);}
 #reviewBtn{border-color:var(--line);color:var(--text);font-weight:600;}
+#scenarioBtn{width:100%;border:1px solid rgba(113,181,224,.45);background:rgba(65,139,190,.07);color:#8fd0f8;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;}
+#scenarioBtn:hover{background:rgba(65,139,190,.14);}
 .reward-bar{height:8px;background:#10141b;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-bottom:10px;}
 .reward-bar i{display:block;height:100%;background:linear-gradient(90deg,#62d68a,var(--gold));width:0%;}
 #ovBlunders{margin:12px 0 4px;text-align:left;max-height:38vh;overflow-y:auto;}
@@ -585,6 +587,34 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
 .practice-footer button{flex:1;border-radius:9px;padding:10px;font-weight:800;cursor:pointer;}
 #practiceNext{background:var(--gold);color:#1a1408;border:none;}
 #practiceClose{background:none;color:var(--text);border:1px solid var(--line);}
+#scenarioOv{position:fixed;inset:0;background:rgba(8,10,14,.9);display:flex;align-items:center;justify-content:center;z-index:70;}
+.scenario-card{background:var(--panel);border:1px solid rgba(113,181,224,.38);border-radius:16px;padding:24px 28px;width:780px;max-width:94vw;max-height:92vh;overflow-y:auto;box-shadow:0 24px 65px rgba(0,0,0,.72);}
+.scenario-card h2{font-size:19px;color:#8fd0f8;margin-bottom:4px;}
+.scenario-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:17px 0;}
+.scenario-field{font-size:11px;color:var(--dim);}
+.scenario-field.wide{grid-column:span 2;}
+.scenario-field input,.scenario-field select{display:block;width:100%;margin-top:5px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);padding:9px 10px;font-size:13px;}
+.scenario-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;}
+.scenario-actions button{flex:1;min-width:120px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:10px;font-weight:700;cursor:pointer;}
+#scenarioAnalyze{background:#438bc0;border-color:#65a9d8;color:white;}
+#scenarioSave{border-color:rgba(232,182,76,.5);color:var(--gold);}
+.scenario-error{color:#ff9b93;font-size:12px;margin-top:8px;}
+.scenario-result{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:14px;margin-top:12px;}
+.scenario-result-head{display:flex;justify-content:space-between;gap:12px;align-items:center;}
+.scenario-result-head strong{font-size:19px;color:var(--gold);}
+.scenario-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;}
+.scenario-metric{border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:9px;}
+.scenario-metric span{display:block;color:var(--dim);font-size:10.5px;}
+.scenario-metric b{display:block;font-size:14px;margin-top:3px;}
+.scenario-reason{font-size:13px;line-height:1.5;color:#d5dce5;}
+.scenario-play-actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px;}
+.scenario-play-actions button{border:1px solid var(--line);border-radius:8px;background:#181e28;color:var(--text);padding:8px 5px;font-size:11px;font-weight:700;cursor:pointer;}
+.scenario-play-actions button.correct{border-color:#62d68a;background:rgba(98,214,138,.14);color:#85eaaa;}
+.scenario-play-actions button.wrong{border-color:#e2574c;background:rgba(226,87,76,.13);color:#ff9b93;}
+.scenario-saved{margin-top:16px;border-top:1px solid var(--line);padding-top:13px;}
+.scenario-saved-row{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-top:6px;font-size:12px;}
+.scenario-saved-row span{flex:1;}
+.scenario-saved-row button{border:1px solid var(--line);border-radius:6px;background:none;color:var(--dim);padding:5px 8px;cursor:pointer;}
 @media(max-width:650px){
   .rev-card{padding:19px 16px;}
   .rev-focus{grid-template-columns:1fr;}
@@ -593,6 +623,9 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
   .rev-decision-actions{justify-content:space-between;}
   .rev-insights,.rev-dim-grid{grid-template-columns:1fr;}
   .practice-actions{grid-template-columns:1fr 1fr;}
+  .scenario-grid{grid-template-columns:1fr 1fr;}
+  .scenario-field.wide{grid-column:span 2;}
+  .scenario-play-actions{grid-template-columns:1fr 1fr;}
 }
 
 /* ---------- REWARDS ROOM ---------- */
@@ -1119,6 +1152,7 @@ body.fl #chipPreview{display:none!important;}
             <div class="setup-action-divider"></div>
             <button id="resumeBtn" class="hidden">&#9654; Resume tournament</button>
             <button id="reviewBtn" class="hidden">&#128202; Session review</button>
+            <button id="scenarioBtn" type="button">🧩 Scenario builder</button>
           </div>
         </div>
         <div id="resetRow">
@@ -1254,6 +1288,30 @@ body.fl #chipPreview{display:none!important;}
     <div id="revList"></div>
     <button id="revAllHands" type="button">All saved hands</button>
     <button id="revClose" type="button">Close</button>
+  </div>
+</div>
+
+<div id="scenarioOv" class="hidden" aria-hidden="true">
+  <div class="scenario-card" role="document">
+    <h2 id="scenarioTitle">Custom Scenario Builder</h2>
+    <p id="scenarioSub" class="rev-intro">Build a decision, analyze it, save it or practice variations.</p>
+    <div class="scenario-grid">
+      <label class="scenario-field wide"><span id="scCardsLbl">Hero cards</span><input id="scCards" value="As Kh" maxlength="8" placeholder="As Kh"></label>
+      <label class="scenario-field"><span id="scBoardLbl">Board</span><input id="scBoard" maxlength="18" placeholder="Qs 7h 2c"></label>
+      <label class="scenario-field"><span id="scPosLbl">Position</span><select id="scPos"><option>UTG</option><option>HJ</option><option>CO</option><option selected>BTN</option><option>SB</option><option>BB</option></select></label>
+      <label class="scenario-field"><span id="scOppLbl">Opponents</span><input id="scOpps" type="number" min="1" max="5" value="1"></label>
+      <label class="scenario-field"><span id="scStackLbl">Effective stack (BB)</span><input id="scStack" type="number" min="2" max="300" value="100"></label>
+      <label class="scenario-field"><span id="scPotLbl">Pot</span><input id="scPot" type="number" min="1" value="150"></label>
+      <label class="scenario-field"><span id="scCallLbl">To call</span><input id="scCall" type="number" min="0" value="0"></label>
+      <label class="scenario-field"><span id="scProfileLbl">Opponent profile</span><select id="scProfile"><option value="rock">🪨 Tight</option><option value="station">📞 Loose</option><option value="shark" selected>🦈 Aggressive</option><option value="maniac">🔥 Wild</option></select></label>
+      <label class="scenario-field"><span id="scGameLbl">Context</span><select id="scGame"><option value="cash">Cash game</option><option value="sng">Sit & Go</option></select></label>
+      <label class="scenario-field"><span id="scActionLbl">Previous action</span><select id="scAction"><option value="unopened">Unopened</option><option value="limp">Limp</option><option value="raise">Raise</option><option value="threeBet">3-bet</option><option value="cbet">C-bet</option><option value="checkRaise">Check-raise</option><option value="allin">All-in</option></select></label>
+    </div>
+    <div id="scenarioError" class="scenario-error hidden"></div>
+    <div class="scenario-actions"><button id="scenarioAnalyze" type="button">Analyze spot</button><button id="scenarioSave" type="button">Save scenario</button><button id="scenarioShare" type="button">Copy share link</button></div>
+    <div id="scenarioResult"></div>
+    <div id="scenarioSaved" class="scenario-saved"></div>
+    <button id="scenarioClose" type="button" class="rev-hand-btn" style="width:100%;margin-top:14px">Close</button>
   </div>
 </div>
 

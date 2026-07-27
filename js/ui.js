@@ -45,8 +45,18 @@ analyticsFrequent:(name,pct,n)=>`Your lowest coach-match rate is <b>${name}</b>:
 analyticsTrendUp:n=>`Coach-match accuracy improved by <b>${n} points</b> versus the previous 10 sessions.`,
 analyticsTrendDown:n=>`Coach-match accuracy fell by <b>${n} points</b> versus the previous 10 sessions.`,
 potUnopened:"Unopened / limped",potSingle:"Single-raised pot",potThreeBet:"3-bet+ pot",potMultiway:"Multiway pot",
+scenarioBtn:"🧩 Scenario builder",scenarioTitle:"Custom Scenario Builder",scenarioSub:"Build a decision, analyze it, save it or practice it immediately.",
+scCards:"Hero cards",scBoard:"Board",scPos:"Position",scOpps:"Opponents",scStack:"Effective stack (BB)",scPot:"Pot",scCall:"To call",scProfile:"Opponent profile",scGame:"Context",scAction:"Previous action",
+scAnalyze:"Analyze spot",scSave:"Save scenario",scShare:"Copy share link",scSaved:"Saved scenarios",scClose:"Close",
+scInvalid:"Use valid unique cards such as “As Kh” and enter 0, 3, 4 or 5 board cards.",scSavedOk:"Scenario saved.",scCopied:"Share link copied.",
+scRecommendation:"Recommendation",scEquity:"Estimated equity",scPrice:"Pot odds",scConfidence:"Confidence",scPlay:"Play this decision",scDrill:"Practice 10 variations",scCorrect:"Correct.",scWrong:r=>`Coach recommendation: ${r}.`,
+scReasonCall:(e,n)=>`Your estimated equity (${e}%) clears the ${n}% price after a small realization adjustment.`,
+scReasonFold:(e,n)=>`Your estimated equity (${e}%) does not clear the adjusted ${n}% requirement.`,
+scReasonRaise:e=>`With about ${e}% equity, building the pot is preferred against the selected range profile.`,
+scReasonCheck:e=>`Checking keeps the pot controlled with about ${e}% equity and costs nothing.`,
+scUnopened:"Unopened",scLimp:"Limp",scRaise:"Raise",scThreeBet:"3-bet",scCbet:"C-bet",scCheckRaise:"Check-raise",scAllin:"All-in",
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
-resetData:"Clear saved data",resetInfo:"Deletes lifetime stats, hand history, session reviews and any unfinished game you could resume. Your Rewards level, XP, unlocks, equipped cosmetics and language choice are kept. This can't be undone.",resetConfirm:"Delete all stats, hand history, session reviews and unfinished games? Rewards level and progress will be kept.",resetDone:"✓ Cleared",
+resetData:"Clear saved data",resetInfo:"Deletes lifetime stats, hand history, session reviews, saved scenarios and any unfinished game you could resume. Your Rewards level, XP, unlocks, equipped cosmetics and language choice are kept. This can't be undone.",resetConfirm:"Delete all stats, hand history, session reviews, saved scenarios and unfinished games? Rewards level and progress will be kept.",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Quit this tournament?",quitCash:"Leave the table?",
 fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ Your turn",
@@ -147,8 +157,18 @@ analyticsFrequent:(name,pct,n)=>`Votre plus faible correspondance au coach est <
 analyticsTrendUp:n=>`La précision face au coach progresse de <b>${n} points</b> par rapport aux 10 sessions précédentes.`,
 analyticsTrendDown:n=>`La précision face au coach baisse de <b>${n} points</b> par rapport aux 10 sessions précédentes.`,
 potUnopened:"Pot non ouvert / limpé",potSingle:"Pot relancé",potThreeBet:"Pot 3-bet+",potMultiway:"Pot multiway",
+scenarioBtn:"🧩 Builder de scénarios",scenarioTitle:"Builder de scénarios personnalisés",scenarioSub:"Construisez une décision, analysez-la, sauvegardez-la ou jouez-la immédiatement.",
+scCards:"Vos cartes",scBoard:"Board",scPos:"Position",scOpps:"Adversaires",scStack:"Tapis effectif (BB)",scPot:"Pot",scCall:"À payer",scProfile:"Profil adverse",scGame:"Contexte",scAction:"Action précédente",
+scAnalyze:"Analyser le spot",scSave:"Sauvegarder",scShare:"Copier le lien",scSaved:"Scénarios sauvegardés",scClose:"Fermer",
+scInvalid:"Utilisez des cartes uniques valides comme « As Kh » et entrez 0, 3, 4 ou 5 cartes au board.",scSavedOk:"Scénario sauvegardé.",scCopied:"Lien copié.",
+scRecommendation:"Recommandation",scEquity:"Équité estimée",scPrice:"Cotes du pot",scConfidence:"Confiance",scPlay:"Jouer cette décision",scDrill:"Pratiquer 10 variantes",scCorrect:"Correct.",scWrong:r=>`Recommandation du coach : ${r}.`,
+scReasonCall:(e,n)=>`Votre équité estimée (${e} %) dépasse le prix de ${n} % après un léger ajustement de réalisation.`,
+scReasonFold:(e,n)=>`Votre équité estimée (${e} %) ne dépasse pas le seuil ajusté de ${n} %.`,
+scReasonRaise:e=>`Avec environ ${e} % d'équité, construire le pot est préférable face au profil sélectionné.`,
+scReasonCheck:e=>`Checker contrôle le pot avec environ ${e} % d'équité et ne coûte rien.`,
+scUnopened:"Non ouvert",scLimp:"Limp",scRaise:"Relance",scThreeBet:"3-bet",scCbet:"C-bet",scCheckRaise:"Check-raise",scAllin:"Tapis",
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
-resetData:"Effacer les données sauvegardées",resetInfo:"Supprime les statistiques globales, l’historique des mains, les bilans de sessions et toute partie en cours à reprendre. Votre niveau Rewards, XP, éléments débloqués, cosmétiques équipés et choix de langue sont conservés. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l’historique, les bilans de sessions et les parties en cours ? Le niveau et la progression Rewards seront conservés.",resetDone:"✓ Effacé",
+resetData:"Effacer les données sauvegardées",resetInfo:"Supprime les statistiques globales, l’historique des mains, les bilans, les scénarios sauvegardés et toute partie en cours à reprendre. Votre niveau Rewards, XP, éléments débloqués, cosmétiques équipés et choix de langue sont conservés. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l’historique, les bilans, les scénarios et les parties en cours ? Le niveau et la progression Rewards seront conservés.",resetDone:"✓ Effacé",
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter ce tournoi ?",quitCash:"Quitter la table ?",
 fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ À vous",
@@ -249,8 +269,18 @@ analyticsFrequent:(name,pct,n)=>`Tu menor coincidencia con el coach es <b>${name
 analyticsTrendUp:n=>`La precisión mejoró <b>${n} puntos</b> frente a las 10 sesiones anteriores.`,
 analyticsTrendDown:n=>`La precisión bajó <b>${n} puntos</b> frente a las 10 sesiones anteriores.`,
 potUnopened:"Bote sin abrir / limpeado",potSingle:"Bote subido",potThreeBet:"Bote 3-bet+",potMultiway:"Bote multiway",
+scenarioBtn:"🧩 Constructor de situaciones",scenarioTitle:"Constructor de situaciones personalizadas",scenarioSub:"Crea una decisión, analízala, guárdala o juégala de inmediato.",
+scCards:"Tus cartas",scBoard:"Mesa",scPos:"Posición",scOpps:"Rivales",scStack:"Stack efectivo (BB)",scPot:"Bote",scCall:"A pagar",scProfile:"Perfil rival",scGame:"Contexto",scAction:"Acción anterior",
+scAnalyze:"Analizar",scSave:"Guardar",scShare:"Copiar enlace",scSaved:"Situaciones guardadas",scClose:"Cerrar",
+scInvalid:"Usa cartas únicas válidas como « As Kh » e introduce 0, 3, 4 o 5 cartas en la mesa.",scSavedOk:"Situación guardada.",scCopied:"Enlace copiado.",
+scRecommendation:"Recomendación",scEquity:"Equity estimada",scPrice:"Odds del bote",scConfidence:"Confianza",scPlay:"Jugar esta decisión",scDrill:"Practicar 10 variantes",scCorrect:"Correcto.",scWrong:r=>`Recomendación del coach: ${r}.`,
+scReasonCall:(e,n)=>`Tu equity estimada (${e} %) supera el precio del ${n} % tras un pequeño ajuste de realización.`,
+scReasonFold:(e,n)=>`Tu equity estimada (${e} %) no supera el requisito ajustado del ${n} %.`,
+scReasonRaise:e=>`Con cerca del ${e} % de equity, construir el bote es preferible contra el perfil elegido.`,
+scReasonCheck:e=>`Pasar controla el bote con cerca del ${e} % de equity y no cuesta nada.`,
+scUnopened:"Sin abrir",scLimp:"Limp",scRaise:"Subida",scThreeBet:"3-bet",scCbet:"C-bet",scCheckRaise:"Check-raise",scAllin:"All-in",
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
-resetData:"Borrar datos guardados",resetInfo:"Elimina estadísticas globales, historial de manos, resúmenes de sesiones y cualquier partida sin terminar. Se conservan tu nivel Rewards, XP, desbloqueos, cosméticos equipados e idioma. No se puede deshacer.",resetConfirm:"¿Borrar estadísticas, historial, resúmenes de sesiones y partidas sin terminar? El nivel y progreso Rewards se conservarán.",resetDone:"✓ Borrado",
+resetData:"Borrar datos guardados",resetInfo:"Elimina estadísticas globales, historial de manos, resúmenes, situaciones guardadas y cualquier partida sin terminar. Se conservan tu nivel Rewards, XP, desbloqueos, cosméticos equipados e idioma. No se puede deshacer.",resetConfirm:"¿Borrar estadísticas, historial, resúmenes, situaciones y partidas sin terminar? El nivel y progreso Rewards se conservarán.",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Salir de este torneo?",quitCash:"¿Dejar la mesa?",
 fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
 actMenu:"◀ Menú",actTurn:"◀ Tu turno",
@@ -615,6 +645,137 @@ function advanceScenarioPractice(){
   $('practiceProgress').textContent='';
   $('practiceBody').innerHTML=`<div class="practice-result good">${T('practiceDone')(practiceScore,practiceQueue.length)}</div>`;
   $('practiceNext').classList.add('hidden');
+}
+function scenarioCardCodes(text){
+  const tokens=String(text||'').trim().split(/[\s,]+/).filter(Boolean),out=[];
+  const ranks={T:10,J:11,Q:12,K:13,A:14},suits={s:0,h:1,d:2,c:3};
+  for(const raw of tokens){
+    const m=raw.match(/^(10|[2-9TJQKA])([shdc])$/i);
+    if(!m)return null;
+    const rank=m[1].toUpperCase(),suit=m[2].toLowerCase();
+    out.push({r:ranks[rank]||Number(rank),s:suits[suit]});
+  }
+  return out;
+}
+function scenarioCode(c){return `${RANK_CH[c.r]}${'shdc'[c.s]}`;}
+function scenarioRead(){
+  const hole=scenarioCardCodes($('scCards').value),board=scenarioCardCodes($('scBoard').value);
+  const all=(hole||[]).concat(board||[]),unique=new Set(all.map(c=>c.r*4+c.s));
+  if(!hole||hole.length!==2||!board||![0,3,4,5].includes(board.length)||unique.size!==all.length)return null;
+  return {
+    hole:hole.map(scenarioCode),board:board.map(scenarioCode),pos:$('scPos').value,
+    opps:clamp(Math.round(Number($('scOpps').value)||1),1,5),
+    stackBB:clamp(Number($('scStack').value)||100,2,300),
+    pot:Math.max(1,Number($('scPot').value)||1),callAmt:Math.max(0,Number($('scCall').value)||0),
+    profile:$('scProfile').value,gameType:$('scGame').value,previousAction:$('scAction').value
+  };
+}
+function scenarioStage(s){return s.board.length===0?'preflop':s.board.length===3?'flop':s.board.length===4?'turn':'river';}
+function scenarioAnalyzeData(s,sims=700){
+  const hole=s.hole.map(parseCardCode),board=s.board.map(parseCardCode);
+  const baseCap={rock:.22,station:.7,shark:.46,maniac:.82}[s.profile]||.5;
+  const actionFactor={unopened:1,limp:1.12,raise:.78,threeBet:.48,cbet:.88,checkRaise:.38,allin:.24}[s.previousAction]||1;
+  const cap=clamp(baseCap*actionFactor,.04,1);
+  const floor={rock:0,station:0,shark:.015,maniac:.04}[s.profile]||0;
+  const eq=mcEquityR(hole,board,Array.from({length:s.opps},()=>({cap,floor})),sims);
+  const price=s.callAmt>0?s.callAmt/(s.pot+s.callAmt):0,stage=scenarioStage(s);
+  const need=clamp(price+(s.opps>1?0.025:0)+((s.pos==='SB'||s.pos==='BB')?0.015:-0.005)+
+    (s.gameType==='sng'&&s.stackBB<20?0.015:0),0,.95);
+  let rec;
+  if(stage==='preflop'){
+    const code=holeCode(hole),rank=handPct[code]||1;
+    const open={UTG:.14,HJ:.19,CO:.27,BTN:.45,SB:.52,BB:.6}[s.pos]||.22;
+    if(s.stackBB<=12)rec=rank<=Math.min(open*1.15,.55)?'ALLIN':'FOLD';
+    else rec=s.callAmt>0?(rank<=.08?'RAISE':eq>=need?'CALL':'FOLD'):(rank<=open?'RAISE':'FOLD');
+  }else rec=s.callAmt>0?(eq>=.72?'RAISE':eq>=need?'CALL':'FOLD'):(eq>=.58?'RAISE':'CHECK');
+  if(rec==='RAISE'&&s.stackBB<=8)rec='ALLIN';
+  const confidence=stage==='preflop'
+    ?{source:T('confidenceChart'),level:T('confidenceHigh'),kind:'chart'}
+    :s.opps===1?{source:T('confidenceMath'),level:T('confidenceMedium'),kind:'simulation'}
+    :{source:T('confidenceHeuristic'),level:T('confidenceLimited'),kind:'heuristic'};
+  const e=Math.round(eq*100),n=Math.round(need*100);
+  const reason=rec==='CALL'?T('scReasonCall')(e,n):rec==='FOLD'?T('scReasonFold')(e,n):(rec==='RAISE'||rec==='ALLIN')?T('scReasonRaise')(e):T('scReasonCheck')(e);
+  return {rec,eq,price,need,confidence,reason,stage,hand:stage==='preflop'?holeCode(hole):handName(evalBest(hole.concat(board)))};
+}
+function scenarioShowError(text){
+  const el=$('scenarioError');el.textContent=text;el.classList.toggle('hidden',!text);
+}
+let scenarioCurrent=null,scenarioCurrentResult=null;
+function scenarioRenderResult(s,r){
+  const actions=['FOLD','CHECK','CALL','RAISE','ALLIN'];
+  $('scenarioResult').innerHTML=`<div class="scenario-result"><div class="scenario-result-head"><span>${T('scRecommendation')}</span><strong>${recWord(r.rec)}</strong></div>`+
+    `<div class="scenario-metrics"><div class="scenario-metric"><span>${T('scEquity')}</span><b>~${Math.round(r.eq*100)}%</b></div>`+
+    `<div class="scenario-metric"><span>${T('scPrice')}</span><b>${s.callAmt>0?Math.round(r.price*100)+'%':'—'}</b></div>`+
+    `<div class="scenario-metric"><span>${T('scConfidence')}</span><b>${r.confidence.level}</b></div></div>`+
+    `<p class="scenario-reason">${r.hand} · ${r.reason}</p><h4 style="margin-top:13px">${T('scPlay')}</h4>`+
+    `<div class="scenario-play-actions">${actions.map(a=>`<button type="button" data-sc-action="${a}">${recWord(a)}</button>`).join('')}</div>`+
+    `<div id="scPlayFeedback"></div><button id="scDrillBtn" type="button" class="rev-practice-btn">${T('scDrill')}</button></div>`;
+  $('scenarioResult').querySelectorAll('[data-sc-action]').forEach(btn=>btn.onclick=()=>{
+    const ok=btn.dataset.scAction===r.rec;
+    $('scenarioResult').querySelectorAll('[data-sc-action]').forEach(b=>{b.disabled=true;if(b.dataset.scAction===r.rec)b.classList.add('correct');});
+    if(!ok)btn.classList.add('wrong');
+    $('scPlayFeedback').className=`practice-result ${ok?'good':'bad'}`;
+    $('scPlayFeedback').textContent=ok?T('scCorrect'):T('scWrong')(recWord(r.rec));
+  });
+  $('scDrillBtn').onclick=()=>scenarioStartDrill(s);
+}
+function scenarioAnalyzeFromForm(){
+  const s=scenarioRead();
+  if(!s){scenarioShowError(T('scInvalid'));return null;}
+  scenarioShowError('');scenarioCurrent=s;
+  scenarioCurrentResult=scenarioAnalyzeData(s);
+  scenarioRenderResult(s,scenarioCurrentResult);
+  return s;
+}
+function scenarioStore(){
+  try{return JSON.parse(localStorage.getItem('sg_poker_scenarios')||'[]');}catch(e){return [];}
+}
+function scenarioSave(){
+  const s=scenarioRead();if(!s){scenarioShowError(T('scInvalid'));return;}
+  const list=scenarioStore();list.unshift({...s,id:Date.now()});while(list.length>40)list.pop();
+  localStorage.setItem('sg_poker_scenarios',JSON.stringify(list));scenarioShowError(T('scSavedOk'));scenarioRenderSaved();
+}
+function scenarioFill(s){
+  $('scCards').value=s.hole.join(' ');$('scBoard').value=s.board.join(' ');$('scPos').value=s.pos;
+  $('scOpps').value=s.opps;$('scStack').value=s.stackBB;$('scPot').value=s.pot;$('scCall').value=s.callAmt;
+  $('scProfile').value=s.profile;$('scGame').value=s.gameType;$('scAction').value=s.previousAction||'unopened';scenarioShowError('');$('scenarioResult').innerHTML='';
+}
+function scenarioRenderSaved(){
+  const list=scenarioStore();
+  $('scenarioSaved').innerHTML=`<h3>${T('scSaved')}</h3>`+(list.length?list.map((s,i)=>
+    `<div class="scenario-saved-row"><span>${s.hole.join(' ')} · ${s.board.join(' ')||'preflop'} · ${s.pos} · ${s.stackBB} BB</span>`+
+    `<button type="button" data-sc-load="${i}">↗</button><button type="button" data-sc-del="${i}">×</button></div>`).join(''):
+    `<p class="rev-section-sub">—</p>`);
+  $('scenarioSaved').querySelectorAll('[data-sc-load]').forEach(b=>b.onclick=()=>scenarioFill(list[Number(b.dataset.scLoad)]));
+  $('scenarioSaved').querySelectorAll('[data-sc-del]').forEach(b=>b.onclick=()=>{
+    list.splice(Number(b.dataset.scDel),1);localStorage.setItem('sg_poker_scenarios',JSON.stringify(list));scenarioRenderSaved();
+  });
+}
+function scenarioShare(){
+  const s=scenarioRead();if(!s){scenarioShowError(T('scInvalid'));return;}
+  const url=location.href.split('#')[0]+'#scenario='+btoa(JSON.stringify(s));
+  navigator.clipboard?.writeText(url);scenarioShowError(T('scCopied'));
+}
+function scenarioStartDrill(s){
+  const board=s.board.map(parseCardCode),used=new Set(board.map(c=>c.r*4+c.s)),deck=FULL_DECK.filter(c=>!used.has(c.r*4+c.s));
+  practiceQueue=[];
+  for(let i=0;i<10;i++){
+    const shuffled=shuffle(deck),hole=shuffled.slice(0,2).map(scenarioCode),variant={...s,hole};
+    const r=scenarioAnalyzeData(variant,260);
+    practiceQueue.push({rec:r.rec,stage:r.stage,spot:'other',pot:s.pot,callAmt:s.callAmt,opps:s.opps,pos:s.pos,
+      hand:{players:[{cards:hole}],board:s.board,actions:[]}});
+  }
+  practiceIndex=0;practiceScore=0;
+  $('practiceTitle').textContent=T('practiceTitle');$('practiceSub').textContent=T('practiceSub');$('practiceClose').textContent=T('practiceClose');
+  closeDialog($('scenarioOv'));renderPracticeSpot();openDialog($('practiceOv'),'practiceTitle');
+}
+function openScenarioBuilder(){
+  scenarioShowError('');$('scenarioResult').innerHTML='';
+  try{
+    const raw=location.hash.startsWith('#scenario=')?location.hash.slice(10):'';
+    if(raw)scenarioFill(JSON.parse(atob(raw)));
+  }catch(e){}
+  scenarioRenderSaved();openDialog($('scenarioOv'),'scenarioTitle');
 }
 function showInstantLesson(text){
   if(!HAS_DOM||!text) return;
@@ -2712,6 +2873,13 @@ function applyLang(){
   if($('tableRoleManiac'))$('tableRoleManiac').textContent='🔥 '+T('profileManiac');
   refreshTableScenarioSetup(+$('pCount').textContent||2);
   set('startBtn',setupGameType==='cash'?'startCash':'deal'); set('resumeBtn','resume'); set('reviewBtn','review');
+  set('scenarioBtn','scenarioBtn');set('scenarioTitle','scenarioTitle');set('scenarioSub','scenarioSub');
+  set('scCardsLbl','scCards');set('scBoardLbl','scBoard');set('scPosLbl','scPos');set('scOppLbl','scOpps');
+  set('scStackLbl','scStack');set('scPotLbl','scPot');set('scCallLbl','scCall');set('scProfileLbl','scProfile');set('scGameLbl','scGame');set('scActionLbl','scAction');
+  set('scenarioAnalyze','scAnalyze');set('scenarioSave','scSave');set('scenarioShare','scShare');set('scenarioClose','scClose');
+  const scProf=$('scProfile');if(scProf)['profileRock','profileStation','profileShark','profileManiac'].forEach((k,i)=>{if(scProf.options[i])scProf.options[i].textContent=['🪨 ','📞 ','🦈 ','🔥 '][i]+T(k);});
+  const scGame=$('scGame');if(scGame){scGame.options[0].textContent=T('modeCash');scGame.options[1].textContent=T('modeSng');}
+  const scAct=$('scAction');if(scAct)['scUnopened','scLimp','scRaise','scThreeBet','scCbet','scCheckRaise','scAllin'].forEach((k,i)=>{if(scAct.options[i])scAct.options[i].textContent=T(k);});
   set('quickPlayTitle','quickPlayTitle');set('quickPlaySub','quickPlaySub');
   set('revTitle','revTitle'); set('revAllHands','revAllHands'); set('revClose','close');
   ['revFilterAll','revFilterCash','revFilterSng'].forEach(id=>set(id,id));
@@ -2969,6 +3137,12 @@ function initUI(){
   $('practiceClose').onclick=()=>closeDialog($('practiceOv'));
   $('practiceNext').onclick=advanceScenarioPractice;
   $('practiceOv').onclick=e=>{if(e.target.id==='practiceOv')closeDialog($('practiceOv'));};
+  $('scenarioBtn').onclick=openScenarioBuilder;
+  $('scenarioAnalyze').onclick=scenarioAnalyzeFromForm;
+  $('scenarioSave').onclick=scenarioSave;
+  $('scenarioShare').onclick=scenarioShare;
+  $('scenarioClose').onclick=()=>closeDialog($('scenarioOv'));
+  $('scenarioOv').onclick=e=>{if(e.target.id==='scenarioOv')closeDialog($('scenarioOv'));};
   $('tRewards').onclick=showRewardsRoom;
   $('rewardClose').onclick=()=>closeDialog($('rewardOv'));
   $('rewardCloseTop').onclick=()=>closeDialog($('rewardOv'));
@@ -3002,6 +3176,7 @@ function initUI(){
       localStorage.removeItem('sg_poker_history');
       localStorage.removeItem('sg_poker_resume');
       localStorage.removeItem('sg_poker_games');
+      localStorage.removeItem('sg_poker_scenarios');
     }catch(e){}
     Object.assign(lifeStats,{hands:0,won:0,net:0,biggest:0,decisions:0,followed:0});
     applyRewardCosmetics();

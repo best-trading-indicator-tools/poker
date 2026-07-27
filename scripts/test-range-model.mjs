@@ -472,6 +472,13 @@ const result=vm.runInContext(`(()=>{
   const ordinals=[opener.rangeModel.history[0].raiseOrdinal,reraiser.rangeModel.history[0].raiseOrdinal,
     opener.rangeModel.history[1].raiseOrdinal,reraiser.rangeModel.history[1].raiseOrdinal];
   if(ordinals.join(',')!=='1,2,3,4')throw new Error('action tree ordinals '+ordinals.join(','));
+  const customScenario=scenarioAnalyzeData({
+    hole:['As','Kh'],board:['Qs','7h','2c'],pos:'BTN',opps:1,stackBB:100,
+    pot:600,callAmt:200,profile:'shark',gameType:'cash'
+  },240);
+  if(!['FOLD','CALL','RAISE'].includes(customScenario.rec)||
+      !(customScenario.eq>=0&&customScenario.eq<=1)||customScenario.stage!=='flop')
+    throw new Error('custom scenario analysis invalid '+JSON.stringify(customScenario));
   return {policy,jamAA,jamA5,topCheck,airCheck,kingBeforeCheck,kingAfterCheck,
     effective:metrics.effective,legal:metrics.legal,underpair,withBackdoor,smallIp,
     underpairDecision:{rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL},
@@ -489,6 +496,7 @@ const result=vm.runInContext(`(()=>{
       deepIp:deepIp.realization,deepOop:deepOop.realization,shallow:shallowConnector.realization,
       squeezeRisk:playersBehind.squeezeRisk,squeezeNeed:playersBehind.requiredEq,committedOppCount
     },
+    customScenario:{rec:customScenario.rec,eq:customScenario.eq,stage:customScenario.stage},
     ordinals};
 })()`,context);
 
