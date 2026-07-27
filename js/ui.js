@@ -55,7 +55,7 @@ analyticsFrequent:(name,pct,n)=>`Your lowest coach-match rate is <b>${name}</b>:
 analyticsTrendUp:n=>`Coach-match accuracy improved by <b>${n} points</b> versus the previous 10 sessions.`,
 analyticsTrendDown:n=>`Coach-match accuracy fell by <b>${n} points</b> versus the previous 10 sessions.`,
 potUnopened:"Unopened / limped",potSingle:"Single-raised pot",potThreeBet:"3-bet+ pot",potMultiway:"Multiway pot",
-scenarioBtn:"🧩 Scenario builder",scenarioTitle:"Custom Scenario Builder",scenarioSub:"Build a decision, analyze it, save it or practice it immediately.",
+scenarioBtn:"Scenario builder",scenarioBtnSub:"Build and practice any poker decision",scenarioTitle:"Custom Scenario Builder",scenarioSub:"Build a decision, analyze it, save it or practice it immediately.",
 scCards:"Hero cards",scBoard:"Board",scPos:"Position",scOpps:"Opponents",scStack:"Effective stack (BB)",scPot:"Pot",scCall:"To call",scProfile:"Opponent profile",scGame:"Context",scAction:"Previous action",
 scCardsHelp:"Choose your two private cards.",scBoardHelp:"Leave empty preflop, or choose 3–5 community cards.",scEmptyCard:"— Empty —",
 scAnalyze:"Analyze spot",scSave:"Save scenario",scShare:"Copy share link",scSaved:"Saved scenarios",scClose:"Close",
@@ -178,7 +178,7 @@ analyticsFrequent:(name,pct,n)=>`Votre plus faible correspondance au coach est <
 analyticsTrendUp:n=>`La précision face au coach progresse de <b>${n} points</b> par rapport aux 10 sessions précédentes.`,
 analyticsTrendDown:n=>`La précision face au coach baisse de <b>${n} points</b> par rapport aux 10 sessions précédentes.`,
 potUnopened:"Pot non ouvert / limpé",potSingle:"Pot relancé",potThreeBet:"Pot 3-bet+",potMultiway:"Pot multiway",
-scenarioBtn:"🧩 Builder de scénarios",scenarioTitle:"Builder de scénarios personnalisés",scenarioSub:"Construisez une décision, analysez-la, sauvegardez-la ou jouez-la immédiatement.",
+scenarioBtn:"Builder de scénarios",scenarioBtnSub:"Créez et entraînez n'importe quelle décision",scenarioTitle:"Builder de scénarios personnalisés",scenarioSub:"Construisez une décision, analysez-la, sauvegardez-la ou jouez-la immédiatement.",
 scCards:"Vos cartes",scBoard:"Board",scPos:"Position",scOpps:"Adversaires",scStack:"Tapis effectif (BB)",scPot:"Pot",scCall:"À payer",scProfile:"Profil adverse",scGame:"Contexte",scAction:"Action précédente",
 scCardsHelp:"Choisissez vos deux cartes privées.",scBoardHelp:"Laissez vide préflop, ou choisissez 3 à 5 cartes communes.",scEmptyCard:"— Vide —",
 scAnalyze:"Analyser le spot",scSave:"Sauvegarder",scShare:"Copier le lien",scSaved:"Scénarios sauvegardés",scClose:"Fermer",
@@ -301,7 +301,7 @@ analyticsFrequent:(name,pct,n)=>`Tu menor coincidencia con el coach es <b>${name
 analyticsTrendUp:n=>`La precisión mejoró <b>${n} puntos</b> frente a las 10 sesiones anteriores.`,
 analyticsTrendDown:n=>`La precisión bajó <b>${n} puntos</b> frente a las 10 sesiones anteriores.`,
 potUnopened:"Bote sin abrir / limpeado",potSingle:"Bote subido",potThreeBet:"Bote 3-bet+",potMultiway:"Bote multiway",
-scenarioBtn:"🧩 Constructor de situaciones",scenarioTitle:"Constructor de situaciones personalizadas",scenarioSub:"Crea una decisión, analízala, guárdala o juégala de inmediato.",
+scenarioBtn:"Constructor de situaciones",scenarioBtnSub:"Crea y practica cualquier decisión",scenarioTitle:"Constructor de situaciones personalizadas",scenarioSub:"Crea una decisión, analízala, guárdala o juégala de inmediato.",
 scCards:"Tus cartas",scBoard:"Mesa",scPos:"Posición",scOpps:"Rivales",scStack:"Stack efectivo (BB)",scPot:"Bote",scCall:"A pagar",scProfile:"Perfil rival",scGame:"Contexto",scAction:"Acción anterior",
 scCardsHelp:"Elige tus dos cartas privadas.",scBoardHelp:"Déjalo vacío preflop o elige entre 3 y 5 cartas comunitarias.",scEmptyCard:"— Vacía —",
 scAnalyze:"Analizar",scSave:"Guardar",scShare:"Copiar enlace",scSaved:"Situaciones guardadas",scClose:"Cerrar",
@@ -3015,7 +3015,7 @@ function applyLang(){
   if($('tableRoleManiac'))$('tableRoleManiac').textContent='🔥 '+T('profileManiac');
   refreshTableScenarioSetup(+$('pCount').textContent||2);
   set('startBtn',setupGameType==='cash'?'startCash':'deal'); set('resumeBtn','resume'); set('reviewBtn','review');
-  set('scenarioBtn','scenarioBtn');set('scenarioTitle','scenarioTitle');set('scenarioSub','scenarioSub');
+  set('scenarioBtnTitle','scenarioBtn');set('scenarioBtnSub','scenarioBtnSub');set('scenarioTitle','scenarioTitle');set('scenarioSub','scenarioSub');
   set('scCardsLbl','scCards');set('scBoardLbl','scBoard');set('scPosLbl','scPos');set('scOppLbl','scOpps');
   set('scCardsHelp','scCardsHelp');set('scBoardHelp','scBoardHelp');
   set('scStackLbl','scStack');set('scPotLbl','scPot');set('scCallLbl','scCall');set('scProfileLbl','scProfile');set('scGameLbl','scGame');set('scActionLbl','scAction');
