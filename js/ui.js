@@ -2344,7 +2344,7 @@ function updateCoach(p){
   const effectiveRow=callAmt>0&&R.needEq!=null&&Math.abs(R.needEq-odds)>=.005
     ?`<div class="coach-row"><span>${T('effectiveNeed')}</span><b>~${pct(R.needEq)}<small class="coach-row-note">${T('effectiveNeedNote')}</small></b></div>`:'';
   const liveMathRows=drawRow+impliedRow+sprRow+effectiveRow;
-  const usableEq=R.eqAdj==null?eq:R.eqAdj;
+  const usableEq=clamp(R.eqAdj==null?eq:R.eqAdj,0,1);
   const decisionNeed=R.needEq==null?odds:R.needEq;
   const beginnerRead=callAmt>0
     ?T('beginnerMath')(Math.round(eq*100),Math.round(usableEq*100),Math.round(decisionNeed*100),usableEq>=decisionNeed)

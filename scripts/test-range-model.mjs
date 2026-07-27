@@ -278,6 +278,25 @@ const result=vm.runInContext(`(()=>{
       JSON.stringify({rec:comboDecision.rec,drawRow:comboDecision.drawRow,implied:comboDecision.impliedInfo,
         need:comboDecision.needEq,odds:comboDecision.odds,eqAdj:comboDecision.eqAdj,
         icmInfo:comboDecision.icmInfo,why:comboDecision.why}));
+  newGame({...cfg,numPlayers:6,difficulty:'medium'});
+  const backdoorHero=state.players[0],backdoorAgg=state.players[1];
+  for(const x of state.players){
+    x.out=false;x.folded=x!==backdoorHero&&x!==backdoorAgg;x.allIn=false;x.bet=0;x.totalBet=0;
+    x.acted=x.folded;x.checkedStreet=false;x.aggStreets=[];x.checkStreets=[];x.rangeCap=1;x.rangeFloor=0;
+  }
+  state.stage='flop';state.board=['9d','7s','7c'].map(parseCardCode);state.bb=80;state.sb=40;
+  state.currentBet=120;state.lastRaiseSize=120;state.lastAggIdx=backdoorAgg.i;state.dealerIdx=backdoorAgg.i;
+  backdoorHero.pos='BB';backdoorHero.hole=['8d','4d'].map(parseCardCode);backdoorHero.chips=2580;
+  backdoorAgg.pos='SB';backdoorAgg.style=null;backdoorAgg.bet=120;backdoorAgg.totalBet=120;backdoorAgg.chips=1660;
+  state.players[2].totalBet=160;
+  const savedBackdoorEquity=mcEquityR,savedBackdoorIcm=icmPremium;
+  mcEquityR=()=>.19;icmPremium=()=>0;
+  const backdoorDecision=coachDecide(backdoorHero);
+  mcEquityR=savedBackdoorEquity;icmPremium=savedBackdoorIcm;
+  if(backdoorDecision.eqAdj!==0||!backdoorDecision.drawRow.includes('backdoor flush only')||
+      !backdoorDecision.extra.some(x=>x.includes('not a normal one-card flush draw')))
+    throw new Error('backdoor-only flush must be explicit and usable equity cannot be negative '+
+      JSON.stringify({eqAdj:backdoorDecision.eqAdj,drawRow:backdoorDecision.drawRow,extra:backdoorDecision.extra}));
 
   /* Shallow flop bluff-catcher: profile looseness is already in the posterior equity.
      It must not be added a second time as fixed Wild + hard/c-bet bonuses, and calling
@@ -545,6 +564,7 @@ const result=vm.runInContext(`(()=>{
     },
     customScenario:{rec:customScenario.rec,eq:customScenario.eq,stage:customScenario.stage},
     adaptiveAI:{reads:adaptiveReads.map(r=>({effective:r.effective,sample:r.sample})),exploit:adaptiveExploit},
+    backdoorOnly:{eqAdj:backdoorDecision.eqAdj,drawRow:backdoorDecision.drawRow},
     tableSizeStrategy,
     ordinals};
 })()`,context);

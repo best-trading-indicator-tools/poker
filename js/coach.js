@@ -8,6 +8,8 @@ madeOverpair:' — an overpair, very strong.',madeUnderPair:' — a pocket pair 
 madeTwoPair:(a,b)=>` — real two pair (${a} and ${b}), strong enough to bet when checked to.`,
 madeNotTop:r=>` — not top pair; anyone holding a ${r} is ahead of you.`,
 drawFlush:(n,o)=>`flush draw (${n} outs, ≈${o})`,drawOESD:(n,o)=>`open-ended straight draw (${n} outs, ≈${o})`,drawGut:(n,o)=>`gutshot straight draw (${n} outs, ≈${o})`,
+drawBackdoorFlush:o=>`backdoor flush only (needs the same suit on turn AND river, ≈${o} to complete)`,
+backdoorFlushWarn:' You only have a backdoor flush possibility: both remaining cards must be the right suit. That is not a normal one-card flush draw and is too weak to justify this call.',
 drawBaked:' Your draw is already baked into the win-chance number — hitting it would likely give you the best hand.',
 warnFlush:' Three of one suit are on the board — be wary of opponents holding a flush.',
 warnPaired:' The board is paired, so full houses and trips are possible.',
@@ -160,6 +162,8 @@ madeOverpair:' — une overpair, très forte.',madeUnderPair:' — une paire ser
 madeTwoPair:(a,b)=>` — vraie double paire (${a} et ${b}), assez forte pour miser quand on checke jusqu’à vous.`,
 madeNotTop:r=>` — pas la top paire ; quiconque détient un ${r} est devant vous.`,
 drawFlush:(n,o)=>`tirage couleur (${n} outs, ≈${o})`,drawOESD:(n,o)=>`tirage quinte par les deux bouts (${n} outs, ≈${o})`,drawGut:(n,o)=>`tirage quinte ventral (${n} outs, ≈${o})`,
+drawBackdoorFlush:o=>`couleur backdoor seulement (même couleur au turn ET à la river, ≈${o} pour la compléter)`,
+backdoorFlushWarn:" Vous avez seulement une possibilité de couleur backdoor : les deux prochaines cartes doivent être de la bonne couleur. Ce n'est pas un vrai tirage couleur à une carte et cela ne justifie pas ce call.",
 drawBaked:' Votre tirage est déjà intégré dans la chance de gain — le toucher vous donnerait probablement la meilleure main.',
 warnFlush:' Trois cartes d’une même couleur sur le board — méfiez-vous d’une couleur adverse.',
 warnPaired:' Le board est apparié : full et brelans sont possibles.',
@@ -312,6 +316,8 @@ madeOverpair:' — una overpair, muy fuerte.',madeUnderPair:' — una pareja de 
 madeTwoPair:(a,b)=>` — doble pareja real (${a} y ${b}), bastante fuerte para apostar cuando pasan hasta ti.`,
 madeNotTop:r=>` — no es top pair; cualquiera con un ${r} va por delante de ti.`,
 drawFlush:(n,o)=>`proyecto de color (${n} outs, ≈${o})`,drawOESD:(n,o)=>`proyecto de escalera abierta (${n} outs, ≈${o})`,drawGut:(n,o)=>`proyecto de escalera interna (${n} outs, ≈${o})`,
+drawBackdoorFlush:o=>`color backdoor solamente (mismo palo en turn Y river, ≈${o} para completarlo)`,
+backdoorFlushWarn:' Solo tienes una posibilidad de color backdoor: las dos cartas restantes deben ser del palo correcto. No es un proyecto de color normal de una carta y no justifica esta igualada.',
 drawBaked:' Tu proyecto ya está incluido en la probabilidad de ganar — completarlo te daría probablemente la mejor mano.',
 warnFlush:' Hay tres cartas del mismo palo en la mesa — cuidado con un color rival.',
 warnPaired:' La mesa está emparejada: son posibles fulls y tríos.',
@@ -1165,6 +1171,13 @@ function coachUnderpairRealization(hole,board,betRatio,actsFirst,draw,ctx={}){
   return {penalty,overcards:overRanks.length,backdoors:bd.flush||bd.straight||bd.frontdoor,
     callFraction,sprAfter};
 }
+function coachBackdoorFlushInfo(hole,board){
+  if(!hole||hole.length!==2||!board||board.length!==3||hole[0].s!==hole[1].s)return null;
+  const suit=hole[0].s,boardSuitCount=board.filter(c=>c.s===suit).length;
+  if(boardSuitCount!==1)return null;
+  const unseen=13-3;
+  return {suit,chance:(unseen/47)*((unseen-1)/46)};
+}
 /* A flush category alone is not enough to justify a value bet. On four-flush boards,
    compare the exact five-card tuple with every legal combo in each opponent posterior,
    then weight those combos by how often that profile would call or raise a 2/3-pot bet.
@@ -1735,10 +1748,12 @@ function coachDecide(p){
     if(state.stage!=='river'){
       const d=detectDraws(p.hole,state.board);
       const dr=[];
+      const backdoorFlush=coachBackdoorFlushInfo(p.hole,state.board);
       drawInfo=coachDrawOutInfo(p.hole,state.board,d);
       if(d.flush) dr.push(C('drawFlush',drawInfo.flush.length,pct(drawInfo.flushChance)));
       if(d.oesd) dr.push(C('drawOESD',drawInfo.straight.length,pct(drawInfo.straightChance)));
       else if(d.gutshot) dr.push(C('drawGut',drawInfo.straight.length,pct(drawInfo.straightChance)));
+      if(backdoorFlush&&!d.flush)dr.push(C('drawBackdoorFlush',pct(backdoorFlush.chance)));
       if(dr.length){
         drawRow=`<div class="coach-row"><span>${T('draws')}</span><b>${dr.join('<br>')}</b></div>`;
         const outCards=drawInfo.unique;
@@ -1761,7 +1776,7 @@ function coachDecide(p){
             if(fl.length) extra.push(C('dirtyOutFlush',formatOutList(fl)));
           }
         }
-        extra.push(C('drawBaked'));
+        if(d.flush||d.oesd||d.gutshot)extra.push(C('drawBaked'));
       }
     }
     /* board texture warnings */
@@ -2163,6 +2178,7 @@ function coachDecide(p){
     const betRatio=callAmt/Math.max(pot-callAmt,1);
     const bigBetPen=betRatio>=1?0.10:betRatio>=0.6?0.05:betRatio>=0.35?0.02:0;
     const d=state.stage!=='river'?detectDraws(p.hole,state.board):null;
+    const backdoorFlush=state.stage==='flop'?coachBackdoorFlushInfo(p.hole,state.board):null;
     const myScore=evalBest(p.hole.concat(state.board));
     const drawOnly=d&&(d.gutshot||d.oesd||d.flush)&&myScore[0]<2;
     /* WHO is betting, and WHAT LINE did they take? exploit the player, read the story */
@@ -2203,11 +2219,11 @@ function coachDecide(p){
       callAmt,pot,stackBefore:p.chips
     });
     underpairPen=underpairInfo?underpairInfo.penalty:0;
-    eqAdj=eq-bigBetPen-airPen-underpairPen+exploitAdj+blockAdj+diffAggAdj;
+    eqAdj=clamp(eq-bigBetPen-airPen-underpairPen+exploitAdj+blockAdj+diffAggAdj,0,1);
     const edge=eqAdj-decisionNeed;
     if(bigBetPen>=0.05) extra.push(C('bigBet',Math.round(betRatio*100)));
     if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
-    if(airPen) extra.push(C(d&&d.gutshot?'weakDrawWarn':'airWarn'));
+    if(airPen) extra.push(C(d&&d.gutshot?'weakDrawWarn':backdoorFlush?'backdoorFlushWarn':'airWarn'));
     if(underpairInfo)extra.push(C('underpairRealization',underpairInfo.overcards,Math.round(underpairPen*100),
       Math.round(betRatio*100),actsFirst,underpairInfo.backdoors,
       Math.round(underpairInfo.callFraction*100),underpairInfo.sprAfter===null?'—':Math.round(underpairInfo.sprAfter*10)/10));

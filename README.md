@@ -46,6 +46,7 @@ Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel s
 - **Money display**: $ and BB shown everywhere, casino-style chip stacks
 - **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, order-of-action awareness (first/last to talk, including your *future* postflop position when advising preflop), bet-size-aware range reading, plain-English reasoning
 - **Visible ICM teaching**: tournament calls affected by prize value receive a dedicated Live Coach section showing stack rank, stack at risk, coverage and the exact increase from chip-odds break-even to the ICM-adjusted threshold; cash games never show it
+- **Draw clarity**: the coach separates real one-card draws from runner-runner backdoors, explicitly labels a backdoor flush as needing the suit on both turn and river, and never displays negative usable equity after risk discounts
 - **GTO mini-solver**: real CFR (counterfactual regret minimization) for heads-up postflop spots — shows the equilibrium mixed strategy with EVs
 - **Stats & training**: post-hand feedback, session + lifetime stats (persisted), full hand-history export to JSON
 - **Blunder report**: every decision is scored against the coach's line in chip-EV; deviations show their estimated EV cost live, the coach panel tracks total "EV leaked" this game, and the game-over screen lists your top 5 costliest mistakes ("Hand #14 · turn — coach: FOLD, you: CALL — −$1,800")
