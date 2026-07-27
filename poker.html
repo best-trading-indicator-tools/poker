@@ -245,6 +245,11 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 
 #tableWrap{flex:1;position:relative;padding:14px;display:flex;gap:14px;min-height:0;}
 #coach{width:310px;flex-shrink:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;overflow-y:auto;}
+#coachScrollHint{position:sticky;z-index:4;bottom:-16px;width:100%;margin:4px 0 -16px;padding:28px 8px 12px;border:0;background:linear-gradient(transparent 0%,rgba(27,32,41,.94) 42%,var(--panel) 68%);color:var(--gold);font-family:inherit;font-size:12px;font-weight:800;line-height:1.2;letter-spacing:.2px;text-align:center;cursor:pointer;filter:drop-shadow(0 -5px 8px rgba(0,0,0,.18));}
+#coachScrollHint span{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border:1px solid rgba(232,182,76,.4);border-radius:999px;background:rgba(24,29,37,.92);box-shadow:0 5px 16px rgba(0,0,0,.3);}
+#coachScrollHint .scroll-hint-arrow{font-size:15px;animation:coachScrollHint 1.25s ease-in-out infinite;}
+#coachScrollHint:hover span{border-color:var(--gold);background:#252a32;}
+@keyframes coachScrollHint{0%,100%{transform:translateY(-1px)}50%{transform:translateY(3px)}}
 /* desktop: drag the coach panel's right edge to resize it */
 #coachResize{flex-shrink:0;width:7px;margin:0 -11px 0 -10px;cursor:col-resize;border-radius:4px;background:transparent;transition:background .15s;touch-action:none;}
 #coachResize:hover,#coachResize.dragging{background:rgba(230,180,60,.35);}
@@ -1229,6 +1234,7 @@ body.fl #chipPreview{display:none!important;}
       <div id="coachBody" aria-live="polite" aria-atomic="true"><div class="waiting">Advice appears here when it&rsquo;s your turn.</div></div>
       <div id="coachFeed" class="hidden"></div>
       <div id="coachStats"></div>
+      <button id="coachScrollHint" class="hidden" type="button"><span><b class="scroll-hint-arrow">↓</b><b id="coachScrollHintLbl">Scroll for more</b></span></button>
     </aside>
     <div id="coachResize" title="Drag to resize the coach panel"></div>
     <div id="tableArea">
