@@ -10,7 +10,7 @@ deal:"Deal me in",startCash:"Sit down",resume:"▶ Resume tournament",resumeMid:
 quickPlayTitle:"Ready to play?",quickPlaySub:"Start a fresh table or continue where you left off.",
 sessionPnL:"Session",cashSessionEnd:"Session complete",cashSessionSub:(h,r,pnl)=>`${h} hands · ${r} rebuy${r!==1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} net`,
 cashRebuy:b=>`Rebuy for ${b}`,
-revTitle:"Session review",revWinRate:"Win rate",revITM:"In the money",revAvgFinish:"Avg finish",
+revTitle:"Session review",reviewBtnSub:"Review leaks and continue your improvement plan",revWinRate:"Win rate",revITM:"In the money",revAvgFinish:"Avg finish",
 revNet:"Total net",revEVLeaked:"EV leaked",revGames:"Games",revNoGames:"No finished games yet — play a tournament!",revNoGamesCash:"No finished sessions yet — play a cash game!",
 revCashBadge:"Cash",revSngBadge:"Sit & Go",
 revFilterAll:"All",revFilterCash:"Cash",revFilterSng:"Sit & Go",
@@ -133,7 +133,7 @@ deal:"Distribuez !",startCash:"S'asseoir",resume:"▶ Reprendre le tournoi",resu
 quickPlayTitle:"Prêt à jouer ?",quickPlaySub:"Lancez une nouvelle table ou reprenez là où vous étiez.",
 sessionPnL:"Session",cashSessionEnd:"Session terminée",cashSessionSub:(h,r,pnl)=>`${h} mains · ${r} rebuy${r>1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} net`,
 cashRebuy:b=>`Rebuy pour ${b}`,
-revTitle:"Bilan des sessions",revWinRate:"Taux de victoire",revITM:"Dans l'argent",revAvgFinish:"Place moyenne",
+revTitle:"Bilan des sessions",reviewBtnSub:"Analysez vos leaks et poursuivez votre progression",revWinRate:"Taux de victoire",revITM:"Dans l'argent",revAvgFinish:"Place moyenne",
 revNet:"Net total",revEVLeaked:"EV perdu",revGames:"Parties",revNoGames:"Aucune partie terminée — jouez un tournoi !",revNoGamesCash:"Aucune session terminée — jouez une partie cash !",
 revCashBadge:"Cash",revSngBadge:"Sit & Go",
 revFilterAll:"All",revFilterCash:"Cash",revFilterSng:"Sit & Go",
@@ -256,7 +256,7 @@ deal:"¡Reparte!",startCash:"Sentarse",resume:"▶ Reanudar torneo",resumeMid:"�
 quickPlayTitle:"¿Listo para jugar?",quickPlaySub:"Empieza una mesa nueva o continúa donde lo dejaste.",
 sessionPnL:"Sesión",cashSessionEnd:"Sesión terminada",cashSessionSub:(h,r,pnl)=>`${h} manos · ${r} rebuy${r!==1?'s':''} · ${pnl>=0?'+':'−'}${usd(Math.abs(pnl))} neto`,
 cashRebuy:b=>`Rebuy por ${b}`,
-revTitle:"Resumen de sesiones",revWinRate:"Tasa de victorias",revITM:"En premios",revAvgFinish:"Puesto medio",
+revTitle:"Resumen de sesiones",reviewBtnSub:"Revisa tus fugas y continúa tu plan de mejora",revWinRate:"Tasa de victorias",revITM:"En premios",revAvgFinish:"Puesto medio",
 revNet:"Neto total",revEVLeaked:"EV perdido",revGames:"Partidas",revNoGames:"Sin partidas terminadas — ¡juega un torneo!",revNoGamesCash:"Sin sesiones terminadas — ¡juega cash!",
 revCashBadge:"Cash",revSngBadge:"Sit & Go",
 revFilterAll:"All",revFilterCash:"Cash",revFilterSng:"Sit & Go",
@@ -3014,7 +3014,7 @@ function applyLang(){
   if($('tableRoleShark'))$('tableRoleShark').textContent='🦈 '+T('profileShark');
   if($('tableRoleManiac'))$('tableRoleManiac').textContent='🔥 '+T('profileManiac');
   refreshTableScenarioSetup(+$('pCount').textContent||2);
-  set('startBtn',setupGameType==='cash'?'startCash':'deal'); set('resumeBtn','resume'); set('reviewBtn','review');
+  set('startBtn',setupGameType==='cash'?'startCash':'deal'); set('resumeBtn','resume'); set('reviewBtnTitle','review'); set('reviewBtnSub','reviewBtnSub');
   set('scenarioBtnTitle','scenarioBtn');set('scenarioBtnSub','scenarioBtnSub');set('scenarioTitle','scenarioTitle');set('scenarioSub','scenarioSub');
   set('scCardsLbl','scCards');set('scBoardLbl','scBoard');set('scPosLbl','scPos');set('scOppLbl','scOpps');
   set('scCardsHelp','scCardsHelp');set('scBoardHelp','scBoardHelp');
