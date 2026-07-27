@@ -501,6 +501,23 @@ const result=vm.runInContext(`(()=>{
   const adaptiveReload=aiLoadHumanModel();
   if(adaptiveReload.actions!==adaptiveModel.actions||adaptiveReload.folds!==adaptiveModel.folds)
     throw new Error('adaptive player profile did not persist '+JSON.stringify(adaptiveReload));
+  const tableSizeStrategy={};
+  for(const n of [3,4,5,6,9]){
+    newGame({...cfg,numPlayers:n,difficulty:'hard'});
+    const bot=state.players[1];bot.pos='BTN';bot.style=STYLES.find(x=>x.id==='shark');
+    tableSizeStrategy[n]={...aiTableSizeDynamics(bot),openThreshold:aiOpenThr(bot,0)};
+  }
+  if(!(tableSizeStrategy[3].openThreshold>tableSizeStrategy[4].openThreshold&&
+      tableSizeStrategy[4].openThreshold>tableSizeStrategy[5].openThreshold&&
+      tableSizeStrategy[5].openThreshold>tableSizeStrategy[6].openThreshold&&
+      tableSizeStrategy[6].openThreshold>tableSizeStrategy[9].openThreshold))
+    throw new Error('short-handed opening ranges must widen progressively '+JSON.stringify(tableSizeStrategy));
+  newGame({...cfg,numPlayers:3,difficulty:'easy'});
+  const easyThree=aiTableSizeDynamics(state.players[1],'easy');
+  newGame({...cfg,numPlayers:3,difficulty:'hard'});
+  const hardThree=aiTableSizeDynamics(state.players[1],'hard');
+  if(!(easyThree.open<hardThree.open&&easyThree.raiseF<hardThree.raiseF))
+    throw new Error('table-size precision must scale with AI difficulty '+JSON.stringify({easyThree,hardThree}));
   return {policy,jamAA,jamA5,topCheck,airCheck,kingBeforeCheck,kingAfterCheck,
     effective:metrics.effective,legal:metrics.legal,underpair,withBackdoor,smallIp,
     underpairDecision:{rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL},
@@ -520,6 +537,7 @@ const result=vm.runInContext(`(()=>{
     },
     customScenario:{rec:customScenario.rec,eq:customScenario.eq,stage:customScenario.stage},
     adaptiveAI:{reads:adaptiveReads.map(r=>({effective:r.effective,sample:r.sample})),exploit:adaptiveExploit},
+    tableSizeStrategy,
     ordinals};
 })()`,context);
 

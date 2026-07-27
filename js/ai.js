@@ -70,6 +70,23 @@ function aiHeadsUpPressure(p){
   const leadBoost=leadRatio>=3?1:leadRatio>=2?0.75:leadRatio>=1.5?0.5:leadRatio>=1.2?0.25:0;
   return {active:true,leadRatio,leadBoost,potHeadsUp:contenders.length===2,opp};
 }
+function aiTableSizeDynamics(p,difficulty=state?.cfg?.difficulty||'medium'){
+  const n=alive().length;
+  const precision=({easy:.48,medium:.78,hard:1})[difficulty]||.78;
+  const late=/(BTN|CO|HJ|SB\/BTN|SB|BB)/.test(p?.pos||'');
+  if(n<=2)return {n,open:1,margin:0,raiseF:0,bluff:0};
+  const raw=n===3
+    ?{open:late?1.38:1.18,margin:-.022,raiseF:.10,bluff:.055}
+    :n===4
+      ?{open:late?1.24:1.12,margin:-.014,raiseF:.065,bluff:.035}
+      :n===5
+        ?{open:late?1.14:1.08,margin:-.008,raiseF:.035,bluff:.018}
+        :n===6
+          ?{open:late?1.06:1.03,margin:-.003,raiseF:.014,bluff:.007}
+          :{open:1,margin:0,raiseF:0,bluff:0};
+  return {n,open:1+(raw.open-1)*precision,margin:raw.margin*precision,
+    raiseF:raw.raiseF*precision,bluff:raw.bluff*precision};
+}
 function aiIcmPressure(p){
   if(isCashGame()||state.cfg?.difficulty!=='hard'||typeof PAYOUTS!=='function')return {active:false,callPremium:0,rangeShift:0};
   const live=alive();
@@ -96,6 +113,7 @@ function aiOpenThr(p, press){
   const adapt=st?.adapt||0;
   const stackBB=(p.chips+p.bet)/state.bb;
   const hu=aiHeadsUpPressure(p);
+  const table=aiTableSizeDynamics(p);
   if(isCashGame()){
     const deep=aiCashDepth(stackBB);
     if(/^(CO|BTN|SB|SB\/BTN)$/.test(p.pos||''))
@@ -108,6 +126,7 @@ function aiOpenThr(p, press){
   else
     thr=Math.min(0.72, thr+press*adapt*0.10);
   if(hu.active) thr=Math.min(0.92, thr+(p.pos==='SB/BTN'?0.22:0.10)+hu.leadBoost*0.18);
+  else thr*=table.open;
   if(st?.id==='rock' && /^UTG/.test(p.pos||'')) thr*=0.85;
   return Math.min(hu.active?0.92:0.72, thr);
 }
@@ -799,6 +818,7 @@ function aiShortPushThr(p, stackBB){
   const st=aiEffectiveStyle(p);
   const sid=st?.id;
   const hu=aiHeadsUpPressure(p);
+  const table=aiTableSizeDynamics(p);
   const hard=state.cfg?.difficulty==='hard';
   let thr=(PUSH_THR[bucket]||0.25)*((st&&(hard
     ?{rock:0.88,station:1.08,shark:1.10,maniac:1.18}
@@ -808,6 +828,7 @@ function aiShortPushThr(p, stackBB){
   else if(sid==='maniac' && /^(CO|BTN|SB|SB\/BTN)$/.test(p.pos)) thr=Math.min(0.68, thr*1.45);
   else if(sid==='shark' && /^(CO|BTN)$/.test(p.pos)) thr=Math.min(0.50, thr*1.12);
   if(hu.active) thr=Math.min(0.94, thr*(p.pos==='SB/BTN'?1.45:1.2)+hu.leadBoost*0.16);
+  else thr*=table.open;
   const icm=aiIcmPressure(p);
   return clamp(thr+press*(st?.adapt||0)*0.12+icm.rangeShift,0.06,hu.active?0.94:0.90);
 }
@@ -1370,6 +1391,7 @@ function aiDecide(p){
   const cash=isCashGame();
   const cashDeep=cash?aiCashDepth(stackBB):0;
   const hu=aiHeadsUpPressure(p);
+  const table=aiTableSizeDynamics(p,d);
   const icm=aiIcmPressure(p);
   const huAgg=hu.active?(0.16+hu.leadBoost*0.30):0;
 
@@ -1416,10 +1438,12 @@ function aiDecide(p){
   const stealBoost=(late&&state.stage==='preflop'&&callAmt<=state.bb)
     ?(cash?cashDeep*0.16:press*0.18):0;
   const st={
-    margin: base.margin - press*0.06 - huAgg*0.45,
+    margin: base.margin - press*0.06 - huAgg*0.45 + table.margin,
     raiseT: base.raiseT - press*0.13 - stealBoost - huAgg,
-    raiseF: base.raiseF + press*0.28 + stealBoost + huAgg*1.2,
-    bluff:  (base.id==='rock'||base.id==='station') ? huAgg*0.18 : base.bluff + press*0.05 + huAgg*0.55,
+    raiseF: base.raiseF + press*0.28 + stealBoost + huAgg*1.2 + table.raiseF,
+    bluff:  (base.id==='rock'||base.id==='station')
+      ?huAgg*0.18+table.bluff*.35
+      :base.bluff+press*0.05+huAgg*0.55+table.bluff,
     size:   base.size + hu.leadBoost*0.18
   };
   const exploit=aiHumanExploit(p);

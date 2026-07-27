@@ -55,7 +55,7 @@ confidenceChartNote:"Uses the position and stack-depth chart for this preflop sp
 confidenceMathNote:"Pot odds are exact; equity and future action use simulations and estimated opponent ranges.",
 confidenceHeuristicNote:"Multiway ranges and future actions require broader assumptions, so treat the recommendation as directional.",
 analyticsTitle:"Advanced leak analytics",analyticsSub:"Every coach decision is grouped by context. Accuracy means how often your action matched the coach.",
-analyticsPosition:"By position",analyticsStreet:"By street",analyticsDepth:"By stack depth",analyticsPotType:"By pot type",
+analyticsPosition:"By position",analyticsStreet:"By street",analyticsDepth:"By stack depth",analyticsPotType:"By pot type",analyticsTableSize:"By players remaining",
 analyticsDecisions:n=>`${n} decision${n!==1?'s':''}`,analyticsAccuracy:"accuracy",analyticsRecent:"Latest 10 sessions",analyticsPrevious:"Previous 10",
 analyticsNoData:"Play a few new hands to unlock contextual analytics. Older decisions still appear in the basic leak finder.",
 analyticsSample:"Treat groups below 10 decisions as early signals, not established leaks.",
@@ -64,6 +64,7 @@ analyticsFrequent:(name,pct,n)=>`Your lowest coach-match rate is <b>${name}</b>:
 analyticsTrendUp:n=>`Coach-match accuracy improved by <b>${n} points</b> versus the previous 10 sessions.`,
 analyticsTrendDown:n=>`Coach-match accuracy fell by <b>${n} points</b> versus the previous 10 sessions.`,
 potUnopened:"Unopened / limped",potSingle:"Single-raised pot",potThreeBet:"3-bet+ pot",potMultiway:"Multiway pot",
+tableHeadsUp:"Heads-up",tableThree:"3-handed",tableFour:"4-handed",tableFive:"5-handed",tableSixPlus:"6+ players",
 scenarioBtn:"Scenario builder",scenarioBtnSub:"Build and practice any poker decision",scenarioTitle:"Custom Scenario Builder",scenarioSub:"Build a decision, analyze it, save it or practice it immediately.",
 scCards:"Hero cards",scBoard:"Board",scPos:"Position",scOpps:"Opponents",scStack:"Effective stack (BB)",scPot:"Pot",scCall:"To call",scProfile:"Opponent profile",scGame:"Context",scAction:"Previous action",
 scCardsHelp:"Choose your two private cards.",scBoardHelp:"Leave empty preflop, or choose 3–5 community cards.",scEmptyCard:"— Empty —",
@@ -189,7 +190,7 @@ confidenceChartNote:"Utilise la charte de position et de profondeur pour ce spot
 confidenceMathNote:"Les cotes du pot sont exactes ; l'équité et l'action future utilisent des simulations et des ranges adverses estimées.",
 confidenceHeuristicNote:"Les ranges multiway et les actions futures demandent plus d'hypothèses : considérez ce conseil comme directionnel.",
 analyticsTitle:"Analyse avancée des leaks",analyticsSub:"Chaque décision du coach est regroupée par contexte. La précision indique à quelle fréquence votre action correspond au coach.",
-analyticsPosition:"Par position",analyticsStreet:"Par street",analyticsDepth:"Par profondeur",analyticsPotType:"Par type de pot",
+analyticsPosition:"Par position",analyticsStreet:"Par street",analyticsDepth:"Par profondeur",analyticsPotType:"Par type de pot",analyticsTableSize:"Par joueurs restants",
 analyticsDecisions:n=>`${n} décision${n!==1?'s':''}`,analyticsAccuracy:"de précision",analyticsRecent:"10 dernières sessions",analyticsPrevious:"10 précédentes",
 analyticsNoData:"Jouez quelques nouvelles mains pour débloquer l'analyse contextuelle. Les anciennes décisions restent dans le leak finder.",
 analyticsSample:"Les groupes de moins de 10 décisions sont des signaux précoces, pas encore des leaks établis.",
@@ -198,6 +199,7 @@ analyticsFrequent:(name,pct,n)=>`Votre plus faible correspondance au coach est <
 analyticsTrendUp:n=>`La précision face au coach progresse de <b>${n} points</b> par rapport aux 10 sessions précédentes.`,
 analyticsTrendDown:n=>`La précision face au coach baisse de <b>${n} points</b> par rapport aux 10 sessions précédentes.`,
 potUnopened:"Pot non ouvert / limpé",potSingle:"Pot relancé",potThreeBet:"Pot 3-bet+",potMultiway:"Pot multiway",
+tableHeadsUp:"Heads-up",tableThree:"3 joueurs",tableFour:"4 joueurs",tableFive:"5 joueurs",tableSixPlus:"6 joueurs et +",
 scenarioBtn:"Builder de scénarios",scenarioBtnSub:"Créez et entraînez n'importe quelle décision",scenarioTitle:"Builder de scénarios personnalisés",scenarioSub:"Construisez une décision, analysez-la, sauvegardez-la ou jouez-la immédiatement.",
 scCards:"Vos cartes",scBoard:"Board",scPos:"Position",scOpps:"Adversaires",scStack:"Tapis effectif (BB)",scPot:"Pot",scCall:"À payer",scProfile:"Profil adverse",scGame:"Contexte",scAction:"Action précédente",
 scCardsHelp:"Choisissez vos deux cartes privées.",scBoardHelp:"Laissez vide préflop, ou choisissez 3 à 5 cartes communes.",scEmptyCard:"— Vide —",
@@ -323,7 +325,7 @@ confidenceChartNote:"Usa la tabla de posición y profundidad para esta situació
 confidenceMathNote:"Las odds del bote son exactas; la equity y la acción futura usan simulaciones y rangos rivales estimados.",
 confidenceHeuristicNote:"Los rangos multiway y las acciones futuras requieren más supuestos; interpreta el consejo como direccional.",
 analyticsTitle:"Análisis avanzado de fugas",analyticsSub:"Cada decisión del coach se agrupa por contexto. La precisión indica con qué frecuencia tu acción coincidió con el coach.",
-analyticsPosition:"Por posición",analyticsStreet:"Por calle",analyticsDepth:"Por profundidad",analyticsPotType:"Por tipo de bote",
+analyticsPosition:"Por posición",analyticsStreet:"Por calle",analyticsDepth:"Por profundidad",analyticsPotType:"Por tipo de bote",analyticsTableSize:"Por jugadores restantes",
 analyticsDecisions:n=>`${n} decisión${n!==1?'es':''}`,analyticsAccuracy:"de precisión",analyticsRecent:"Últimas 10 sesiones",analyticsPrevious:"10 anteriores",
 analyticsNoData:"Juega algunas manos nuevas para desbloquear el análisis contextual. Las decisiones antiguas siguen en el buscador de fugas.",
 analyticsSample:"Los grupos con menos de 10 decisiones son señales iniciales, no fugas confirmadas.",
@@ -332,6 +334,7 @@ analyticsFrequent:(name,pct,n)=>`Tu menor coincidencia con el coach es <b>${name
 analyticsTrendUp:n=>`La precisión mejoró <b>${n} puntos</b> frente a las 10 sesiones anteriores.`,
 analyticsTrendDown:n=>`La precisión bajó <b>${n} puntos</b> frente a las 10 sesiones anteriores.`,
 potUnopened:"Bote sin abrir / limpeado",potSingle:"Bote subido",potThreeBet:"Bote 3-bet+",potMultiway:"Bote multiway",
+tableHeadsUp:"Heads-up",tableThree:"3 jugadores",tableFour:"4 jugadores",tableFive:"5 jugadores",tableSixPlus:"6+ jugadores",
 scenarioBtn:"Constructor de situaciones",scenarioBtnSub:"Crea y practica cualquier decisión",scenarioTitle:"Constructor de situaciones personalizadas",scenarioSub:"Crea una decisión, analízala, guárdala o juégala de inmediato.",
 scCards:"Tus cartas",scBoard:"Mesa",scPos:"Posición",scOpps:"Rivales",scStack:"Stack efectivo (BB)",scPot:"Bote",scCall:"A pagar",scProfile:"Perfil rival",scGame:"Contexto",scAction:"Acción anterior",
 scCardsHelp:"Elige tus dos cartas privadas.",scBoardHelp:"Déjalo vacío preflop o elige entre 3 y 5 cartas comunitarias.",scEmptyCard:"— Vacía —",
@@ -585,6 +588,13 @@ function analyticsDepthLabel(k){
 function analyticsPotLabel(k){
   return T(k==='unopened'?'potUnopened':k==='singleRaised'?'potSingle':k==='threeBet'?'potThreeBet':'potMultiway');
 }
+function analyticsTableSizeKey(d){
+  const n=Number(d.tableSize);
+  return n===2?'2':n===3?'3':n===4?'4':n===5?'5':n>=6?'6plus':'';
+}
+function analyticsTableSizeLabel(k){
+  return T(k==='2'?'tableHeadsUp':k==='3'?'tableThree':k==='4'?'tableFour':k==='5'?'tableFive':'tableSixPlus');
+}
 function renderAnalyticsDimension(title,rows){
   if(!rows.length)return '';
   return `<div class="rev-dim"><h4>${title}</h4>`+
@@ -598,8 +608,9 @@ function renderAdvancedAnalytics(games){
   const streets=analyticsGroups(samples,d=>d.stage||'',reviewStreetLabel);
   const depths=analyticsGroups(samples,analyticsDepthKey,analyticsDepthLabel);
   const pots=analyticsGroups(samples,d=>d.potType||'',analyticsPotLabel);
-  const hasDimensions=positions.length||streets.length||depths.length||pots.length;
-  const candidates=[...positions,...streets,...depths,...pots];
+  const tableSizes=analyticsGroups(samples,analyticsTableSizeKey,analyticsTableSizeLabel);
+  const hasDimensions=positions.length||streets.length||depths.length||pots.length||tableSizes.length;
+  const candidates=[...positions,...streets,...depths,...pots,...tableSizes];
   const worst=candidates.filter(r=>r.n>=3&&r.ev>0).sort((a,b)=>b.ev-a.ev)[0];
   const frequent=candidates.filter(r=>r.n>=5).sort((a,b)=>a.accuracy-b.accuracy||b.n-a.n)[0];
   const latestGames=games.slice(0,10),previousGames=games.slice(10,20);
@@ -617,7 +628,8 @@ function renderAdvancedAnalytics(games){
     (latest.length&&previous.length?`<div class="rev-trend"><div class="rev-trend-block"><span>${T('analyticsPrevious')}</span><b>${previousAcc}%</b></div>`+
       `<span class="rev-trend-arrow">→</span><div class="rev-trend-block"><span>${T('analyticsRecent')}</span><b class="${delta>=0?'pos':'neg'}">${latestAcc}% ${delta?`(${delta>0?'+':''}${delta})`:''}</b></div></div>`:'')+
     (hasDimensions?`<div class="rev-dim-grid">${renderAnalyticsDimension(T('analyticsPosition'),positions)}${renderAnalyticsDimension(T('analyticsStreet'),streets)}`+
-      `${renderAnalyticsDimension(T('analyticsDepth'),depths)}${renderAnalyticsDimension(T('analyticsPotType'),pots)}</div>`:
+      `${renderAnalyticsDimension(T('analyticsDepth'),depths)}${renderAnalyticsDimension(T('analyticsPotType'),pots)}`+
+      `${renderAnalyticsDimension(T('analyticsTableSize'),tableSizes)}</div>`:
       `<div class="rev-empty">${T('analyticsNoData')}</div>`)+
     `<p class="rev-sample-note">${T('analyticsSample')}</p></div>`;
 }
@@ -2753,7 +2765,7 @@ function humanAct(type,amount){
       pot:coachRecNow.pot,callAmt:coachRecNow.callAmt,eq:coachRecNow.eq,needEq:coachRecNow.needEq,
       eqAdj:coachRecNow.eqAdj,raiseTo:coachRecNow.coachT||0,
       evs:coachRecNow.evs?{FOLD:coachRecNow.evs.FOLD,CALL:coachRecNow.evs.CALL,RAISE:coachRecNow.evs.RAISE}:null,
-      stackBB:state.bb>0?Math.round((p.chips+p.bet)/state.bb*10)/10:0,potType,
+      stackBB:state.bb>0?Math.round((p.chips+p.bet)/state.bb*10)/10:0,potType,tableSize:alive().length,
       logIndex:(state.handLog||[]).length};
     state.humanDecisions.push(decisionContext);
     if(evLoss>0&&state.sessStats){
