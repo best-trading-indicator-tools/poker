@@ -548,6 +548,7 @@ function tableSizeFacingFactor(n,pos){
   if(n===3) return late?1.25:1.12;
   if(n===4) return late?1.14:1.08;
   if(n===5) return 1.06;
+  if(n===6) return late?1.04:1.02;
   return 1;
 }
 const RANGE_DISTRIBUTION_CACHE=new WeakMap();

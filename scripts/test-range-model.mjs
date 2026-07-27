@@ -512,6 +512,11 @@ const result=vm.runInContext(`(()=>{
       tableSizeStrategy[5].openThreshold>tableSizeStrategy[6].openThreshold&&
       tableSizeStrategy[6].openThreshold>tableSizeStrategy[9].openThreshold))
     throw new Error('short-handed opening ranges must widen progressively '+JSON.stringify(tableSizeStrategy));
+  if(tableSizeStrategy[6].format!=='sixMax'||tableSizeStrategy[9].format!=='fullRing')
+    throw new Error('6-max and 7–9 full-ring must remain distinct '+JSON.stringify(tableSizeStrategy));
+  if(!(tableSizeOpenFactor('BTN',6)>tableSizeOpenFactor('BTN',7)&&
+      tableSizeFacingFactor(6,'BB')>tableSizeFacingFactor(7,'BB')))
+    throw new Error('coach must separate 6-max ranges from full-ring ranges');
   newGame({...cfg,numPlayers:3,difficulty:'easy'});
   const easyThree=aiTableSizeDynamics(state.players[1],'easy');
   newGame({...cfg,numPlayers:3,difficulty:'hard'});

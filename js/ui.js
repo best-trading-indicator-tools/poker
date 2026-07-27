@@ -64,7 +64,7 @@ analyticsFrequent:(name,pct,n)=>`Your lowest coach-match rate is <b>${name}</b>:
 analyticsTrendUp:n=>`Coach-match accuracy improved by <b>${n} points</b> versus the previous 10 sessions.`,
 analyticsTrendDown:n=>`Coach-match accuracy fell by <b>${n} points</b> versus the previous 10 sessions.`,
 potUnopened:"Unopened / limped",potSingle:"Single-raised pot",potThreeBet:"3-bet+ pot",potMultiway:"Multiway pot",
-tableHeadsUp:"Heads-up",tableThree:"3-handed",tableFour:"4-handed",tableFive:"5-handed",tableSixPlus:"6+ players",
+tableHeadsUp:"Heads-up",tableThree:"3-handed",tableFour:"4-handed",tableFive:"5-handed",tableSixMax:"6-max",tableFullRing:"Full-ring (7–9)",
 scenarioBtn:"Scenario builder",scenarioBtnSub:"Build and practice any poker decision",scenarioTitle:"Custom Scenario Builder",scenarioSub:"Build a decision, analyze it, save it or practice it immediately.",
 scCards:"Hero cards",scBoard:"Board",scPos:"Position",scOpps:"Opponents",scStack:"Effective stack (BB)",scPot:"Pot",scCall:"To call",scProfile:"Opponent profile",scGame:"Context",scAction:"Previous action",
 scCardsHelp:"Choose your two private cards.",scBoardHelp:"Leave empty preflop, or choose 3–5 community cards.",scEmptyCard:"— Empty —",
@@ -199,7 +199,7 @@ analyticsFrequent:(name,pct,n)=>`Votre plus faible correspondance au coach est <
 analyticsTrendUp:n=>`La précision face au coach progresse de <b>${n} points</b> par rapport aux 10 sessions précédentes.`,
 analyticsTrendDown:n=>`La précision face au coach baisse de <b>${n} points</b> par rapport aux 10 sessions précédentes.`,
 potUnopened:"Pot non ouvert / limpé",potSingle:"Pot relancé",potThreeBet:"Pot 3-bet+",potMultiway:"Pot multiway",
-tableHeadsUp:"Heads-up",tableThree:"3 joueurs",tableFour:"4 joueurs",tableFive:"5 joueurs",tableSixPlus:"6 joueurs et +",
+tableHeadsUp:"Heads-up",tableThree:"3 joueurs",tableFour:"4 joueurs",tableFive:"5 joueurs",tableSixMax:"6-max",tableFullRing:"Full-ring (7–9)",
 scenarioBtn:"Builder de scénarios",scenarioBtnSub:"Créez et entraînez n'importe quelle décision",scenarioTitle:"Builder de scénarios personnalisés",scenarioSub:"Construisez une décision, analysez-la, sauvegardez-la ou jouez-la immédiatement.",
 scCards:"Vos cartes",scBoard:"Board",scPos:"Position",scOpps:"Adversaires",scStack:"Tapis effectif (BB)",scPot:"Pot",scCall:"À payer",scProfile:"Profil adverse",scGame:"Contexte",scAction:"Action précédente",
 scCardsHelp:"Choisissez vos deux cartes privées.",scBoardHelp:"Laissez vide préflop, ou choisissez 3 à 5 cartes communes.",scEmptyCard:"— Vide —",
@@ -334,7 +334,7 @@ analyticsFrequent:(name,pct,n)=>`Tu menor coincidencia con el coach es <b>${name
 analyticsTrendUp:n=>`La precisión mejoró <b>${n} puntos</b> frente a las 10 sesiones anteriores.`,
 analyticsTrendDown:n=>`La precisión bajó <b>${n} puntos</b> frente a las 10 sesiones anteriores.`,
 potUnopened:"Bote sin abrir / limpeado",potSingle:"Bote subido",potThreeBet:"Bote 3-bet+",potMultiway:"Bote multiway",
-tableHeadsUp:"Heads-up",tableThree:"3 jugadores",tableFour:"4 jugadores",tableFive:"5 jugadores",tableSixPlus:"6+ jugadores",
+tableHeadsUp:"Heads-up",tableThree:"3 jugadores",tableFour:"4 jugadores",tableFive:"5 jugadores",tableSixMax:"6-max",tableFullRing:"Full-ring (7–9)",
 scenarioBtn:"Constructor de situaciones",scenarioBtnSub:"Crea y practica cualquier decisión",scenarioTitle:"Constructor de situaciones personalizadas",scenarioSub:"Crea una decisión, analízala, guárdala o juégala de inmediato.",
 scCards:"Tus cartas",scBoard:"Mesa",scPos:"Posición",scOpps:"Rivales",scStack:"Stack efectivo (BB)",scPot:"Bote",scCall:"A pagar",scProfile:"Perfil rival",scGame:"Contexto",scAction:"Acción anterior",
 scCardsHelp:"Elige tus dos cartas privadas.",scBoardHelp:"Déjalo vacío preflop o elige entre 3 y 5 cartas comunitarias.",scEmptyCard:"— Vacía —",
@@ -590,10 +590,10 @@ function analyticsPotLabel(k){
 }
 function analyticsTableSizeKey(d){
   const n=Number(d.tableSize);
-  return n===2?'2':n===3?'3':n===4?'4':n===5?'5':n>=6?'6plus':'';
+  return n===2?'2':n===3?'3':n===4?'4':n===5?'5':n===6?'6max':n>=7?'fullRing':'';
 }
 function analyticsTableSizeLabel(k){
-  return T(k==='2'?'tableHeadsUp':k==='3'?'tableThree':k==='4'?'tableFour':k==='5'?'tableFive':'tableSixPlus');
+  return T(k==='2'?'tableHeadsUp':k==='3'?'tableThree':k==='4'?'tableFour':k==='5'?'tableFive':k==='6max'?'tableSixMax':'tableFullRing');
 }
 function renderAnalyticsDimension(title,rows){
   if(!rows.length)return '';

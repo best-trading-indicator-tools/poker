@@ -72,9 +72,10 @@ function aiHeadsUpPressure(p){
 }
 function aiTableSizeDynamics(p,difficulty=state?.cfg?.difficulty||'medium'){
   const n=alive().length;
+  const format=n===2?'headsUp':n===3?'threeHanded':n===4?'fourHanded':n===5?'fiveHanded':n===6?'sixMax':'fullRing';
   const precision=({easy:.48,medium:.78,hard:1})[difficulty]||.78;
   const late=/(BTN|CO|HJ|SB\/BTN|SB|BB)/.test(p?.pos||'');
-  if(n<=2)return {n,open:1,margin:0,raiseF:0,bluff:0};
+  if(n<=2)return {n,format,open:1,margin:0,raiseF:0,bluff:0};
   const raw=n===3
     ?{open:late?1.38:1.18,margin:-.022,raiseF:.10,bluff:.055}
     :n===4
@@ -84,7 +85,7 @@ function aiTableSizeDynamics(p,difficulty=state?.cfg?.difficulty||'medium'){
         :n===6
           ?{open:late?1.06:1.03,margin:-.003,raiseF:.014,bluff:.007}
           :{open:1,margin:0,raiseF:0,bluff:0};
-  return {n,open:1+(raw.open-1)*precision,margin:raw.margin*precision,
+  return {n,format,open:1+(raw.open-1)*precision,margin:raw.margin*precision,
     raiseF:raw.raiseF*precision,bluff:raw.bluff*precision};
 }
 function aiIcmPressure(p){
