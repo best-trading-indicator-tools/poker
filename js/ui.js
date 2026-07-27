@@ -20,7 +20,7 @@ statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Leak finder (by spot)",revLeaksNone:"No classified leaks yet — deviate from the coach and finish games to populate this.",
 leakPfOpen:"Preflop opens",leakPfFace:"Facing raises",leakCbet:"C-bet defense",leakMultiway:"Multiway pots",leakRiver:"River calls",leakRiverAir:n=>`${n} river call${n>1?'s':''} with high card / no hand`,
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
-resetData:"Clear saved data",resetInfo:"Deletes everything this game keeps in your browser: lifetime stats, hand history, arcade rewards and any unfinished tournament you could resume. Your language choice stays. This can't be undone.",resetConfirm:"Delete all saved stats, hand history, arcade rewards and any unfinished tournament?",resetDone:"✓ Cleared",
+resetData:"Clear saved data",resetInfo:"Deletes lifetime stats, hand history, session reviews and any unfinished game you could resume. Your Rewards level, XP, unlocks, equipped cosmetics and language choice are kept. This can't be undone.",resetConfirm:"Delete all stats, hand history, session reviews and unfinished games? Rewards level and progress will be kept.",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Quit this tournament?",quitCash:"Leave the table?",
 fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ Your turn",
@@ -96,7 +96,7 @@ statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Fuites par type de spot",revLeaksNone:"Pas encore de fuites classées — écartez-vous du coach et terminez des parties.",
 leakPfOpen:"Ouvertures préflop",leakPfFace:"Face aux relances",leakCbet:"Défense c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls rivière",leakRiverAir:n=>`${n} call${n>1?'s':''} rivière sans main`,
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
-resetData:"Effacer les données sauvegardées",resetInfo:"Supprime tout ce que le jeu garde dans votre navigateur : statistiques globales, historique des mains, récompenses arcade et tout tournoi en cours à reprendre. Votre choix de langue est conservé. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l'historique des mains, les récompenses arcade et tout tournoi en cours ?",resetDone:"✓ Effacé",
+resetData:"Effacer les données sauvegardées",resetInfo:"Supprime les statistiques globales, l’historique des mains, les bilans de sessions et toute partie en cours à reprendre. Votre niveau Rewards, XP, éléments débloqués, cosmétiques équipés et choix de langue sont conservés. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l’historique, les bilans de sessions et les parties en cours ? Le niveau et la progression Rewards seront conservés.",resetDone:"✓ Effacé",
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter ce tournoi ?",quitCash:"Quitter la table ?",
 fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ À vous",
@@ -172,7 +172,7 @@ statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Fugas por tipo de spot",revLeaksNone:"Sin fugas clasificadas aún — desvíate del coach y termina partidas.",
 leakPfOpen:"Aperturas preflop",leakPfFace:"Frente a subidas",leakCbet:"Defensa c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls en river",leakRiverAir:n=>`${n} call${n>1?'s':''} en river sin mano`,
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
-resetData:"Borrar datos guardados",resetInfo:"Elimina todo lo que el juego guarda en tu navegador: estadísticas globales, historial de manos, recompensas arcade y cualquier torneo sin terminar. Tu idioma se mantiene. No se puede deshacer.",resetConfirm:"¿Borrar todas las estadísticas, el historial de manos, las recompensas arcade y cualquier torneo sin terminar?",resetDone:"✓ Borrado",
+resetData:"Borrar datos guardados",resetInfo:"Elimina estadísticas globales, historial de manos, resúmenes de sesiones y cualquier partida sin terminar. Se conservan tu nivel Rewards, XP, desbloqueos, cosméticos equipados e idioma. No se puede deshacer.",resetConfirm:"¿Borrar estadísticas, historial, resúmenes de sesiones y partidas sin terminar? El nivel y progreso Rewards se conservarán.",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Salir de este torneo?",quitCash:"¿Dejar la mesa?",
 fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
 actMenu:"◀ Menú",actTurn:"◀ Tu turno",
@@ -2616,7 +2616,7 @@ function initUI(){
     };
   });
   $('revAllHands').onclick=()=>{closeDialog($('reviewOv'));showHistoryReplay();};
-  /* --- clear saved data (human name for localStorage wipe) --- */
+  /* --- clear gameplay data while preserving Rewards progress and language --- */
   $('resetInfoBtn').onclick=()=>{
     const info=$('resetInfo');
     const hidden=info.classList.toggle('hidden');
@@ -2635,7 +2635,6 @@ function initUI(){
       localStorage.removeItem('sg_poker_history');
       localStorage.removeItem('sg_poker_resume');
       localStorage.removeItem('sg_poker_games');
-      if(typeof resetRewards==='function') resetRewards();
     }catch(e){}
     Object.assign(lifeStats,{hands:0,won:0,net:0,biggest:0,decisions:0,followed:0});
     applyRewardCosmetics();
