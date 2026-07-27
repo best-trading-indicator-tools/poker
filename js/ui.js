@@ -2127,7 +2127,7 @@ function render(winners){
   if(caEl) caEl.classList.toggle('has-board',state.board.length>0);
   for(const p of state.players){
     const seat=$('seat'+p.i); if(!seat)continue;
-    const isActing=!state.handOver&&state.turnIdx===p.i&&!p.out&&!p.allIn&&inHand().length>1;
+    const isActing=playerIsActing(p);
     const cardsLive=!p.folded&&!p.out||isActing;
     seat.classList.toggle('active',isActing);
     seat.classList.toggle('cards-live',cardsLive);
@@ -2160,6 +2160,9 @@ function render(winners){
   }
   layoutSeats();
   mpBroadcast();
+}
+function playerIsActing(p){
+  return !!p&&!state.handOver&&state.turnIdx===p.i&&!p.out&&!p.folded&&!p.allIn&&inHand().length>1;
 }
 
 /* ---------- live coach ---------- */

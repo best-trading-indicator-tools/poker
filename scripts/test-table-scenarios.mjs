@@ -38,6 +38,13 @@ const result=vm.runInContext(`(()=>{
   }
 
   newGame({...base,numPlayers:9,tableScenario:'balanced'});
+  state.handOver=false;state.turnIdx=1;
+  state.players[1].folded=true;
+  if(playerIsActing(state.players[1]))
+    throw new Error('a folded player must never retain the active-seat highlight');
+  state.players[1].folded=false;
+  if(!playerIsActing(state.players[1]))
+    throw new Error('the live current actor should retain the active-seat highlight');
   const balanced=countPlayers();
   if(!Object.values(balanced).every(n=>n===2))throw new Error('9-player balanced composition '+JSON.stringify(balanced));
 
