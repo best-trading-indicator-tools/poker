@@ -450,10 +450,10 @@ function rangeComboPotential(hole,board,score,usesHole,drawInfo){
   }
   const backdoorFlush=board.length===3&&!d.flush&&Math.max(...suitCounts)===3&&
     hole.some(c=>tex.suitCounts[c.s]>0);
-  const backdoorStraight=board.length===3&&!d.oesd&&!d.gutshot&&comboWindow===3&&holeWindow>0&&boardWindow<3;
+  const backdoorStraight=!!d.backdoorStraight;
   const straightBlocker=clamp((boardWindow>=3?holeWindow*.35:holeWindow*.15),0,1);
-  const redraw=usesHole&&(d.flush||d.oesd||d.gutshot);
-  const drawStrength=d.flush ? .44 : d.oesd ? .36 : d.gutshot ? .19 : 0;
+  const redraw=usesHole&&(d.flush||d.oesd||d.doubleGutshot||d.gutshot);
+  const drawStrength=d.flush ? .44 : d.oesd||d.doubleGutshot ? .36 : d.gutshot ? .19 : 0;
   const lowShowdown=score[0]===0||(!usesHole&&score[0]<=1);
   const bluffQuality=clamp(drawStrength+(nutFlushBlocker ? .24 : 0)+flushBlocker*.10+straightBlocker*.12+
     (backdoorFlush ? .10 : 0)+(backdoorStraight ? .07 : 0)-(lowShowdown ? 0 : .18),0,1);
@@ -725,8 +725,9 @@ function rangeModelComboInfo(hole,board){
   if(board.length<5&&typeof detectDraws==='function'){
     d=detectDraws(hole,board);
     if(d.flush)draw=Math.max(draw,0.42);
-    if(d.oesd)draw=Math.max(draw,0.34);
+    if(d.oesd||d.doubleGutshot)draw=Math.max(draw,0.34);
     else if(d.gutshot)draw=Math.max(draw,0.18);
+    else if(d.backdoorStraight)draw=Math.max(draw,0.06);
   }
   const potential=rangeComboPotential(hole,board,score,usesHole,d);
   return {pct,score,made,draw,drawInfo:d,usesHole,topPair,overPair,underPair,
@@ -1124,8 +1125,8 @@ function aiBluffQuality(p){
     return aceBlocker?0.48:kingBlocker?0.30:0.10;
   }
   const draw=detectDraws(p.hole,state.board);
-  if(draw.flush&&draw.oesd)return 1;
-  if(draw.flush||draw.oesd)return 0.90;
+  if(draw.flush&&(draw.oesd||draw.doubleGutshot))return 1;
+  if(draw.flush||draw.oesd||draw.doubleGutshot)return 0.90;
   if(draw.gutshot)return 0.62;
   const boardMax=Math.max(...state.board.map(c=>c.r));
   const overcards=p.hole.filter(c=>c.r>boardMax).length;
@@ -1290,7 +1291,7 @@ function aiHardPostflopNoBet(p,eq,pot,d,st,pfAdj){
   }else if(p.aiPlan?.mode==='barrel'&&state.stage!=='flop'){
     const newCard=state.board[state.board.length-1];
     const scare=newCard&&(newCard.r>=12||newCard.r>p.aiPlan.flopMax);
-    const improved=score[0]>p.aiPlan.made||(draw&&(draw.flush||draw.oesd));
+    const improved=score[0]>p.aiPlan.made||(draw&&(draw.flush||draw.oesd||draw.doubleGutshot));
     if(!value&&!stab&&!scare&&!improved&&eq<0.38){p.aiPlan=null;return {type:'call'};}
   }
   const protectable=value&&opps.length<=2&&(tex.dry||score[0]>=2);
@@ -1306,7 +1307,8 @@ function aiHardPostflopNoBet(p,eq,pot,d,st,pfAdj){
   if(stab)freq*=leverageStab?Math.max(pfAdj.bluffMult,0.72+hu.leadBoost*0.16):pfAdj.bluffMult;
   if(opps.length>2)freq-=0.12;
   if(Math.random()>clamp(freq,0.18,0.94))return null;
-  if(state.stage==='flop')p.aiPlan={mode:'barrel',made:score[0],flopMax:boardMax,draw:!!(draw&&(draw.flush||draw.oesd))};
+  if(state.stage==='flop')p.aiPlan={mode:'barrel',made:score[0],flopMax:boardMax,
+    draw:!!(draw&&(draw.flush||draw.oesd||draw.doubleGutshot))};
   return {type:'raise',amount:betTarget(p,pot,Math.max(eq,value?0.62:0.48),d)};
 }
 function aiPostflopContinueInfo(p){
@@ -1318,7 +1320,7 @@ function aiPostflopContinueInfo(p){
     :score[0]>=3;
   const made=usesHole;
   const draw=state.stage!=='river'?detectDraws(p.hole,state.board):null;
-  const strongDraw=!!(draw&&(draw.flush||draw.oesd));
+  const strongDraw=!!(draw&&(draw.flush||draw.oesd||draw.doubleGutshot));
   const gutshot=!!(draw&&draw.gutshot);
   const boardMax=Math.max(...state.board.map(c=>c.r));
   const overcards=p.hole.filter(c=>c.r>boardMax).length;
@@ -1361,7 +1363,7 @@ function aiHardPostflopVsBet(p,eq,odds,callAmt,pot,d,st,pfAdj){
   const betRatio=callAmt/Math.max(pot-callAmt,state.bb||1);
   const score=evalBest(p.hole.concat(state.board));
   const draw=state.stage!=='river'?detectDraws(p.hole,state.board):null;
-  const strongDraw=draw&&(draw.flush||draw.oesd);
+  const strongDraw=draw&&(draw.flush||draw.oesd||draw.doubleGutshot);
   const strongMade=score[0]>=3||(score[0]===2&&p.hole.some(c=>c.r===score[1]||c.r===score[2]));
   const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
   const read=rangeModelRead(agg);

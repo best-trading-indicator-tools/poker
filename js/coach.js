@@ -8,8 +8,11 @@ madeOverpair:' — an overpair, very strong.',madeUnderPair:' — a pocket pair 
 madeTwoPair:(a,b)=>` — real two pair (${a} and ${b}), strong enough to bet when checked to.`,
 madeNotTop:r=>` — not top pair; anyone holding a ${r} is ahead of you.`,
 drawFlush:(n,o)=>`flush draw (${n} outs, ≈${o})`,drawOESD:(n,o)=>`open-ended straight draw (${n} outs, ≈${o})`,drawGut:(n,o)=>`gutshot straight draw (${n} outs, ≈${o})`,
+drawDoubleGut:(n,o)=>`double-gutshot straight draw (${n} outs, ≈${o})`,
+drawBackdoorStraight:o=>`backdoor straight only (needs two specific running ranks, ≈${o} to complete)`,
 drawBackdoorFlush:o=>`backdoor flush only (needs the same suit on turn AND river, ≈${o} to complete)`,
 backdoorFlushWarn:' You only have a backdoor flush possibility: both remaining cards must be the right suit. That is not a normal one-card flush draw and is too weak to justify this call.',
+backdoorStraightWarn:' You only have a backdoor straight possibility: two specific ranks must arrive on turn and river. It is not a normal one-card straight draw and is too weak to justify this call.',
 drawBaked:' Your draw is already baked into the win-chance number — hitting it would likely give you the best hand.',
 warnFlush:' Three of one suit are on the board — be wary of opponents holding a flush.',
 warnPaired:' The board is paired, so full houses and trips are possible.',
@@ -162,8 +165,11 @@ madeOverpair:' — une overpair, très forte.',madeUnderPair:' — une paire ser
 madeTwoPair:(a,b)=>` — vraie double paire (${a} et ${b}), assez forte pour miser quand on checke jusqu’à vous.`,
 madeNotTop:r=>` — pas la top paire ; quiconque détient un ${r} est devant vous.`,
 drawFlush:(n,o)=>`tirage couleur (${n} outs, ≈${o})`,drawOESD:(n,o)=>`tirage quinte par les deux bouts (${n} outs, ≈${o})`,drawGut:(n,o)=>`tirage quinte ventral (${n} outs, ≈${o})`,
+drawDoubleGut:(n,o)=>`double gutshot (${n} outs, ≈${o})`,
+drawBackdoorStraight:o=>`quinte backdoor seulement (deux hauteurs précises au turn et à la river, ≈${o} pour la compléter)`,
 drawBackdoorFlush:o=>`couleur backdoor seulement (même couleur au turn ET à la river, ≈${o} pour la compléter)`,
 backdoorFlushWarn:" Vous avez seulement une possibilité de couleur backdoor : les deux prochaines cartes doivent être de la bonne couleur. Ce n'est pas un vrai tirage couleur à une carte et cela ne justifie pas ce call.",
+backdoorStraightWarn:" Vous avez seulement une possibilité de quinte backdoor : deux hauteurs précises doivent tomber au turn et à la river. Ce n'est pas un vrai tirage quinte à une carte et cela ne justifie pas ce call.",
 drawBaked:' Votre tirage est déjà intégré dans la chance de gain — le toucher vous donnerait probablement la meilleure main.',
 warnFlush:' Trois cartes d’une même couleur sur le board — méfiez-vous d’une couleur adverse.',
 warnPaired:' Le board est apparié : full et brelans sont possibles.',
@@ -316,8 +322,11 @@ madeOverpair:' — una overpair, muy fuerte.',madeUnderPair:' — una pareja de 
 madeTwoPair:(a,b)=>` — doble pareja real (${a} y ${b}), bastante fuerte para apostar cuando pasan hasta ti.`,
 madeNotTop:r=>` — no es top pair; cualquiera con un ${r} va por delante de ti.`,
 drawFlush:(n,o)=>`proyecto de color (${n} outs, ≈${o})`,drawOESD:(n,o)=>`proyecto de escalera abierta (${n} outs, ≈${o})`,drawGut:(n,o)=>`proyecto de escalera interna (${n} outs, ≈${o})`,
+drawDoubleGut:(n,o)=>`doble gutshot (${n} outs, ≈${o})`,
+drawBackdoorStraight:o=>`escalera backdoor solamente (dos rangos concretos en turn y river, ≈${o} para completarla)`,
 drawBackdoorFlush:o=>`color backdoor solamente (mismo palo en turn Y river, ≈${o} para completarlo)`,
 backdoorFlushWarn:' Solo tienes una posibilidad de color backdoor: las dos cartas restantes deben ser del palo correcto. No es un proyecto de color normal de una carta y no justifica esta igualada.',
+backdoorStraightWarn:' Solo tienes una posibilidad de escalera backdoor: deben llegar dos rangos concretos en turn y river. No es un proyecto de escalera normal de una carta y no justifica esta igualada.',
 drawBaked:' Tu proyecto ya está incluido en la probabilidad de ganar — completarlo te daría probablemente la mejor mano.',
 warnFlush:' Hay tres cartas del mismo palo en la mesa — cuidado con un color rival.',
 warnPaired:' La mesa está emparejada: son posibles fulls y tríos.',
@@ -657,7 +666,9 @@ function comboStrength(combo,board){
   let v=s[0]*1e6+(s[1]||0)*1e4+(s[2]||0)*100+(s[3]||0);
   if(board.length<5){
     const d=detectDraws(combo,board);
-    if(d.flush)v+=8e5; if(d.oesd)v+=6e5; else if(d.gutshot)v+=2.5e5;
+    if(d.flush)v+=8e5;
+    if(d.oesd||d.doubleGutshot)v+=6e5;
+    else if(d.gutshot)v+=2.5e5;
   }
   return v;
 }
@@ -785,30 +796,67 @@ function gtoSolve(opt){
   return {actions:out};
 }
 
+function straightRankSet(cards){
+  const ranks=new Set(cards.map(c=>c.r));
+  if(ranks.has(14))ranks.add(1);
+  return ranks;
+}
+function straightWindows(hole,board){
+  const ranks=straightRankSet(hole.concat(board)),boardRanks=straightRankSet(board),windows=[];
+  for(let lo=1;lo<=10;lo++){
+    const seq=[];for(let r=lo;r<lo+5;r++)seq.push(r);
+    const present=seq.filter(r=>ranks.has(r)),missing=seq.filter(r=>!ranks.has(r));
+    const boardPresent=seq.filter(r=>boardRanks.has(r)).length;
+    if(present.length>=3&&boardPresent<present.length)
+      windows.push({lo,seq,present,missing});
+  }
+  return windows;
+}
+function straightBackdoorChance(hole,board){
+  if(board.length!==3)return 0;
+  const canonical=r=>r===1?14:r,pairs=new Set();
+  for(const w of straightWindows(hole,board)){
+    if(w.missing.length!==2)continue;
+    const pair=w.missing.map(canonical).sort((a,b)=>a-b);
+    if(pair[0]!==pair[1])pairs.add(pair.join('-'));
+  }
+  const unknown=52-hole.length-board.length,total=unknown*(unknown-1)/2;
+  /* Every absent rank has four available suits. Deduplicate rank pairs shared by
+     overlapping straight windows before converting them to exact card runouts. */
+  return total?pairs.size*16/total:0;
+}
+/* Exact one-card and runner-runner straight classification, using at least one hole card. */
+function straightDrawAnalysis(hole,board){
+  const made=evalBest(hole.concat(board));
+  if(made[0]===4||made[0]===8)return {type:'made',outRanks:[],backdoorChance:0};
+  const candidates=straightWindows(hole,board).filter(w=>w.missing.length===1);
+  const canonical=r=>r===1?14:r;
+  const outRanks=[...new Set(candidates.map(w=>canonical(w.missing[0])))].sort((a,b)=>a-b);
+  let openEnded=false;
+  for(let i=0;i<candidates.length&&!openEnded;i++)for(let j=i+1;j<candidates.length;j++){
+    const a=new Set(candidates[i].present),shared=candidates[j].present.filter(r=>a.has(r));
+    const sorted=[...new Set(shared)].sort((x,y)=>x-y);
+    if(sorted.length===4&&sorted.every((r,k)=>k===0||r===sorted[k-1]+1))openEnded=true;
+  }
+  const type=openEnded?'oesd':outRanks.length>=2?'doubleGutshot':outRanks.length===1?'gutshot':'none';
+  const backdoorChance=type==='none'&&board.length===3?straightBackdoorChance(hole,board):0;
+  return {type,outRanks,backdoorChance};
+}
 /* detect draws that use at least one hole card */
 function detectDraws(hole,board){
   const made=evalBest(hole.concat(board));
-  const out={flush:false,oesd:false,gutshot:false};
-  if(made[0]>=5) return out; // already flush or better, draws moot
+  if(made[0]>=5)return {flush:false,oesd:false,doubleGutshot:false,gutshot:false,
+    backdoorStraight:false,backdoorStraightChance:0,straightType:'made',straightOutRanks:[]};
+  const straight=straightDrawAnalysis(hole,board);
+  const out={flush:false,oesd:straight.type==='oesd',doubleGutshot:straight.type==='doubleGutshot',
+    gutshot:straight.type==='gutshot'||straight.type==='doubleGutshot',
+    backdoorStraight:straight.backdoorChance>0,backdoorStraightChance:straight.backdoorChance,
+    straightType:straight.type,straightOutRanks:straight.outRanks};
   const cards=hole.concat(board);
   const suitCount=[0,0,0,0];
   for(const c of cards) suitCount[c.s]++;
   for(let s=0;s<4;s++)
     if(suitCount[s]===4 && (hole[0].s===s||hole[1].s===s)) out.flush=true;
-  if(made[0]!==4){ // no made straight
-    const ranks=new Set(cards.map(c=>c.r));
-    if(ranks.has(14)) ranks.add(1);
-    const boardRanks=new Set(board.map(c=>c.r));
-    if(boardRanks.has(14)) boardRanks.add(1);
-    for(let lo=1;lo<=10;lo++){
-      let cnt=0,bcnt=0,consec=0,maxConsec=0;
-      for(let v=lo;v<lo+5;v++){
-        if(ranks.has(v)){cnt++;consec++;maxConsec=Math.max(maxConsec,consec);}else consec=0;
-        if(boardRanks.has(v))bcnt++;
-      }
-      if(cnt===4&&bcnt<4){ if(maxConsec>=4) out.oesd=true; else out.gutshot=true; }
-    }
-  }
   return out;
 }
 function findDrawOuts(hole,board){
@@ -878,7 +926,8 @@ function drawHitChance(outCount,unknownCount,streets){
 }
 function coachDrawOutInfo(hole,board,draw=null){
   const d=draw||detectDraws(hole,board),outs=findDrawOuts(hole,board);
-  const flush=d.flush?outs.flush:[],straight=d.oesd||d.gutshot?outs.straight:[];
+  const flush=d.flush?outs.flush:[],straight=d.oesd||d.gutshot
+    ?outs.straight.filter(c=>!d.straightOutRanks?.length||d.straightOutRanks.includes(c.r)):[];
   const flushKeys=new Set(flush.map(c=>c.r*4+c.s));
   const overlap=straight.filter(c=>flushKeys.has(c.r*4+c.s));
   const unique=[],seen=new Set();
@@ -915,9 +964,9 @@ function coachPostflopImpliedOdds(p,callAmt,pot,drawInfo,actsFirst,actsLast,icmP
   const agg=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:villains[0];
   let payRate=.42;
   payRate*=actsLast ? .86 : actsFirst ? .62 : .74;
-  if(drawInfo.draw.flush&&drawInfo.draw.oesd)payRate*=.68;
+  if(drawInfo.draw.flush&&(drawInfo.draw.oesd||drawInfo.draw.doubleGutshot))payRate*=.68;
   else if(drawInfo.draw.flush)payRate*=.72;
-  else if(drawInfo.draw.oesd)payRate*=.86;
+  else if(drawInfo.draw.oesd||drawInfo.draw.doubleGutshot)payRate*=.86;
   else payRate*=.74;
   const sid=agg?.style?.id;
   payRate*=sid==='station' ? 1.12 : sid==='maniac' ? 1.04 : sid==='rock' ? .78 : .95;
@@ -1121,7 +1170,7 @@ function classifyMade(hole,board,score){
 }
 function underpairBackdoors(hole,board,draw){
   if(board.length!==3)return {flush:false,straight:false,frontdoor:false};
-  const frontdoor=!!(draw&&(draw.flush||draw.oesd));
+  const frontdoor=!!(draw&&(draw.flush||draw.oesd||draw.doubleGutshot));
   const flush=hole.some(h=>board.filter(c=>c.s===h.s).length===2);
   const ranks=new Set(hole.concat(board).map(c=>c.r));
   if(ranks.has(14))ranks.add(1);
@@ -1752,8 +1801,11 @@ function coachDecide(p){
       drawInfo=coachDrawOutInfo(p.hole,state.board,d);
       if(d.flush) dr.push(C('drawFlush',drawInfo.flush.length,pct(drawInfo.flushChance)));
       if(d.oesd) dr.push(C('drawOESD',drawInfo.straight.length,pct(drawInfo.straightChance)));
+      else if(d.doubleGutshot)dr.push(C('drawDoubleGut',drawInfo.straight.length,pct(drawInfo.straightChance)));
       else if(d.gutshot) dr.push(C('drawGut',drawInfo.straight.length,pct(drawInfo.straightChance)));
       if(backdoorFlush&&!d.flush)dr.push(C('drawBackdoorFlush',pct(backdoorFlush.chance)));
+      if(d.backdoorStraight&&!d.oesd&&!d.gutshot)
+        dr.push(C('drawBackdoorStraight',pct(d.backdoorStraightChance)));
       if(dr.length){
         drawRow=`<div class="coach-row"><span>${T('draws')}</span><b>${dr.join('<br>')}</b></div>`;
         const outCards=drawInfo.unique;
@@ -2213,7 +2265,7 @@ function coachDecide(p){
        High cards only (or just the board's pair) vs a bet = fold unless the price is absurdly good. */
     const usesHole=myScore[0]>=1&&myScore[0]<=2&&p.hole.some(c=>c.r===myScore[1]);
     const noMade=myScore[0]===0||(myScore[0]<=2&&!usesHole);
-    const goodDraw=d&&(d.flush||d.oesd);
+    const goodDraw=d&&(d.flush||d.oesd||d.doubleGutshot);
     airPen=(noMade&&!goodDraw)?0.15:0;
     underpairInfo=coachUnderpairRealization(p.hole,state.board,betRatio,actsFirst,d,{
       callAmt,pot,stackBefore:p.chips
@@ -2222,8 +2274,13 @@ function coachDecide(p){
     eqAdj=clamp(eq-bigBetPen-airPen-underpairPen+exploitAdj+blockAdj+diffAggAdj,0,1);
     const edge=eqAdj-decisionNeed;
     if(bigBetPen>=0.05) extra.push(C('bigBet',Math.round(betRatio*100)));
-    if(d&&d.gutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
-    if(airPen) extra.push(C(d&&d.gutshot?'weakDrawWarn':backdoorFlush?'backdoorFlushWarn':'airWarn'));
+    if(d&&d.gutshot&&!d.doubleGutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
+    if(airPen){
+      if(d&&d.gutshot&&!d.doubleGutshot)extra.push(C('weakDrawWarn'));
+      else if(backdoorFlush)extra.push(C('backdoorFlushWarn'));
+      else if(d?.backdoorStraight)extra.push(C('backdoorStraightWarn'));
+      else extra.push(C('airWarn'));
+    }
     if(underpairInfo)extra.push(C('underpairRealization',underpairInfo.overcards,Math.round(underpairPen*100),
       Math.round(betRatio*100),actsFirst,underpairInfo.backdoors,
       Math.round(underpairInfo.callFraction*100),underpairInfo.sprAfter===null?'—':Math.round(underpairInfo.sprAfter*10)/10));

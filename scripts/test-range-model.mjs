@@ -241,6 +241,29 @@ const result=vm.runInContext(`(()=>{
       comboDrawInfo.clean.length!==15||comboDrawInfo.higherFlushThreats!==1||
       Math.abs(comboDrawInfo.cleanHitChance-15/46)>1e-12)
     throw new Error('combo draw outs must be deduplicated exactly '+JSON.stringify(comboDrawInfo));
+  const drawCase=(hole,board)=>{
+    const h=hole.map(parseCardCode),b=board.map(parseCardCode),draw=detectDraws(h,b);
+    return {draw,info:coachDrawOutInfo(h,b,draw)};
+  };
+  const openEnded=drawCase(['8s','7h'],['6c','5d','Ks']);
+  const gutshot=drawCase(['8s','7h'],['6c','4d','Ks']);
+  const doubleGut=drawCase(['Qs','10h'],['Ac','Jd','8s']);
+  const wheelGut=drawCase(['As','2h'],['3c','4d','Ks']);
+  const babyOpen=drawCase(['2s','3h'],['4c','5d','Ks']);
+  const backdoorStraight=drawCase(['8s','7h'],['6c','2d','Ks']);
+  if(!openEnded.draw.oesd||openEnded.info.straight.length!==8)
+    throw new Error('open-ended straight classification failed '+JSON.stringify(openEnded));
+  if(!gutshot.draw.gutshot||gutshot.draw.doubleGutshot||gutshot.info.straight.length!==4)
+    throw new Error('gutshot classification failed '+JSON.stringify(gutshot));
+  if(!doubleGut.draw.doubleGutshot||doubleGut.draw.oesd||doubleGut.info.straight.length!==8)
+    throw new Error('double-gutshot classification failed '+JSON.stringify(doubleGut));
+  if(!wheelGut.draw.gutshot||wheelGut.draw.oesd||wheelGut.info.straight.length!==4)
+    throw new Error('A234 must have only the five as a gutshot '+JSON.stringify(wheelGut));
+  if(!babyOpen.draw.oesd||babyOpen.info.straight.length!==8)
+    throw new Error('2345 must recognize both ace and six ends '+JSON.stringify(babyOpen));
+  if(!backdoorStraight.draw.backdoorStraight||backdoorStraight.draw.gutshot||
+      backdoorStraight.draw.oesd||!(backdoorStraight.draw.backdoorStraightChance>0))
+    throw new Error('runner-runner straight classification failed '+JSON.stringify(backdoorStraight));
   newGame({...cfg,numPlayers:6});
   const impliedHero=state.players[0],impliedAgg=state.players[1];
   for(const x of state.players){
@@ -565,6 +588,9 @@ const result=vm.runInContext(`(()=>{
     customScenario:{rec:customScenario.rec,eq:customScenario.eq,stage:customScenario.stage},
     adaptiveAI:{reads:adaptiveReads.map(r=>({effective:r.effective,sample:r.sample})),exploit:adaptiveExploit},
     backdoorOnly:{eqAdj:backdoorDecision.eqAdj,drawRow:backdoorDecision.drawRow},
+    straightDraws:{openEnded:openEnded.info.straight.length,gutshot:gutshot.info.straight.length,
+      doubleGut:doubleGut.info.straight.length,wheel:wheelGut.info.straight.length,
+      babyOpen:babyOpen.info.straight.length,backdoor:backdoorStraight.draw.backdoorStraightChance},
     tableSizeStrategy,
     ordinals};
 })()`,context);
