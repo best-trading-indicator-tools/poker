@@ -3079,6 +3079,36 @@ function initUI(){
     if(numPlayers>max)setSetupPlayerCount(max);
     else refreshTableScenarioSetup(numPlayers);
   };
+  const restoreSetupFromGame=()=>{
+    const cfg=state&&state.cfg;
+    if(!cfg)return;
+    setupGameType=cfg.gameType==='cash'?'cash':'sng';
+    updateSetupMode(setupGameType);
+    setSetupPlayerCount(Number(cfg.numPlayers)||numPlayers);
+    const setSelect=(id,value)=>{
+      const el=$(id);
+      if(el&&Array.from(el.options).some(option=>String(option.value)===String(value)))el.value=String(value);
+    };
+    setSelect('startBlind',cfg.startBlind);
+    setSelect('startBB',cfg.startBB);
+    if($('timerChk'))$('timerChk').checked=!!cfg.timer;
+    difficulty=['easy','medium','hard'].includes(cfg.difficulty)?cfg.difficulty:'medium';
+    $('diffSeg').querySelectorAll('button').forEach(button=>{
+      button.classList.toggle('on',button.dataset.d===difficulty);
+    });
+    if(setupGameType==='sng'){
+      setSelect('anteSel',cfg.ante);
+      const speed=cfg.speed||'turbo';
+      document.querySelectorAll('input[name=speed]').forEach(input=>{
+        input.checked=input.value===speed;
+      });
+      $('koBonusChk').checked=!!cfg.koBonus;
+    }
+    const scenario=normalizeTableScenario(cfg.tableScenario);
+    $('tableScenarioSel').value=scenario;
+    if(scenario==='custom'&&cfg.tableCustom)setTableCustomCounts(cfg.tableCustom);
+    refreshTableScenarioSetup(numPlayers);
+  };
   $('modeSeg').querySelectorAll('button').forEach(b=>{
     b.onclick=()=>{setupGameType=b.dataset.m; updateSetupMode(setupGameType); refreshResume();};
   });
@@ -3367,12 +3397,14 @@ function initUI(){
     if(confirm(T(cash?'quitCash':'quitSng'))){
       if(cash){
         showCashSessionEnd();
+        restoreSetupFromGame();
         $('game').classList.add('hidden');
         $('setup').classList.remove('hidden');
         refreshResume(); updateOrient();
         return;
       }
       state.gameOver=true; clearResume(); hideNextBtn(); hideActions();
+      restoreSetupFromGame();
       $('game').classList.add('hidden'); $('setup').classList.remove('hidden');
       refreshResume(); updateOrient();
     }
@@ -3380,6 +3412,7 @@ function initUI(){
   $('ovBtn').onclick=()=>{
     if(MP){mpRequestRematch();return;}
     closeDialog($('overlay'));
+    restoreSetupFromGame();
     $('game').classList.add('hidden');
     $('setup').classList.remove('hidden');
     refreshResume(); updateOrient();
