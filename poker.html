@@ -594,6 +594,10 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
 .scenario-field{font-size:11px;color:var(--dim);}
 .scenario-field.wide{grid-column:span 2;}
 .scenario-field input,.scenario-field select{display:block;width:100%;margin-top:5px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);padding:9px 10px;font-size:13px;}
+.scenario-card-pickers{display:flex;gap:7px;margin-top:5px;flex-wrap:wrap;}
+.scenario-card-pickers select{width:auto;min-width:86px;margin-top:0;font-size:17px;font-weight:750;padding:9px 28px 9px 10px;}
+.scenario-card-pickers select.red-card{color:#ef6f68;}
+.scenario-card-help{display:block;margin-top:5px;color:#788599;font-size:10.5px;line-height:1.35;}
 .scenario-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;}
 .scenario-actions button{flex:1;min-width:120px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:10px;font-weight:700;cursor:pointer;}
 #scenarioAnalyze{background:#438bc0;border-color:#65a9d8;color:white;}
@@ -1296,8 +1300,8 @@ body.fl #chipPreview{display:none!important;}
     <h2 id="scenarioTitle">Custom Scenario Builder</h2>
     <p id="scenarioSub" class="rev-intro">Build a decision, analyze it, save it or practice variations.</p>
     <div class="scenario-grid">
-      <label class="scenario-field wide"><span id="scCardsLbl">Hero cards</span><input id="scCards" value="As Kh" maxlength="8" placeholder="As Kh"></label>
-      <label class="scenario-field"><span id="scBoardLbl">Board</span><input id="scBoard" maxlength="18" placeholder="Qs 7h 2c"></label>
+      <label class="scenario-field wide"><span id="scCardsLbl">Hero cards</span><span id="scCards" class="scenario-card-pickers"></span><small id="scCardsHelp" class="scenario-card-help">Choose your two private cards.</small></label>
+      <label class="scenario-field"><span id="scBoardLbl">Board</span><span id="scBoard" class="scenario-card-pickers"></span><small id="scBoardHelp" class="scenario-card-help">Leave empty preflop, or choose 3–5 community cards.</small></label>
       <label class="scenario-field"><span id="scPosLbl">Position</span><select id="scPos"><option>UTG</option><option>HJ</option><option>CO</option><option selected>BTN</option><option>SB</option><option>BB</option></select></label>
       <label class="scenario-field"><span id="scOppLbl">Opponents</span><input id="scOpps" type="number" min="1" max="5" value="1"></label>
       <label class="scenario-field"><span id="scStackLbl">Effective stack (BB)</span><input id="scStack" type="number" min="2" max="300" value="100"></label>

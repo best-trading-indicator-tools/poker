@@ -47,8 +47,9 @@ analyticsTrendDown:n=>`Coach-match accuracy fell by <b>${n} points</b> versus th
 potUnopened:"Unopened / limped",potSingle:"Single-raised pot",potThreeBet:"3-bet+ pot",potMultiway:"Multiway pot",
 scenarioBtn:"🧩 Scenario builder",scenarioTitle:"Custom Scenario Builder",scenarioSub:"Build a decision, analyze it, save it or practice it immediately.",
 scCards:"Hero cards",scBoard:"Board",scPos:"Position",scOpps:"Opponents",scStack:"Effective stack (BB)",scPot:"Pot",scCall:"To call",scProfile:"Opponent profile",scGame:"Context",scAction:"Previous action",
+scCardsHelp:"Choose your two private cards.",scBoardHelp:"Leave empty preflop, or choose 3–5 community cards.",scEmptyCard:"— Empty —",
 scAnalyze:"Analyze spot",scSave:"Save scenario",scShare:"Copy share link",scSaved:"Saved scenarios",scClose:"Close",
-scInvalid:"Use valid unique cards such as “As Kh” and enter 0, 3, 4 or 5 board cards.",scSavedOk:"Scenario saved.",scCopied:"Share link copied.",
+scInvalid:"Choose two different private cards and either 0, 3, 4 or 5 different board cards, without empty gaps.",scSavedOk:"Scenario saved.",scCopied:"Share link copied.",
 scRecommendation:"Recommendation",scEquity:"Estimated equity",scPrice:"Pot odds",scConfidence:"Confidence",scPlay:"Play this decision",scDrill:"Practice 10 variations",scCorrect:"Correct.",scWrong:r=>`Coach recommendation: ${r}.`,
 scReasonCall:(e,n)=>`Your estimated equity (${e}%) clears the ${n}% price after a small realization adjustment.`,
 scReasonFold:(e,n)=>`Your estimated equity (${e}%) does not clear the adjusted ${n}% requirement.`,
@@ -159,8 +160,9 @@ analyticsTrendDown:n=>`La précision face au coach baisse de <b>${n} points</b> 
 potUnopened:"Pot non ouvert / limpé",potSingle:"Pot relancé",potThreeBet:"Pot 3-bet+",potMultiway:"Pot multiway",
 scenarioBtn:"🧩 Builder de scénarios",scenarioTitle:"Builder de scénarios personnalisés",scenarioSub:"Construisez une décision, analysez-la, sauvegardez-la ou jouez-la immédiatement.",
 scCards:"Vos cartes",scBoard:"Board",scPos:"Position",scOpps:"Adversaires",scStack:"Tapis effectif (BB)",scPot:"Pot",scCall:"À payer",scProfile:"Profil adverse",scGame:"Contexte",scAction:"Action précédente",
+scCardsHelp:"Choisissez vos deux cartes privées.",scBoardHelp:"Laissez vide préflop, ou choisissez 3 à 5 cartes communes.",scEmptyCard:"— Vide —",
 scAnalyze:"Analyser le spot",scSave:"Sauvegarder",scShare:"Copier le lien",scSaved:"Scénarios sauvegardés",scClose:"Fermer",
-scInvalid:"Utilisez des cartes uniques valides comme « As Kh » et entrez 0, 3, 4 ou 5 cartes au board.",scSavedOk:"Scénario sauvegardé.",scCopied:"Lien copié.",
+scInvalid:"Choisissez deux cartes privées différentes puis 0, 3, 4 ou 5 cartes différentes au board, sans emplacement vide entre elles.",scSavedOk:"Scénario sauvegardé.",scCopied:"Lien copié.",
 scRecommendation:"Recommandation",scEquity:"Équité estimée",scPrice:"Cotes du pot",scConfidence:"Confiance",scPlay:"Jouer cette décision",scDrill:"Pratiquer 10 variantes",scCorrect:"Correct.",scWrong:r=>`Recommandation du coach : ${r}.`,
 scReasonCall:(e,n)=>`Votre équité estimée (${e} %) dépasse le prix de ${n} % après un léger ajustement de réalisation.`,
 scReasonFold:(e,n)=>`Votre équité estimée (${e} %) ne dépasse pas le seuil ajusté de ${n} %.`,
@@ -271,8 +273,9 @@ analyticsTrendDown:n=>`La precisión bajó <b>${n} puntos</b> frente a las 10 se
 potUnopened:"Bote sin abrir / limpeado",potSingle:"Bote subido",potThreeBet:"Bote 3-bet+",potMultiway:"Bote multiway",
 scenarioBtn:"🧩 Constructor de situaciones",scenarioTitle:"Constructor de situaciones personalizadas",scenarioSub:"Crea una decisión, analízala, guárdala o juégala de inmediato.",
 scCards:"Tus cartas",scBoard:"Mesa",scPos:"Posición",scOpps:"Rivales",scStack:"Stack efectivo (BB)",scPot:"Bote",scCall:"A pagar",scProfile:"Perfil rival",scGame:"Contexto",scAction:"Acción anterior",
+scCardsHelp:"Elige tus dos cartas privadas.",scBoardHelp:"Déjalo vacío preflop o elige entre 3 y 5 cartas comunitarias.",scEmptyCard:"— Vacía —",
 scAnalyze:"Analizar",scSave:"Guardar",scShare:"Copiar enlace",scSaved:"Situaciones guardadas",scClose:"Cerrar",
-scInvalid:"Usa cartas únicas válidas como « As Kh » e introduce 0, 3, 4 o 5 cartas en la mesa.",scSavedOk:"Situación guardada.",scCopied:"Enlace copiado.",
+scInvalid:"Elige dos cartas privadas distintas y 0, 3, 4 o 5 cartas distintas en la mesa, sin huecos vacíos.",scSavedOk:"Situación guardada.",scCopied:"Enlace copiado.",
 scRecommendation:"Recomendación",scEquity:"Equity estimada",scPrice:"Odds del bote",scConfidence:"Confianza",scPlay:"Jugar esta decisión",scDrill:"Practicar 10 variantes",scCorrect:"Correcto.",scWrong:r=>`Recomendación del coach: ${r}.`,
 scReasonCall:(e,n)=>`Tu equity estimada (${e} %) supera el precio del ${n} % tras un pequeño ajuste de realización.`,
 scReasonFold:(e,n)=>`Tu equity estimada (${e} %) no supera el requisito ajustado del ${n} %.`,
@@ -646,22 +649,53 @@ function advanceScenarioPractice(){
   $('practiceBody').innerHTML=`<div class="practice-result good">${T('practiceDone')(practiceScore,practiceQueue.length)}</div>`;
   $('practiceNext').classList.add('hidden');
 }
-function scenarioCardCodes(text){
-  const tokens=String(text||'').trim().split(/[\s,]+/).filter(Boolean),out=[];
-  const ranks={T:10,J:11,Q:12,K:13,A:14},suits={s:0,h:1,d:2,c:3};
-  for(const raw of tokens){
-    const m=raw.match(/^(10|[2-9TJQKA])([shdc])$/i);
-    if(!m)return null;
-    const rank=m[1].toUpperCase(),suit=m[2].toLowerCase();
-    out.push({r:ranks[rank]||Number(rank),s:suits[suit]});
-  }
-  return out;
-}
 function scenarioCode(c){return `${RANK_CH[c.r]}${'shdc'[c.s]}`;}
+function scenarioCardLabel(code){
+  if(!code)return T('scEmptyCard');
+  const c=parseCardCode(code);
+  return `${RANK_CH[c.r]}${SUIT_CH[c.s]}`;
+}
+function scenarioRefreshCardColor(sel){
+  if(!sel)return;
+  sel.classList.toggle('red-card',/[hd]$/.test(sel.value));
+}
+function scenarioBuildCardPickers(){
+  const build=(rootId,count,defaults)=>{
+    const root=$(rootId);if(!root)return;
+    if(!root.children.length){
+      for(let i=0;i<count;i++){
+        const sel=document.createElement('select');
+        sel.className='scenario-card-select';
+        sel.setAttribute('aria-label',`${rootId==='scCards'?T('scCards'):T('scBoard')} ${i+1}`);
+        sel.innerHTML=`<option value="">${T('scEmptyCard')}</option>`+
+          [14,13,12,11,10,9,8,7,6,5,4,3,2].flatMap(r=>[0,1,2,3].map(s=>{
+            const code=scenarioCode({r,s});return `<option value="${code}">${scenarioCardLabel(code)}</option>`;
+          })).join('');
+        sel.value=defaults[i]||'';
+        sel.onchange=()=>scenarioRefreshCardColor(sel);
+        scenarioRefreshCardColor(sel);root.appendChild(sel);
+      }
+    }else [...root.querySelectorAll('select')].forEach(sel=>{
+      if(sel.options[0])sel.options[0].textContent=T('scEmptyCard');
+      scenarioRefreshCardColor(sel);
+    });
+  };
+  build('scCards',2,['As','Kh']);build('scBoard',5,[]);
+}
+function scenarioSelectedCards(rootId){
+  return [...$(rootId).querySelectorAll('select')].map(s=>s.value).filter(Boolean);
+}
+function scenarioSetCards(rootId,codes){
+  scenarioBuildCardPickers();
+  [...$(rootId).querySelectorAll('select')].forEach((sel,i)=>{sel.value=codes[i]||'';scenarioRefreshCardColor(sel);});
+}
 function scenarioRead(){
-  const hole=scenarioCardCodes($('scCards').value),board=scenarioCardCodes($('scBoard').value);
-  const all=(hole||[]).concat(board||[]),unique=new Set(all.map(c=>c.r*4+c.s));
-  if(!hole||hole.length!==2||!board||![0,3,4,5].includes(board.length)||unique.size!==all.length)return null;
+  const holeCodes=scenarioSelectedCards('scCards'),boardCodes=scenarioSelectedCards('scBoard');
+  const hole=holeCodes.map(parseCardCode),board=boardCodes.map(parseCardCode);
+  const all=hole.concat(board),unique=new Set(all.map(c=>c.r*4+c.s));
+  const boardSlots=[...$('scBoard').querySelectorAll('select')].map(s=>s.value);
+  const hasGap=boardSlots.some((v,i)=>!v&&boardSlots.slice(i+1).some(Boolean));
+  if(hole.length!==2||![0,3,4,5].includes(board.length)||unique.size!==all.length||hasGap)return null;
   return {
     hole:hole.map(scenarioCode),board:board.map(scenarioCode),pos:$('scPos').value,
     opps:clamp(Math.round(Number($('scOpps').value)||1),1,5),
@@ -736,7 +770,7 @@ function scenarioSave(){
   localStorage.setItem('sg_poker_scenarios',JSON.stringify(list));scenarioShowError(T('scSavedOk'));scenarioRenderSaved();
 }
 function scenarioFill(s){
-  $('scCards').value=s.hole.join(' ');$('scBoard').value=s.board.join(' ');$('scPos').value=s.pos;
+  scenarioSetCards('scCards',s.hole);scenarioSetCards('scBoard',s.board);$('scPos').value=s.pos;
   $('scOpps').value=s.opps;$('scStack').value=s.stackBB;$('scPot').value=s.pot;$('scCall').value=s.callAmt;
   $('scProfile').value=s.profile;$('scGame').value=s.gameType;$('scAction').value=s.previousAction||'unopened';scenarioShowError('');$('scenarioResult').innerHTML='';
 }
@@ -770,6 +804,7 @@ function scenarioStartDrill(s){
   closeDialog($('scenarioOv'));renderPracticeSpot();openDialog($('practiceOv'),'practiceTitle');
 }
 function openScenarioBuilder(){
+  scenarioBuildCardPickers();
   scenarioShowError('');$('scenarioResult').innerHTML='';
   try{
     const raw=location.hash.startsWith('#scenario=')?location.hash.slice(10):'';
@@ -2875,11 +2910,13 @@ function applyLang(){
   set('startBtn',setupGameType==='cash'?'startCash':'deal'); set('resumeBtn','resume'); set('reviewBtn','review');
   set('scenarioBtn','scenarioBtn');set('scenarioTitle','scenarioTitle');set('scenarioSub','scenarioSub');
   set('scCardsLbl','scCards');set('scBoardLbl','scBoard');set('scPosLbl','scPos');set('scOppLbl','scOpps');
+  set('scCardsHelp','scCardsHelp');set('scBoardHelp','scBoardHelp');
   set('scStackLbl','scStack');set('scPotLbl','scPot');set('scCallLbl','scCall');set('scProfileLbl','scProfile');set('scGameLbl','scGame');set('scActionLbl','scAction');
   set('scenarioAnalyze','scAnalyze');set('scenarioSave','scSave');set('scenarioShare','scShare');set('scenarioClose','scClose');
   const scProf=$('scProfile');if(scProf)['profileRock','profileStation','profileShark','profileManiac'].forEach((k,i)=>{if(scProf.options[i])scProf.options[i].textContent=['🪨 ','📞 ','🦈 ','🔥 '][i]+T(k);});
   const scGame=$('scGame');if(scGame){scGame.options[0].textContent=T('modeCash');scGame.options[1].textContent=T('modeSng');}
   const scAct=$('scAction');if(scAct)['scUnopened','scLimp','scRaise','scThreeBet','scCbet','scCheckRaise','scAllin'].forEach((k,i)=>{if(scAct.options[i])scAct.options[i].textContent=T(k);});
+  scenarioBuildCardPickers();
   set('quickPlayTitle','quickPlayTitle');set('quickPlaySub','quickPlaySub');
   set('revTitle','revTitle'); set('revAllHands','revAllHands'); set('revClose','close');
   ['revFilterAll','revFilterCash','revFilterSng'].forEach(id=>set(id,id));
