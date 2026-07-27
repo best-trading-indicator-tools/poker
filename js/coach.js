@@ -2588,13 +2588,29 @@ function rangeHandClassVector(board){
 }
 function rangeMatrixMetrics(info){
   if(info._rangeMetrics)return info._rangeMetrics;
+  if(info.snapshotMetrics){
+    const s=info.snapshotMetrics,available=s.available||Object.create(null);
+    if(!s.available){
+      const dead=new Set((info.board||[]).concat(info.dead||[]).map(c=>c.r*4+c.s));
+      for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++){
+        const a=FULL_DECK[i],b=FULL_DECK[j];
+        if(dead.has(a.r*4+a.s)||dead.has(b.r*4+b.s))continue;
+        const code=holeCode([a,b]);available[code]=(available[code]||0)+1;
+      }
+    }
+    const lift=s.lift||Object.create(null);
+    if(!s.lift)for(const code of Object.keys(s.mass||{}))
+      lift[code]=(s.mass[code]/Math.max(available[code]||1,1))*(s.legal||1);
+    return info._rangeMetrics={mass:s.mass||{},available,lift,
+      composition:s.composition||null,classMass:s.classMass||{},effective:s.effective||0,legal:s.legal||0};
+  }
   const mass=Object.create(null),available=Object.create(null),comboWeights=[];
   if(info.kind!=='range'){
     for(const code of info.list||[]){mass[code]=1;available[code]=1;}
     return info._rangeMetrics={mass,available,lift:mass,composition:null,effective:(info.list||[]).length,legal:(info.list||[]).length};
   }
   const dead=new Set((info.board||[]).concat(info.dead||[]).map(c=>c.r*4+c.s));
-  const classVector=rangeHandClassVector(info.board||[]),composition=Object.create(null);
+  const classVector=rangeHandClassVector(info.board||[]),composition=Object.create(null),classMass=Object.create(null);
   let total=0,legal=0,k=0;
   for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++,k++){
     const a=FULL_DECK[i],b=FULL_DECK[j];
@@ -2611,14 +2627,18 @@ function rangeMatrixMetrics(info){
     if(classVector){
       const bucket=classVector[k];
       composition[bucket]=(composition[bucket]||0)+w;
+      const byCode=classMass[code]||(classMass[code]=Object.create(null));
+      byCode[bucket]=(byCode[bucket]||0)+w;
     }
   }
   if(total>0)for(const code of Object.keys(mass))mass[code]/=total;
   if(total>0)for(const bucket of Object.keys(composition))composition[bucket]/=total;
+  if(total>0)for(const code of Object.keys(classMass))
+    for(const bucket of Object.keys(classMass[code]))classMass[code][bucket]/=total;
   const lift=Object.create(null);
   for(const code of Object.keys(mass))lift[code]=(mass[code]/Math.max(available[code]||1,1))*legal;
   let sq=0;for(const w of comboWeights){const n=w/Math.max(total,1e-12);sq+=n*n;}
-  return info._rangeMetrics={mass,available,lift,composition:classVector?composition:null,
+  return info._rangeMetrics={mass,available,lift,composition:classVector?composition:null,classMass,
     effective:Math.round(1/Math.max(sq,1/Math.max(legal,1))),legal};
 }
 function rangeMatrixMassMap(info){
@@ -2632,7 +2652,7 @@ function rangeMostLikelyCodes(info,n=8){
     .filter(x=>x.w>0).sort((a,b)=>b.w-a.w).slice(0,n)
     .map(x=>`${x.code} (${x.w>=0.001?Math.round(x.w*1000)/10:Math.round(x.w*10000)/100}%)`);
 }
-function rangeMatrixCells(info,heroCode,compact=false,mode='density'){
+function rangeMatrixCells(info,heroCode,compact=false,mode='density',filter='all'){
   const R=['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
   const inSet2=new Set(info.list2||[]),metrics=rangeMatrixMetrics(info);
   const cells=[];
@@ -2642,15 +2662,28 @@ function rangeMatrixCells(info,heroCode,compact=false,mode='density'){
     cells.push({h,mass,lift,combos,in2:inSet2.has(h),me:h===heroCode});
   }
   const html=cells.map(c=>{
+    const buckets=metrics.classMass?.[c.h]||{};
+    const madeMass=['fullHousePlus','flush','straight','trips','twoPair','onePair'].reduce((s,k)=>s+(buckets[k]||0),0);
+    const visible=filter==='all'||(filter==='made'?madeMass:filter==='draws'?buckets.drawOnly:
+      filter==='air'?(buckets.air||0)+(buckets.boardOnly||0):buckets[filter]||0)>0;
     const score=mode==='mass'?c.mass:c.lift;
     const tier=info.kind!=='range'?(c.mass>0?' rw4':''):mode==='mass'
       ?score>=0.02?' rw4':score>=0.01?' rw3':score>=0.0035?' rw2':score>=0.0003?' rw1':''
       :score>=4?' rw4':score>=2?' rw3':score>=0.8?' rw2':score>=0.2?' rw1':'';
     const probability=c.mass>=0.001?`${Math.round(c.mass*1000)/10}%`:`${Math.round(c.mass*10000)/100}%`;
     const title=info.kind==='range'?` · ${probability} ${T('rangeOfRange')} · ${c.combos} ${T('rangeCombos')} · ${Math.round(c.lift*10)/10}× ${T('rangeAvgCombo')}`:'';
-    return `<div class="cc${tier}${c.in2?' in2':''}${c.me?' me':''}" title="${c.h}${title}"><span>${c.h}</span>${!compact&&info.kind==='range'&&c.mass>0?`<small>${probability}</small>`:''}</div>`;
+    return `<div class="cc${tier}${c.in2?' in2':''}${c.me?' me':''}${visible?'':' range-filtered'}" data-range-code="${c.h}" tabindex="${compact?'-1':'0'}" title="${c.h}${title}"><span>${c.h}</span>${!compact&&info.kind==='range'&&c.mass>0?`<small>${probability}</small>`:''}</div>`;
   }).join('');
   return `<div class="range-grid${compact?' compact':''}">${html}</div>`;
+}
+function rangeSnapshot(info){
+  if(!info||info.kind!=='range')return null;
+  const m=rangeMatrixMetrics(info),plain=x=>JSON.parse(JSON.stringify(x||{}));
+  return {kind:'range',pos:info.pos,cap:info.cap,floor:info.floor,
+    board:(info.board||[]).map(c=>({r:c.r,s:c.s})),dead:(info.dead||[]).map(c=>({r:c.r,s:c.s})),
+    model:{history:plain(info.model?.history||[])},
+    snapshotMetrics:{mass:plain(m.mass),composition:plain(m.composition),
+      classMass:plain(m.classMass),effective:m.effective,legal:m.legal}};
 }
 function rangeMatrixLegend(){
   return `<div class="range-heat-legend"><span><i class="rw1"></i>${T('rangeFringe')}</span><span><i class="rw2"></i>${T('rangePossible')}</span><span><i class="rw3"></i>${T('rangeLikely')}</span><span><i class="rw4"></i>${T('rangeVeryLikely')}</span></div>`;
@@ -2717,23 +2750,59 @@ function rangeMatrixMetaHtml(info,controls=false,mode='density'){
     (topCardMass?`<div class="range-line range-read"><b>${T('rangeTopCard')}:</b> ${topChar}x ≈ ${topCardPct}%</div>`:'')+
     (top?`<div class="range-line range-top"><b>${T('rangeTopHands')}:</b> ${top}</div>`:'');
 }
-function showChartMatrix(info,heroCode){
+function showChartMatrix(info,heroCode,alternatives=null){
   if(!HAS_DOM||!info)return;
-  let mode='density';
+  const ranges=alternatives?.length?alternatives:[info];
+  let active=info,mode='density',filter='all',selected='';
+  const bucketLabels={
+    fullHousePlus:'rangeFullHousePlus',flush:'rangeMadeFlushes',straight:'rangeStraights',
+    trips:'rangeTrips',twoPair:'rangeTwoPair',onePair:'rangeOnePair',drawOnly:'rangeDrawOnly',
+    air:'rangeAir',boardOnly:'rangeBoardOnly'
+  };
+  const detail=code=>{
+    const m=rangeMatrixMetrics(active),mass=m.mass[code]||0,combos=m.available[code]||0,lift=m.lift[code]||0;
+    if(!mass)return `<div class="range-cell-empty">${T('rangeUnavailable')}</div>`;
+    const buckets=m.classMass?.[code]||{},parts=Object.keys(bucketLabels)
+      .filter(k=>(buckets[k]||0)>0)
+      .map(k=>`${T(bucketLabels[k])} ${Math.round((buckets[k]/mass)*100)}%`);
+    return `<div class="range-cell-title">${code} · ${rangePct(mass)}%</div>`+
+      `<p>${T('rangeCellShare')(code,rangePct(mass),combos)}</p>`+
+      `<p>${T('rangeCellDensity')(Math.round(lift*10)/10+'×')}</p>`+
+      (parts.length?`<div class="range-cell-mix"><b>${T('rangeCellMix')}:</b> ${parts.join(' · ')}</div>`:'');
+  };
+  const controls=()=>active.kind!=='range'?'':`<div class="range-explorer-controls">`+
+    (ranges.length>1?ranges.map((x,i)=>`<button type="button" data-range-opponent="${i}" class="${active===x?'on':''}">${x.pos}</button>`).join(''):'')+
+    `<span>${T('rangeFilter')}</span>`+
+    [['all','rangeFilterAll'],['made','rangeFilterMade'],['draws','rangeFilterDraws'],['air','rangeFilterAir']]
+      .map(([v,k])=>`<button type="button" data-range-filter="${v}" class="${filter===v?'on':''}">${T(k)}</button>`).join('')+
+    `</div>`;
   const paint=()=>{
-    $('chartGrid').innerHTML=rangeMatrixCells(info,heroCode,false,mode);
-    $('chartRangeMeta').innerHTML=rangeMatrixMetaHtml(info,true,mode);
+    $('chartGrid').innerHTML=rangeMatrixCells(active,heroCode,false,mode,filter);
+    $('chartRangeMeta').innerHTML=rangeMatrixMetaHtml(active,true,mode)+controls();
+    $('chartCellDetail').innerHTML=active.kind==='range'
+      ?(selected?detail(selected):`<div class="range-cell-empty">${T('rangePick')}</div>`):'';
     $('chartRangeMeta').querySelectorAll('[data-range-mode]').forEach(btn=>btn.onclick=()=>{mode=btn.dataset.rangeMode;paint();});
-    if(info.kind==='range')$('chartLegend').innerHTML=rangeMatrixLegend();
+    $('chartRangeMeta').querySelectorAll('[data-range-filter]').forEach(btn=>btn.onclick=()=>{filter=btn.dataset.rangeFilter;selected='';paint();});
+    $('chartRangeMeta').querySelectorAll('[data-range-opponent]').forEach(btn=>btn.onclick=()=>{
+      active=ranges[Number(btn.dataset.rangeOpponent)]||active;selected='';paint();
+      $('chartTitle').textContent=`${active.pos} — ${T('chartTitleRange')}`;
+    });
+    $('chartGrid').querySelectorAll('[data-range-code]').forEach(cell=>{
+      const choose=()=>{selected=cell.dataset.rangeCode;$('chartCellDetail').innerHTML=detail(selected);
+        $('chartGrid').querySelectorAll('.selected').forEach(x=>x.classList.remove('selected'));cell.classList.add('selected');};
+      cell.onclick=choose;
+      cell.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}};
+    });
+    if(active.kind==='range')$('chartLegend').innerHTML=rangeMatrixLegend();
   };
   paint();
-  const titleKey=info.kind==='rfi'?'chartTitleOpen':info.kind==='iso'?'chartTitleIso':info.kind==='facing'?'chartTitleFacing':info.kind==='bbDefend'?'chartTitleBbDefend':info.kind==='fourBet'?'chartTitleFourBet':info.kind==='range'?'chartTitleRange':'chartTitleShove';
-  $('chartTitle').textContent=`${info.pos} — ${T(titleKey)}`;
-  if(info.kind!=='range'){
+  const titleKey=active.kind==='rfi'?'chartTitleOpen':active.kind==='iso'?'chartTitleIso':active.kind==='facing'?'chartTitleFacing':active.kind==='bbDefend'?'chartTitleBbDefend':active.kind==='fourBet'?'chartTitleFourBet':active.kind==='range'?'chartTitleRange':'chartTitleShove';
+  $('chartTitle').textContent=`${active.pos} — ${T(titleKey)}`;
+  if(active.kind!=='range'){
     $('chartRangeMeta').innerHTML='';
     $('chartLegend').innerHTML=
-      `<span><span class="sw" style="background:var(--gold);"></span>${T(info.kind==='rfi'||info.kind==='iso'?'legendOpen':info.kind==='fourBet'?'legendFourBet':info.kind==='facing'||info.kind==='bbDefend'?'legend3bet':'legendShove')}</span>`+
-      (info.list2?`<span><span class="sw" style="background:#2e7d8f;"></span>${T('legendCall')}</span>`:'')+
+      `<span><span class="sw" style="background:var(--gold);"></span>${T(active.kind==='rfi'||active.kind==='iso'?'legendOpen':active.kind==='fourBet'?'legendFourBet':active.kind==='facing'||active.kind==='bbDefend'?'legend3bet':'legendShove')}</span>`+
+      (active.list2?`<span><span class="sw" style="background:#2e7d8f;"></span>${T('legendCall')}</span>`:'')+
       `<span><span class="sw" style="background:#1d232e;"></span>${T('legendFold')}</span>`+
       `<span><span class="sw" style="background:none;outline:2px solid #4da3ff;outline-offset:-1px;"></span>${T('legendYou')}</span>`;
   }

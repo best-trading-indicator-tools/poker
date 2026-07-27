@@ -125,7 +125,8 @@ mpConnFail:"Could not connect to the room. Phone networks sometimes block direct
 mpJoined:n=>`${n} joined the room`,mpGone:n=>`${n} disconnected — their hand is folded`,
 mpYou:"(you · host)",mpYouG:"(you)",chatPh:"Message…",
 viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleIso:"iso vs limpers chart",chartTitleShove:"all-in chart",chartTitleFacing:"chart vs this raise",chartTitleBbDefend:"BB defense chart",chartTitleFourBet:"response vs 3-bet",
-showRange:"📊 Show opponent range",hideRange:"▴ Hide opponent range",viewRange:"📊 Enlarge opponent range",chartTitleRange:"estimated range right now",legendRange:"hands he could still have",rangeFringe:"Fringe",rangePossible:"Possible",rangeLikely:"Likely",rangeVeryLikely:"Very likely",
+showRange:"📊 Show opponent range",hideRange:"▴ Hide opponent range",viewRange:"🔎 Open interactive Range Explorer",chartTitleRange:"estimated range right now",legendRange:"hands he could still have",rangeFringe:"Fringe",rangePossible:"Possible",rangeLikely:"Likely",rangeVeryLikely:"Very likely",
+rangeExplore:"Explore range",rangeFilter:"Show",rangeFilterAll:"All hands",rangeFilterMade:"Made hands",rangeFilterDraws:"Draws",rangeFilterAir:"Air / bluffs",rangePick:"Select a hand class in the grid to understand why it remains possible.",rangeCellShare:(h,p,c)=>`${h} represents about ${p}% of this opponent range across ${c} available suit combinations.`,rangeCellDensity:n=>`Each available ${n} combo is weighted relative to an average legal combo.`,rangeCellMix:"What these combos currently make",rangeUnavailable:"This hand class has no remaining weighted combinations after blockers and the action line.",revExploreRange:"Explore range",
 rangeDensity:"Per-combo likelihood",rangeClassProb:"Class probability",rangeEffective:"effective combos",rangeLine:"Action line",rangeTopCard:"Top-card hands now",rangeTopHands:"Top candidates",rangeOpen:"Open",rangeOfRange:"of range",rangeCombos:"available combos",rangeAvgCombo:"average combo likelihood",
 rangeComposition:"Exact hand mix",rangeFullHousePlus:"Full house or better",rangeMadeFlushes:"Made flushes",rangeStraights:"Straights",rangeTrips:"Trips",rangeTwoPair:"Two pair",rangeOnePair:"One pair",rangeDrawOnly:"Draw only",rangeAir:"Air / bluff candidates",rangeBoardOnly:"Playing the board",
 rangeIso:"Iso-raise",rangeSqueeze:"Squeeze",rangeLimp:"Limp",rangeOption:"Check option",rangeEntering:s=>`Range entering ${s} — opponent has not acted yet`,
@@ -265,7 +266,8 @@ mpConnFail:"Connexion au salon impossible. Les réseaux mobiles bloquent parfois
 mpJoined:n=>`${n} a rejoint le salon`,mpGone:n=>`${n} s'est déconnecté — sa main est couchée`,
 mpYou:"(vous · hôte)",mpYouG:"(vous)",chatPh:"Message…",
 viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleIso:"charte iso vs limps",chartTitleShove:"charte de tapis",chartTitleFacing:"charte face à cette relance",chartTitleBbDefend:"charte défense BB",chartTitleFourBet:"réponse face au 3-bet",
-showRange:"📊 Afficher la range adverse",hideRange:"▴ Masquer la range adverse",viewRange:"📊 Agrandir la range adverse",chartTitleRange:"range estimée en ce moment",legendRange:"mains qu'il peut encore avoir",rangeFringe:"Marginal",rangePossible:"Possible",rangeLikely:"Probable",rangeVeryLikely:"Très probable",
+showRange:"📊 Afficher la range adverse",hideRange:"▴ Masquer la range adverse",viewRange:"🔎 Ouvrir le Range Explorer interactif",chartTitleRange:"range estimée en ce moment",legendRange:"mains qu'il peut encore avoir",rangeFringe:"Marginal",rangePossible:"Possible",rangeLikely:"Probable",rangeVeryLikely:"Très probable",
+rangeExplore:"Explorer la range",rangeFilter:"Afficher",rangeFilterAll:"Toutes les mains",rangeFilterMade:"Mains faites",rangeFilterDraws:"Tirages",rangeFilterAir:"Air / bluffs",rangePick:"Sélectionnez une classe de mains dans la grille pour comprendre pourquoi elle reste possible.",rangeCellShare:(h,p,c)=>`${h} représente environ ${p} % de cette range adverse parmi ${c} combinaisons de couleurs disponibles.`,rangeCellDensity:n=>`Chaque combo disponible de ${n} est pondéré par rapport à un combo légal moyen.`,rangeCellMix:"Ce que ces combos ont actuellement",rangeUnavailable:"Cette classe de mains n’a plus aucune combinaison pondérée après les bloqueurs et la ligne d’action.",revExploreRange:"Explorer la range",
 rangeDensity:"Probabilité par combo",rangeClassProb:"Probabilité de la classe",rangeEffective:"combos effectifs",rangeLine:"Ligne d'actions",rangeTopCard:"Mains avec la top card",rangeTopHands:"Candidats principaux",rangeOpen:"Open",rangeOfRange:"de la range",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilité moyenne d'un combo",
 rangeComposition:"Répartition exacte",rangeFullHousePlus:"Full ou mieux",rangeMadeFlushes:"Couleurs faites",rangeStraights:"Quintes",rangeTrips:"Brelans",rangeTwoPair:"Deux paires",rangeOnePair:"Une paire",rangeDrawOnly:"Tirage seul",rangeAir:"Air / bluffs possibles",rangeBoardOnly:"Board joué",
 rangeIso:"Relance d'isolation",rangeSqueeze:"Squeeze",rangeLimp:"Limp",rangeOption:"Check gratuit",rangeEntering:s=>`Range à l'entrée du ${s} — l'adversaire n'a pas encore agi`,
@@ -405,7 +407,8 @@ mpConnFail:"No se pudo conectar a la sala. Las redes móviles a veces bloquean c
 mpJoined:n=>`${n} entró en la sala`,mpGone:n=>`${n} se desconectó — su mano se retira`,
 mpYou:"(tú · anfitrión)",mpYouG:"(tú)",chatPh:"Mensaje…",
 viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleIso:"tabla iso vs limps",chartTitleShove:"tabla de all-in",chartTitleFacing:"tabla contra esta subida",chartTitleBbDefend:"tabla defensa BB",chartTitleFourBet:"respuesta frente al 3-bet",
-showRange:"📊 Mostrar rango rival",hideRange:"▴ Ocultar rango rival",viewRange:"📊 Ampliar el rango rival",chartTitleRange:"rango estimado ahora mismo",legendRange:"manos que aún puede tener",rangeFringe:"Marginal",rangePossible:"Posible",rangeLikely:"Probable",rangeVeryLikely:"Muy probable",
+showRange:"📊 Mostrar rango rival",hideRange:"▴ Ocultar rango rival",viewRange:"🔎 Abrir el explorador de rangos interactivo",chartTitleRange:"rango estimado ahora mismo",legendRange:"manos que aún puede tener",rangeFringe:"Marginal",rangePossible:"Posible",rangeLikely:"Probable",rangeVeryLikely:"Muy probable",
+rangeExplore:"Explorar rango",rangeFilter:"Mostrar",rangeFilterAll:"Todas las manos",rangeFilterMade:"Manos hechas",rangeFilterDraws:"Proyectos",rangeFilterAir:"Aire / faroles",rangePick:"Selecciona una clase de manos en la cuadrícula para entender por qué sigue siendo posible.",rangeCellShare:(h,p,c)=>`${h} representa aproximadamente el ${p}% de este rango rival entre ${c} combinaciones de palos disponibles.`,rangeCellDensity:n=>`Cada combo disponible de ${n} se pondera frente a un combo legal medio.`,rangeCellMix:"Qué forman actualmente estos combos",rangeUnavailable:"Esta clase de manos ya no tiene combinaciones ponderadas tras los bloqueadores y la línea de acción.",revExploreRange:"Explorar rango",
 rangeDensity:"Probabilidad por combo",rangeClassProb:"Probabilidad de la clase",rangeEffective:"combos efectivos",rangeLine:"Línea de acciones",rangeTopCard:"Manos con la carta más alta",rangeTopHands:"Candidatos principales",rangeOpen:"Open",rangeOfRange:"del rango",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilidad media de un combo",
 rangeComposition:"Distribución exacta",rangeFullHousePlus:"Full o mejor",rangeMadeFlushes:"Colores hechos",rangeStraights:"Escaleras",rangeTrips:"Tríos",rangeTwoPair:"Doble pareja",rangeOnePair:"Una pareja",rangeDrawOnly:"Solo proyecto",rangeAir:"Aire / posibles faroles",rangeBoardOnly:"Juega la mesa",
 rangeIso:"Subida de aislamiento",rangeSqueeze:"Squeeze",rangeLimp:"Limp",rangeOption:"Check gratis",rangeEntering:s=>`Rango al entrar en ${s} — el rival aún no ha actuado`,
@@ -683,10 +686,15 @@ function renderReviewDecisions(games){
     return `<div class="rev-decision"><div class="rev-decision-main"><div class="rev-decision-title">${label} · ${T('hand')}#${d.hand}</div>`+
       `<div class="rev-decision-meta">${when} · ${reviewStreetLabel(d.stage)} · ${T('coachSaid')} ${recWord(d.rec)} · ${T('youChose')} ${actWord(d.action)}</div></div>`+
       `<div class="rev-decision-actions"><span class="rev-decision-ev">−${usd(d.evLoss)} EV</span>`+
+      (d.rangeSnapshots?.length?`<button type="button" class="rev-range-btn" data-range-decision="${i}">${T('revExploreRange')}</button>`:'')+
       `<button type="button" class="rev-hand-btn" data-decision="${i}">${T('revReplayHand')}</button></div></div>`;
   }).join('');
   $('revDecisions').querySelectorAll('.rev-hand-btn').forEach(btn=>{
     btn.onclick=()=>openReviewDecision(rows[Number(btn.dataset.decision)]);
+  });
+  $('revDecisions').querySelectorAll('.rev-range-btn').forEach(btn=>btn.onclick=()=>{
+    const d=rows[Number(btn.dataset.rangeDecision)],ranges=d?.rangeSnapshots||[],info=ranges[0];
+    if(info)showChartMatrix(info,d.heroCode||'',ranges);
   });
 }
 function wireReviewDecisionTools(games){
@@ -2403,7 +2411,7 @@ function updateCoach(p){
     if(cb) cb.onclick=()=>showChartMatrix(activeChart,R.code);
   }
   coachRecNow={rec,stage:state.stage,evs,coachT:R.coachT,eq,eqAdj:R.eqAdj??eq,odds,needEq:R.needEq,callAmt,pot,
-    airPen:R.airPen||0,opps,pos,confidenceKind:coachConfidence(R).kind};
+    airPen:R.airPen||0,opps,pos,confidenceKind:coachConfidence(R).kind,rangeCharts,heroCode:R.code};
 
   /* GTO mini-solver: heads-up postflop spots */
   if(state.stage!=='preflop'){
@@ -2791,8 +2799,10 @@ function humanAct(type,amount){
       pot:coachRecNow.pot,callAmt:coachRecNow.callAmt,eq:coachRecNow.eq,needEq:coachRecNow.needEq,
       eqAdj:coachRecNow.eqAdj,raiseTo:coachRecNow.coachT||0,
       evs:coachRecNow.evs?{FOLD:coachRecNow.evs.FOLD,CALL:coachRecNow.evs.CALL,RAISE:coachRecNow.evs.RAISE}:null,
+      heroCode:coachRecNow.heroCode||'',
       stackBB:state.bb>0?Math.round((p.chips+p.bet)/state.bb*10)/10:0,potType,tableSize:alive().length,
       logIndex:(state.handLog||[]).length};
+    if(evLoss>0)decisionContext.rangeSnapshots=(coachRecNow.rangeCharts||[]).slice(0,3).map(rangeSnapshot).filter(Boolean);
     state.humanDecisions.push(decisionContext);
     if(evLoss>0&&state.sessStats){
       const air=!!(coachRecNow.airPen>=0.1);

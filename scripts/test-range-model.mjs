@@ -165,6 +165,17 @@ const result=vm.runInContext(`(()=>{
   const suitedMeta=rangeMatrixMetaHtml(suitedInfo);
   if(!suitedMeta.includes('Made flushes ≈ 25%')||!suitedMeta.includes('Air / bluff candidates ≈ 75%'))
     throw new Error('exact hand mix missing from matrix summary '+suitedMeta);
+  const suitedSnapshot=rangeSnapshot(suitedInfo),snapshotMetrics=rangeMatrixMetrics(suitedSnapshot);
+  if(Math.abs((snapshotMetrics.mass.AQs||0)-1)>1e-9||
+      Math.abs((snapshotMetrics.composition.flush||0)-.25)>1e-9||
+      snapshotMetrics.available.AQs!==suitedMetrics.available.AQs)
+    throw new Error('saved range snapshot must preserve probabilities, blockers and composition '+
+      JSON.stringify({mass:snapshotMetrics.mass.AQs,composition:snapshotMetrics.composition,available:snapshotMetrics.available.AQs}));
+  const madeFilter=rangeMatrixCells(suitedSnapshot,'',false,'density','made');
+  const airFilter=rangeMatrixCells(suitedSnapshot,'',false,'density','air');
+  if(!madeFilter.includes('data-range-code="AQs"')||!airFilter.includes('data-range-code="AQs"')||
+      !madeFilter.includes('range-filtered')||!airFilter.includes('range-filtered'))
+    throw new Error('interactive range filters or selectable cells missing');
 
   const k96=[C(13,1),C(9,2),C(6,1)],threes=H(C(3,0),C(3,2));
   const underpair=coachUnderpairRealization(threes,k96,.80,true,detectDraws(threes,k96));
