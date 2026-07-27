@@ -84,7 +84,7 @@ actMenu:"◀ Menu",actTurn:"◀ Your turn",
 log:"Log",lastHand:"Last hand",exportH:"Export history",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",coachScrollMore:"Scroll for more",
 waiting:"Advice appears here when it's your turn.",
 outQuality:"Out quality",weightedOuts:"range-adjusted outs",weightedOutsNote:n=>`${n} raw cards, discounted when they can chop, be dominated, improve the board for everyone, or lose more often against the opponent's estimated range.`,overcardOuts:"Overcard pair outs",pairImproveOuts:"Trips / two-pair outs",redrawOuts:"Full-house / quads redraws",
-yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",draws:"Draws",outs:"Outs",unique:"unique",shared:"shared",countedOnce:"counted once",dirtyOuts:"Dirty outs",dirtyOutsInfoLbl:"What is a dirty out?",dirtyOutsInfo:"A dirty (tainted) out completes your draw on paper but often doesn't win the pot — e.g. it pairs the board (helping everyone) or is the 4th card to a board flush that gives an opponent the winning flush. Use clean outs for your odds.",potOdds:"Pot odds",impliedOdds:"Implied odds",realisticNeed:"realistic need",bestCaseNeed:"best case",effectiveNeed:"Effective call threshold",effectiveNeedNote:"Equity needed after position, ranges and tournament pressure.",preflopRank:p=>`Preflop rank: top ~${p}% of starting hands`,lowerStronger:"lower is stronger",yourStack:"Your stack",sugSize:"Suggested size",
+yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",playersBehind:"Players behind",openingDecision:"Opening decision",raiseOrFold:"Raise or fold · no limp",draws:"Draws",outs:"Outs",unique:"unique",shared:"shared",countedOnce:"counted once",dirtyOuts:"Dirty outs",dirtyOutsInfoLbl:"What is a dirty out?",dirtyOutsInfo:"A dirty (tainted) out completes your draw on paper but often doesn't win the pot — e.g. it pairs the board (helping everyone) or is the 4th card to a board flush that gives an opponent the winning flush. Use clean outs for your odds.",potOdds:"Pot odds",impliedOdds:"Implied odds",realisticNeed:"realistic need",bestCaseNeed:"best case",effectiveNeed:"Effective call threshold",effectiveNeedNote:"Equity needed after position, ranges and tournament pressure.",preflopRank:p=>`Preflop rank: top ~${p}% of starting hands`,lowerStronger:"lower is stronger",yourStack:"Your stack",sugSize:"Suggested size",
 firstToAct:"first to act (OOP)",lastToAct:"last to act (IP)",ofN:"of",need:"need ",vs:"vs",opp:"opponent",opps:"opponents",
 beginnerMath:(raw,usable,need,enough)=>`Raw equity: ${raw}%. Usable after position and risk: ~${usable}%. A call needs ${need}% — ${enough?'enough to continue':'not enough, so fold'}.`,
 beginnerFree:"In plain English: checking costs no chips. You keep your hand alive and see what develops without making the pot bigger.",
@@ -225,7 +225,7 @@ actMenu:"◀ Menu",actTurn:"◀ À vous",
 log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",coachScrollMore:"Faites défiler pour voir la suite",
 waiting:"Les conseils apparaissent ici quand c'est votre tour.",
 outQuality:"Qualité des outs",weightedOuts:"outs ajustés à la range",weightedOutsNote:n=>`${n} cartes brutes, réduites lorsqu’elles peuvent partager, être dominées, améliorer le board pour tous ou perdre plus souvent face à la range adverse estimée.`,overcardOuts:"Outs d'overcards vers une paire",pairImproveOuts:"Outs vers brelan / deux paires",redrawOuts:"Redraws full / carré",
-yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",draws:"Tirages",outs:"Outs",unique:"uniques",shared:"communs",countedOnce:"comptés une fois",dirtyOuts:"Outs sales",dirtyOutsInfoLbl:"Qu'est-ce qu'un out sale ?",dirtyOutsInfo:"Un out sale complète votre tirage sur le papier mais ne gagne souvent pas le pot — ex. il pair le board (aide tout le monde) ou est la 4e carte d'une couleur au board qui donne la couleur gagnante à l'adversaire. Comptez les outs propres pour vos cotes.",potOdds:"Cote du pot",impliedOdds:"Cotes implicites",realisticNeed:"seuil réaliste",bestCaseNeed:"meilleur cas",effectiveNeed:"Seuil effectif du call",effectiveNeedNote:"Équité requise après position, ranges et pression du tournoi.",preflopRank:p=>`Classement préflop : top ~${p}% des mains de départ`,lowerStronger:"plus bas = plus fort",yourStack:"Votre tapis",sugSize:"Taille suggérée",
+yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",playersBehind:"Joueurs derrière",openingDecision:"Décision d'ouverture",raiseOrFold:"Relancer ou se coucher · pas de limp",draws:"Tirages",outs:"Outs",unique:"uniques",shared:"communs",countedOnce:"comptés une fois",dirtyOuts:"Outs sales",dirtyOutsInfoLbl:"Qu'est-ce qu'un out sale ?",dirtyOutsInfo:"Un out sale complète votre tirage sur le papier mais ne gagne souvent pas le pot — ex. il pair le board (aide tout le monde) ou est la 4e carte d'une couleur au board qui donne la couleur gagnante à l'adversaire. Comptez les outs propres pour vos cotes.",potOdds:"Cote du pot",impliedOdds:"Cotes implicites",realisticNeed:"seuil réaliste",bestCaseNeed:"meilleur cas",effectiveNeed:"Seuil effectif du call",effectiveNeedNote:"Équité requise après position, ranges et pression du tournoi.",preflopRank:p=>`Classement préflop : top ~${p}% des mains de départ`,lowerStronger:"plus bas = plus fort",yourStack:"Votre tapis",sugSize:"Taille suggérée",
 firstToAct:"premier à parler (OOP)",lastToAct:"dernier à parler (IP)",ofN:"sur",need:"requis ",vs:"vs",opp:"adversaire",opps:"adversaires",
 beginnerMath:(raw,usable,need,enough)=>`Équité brute : ${raw} %. Utilisable après position et risque : ~${usable} %. Un call exige ${need} % — ${enough?'assez pour continuer':'pas assez, couchez-vous'}.`,
 beginnerFree:"En clair : checker ne coûte aucun jeton. Vous gardez votre main en vie et voyez la suite sans grossir le pot.",
@@ -366,7 +366,7 @@ actMenu:"◀ Menú",actTurn:"◀ Tu turno",
 log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",coachScrollMore:"Desplázate para ver más",
 waiting:"Los consejos aparecen aquí cuando es tu turno.",
 outQuality:"Calidad de los outs",weightedOuts:"outs ajustados al rango",weightedOutsNote:n=>`${n} cartas brutas, reducidas cuando pueden empatar, estar dominadas, mejorar la mesa para todos o perder más contra el rango rival estimado.`,overcardOuts:"Outs de overcards a pareja",pairImproveOuts:"Outs a trío / dobles parejas",redrawOuts:"Redraws a full / póquer",
-yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",draws:"Proyectos",outs:"Outs",unique:"únicos",shared:"compartidos",countedOnce:"contados una vez",dirtyOuts:"Outs sucios",dirtyOutsInfoLbl:"¿Qué es un out sucio?",dirtyOutsInfo:"Un out sucio completa tu proyecto en papel pero a menudo no gana el bote — p. ej. empareja el board (ayuda a todos) o es la 4ª carta a color en el board que le da el color ganador al rival. Cuenta los outs limpios para tus odds.",potOdds:"Odds del bote",impliedOdds:"Odds implícitas",realisticNeed:"umbral realista",bestCaseNeed:"mejor caso",effectiveNeed:"Umbral efectivo del call",effectiveNeedNote:"Equity necesaria tras posición, rangos y presión del torneo.",preflopRank:p=>`Rango preflop: top ~${p}% de las manos iniciales`,lowerStronger:"más bajo = más fuerte",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
+yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",playersBehind:"Jugadores por hablar",openingDecision:"Decisión de apertura",raiseOrFold:"Subir o retirarse · sin limp",draws:"Proyectos",outs:"Outs",unique:"únicos",shared:"compartidos",countedOnce:"contados una vez",dirtyOuts:"Outs sucios",dirtyOutsInfoLbl:"¿Qué es un out sucio?",dirtyOutsInfo:"Un out sucio completa tu proyecto en papel pero a menudo no gana el bote — p. ej. empareja la mesa (ayuda a todos) o es la 4ª carta a color en la mesa que da el color ganador al rival. Cuenta los outs limpios para tus odds.",potOdds:"Odds del bote",impliedOdds:"Odds implícitas",realisticNeed:"umbral realista",bestCaseNeed:"mejor caso",effectiveNeed:"Umbral efectivo del call",effectiveNeedNote:"Equity necesaria tras posición, rangos y presión del torneo.",preflopRank:p=>`Rango preflop: top ~${p}% de las manos iniciales`,lowerStronger:"más bajo = más fuerte",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
 firstToAct:"primero en hablar (OOP)",lastToAct:"último en hablar (IP)",ofN:"de",need:"necesitas ",vs:"vs",opp:"rival",opps:"rivales",
 beginnerMath:(raw,usable,need,enough)=>`Equity bruta: ${raw} %. Utilizable tras posición y riesgo: ~${usable} %. Igualar exige ${need} % — ${enough?'suficiente para continuar':'insuficiente, retírate'}.`,
 beginnerFree:"En claro: pasar no cuesta fichas. Mantienes viva la mano y ves qué ocurre sin agrandar el bote.",
@@ -2352,6 +2352,10 @@ function updateCoach(p){
     `<button class="chart-link" id="chartViewBtn">${T('viewRange')}</button></div>`:'';
   const allReasons=[...why,...extra].map(s=>(s||'').trim()).filter(Boolean);
   const keyReason=allReasons.shift()||'';
+  /* When nobody has entered the pot, matching the big blind would be a limp,
+     not a priced call. Show the actual strategic question instead of presenting
+     showdown equity and 1-BB pot odds as the reason to open or fold. */
+  const openingDecision=state.stage==='preflop'&&state.currentBet<=state.bb&&limperCount(p)===0&&p.bet<state.bb;
   const priceMetric=callAmt>0?`${T('need')}${pct(odds)} · ${usd(callAmt)} → ${usd(pot)}`:'';
   const impliedRow=R.impliedInfo
     ?`<div class="coach-row"><span>${T('impliedOdds')}</span><b>~${pct(R.impliedInfo.realisticNeed)} ${T('realisticNeed')}<br>${pct(R.impliedInfo.bestCaseNeed)} ${T('bestCaseNeed')} · ${usd(R.impliedInfo.maxFuture)} max</b></div>`:'';
@@ -2360,7 +2364,9 @@ function updateCoach(p){
   const liveMathRows=drawRow+impliedRow+sprRow+effectiveRow;
   const usableEq=clamp(R.eqAdj==null?eq:R.eqAdj,0,1);
   const decisionNeed=R.needEq==null?odds:R.needEq;
-  const beginnerRead=callAmt>0
+  const beginnerRead=openingDecision
+    ?(rec==='FOLD'?T('beginnerOpenFold'):T('beginnerAgg'))
+    :callAmt>0
     ?T('beginnerMath')(Math.round(eq*100),Math.round(usableEq*100),Math.round(decisionNeed*100),usableEq>=decisionNeed)
     :(rec==='CHECK'?T('beginnerFree'):rec==='FOLD'?T('beginnerOpenFold'):T('beginnerAgg'));
   const detailRows=
@@ -2373,8 +2379,11 @@ function updateCoach(p){
     `<div class="coach-decision"><span class="coach-decision-label">${coachDecisionLabel()}</span><div class="rec ${rec}">${recLabel}</div></div>`+
     `<div class="coach-glance">`+
       coachMetric(T('yourHand'),handDesc,'wide')+
-      coachMetric(T('winChance'),`~${pct(eq)} ${T('vs')} ${opps} ${opps===1?T('opp'):T('opps')}`,'emphasis')+
-      coachMetric(T('potOdds'),priceMetric)+
+      (openingDecision
+        ?coachMetric(T('playersBehind'),String(opps),'emphasis')+
+          coachMetric(T('openingDecision'),T('raiseOrFold'))
+        :coachMetric(T('winChance'),`~${pct(eq)} ${T('vs')} ${opps} ${opps===1?T('opp'):T('opps')}`,'emphasis')+
+          coachMetric(T('potOdds'),priceMetric))+
     `</div>`+
     coachConfidenceHtml(R)+
     `<div class="coach-beginner-read"><span>💡</span><p>${beginnerRead}</p></div>`+
