@@ -25,6 +25,16 @@ revFocusRank:n=>`Priority ${n}`,revTimes:n=>`${n} time${n!==1?'s':''}`,revAvgLos
 revDecisionsTitle:"Costliest decisions",revDecisionsSub:"Filter your mistakes, then open the exact hand to understand the action in context.",
 revSpot:"Spot",revStreet:"Street",revPeriod:"Sessions",revAny:"All",revRecent10:"Latest 10",revRecent25:"Latest 25",
 revReplayHand:"Replay hand",revNoDecisions:"No mistakes match these filters. Try a broader filter or play another session.",
+revPractice:n=>`Practice ${n} similar spot${n!==1?'s':''}`,practiceTitle:"Focused practice",practiceSub:"Choose first. The coach answer appears only after your decision.",practiceProgress:(n,t)=>`Spot ${n} of ${t}`,
+practicePrompt:"What would you do?",practiceNext:"Next spot",practiceFinish:"Finish",practiceClose:"Exit practice",
+practicePot:"Pot",practiceToCall:"To call",practiceOpponents:"Opponents",
+practiceCorrect:"Correct — this matches the coach's recommendation.",practiceWrong:r=>`Not this time. The coach recommends ${r}.`,
+practiceDone:(s,t)=>`Practice complete: ${s}/${t} decisions matched the coach. These are real saved spots from your sessions.`,
+confidenceTitle:(source,level)=>`${source} · ${level} confidence`,confidenceHigh:"High",confidenceMedium:"Medium",confidenceLimited:"Limited",
+confidenceChart:"Preflop chart",confidenceMath:"Exact pot math + equity simulation",confidenceHeuristic:"Range heuristic",
+confidenceChartNote:"Based on the position and stack-depth chart used for this exact preflop branch.",
+confidenceMathNote:"Pot odds are exact; equity and future action use simulations and estimated opponent ranges.",
+confidenceHeuristicNote:"Multiway ranges and future actions require broader assumptions, so treat the recommendation as directional.",
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
 resetData:"Clear saved data",resetInfo:"Deletes lifetime stats, hand history, session reviews and any unfinished game you could resume. Your Rewards level, XP, unlocks, equipped cosmetics and language choice are kept. This can't be undone.",resetConfirm:"Delete all stats, hand history, session reviews and unfinished games? Rewards level and progress will be kept.",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Quit this tournament?",quitCash:"Leave the table?",
@@ -107,6 +117,16 @@ revFocusRank:n=>`Priorité ${n}`,revTimes:n=>`${n} fois`,revAvgLoss:"perte moyen
 revDecisionsTitle:"Décisions les plus coûteuses",revDecisionsSub:"Filtrez vos erreurs puis ouvrez la main exacte pour revoir toute l'action.",
 revSpot:"Spot",revStreet:"Street",revPeriod:"Sessions",revAny:"Tous",revRecent10:"10 dernières",revRecent25:"25 dernières",
 revReplayHand:"Rejouer la main",revNoDecisions:"Aucune erreur ne correspond à ces filtres. Élargissez-les ou jouez une nouvelle session.",
+revPractice:n=>`Pratiquer ${n} spot${n!==1?'s':''} similaire${n!==1?'s':''}`,practiceTitle:"Entraînement ciblé",practiceSub:"Décidez d'abord. La réponse du coach apparaît ensuite.",practiceProgress:(n,t)=>`Spot ${n} sur ${t}`,
+practicePrompt:"Que feriez-vous ?",practiceNext:"Spot suivant",practiceFinish:"Terminer",practiceClose:"Quitter l'entraînement",
+practicePot:"Pot",practiceToCall:"À payer",practiceOpponents:"Adversaires",
+practiceCorrect:"Correct — votre décision correspond à celle du coach.",practiceWrong:r=>`Pas cette fois. Le coach recommande ${r}.`,
+practiceDone:(s,t)=>`Entraînement terminé : ${s}/${t} décisions correspondent au coach. Ce sont de vrais spots sauvegardés de vos sessions.`,
+confidenceTitle:(source,level)=>`${source} · confiance ${level}`,confidenceHigh:"élevée",confidenceMedium:"moyenne",confidenceLimited:"limitée",
+confidenceChart:"Charte préflop",confidenceMath:"Calcul du pot exact + simulation d'équité",confidenceHeuristic:"Heuristique de ranges",
+confidenceChartNote:"Basé sur la charte de position et de profondeur utilisée pour cette branche préflop précise.",
+confidenceMathNote:"Les cotes du pot sont exactes ; l'équité et l'action future utilisent des simulations et des ranges adverses estimées.",
+confidenceHeuristicNote:"Les ranges multiway et les actions futures demandent plus d'hypothèses : considérez ce conseil comme directionnel.",
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
 resetData:"Effacer les données sauvegardées",resetInfo:"Supprime les statistiques globales, l’historique des mains, les bilans de sessions et toute partie en cours à reprendre. Votre niveau Rewards, XP, éléments débloqués, cosmétiques équipés et choix de langue sont conservés. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l’historique, les bilans de sessions et les parties en cours ? Le niveau et la progression Rewards seront conservés.",resetDone:"✓ Effacé",
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter ce tournoi ?",quitCash:"Quitter la table ?",
@@ -189,6 +209,16 @@ revFocusRank:n=>`Prioridad ${n}`,revTimes:n=>`${n} vez${n!==1?'es':''}`,revAvgLo
 revDecisionsTitle:"Decisiones más costosas",revDecisionsSub:"Filtra tus errores y abre la mano exacta para revisar la acción completa.",
 revSpot:"Situación",revStreet:"Calle",revPeriod:"Sesiones",revAny:"Todas",revRecent10:"Últimas 10",revRecent25:"Últimas 25",
 revReplayHand:"Repetir mano",revNoDecisions:"Ningún error coincide con estos filtros. Amplía los filtros o juega otra sesión.",
+revPractice:n=>`Practicar ${n} situación${n!==1?'es':''} similar${n!==1?'es':''}`,practiceTitle:"Práctica enfocada",practiceSub:"Decide primero. La respuesta del coach aparece después.",practiceProgress:(n,t)=>`Situación ${n} de ${t}`,
+practicePrompt:"¿Qué harías?",practiceNext:"Siguiente",practiceFinish:"Terminar",practiceClose:"Salir de práctica",
+practicePot:"Bote",practiceToCall:"A pagar",practiceOpponents:"Rivales",
+practiceCorrect:"Correcto: coincide con la recomendación del coach.",practiceWrong:r=>`Esta vez no. El coach recomienda ${r}.`,
+practiceDone:(s,t)=>`Práctica terminada: ${s}/${t} decisiones coincidieron con el coach. Son situaciones reales guardadas de tus sesiones.`,
+confidenceTitle:(source,level)=>`${source} · confianza ${level}`,confidenceHigh:"alta",confidenceMedium:"media",confidenceLimited:"limitada",
+confidenceChart:"Tabla preflop",confidenceMath:"Cálculo exacto del bote + simulación de equity",confidenceHeuristic:"Heurística de rangos",
+confidenceChartNote:"Basado en la tabla de posición y profundidad usada para esta rama preflop exacta.",
+confidenceMathNote:"Las odds del bote son exactas; la equity y la acción futura usan simulaciones y rangos rivales estimados.",
+confidenceHeuristicNote:"Los rangos multiway y las acciones futuras requieren más supuestos; interpreta el consejo como direccional.",
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
 resetData:"Borrar datos guardados",resetInfo:"Elimina estadísticas globales, historial de manos, resúmenes de sesiones y cualquier partida sin terminar. Se conservan tu nivel Rewards, XP, desbloqueos, cosméticos equipados e idioma. No se puede deshacer.",resetConfirm:"¿Borrar estadísticas, historial, resúmenes de sesiones y partidas sin terminar? El nivel y progreso Rewards se conservarán.",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Salir de este torneo?",quitCash:"¿Dejar la mesa?",
@@ -330,7 +360,9 @@ function renderReviewFocus(games){
     `<p class="rev-section-sub">${T('revFocusSub')}</p><div class="rev-focus">`+
     rows.map((r,i)=>`<div class="rev-focus-card"><div class="rev-focus-rank">${T('revFocusRank')(i+1)}</div>`+
       `<b>${T(LEAK_LABEL[r.spot])}</b><span>${T('revTimes')(r.n)} · ${T('revAvgLoss')} −${usd(Math.round(r.ev/r.n))}</span>`+
-      `<span class="rev-focus-ev">−${usd(r.ev)} EV</span></div>`).join('')+`</div>`;
+      `<span class="rev-focus-ev">−${usd(r.ev)} EV</span>`+
+      (practiceSavedSpots(r.spot).length?`<button type="button" class="rev-practice-btn" data-practice-spot="${r.spot}">${T('revPractice')(practiceSavedSpots(r.spot).length)}</button>`:'')+
+      `</div>`).join('')+`</div>`;
 }
 function reviewStreetLabel(stage){
   return T(stage==='turn'?'turnSt':stage==='river'?'riverSt':stage)||stage;
@@ -374,17 +406,112 @@ function renderReviewDecisions(games){
   });
 }
 function wireReviewDecisionTools(games){
+  const wirePractice=()=>$('revFocus').querySelectorAll('[data-practice-spot]').forEach(btn=>{
+    btn.onclick=()=>startScenarioPractice(btn.dataset.practiceSpot);
+  });
   const rerender=()=>{
     $('revFocus').innerHTML=renderReviewFocus(games);
+    wirePractice();
     renderReviewDecisions(games);
   };
+  wirePractice();
   $('revSpotSel').onchange=e=>{revDecisionSpot=e.target.value;rerender();};
   $('revStreetSel').onchange=e=>{revDecisionStreet=e.target.value;rerender();};
   $('revPeriodSel').onchange=e=>{
     revDecisionPeriod=e.target.value;
-    $('revFocus').innerHTML=renderReviewFocus(games);
-    renderReviewDecisions(games);
+    rerender();
   };
+}
+let practiceQueue=[],practiceIndex=0,practiceScore=0,practiceAnswered=false;
+function practiceSavedSpots(spot){
+  const games=loadGames().filter(g=>!g.mp);
+  const hist=loadHandHistory();
+  const byGameHand=new Map();
+  hist.forEach(h=>byGameHand.set(`${String(h.gameId??'')}:${Number(h.hand)||0}`,h));
+  const rows=[],seen=new Set();
+  games.forEach(g=>(g.decisions||[]).forEach(d=>{
+    if(classifyLeakSpotRetro(d)!==spot)return;
+    const hand=byGameHand.get(`${String(g.gameId??'')}:${Number(d.hand)||0}`);
+    if(hand){
+      const key=`${String(g.gameId??'')}:${Number(d.hand)||0}:${d.stage}:${d.rec}`;
+      seen.add(key);rows.push({...d,spot,hand});
+    }
+  }));
+  hist.slice().reverse().forEach(hand=>(hand.myDecisions||[]).forEach(d=>{
+    if(classifyLeakSpotRetro(d)!==spot)return;
+    const key=`${String(hand.gameId??'')}:${Number(hand.hand)||0}:${d.stage}:${d.rec}`;
+    if(seen.has(key))return;
+    seen.add(key);rows.push({...d,spot,hand});
+  }));
+  rows.sort((a,b)=>replayHandTime(b.hand)-replayHandTime(a.hand));
+  return rows.slice(0,10);
+}
+function practiceBoardCount(stage){
+  return stage==='flop'?3:stage==='turn'?4:stage==='river'?5:0;
+}
+function practiceCardGroup(codes,cls){
+  return `<div class="${cls}">${(codes||[]).map(c=>cardHTML(parseCardCode(c),true)).join('')}</div>`;
+}
+function renderPracticeSpot(){
+  const d=practiceQueue[practiceIndex];
+  if(!d)return;
+  practiceAnswered=false;
+  $('practiceProgress').textContent=T('practiceProgress')(practiceIndex+1,practiceQueue.length);
+  $('practiceNext').classList.add('hidden');
+  const hero=d.hand.players&&d.hand.players[0];
+  const board=(d.hand.board||[]).slice(0,practiceBoardCount(d.stage));
+  const label=LEAK_LABEL[d.spot]?T(LEAK_LABEL[d.spot]):reviewStreetLabel(d.stage);
+  const actions=['FOLD','CHECK','CALL','RAISE','ALLIN'];
+  const facts=[
+    d.pot!=null?`${T('practicePot')}: ${usd(d.pot)}`:'',
+    d.callAmt!=null?`${T('practiceToCall')}: ${usd(d.callAmt)}`:'',
+    d.opps!=null?`${T('practiceOpponents')}: ${d.opps}`:'',
+    d.pos||''
+  ].filter(Boolean).join(' · ');
+  const priorActions=d.logIndex!=null?(d.hand.actions||[]).slice(0,d.logIndex).slice(-4):[];
+  $('practiceBody').innerHTML=`<div class="practice-context"><div class="practice-spot">${label} · ${reviewStreetLabel(d.stage)}</div>`+
+    `<div class="practice-cards">${practiceCardGroup(hero?.cards||[],'practice-hole')}<span class="practice-vs">vs</span>${practiceCardGroup(board,'practice-board')}</div>`+
+    (facts?`<div class="rev-decision-meta" style="margin-top:10px">${facts}</div>`:'')+
+    (priorActions.length?`<div class="rp-log" style="margin:10px 0 0">${priorActions.map(a=>`<div>${a}</div>`).join('')}</div>`:'')+
+    `<div class="practice-prompt">${T('practicePrompt')}</div><div class="practice-actions">`+
+    actions.map(a=>`<button type="button" data-practice-action="${a}">${recWord(a)}</button>`).join('')+`</div><div id="practiceResult"></div></div>`;
+  $('practiceBody').querySelectorAll('[data-practice-action]').forEach(btn=>btn.onclick=()=>{
+    if(practiceAnswered)return;
+    practiceAnswered=true;
+    const picked=btn.dataset.practiceAction;
+    const correct=picked===d.rec;
+    if(correct)practiceScore++;
+    $('practiceBody').querySelectorAll('[data-practice-action]').forEach(b=>{
+      b.disabled=true;
+      if(b.dataset.practiceAction===d.rec)b.classList.add('correct');
+    });
+    if(!correct)btn.classList.add('wrong');
+    const result=$('practiceResult');
+    result.className=`practice-result ${correct?'good':'bad'}`;
+    result.textContent=correct?T('practiceCorrect'):T('practiceWrong')(recWord(d.rec));
+    $('practiceNext').textContent=practiceIndex===practiceQueue.length-1?T('practiceFinish'):T('practiceNext');
+    $('practiceNext').classList.remove('hidden');
+  });
+}
+function startScenarioPractice(spot){
+  practiceQueue=practiceSavedSpots(spot);
+  if(!practiceQueue.length)return;
+  practiceIndex=0;practiceScore=0;
+  $('practiceTitle').textContent=T('practiceTitle');
+  $('practiceSub').textContent=T('practiceSub');
+  $('practiceClose').textContent=T('practiceClose');
+  closeDialog($('reviewOv'));
+  renderPracticeSpot();
+  openDialog($('practiceOv'),'practiceTitle');
+}
+function advanceScenarioPractice(){
+  if(!practiceAnswered)return;
+  if(practiceIndex<practiceQueue.length-1){
+    practiceIndex++;renderPracticeSpot();return;
+  }
+  $('practiceProgress').textContent='';
+  $('practiceBody').innerHTML=`<div class="practice-result good">${T('practiceDone')(practiceScore,practiceQueue.length)}</div>`;
+  $('practiceNext').classList.add('hidden');
 }
 function showInstantLesson(text){
   if(!HAS_DOM||!text) return;
@@ -1691,6 +1818,24 @@ function coachMetric(label,value,cls=''){
   if(!value)return'';
   return `<div class="coach-metric ${cls}"><span>${label}</span><b>${value}</b></div>`;
 }
+function coachConfidence(R){
+  const preflop=state.stage==='preflop';
+  const chart=preflop&&R.chartInfo&&R.chartInfo.kind!=='range';
+  if(chart)return{
+    kind:'chart',source:T('confidenceChart'),level:T('confidenceHigh'),note:T('confidenceChartNote'),icon:'▦'
+  };
+  if((R.opps||0)<=1)return{
+    kind:'simulation',source:T('confidenceMath'),level:T('confidenceMedium'),note:T('confidenceMathNote'),icon:'≈'
+  };
+  return{
+    kind:'heuristic',source:T('confidenceHeuristic'),level:T('confidenceLimited'),note:T('confidenceHeuristicNote'),icon:'◇'
+  };
+}
+function coachConfidenceHtml(R){
+  const c=coachConfidence(R);
+  return `<div class="coach-confidence"><span class="coach-confidence-icon">${c.icon}</span><div>`+
+    `<b>${T('confidenceTitle')(c.source,c.level)}</b><span>${c.note}</span></div></div>`;
+}
 
 function updateCoach(p){
   if(!HAS_DOM)return;
@@ -1745,6 +1890,7 @@ function updateCoach(p){
       coachMetric(T('winChance'),`~${pct(eq)} ${T('vs')} ${opps} ${opps===1?T('opp'):T('opps')}`,'emphasis')+
       coachMetric(T('potOdds'),priceMetric)+
     `</div>`+
+    coachConfidenceHtml(R)+
     `<div class="coach-beginner-read"><span>💡</span><p>${beginnerRead}</p></div>`+
     (liveMathRows?`<div class="coach-live-math"><span class="coach-live-math-title">${coachMathLabel()}</span>${liveMathRows}</div>`:'')+
     (keyReason?`<div class="coach-key-reason"><span class="coach-key-reason-label">${coachReasonLabel()}</span>${keyReason}</div>`:'')+
@@ -1779,7 +1925,8 @@ function updateCoach(p){
     const cb=$('chartViewBtn');
     if(cb) cb.onclick=()=>showChartMatrix(activeChart,R.code);
   }
-  coachRecNow={rec,stage:state.stage,evs,eq,eqAdj:R.eqAdj??eq,odds,needEq:R.needEq,callAmt,pot,airPen:R.airPen||0};
+  coachRecNow={rec,stage:state.stage,evs,eq,eqAdj:R.eqAdj??eq,odds,needEq:R.needEq,callAmt,pot,
+    airPen:R.airPen||0,opps,pos,confidenceKind:coachConfidence(R).kind};
 
   /* GTO mini-solver: heads-up postflop spots */
   if(state.stage!=='preflop'){
@@ -2082,13 +2229,17 @@ function humanAct(type,amount){
       const recKey=r==='ALLIN'?'RAISE':r==='CHECK'?'CALL':r;
       evLoss=Math.max(0,Math.round((coachRecNow.evs[recKey]||0)-(coachRecNow.evs[key(type)]||0)));
     }
-    state.humanDecisions.push({stage:state.stage,rec:r,action:type,followed,evLoss});
+    const opps=inHand().length-1;
+    const spot=typeof classifyLeakSpot==='function'?classifyLeakSpot(callNow,opps):classifyLeakSpotRetro({stage:state.stage,action:type});
+    const decisionContext={stage:state.stage,rec:r,action:type,followed,evLoss,spot,opps,
+      pos:coachRecNow.pos||'',confidenceKind:coachRecNow.confidenceKind||'heuristic',
+      pot:coachRecNow.pot,callAmt:coachRecNow.callAmt,eq:coachRecNow.eq,needEq:coachRecNow.needEq,
+      logIndex:(state.handLog||[]).length};
+    state.humanDecisions.push(decisionContext);
     if(evLoss>0&&state.sessStats){
-      const opps=inHand().length-1;
-      const spot=typeof classifyLeakSpot==='function'?classifyLeakSpot(callNow,opps):classifyLeakSpotRetro({stage:state.stage,action:type});
       const air=!!(coachRecNow.airPen>=0.1);
       state.sessStats.evLost=(state.sessStats.evLost||0)+evLoss;
-      (state.gameDecisions=state.gameDecisions||[]).push({hand:state.handNum,stage:state.stage,rec:r,action:type,evLoss,spot,air});
+      (state.gameDecisions=state.gameDecisions||[]).push({hand:state.handNum,...decisionContext,air});
     }
     if(!followed){
       const lesson=typeof coachMicroLesson==='function'?coachMicroLesson(coachRecNow,type):'';
@@ -2708,6 +2859,9 @@ function initUI(){
   $('reviewBtn').onclick=showSessionReview;
   $('revClose').onclick=()=>closeDialog($('reviewOv'));
   $('reviewOv').onclick=e=>{if(e.target.id==='reviewOv')closeDialog($('reviewOv'));};
+  $('practiceClose').onclick=()=>closeDialog($('practiceOv'));
+  $('practiceNext').onclick=advanceScenarioPractice;
+  $('practiceOv').onclick=e=>{if(e.target.id==='practiceOv')closeDialog($('practiceOv'));};
   $('tRewards').onclick=showRewardsRoom;
   $('rewardClose').onclick=()=>closeDialog($('rewardOv'));
   $('rewardCloseTop').onclick=()=>closeDialog($('rewardOv'));

@@ -506,6 +506,8 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
 .rev-focus-card b{display:block;font-size:14px;margin:5px 0 3px;}
 .rev-focus-card span{display:block;font-size:11.5px;color:var(--dim);line-height:1.35;}
 .rev-focus-card .rev-focus-ev{color:#ef8b83;font-weight:800;margin-top:7px;font-size:13px;}
+.rev-practice-btn{width:100%;margin-top:9px;border:1px solid rgba(232,182,76,.55);background:rgba(232,182,76,.10);color:var(--gold);border-radius:7px;padding:7px 8px;font-size:11px;font-weight:800;cursor:pointer;}
+.rev-practice-btn:hover{background:rgba(232,182,76,.19);}
 .rev-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
 .rev-controls label{font-size:11px;color:var(--dim);}
 .rev-controls select{display:block;width:100%;margin-top:4px;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);font-size:12px;}
@@ -539,12 +541,40 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
 #revAllHands,#revClose{width:100%;margin-top:6px;border-radius:9px;padding:10px;font-weight:700;cursor:pointer;}
 #revAllHands{background:none;border:1px solid var(--line);color:var(--text);margin-bottom:8px;}
 #revClose{background:var(--gold);color:#1a1408;border:none;}
+.coach-confidence{display:flex;align-items:flex-start;gap:9px;margin:10px 0;padding:9px 11px;border:1px solid rgba(113,181,224,.35);border-radius:9px;background:rgba(65,139,190,.08);}
+.coach-confidence-icon{font-size:16px;line-height:1.2;}
+.coach-confidence b{display:block;color:#8fd0f8;font-size:12px;}
+.coach-confidence span{display:block;color:var(--dim);font-size:11px;line-height:1.4;margin-top:2px;}
+#practiceOv{position:fixed;inset:0;background:rgba(8,10,14,.9);display:flex;align-items:center;justify-content:center;z-index:70;}
+.practice-card{background:var(--panel);border:1px solid rgba(232,182,76,.4);border-radius:16px;padding:24px 28px;width:620px;max-width:94vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 65px rgba(0,0,0,.7);}
+.practice-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px;}
+.practice-head h2{font-size:18px;color:var(--gold);}
+.practice-progress{font-size:12px;color:var(--dim);white-space:nowrap;}
+.practice-context{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:16px;margin-bottom:14px;}
+.practice-spot{font-size:12px;color:#8fd0f8;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:11px;}
+.practice-cards{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.practice-hole,.practice-board{display:flex;gap:5px;}
+.practice-vs{color:var(--dim);font-size:12px;}
+.practice-prompt{font-size:15px;font-weight:700;margin:15px 0 11px;}
+.practice-actions{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
+.practice-actions button{border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:10px 6px;font-size:12px;font-weight:700;cursor:pointer;}
+.practice-actions button:hover{border-color:var(--gold);}
+.practice-actions button.correct{border-color:#62d68a;background:rgba(98,214,138,.14);color:#85eaaa;}
+.practice-actions button.wrong{border-color:#e2574c;background:rgba(226,87,76,.13);color:#ff9b93;}
+.practice-result{margin-top:13px;border-radius:10px;padding:12px;font-size:13px;line-height:1.45;}
+.practice-result.good{background:rgba(98,214,138,.10);border:1px solid rgba(98,214,138,.35);}
+.practice-result.bad{background:rgba(226,87,76,.08);border:1px solid rgba(226,87,76,.3);}
+.practice-footer{display:flex;gap:8px;margin-top:15px;}
+.practice-footer button{flex:1;border-radius:9px;padding:10px;font-weight:800;cursor:pointer;}
+#practiceNext{background:var(--gold);color:#1a1408;border:none;}
+#practiceClose{background:none;color:var(--text);border:1px solid var(--line);}
 @media(max-width:650px){
   .rev-card{padding:19px 16px;}
   .rev-focus{grid-template-columns:1fr;}
   .rev-controls{grid-template-columns:1fr;}
   .rev-decision{grid-template-columns:1fr;}
   .rev-decision-actions{justify-content:space-between;}
+  .practice-actions{grid-template-columns:1fr 1fr;}
 }
 
 /* ---------- REWARDS ROOM ---------- */
@@ -1205,6 +1235,14 @@ body.fl #chipPreview{display:none!important;}
     <div id="revList"></div>
     <button id="revAllHands" type="button">All saved hands</button>
     <button id="revClose" type="button">Close</button>
+  </div>
+</div>
+
+<div id="practiceOv" class="hidden" aria-hidden="true">
+  <div class="practice-card" role="document">
+    <div class="practice-head"><div><h2 id="practiceTitle">Focused practice</h2><p id="practiceSub" class="rev-intro"></p></div><span id="practiceProgress" class="practice-progress"></span></div>
+    <div id="practiceBody"></div>
+    <div class="practice-footer"><button id="practiceClose" type="button">Close</button><button id="practiceNext" type="button" class="hidden">Next spot</button></div>
   </div>
 </div>
 
