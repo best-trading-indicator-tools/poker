@@ -28,7 +28,7 @@ pfShove:(bb,c,pr,t,p)=>`At ${bb} BB you're in push/fold territory. ${c} (${pr}) 
 pfShortCheck:(c,p)=>`${c} is below the shoving range for ${p}, but checking is free.`,
 pfShortCall:(c,e,o)=>`${c} is below a standard shoving range, but your simulated equity (${e}) comfortably beats the price (${o}).`,
 pfShortFold:(bb,c,pr,t,p)=>`At ${bb} BB, ${c} (${pr}) is outside the ~${t}% Nash range for ${p}. Fold and wait — even short, patience beats spew.`,
-huPush:(bb,c,pr,t,p)=>`Heads-up at ${bb} BB effective, there is no ladder left to wait for. ${c} (${pr}) is inside the ~${t}% heads-up shove range from ${p} — all-in maximizes fold equity and denies the big blind a cheap flop.`,
+huPush:(bb,c,pr,t,p)=>`Heads-up at ${bb} BB effective, folding or limping gives up too much to the blinds. ${c} (${pr}) is near the bottom of the ~${t}% shove range from ${p}, but it is still a profitable all-in: you can win the pot immediately when the big blind folds, and you retain equity when called. The displayed win chance is your showdown equity if called — it is not the only reason to shove.`,
 huOpen:(bb,c,p)=>`Heads-up at ${bb} BB effective is deep enough to play postflop. ${c} is playable from ${p}, but it is not a pure shove spot — open small and keep weaker hands in.`,
 huCall:(bb,c,e,o)=>`Heads-up at ${bb} BB effective, calling ranges widen because there is no ladder pressure left. ${c} has about ${e} equity versus the price ${o}, so continue.`,
 huFold:(bb,c,pr,t,p)=>`Heads-up at ${bb} BB effective, ${c} (${pr}) is below the ~${t}% shove/continue range for ${p}. Let this one go rather than gambling the match with pure trash.`,
@@ -185,7 +185,7 @@ pfShove:(bb,c,pr,t,p)=>`À ${bb} BB vous êtes en zone push/fold. ${c} (${pr}) e
 pfShortCheck:(c,p)=>`${c} est sous la range de shove pour ${p}, mais le check est gratuit.`,
 pfShortCall:(c,e,o)=>`${c} est sous une range de shove standard, mais votre équité simulée (${e}) bat largement le prix (${o}).`,
 pfShortFold:(bb,c,pr,t,p)=>`À ${bb} BB, ${c} (${pr}) est hors de la range Nash (~${t}%) pour ${p}. Couchez-vous et attendez — même court, la patience bat le spew.`,
-huPush:(bb,c,pr,t,p)=>`Heads-up à ${bb} BB effectives : il n'y a plus de palier à attendre. ${c} (${pr}) est dans la range de shove heads-up (~${t}%) depuis ${p} — tapis maximise la fold equity et empêche la BB de voir un flop gratuit.`,
+huPush:(bb,c,pr,t,p)=>`Heads-up à ${bb} BB effectives : folder ou limper abandonne trop de valeur aux blindes. ${c} (${pr}) est près du bas de la range de tapis (~${t}%) depuis ${p}, mais le all-in reste rentable : vous gagnez immédiatement quand la grosse blinde passe et conservez de l'équité quand elle paie. Le pourcentage de victoire affiché est votre équité à l'abattage si vous êtes payé — ce n'est pas la seule raison de faire tapis.`,
 huOpen:(bb,c,p)=>`Heads-up à ${bb} BB effectives : c'est assez deep pour jouer postflop. ${c} est jouable depuis ${p}, mais ce n'est pas un shove pur — ouvrez petit et gardez les mains faibles dedans.`,
 huCall:(bb,c,e,o)=>`Heads-up à ${bb} BB effectives, les ranges de call s'élargissent car il n'y a plus de pression de palier. ${c} a environ ${e} d'équité pour un prix de ${o}, donc continuez.`,
 huFold:(bb,c,pr,t,p)=>`Heads-up à ${bb} BB effectives, ${c} (${pr}) est sous la range shove/continue (~${t}%) pour ${p}. Couchez plutôt que de jouer le match avec une main poubelle.`,
@@ -342,7 +342,7 @@ pfShove:(bb,c,pr,t,p)=>`Con ${bb} BB estás en territorio push/fold. ${c} (${pr}
 pfShortCheck:(c,p)=>`${c} está por debajo del rango de all-in para ${p}, pero pasar es gratis.`,
 pfShortCall:(c,e,o)=>`${c} está por debajo de un rango estándar de all-in, pero tu equidad simulada (${e}) supera con holgura el precio (${o}).`,
 pfShortFold:(bb,c,pr,t,p)=>`Con ${bb} BB, ${c} (${pr}) queda fuera del rango Nash (~${t}%) para ${p}. Retírate y espera — incluso corto de fichas, la paciencia gana al despilfarro.`,
-huPush:(bb,c,pr,t,p)=>`Heads-up con ${bb} BB efectivas: ya no hay salto de premios que esperar. ${c} (${pr}) está dentro del rango de all-in heads-up (~${t}%) desde ${p} — all-in maximiza fold equity y evita que la BB vea un flop barato.`,
+huPush:(bb,c,pr,t,p)=>`Heads-up con ${bb} BB efectivas: retirarse o completar cede demasiado valor a las ciegas. ${c} (${pr}) está cerca de la parte baja del rango de all-in (~${t}%) desde ${p}, pero el all-in sigue siendo rentable: ganas el bote cuando la ciega grande se retira y conservas equity cuando paga. El porcentaje de victoria mostrado es tu equity al showdown si te pagan; no es la única razón para ir all-in.`,
 huOpen:(bb,c,p)=>`Heads-up con ${bb} BB efectivas hay suficiente profundidad para jugar postflop. ${c} es jugable desde ${p}, pero no es un shove puro — abre pequeño y mantén manos peores dentro.`,
 huCall:(bb,c,e,o)=>`Heads-up con ${bb} BB efectivas, los rangos de call se amplían porque ya no hay presión de saltos de premio. ${c} tiene aprox. ${e} equity contra el precio ${o}, así que continúa.`,
 huFold:(bb,c,pr,t,p)=>`Heads-up con ${bb} BB efectivas, ${c} (${pr}) está por debajo del rango de shove/continuación (~${t}%) para ${p}. Retírate en vez de jugarte el match con basura pura.`,
@@ -525,7 +525,11 @@ function headsUpShoveThreshold(pos,effBB,callAmt){
   const facing=callAmt>0;
   let base;
   if(sbBtn){
-    base=effBB<=5?1.00:effBB<=7?0.92:effBB<=9?0.82:effBB<=12?0.68:effBB<=15?0.54:effBB<=20?0.36:0;
+    /* Approximate HU push/fold coverage. Keep the displayed percentage tied to
+       the actual chart boundary: at five blinds 95o is a marginal shove, not
+       evidence that virtually every starting hand should be pushed. */
+    base=effBB<=2?0.96:effBB<=3?0.92:effBB<=4?0.86:effBB<=5?0.79:
+      effBB<=7?0.68:effBB<=9?0.56:effBB<=12?0.43:effBB<=15?0.32:effBB<=20?0.22:0;
   }else{
     base=effBB<=5?0.78:effBB<=7?0.66:effBB<=9?0.56:effBB<=12?0.44:effBB<=15?0.33:effBB<=20?0.24:0;
   }

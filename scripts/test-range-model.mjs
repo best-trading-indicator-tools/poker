@@ -21,6 +21,12 @@ const result=vm.runInContext(`(()=>{
   const C=(r,s)=>({r,s}), H=(a,b)=>[a,b];
   const holes={AA:H(C(14,0),C(14,1)),A5s:H(C(14,0),C(5,0)),A5o:H(C(14,0),C(5,1)),
     eightSeven:H(C(8,2),C(7,2)),KJo:H(C(13,0),C(11,1)),sevenTwo:H(C(7,0),C(2,1))};
+  const huFiveBbThreshold=headsUpShoveThreshold('SB/BTN',4.64,640);
+  if(huFiveBbThreshold<handPct['95o']||huFiveBbThreshold>.82)
+    throw new Error('5BB HU range must include marginal 95o without claiming a near-100% shove range '+
+      JSON.stringify({threshold:huFiveBbThreshold,p95o:handPct['95o']}));
+  if(headsUpShoveThreshold('SB/BTN',8,640)>=huFiveBbThreshold)
+    throw new Error('HU shove range must tighten as effective stack depth increases');
   const cfg={gameType:'sng',numPlayers:6,startBB:100,startBlind:100,ante:0,speed:'standard',difficulty:'hard',allAI:true};
   newGame(cfg);
   const p=state.players[1];p.pos='CO';p.style=STYLES.find(x=>x.id==='shark');
