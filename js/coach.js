@@ -544,10 +544,13 @@ function tableSizeOpenFactor(pos,n){
   const late=/(BTN|CO|HJ|SB\/BTN|SB)/.test(pos);
   const early=/^(UTG|MP)/.test(pos);
   if(n<=2) return late?1.65:1.30;
-  if(n===3) return late?1.38:1.18;
-  if(n===4) return late?1.24:1.12;
-  if(n===5) return early?1.08:1.14;
-  if(n===6) return early?1.03:1.06;
+  if(n===3) return late?1.38:1.80;
+  /* Seat labels remain UTG/MP as a table shrinks, but their strategic meaning
+     moves later: 4-handed UTG is effectively CO, and 5-handed UTG is HJ.
+     Widen early-seat ranges accordingly instead of reusing full-ring UTG. */
+  if(n===4) return early?2.15:1.24;
+  if(n===5) return early?1.75:1.14;
+  if(n===6) return early?1.30:1.06;
   return 1;
 }
 function tableSizeOpenCap(n){
@@ -2192,7 +2195,11 @@ function coachDecide(p){
       const isoList=limpPot?chartFor('iso',pos):null;
       const rfi=chartFor('rfi',pos);
       const chartList=isoList||rfi;
-      if(chartList) chartInfo={kind:isoList?'iso':'rfi',pos,list:chartList};
+      if(chartList){
+        const adjusted=!isoList&&aliveN<=6
+          ?[...new Set(chartList.concat(handsThroughPct(thrEff)))]:chartList;
+        chartInfo={kind:isoList?'iso':'rfi',pos:`${pos}${!isoList&&aliveN<=6?` · ${aliveN}-handed`:''}`,list:adjusted};
+      }
       const chartHit=chartList?chartList.includes(code):false;
       const pressureOpen=prEff<=thrEff&&callAmt>0||prEff<=Math.min(thrEff,0.10)&&callAmt===0;
       const isoSlack=dom.tier===2?0.13:dom.tier===1?0.08:0;

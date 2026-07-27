@@ -596,6 +596,24 @@ const result=vm.runInContext(`(()=>{
   if(!(tableSizeOpenFactor('BTN',6)>tableSizeOpenFactor('BTN',7)&&
       tableSizeFacingFactor(6,'BB')>tableSizeFacingFactor(7,'BB')))
     throw new Error('coach must separate 6-max ranges from full-ring ranges');
+  if(!((handPct.QJo||1)<=OPEN_THR.EP*tableSizeOpenFactor('UTG',5))||
+      !((handPct.QJo||1)>OPEN_THR.EP*tableSizeOpenFactor('UTG',6)))
+    throw new Error('QJo must open from compressed 5-handed UTG but remain outside baseline 6-max UTG');
+  newGame({...cfg,numPlayers:5,difficulty:'hard'});
+  const fiveUtg=state.players[0];
+  for(const x of state.players){
+    x.out=false;x.folded=false;x.allIn=false;x.bet=0;x.totalBet=0;x.acted=false;
+    x.rangeCap=1;x.rangeFloor=0;
+  }
+  state.stage='preflop';state.board=[];state.handOver=false;state.bb=320;state.sb=160;
+  state.currentBet=320;state.lastRaiseSize=320;state.lastAggIdx=-1;state.preflopRaiseCount=0;
+  fiveUtg.pos='UTG';fiveUtg.hole=H(C(12,1),C(11,0));fiveUtg.chips=4540;
+  state.players[3].pos='SB';state.players[3].bet=160;state.players[3].totalBet=160;
+  state.players[4].pos='BB';state.players[4].bet=320;state.players[4].totalBet=320;
+  const fiveUtgQJo=coachDecide(fiveUtg);
+  if(fiveUtgQJo.rec!=='RAISE')
+    throw new Error('5-handed 14 BB UTG QJo must open-raise, not fold '+JSON.stringify({
+      rec:fiveUtgQJo.rec,why:fiveUtgQJo.why,stack:fiveUtg.chips/state.bb}));
   newGame({...cfg,numPlayers:3,difficulty:'easy'});
   const easyThree=aiTableSizeDynamics(state.players[1],'easy');
   newGame({...cfg,numPlayers:3,difficulty:'hard'});
