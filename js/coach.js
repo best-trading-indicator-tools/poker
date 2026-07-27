@@ -894,6 +894,171 @@ function formatOutList(cards){
   }
   return out.join(' · ');
 }
+function compareScores(a,b){
+  for(let i=0;i<Math.max(a.length,b.length);i++){
+    const d=(a[i]||0)-(b[i]||0);
+    if(d)return d;
+  }
+  return 0;
+}
+function boardOnlyScore(board){
+  return board.length>=5?evalBest(board):null;
+}
+function canOpponentMakeHigherStraight(hole,board,card,heroScore){
+  if(heroScore[0]!==4)return false;
+  const known=new Set(hole.concat(board,[card]).map(c=>c.r*4+c.s));
+  const deck=FULL_DECK.filter(c=>!known.has(c.r*4+c.s));
+  for(let i=0;i<deck.length;i++)for(let j=i+1;j<deck.length;j++){
+    const sc=evalBest(board.concat([card,deck[i],deck[j]]));
+    if(sc[0]===4&&compareScores(sc,heroScore)>0)return true;
+  }
+  return false;
+}
+/* Structural out analysis complements raw straight/flush detection. It describes
+   what an improving card really does instead of treating every nominal out as 1. */
+function advancedOutAnalysis(hole,board,drawInfo){
+  const known=new Set(hole.concat(board).map(c=>c.r*4+c.s));
+  const current=evalBest(hole.concat(board)),cards=[],overcards=[],pairImprove=[];
+  const fullHouse=[],quads=[],counterfeit=[],chop=[],dominatedStraight=[];
+  const maxBoard=Math.max(...board.map(c=>c.r));
+  const holeCounts={};for(const c of hole)holeCounts[c.r]=(holeCounts[c.r]||0)+1;
+  const boardCounts={};for(const c of board)boardCounts[c.r]=(boardCounts[c.r]||0)+1;
+  const madeUsesHole=handUsesHoleCards(hole,board,current);
+  const privateOverRanks=[...new Set(hole.filter(c=>c.r>maxBoard&&!boardCounts[c.r]).map(c=>c.r))];
+  for(const c of FULL_DECK){
+    const key=c.r*4+c.s;if(known.has(key))continue;
+    const nextBoard=board.concat(c),next=evalBest(hole.concat(nextBoard));
+    const improves=compareScores(next,current)>0;
+    if(privateOverRanks.includes(c.r)&&next[0]>=1)overcards.push(c);
+    /* With one pair, the familiar five private improvement outs are the two
+       remaining cards of the paired rank plus the three mates of the kicker.
+       Pairing an unrelated board rank is a shared-board change, not a clean
+       private two-pair out. */
+    if(improves&&current[0]===1&&madeUsesHole&&holeCounts[c.r])pairImprove.push(c);
+    if(improves&&next[0]===6)fullHouse.push(c);
+    if(improves&&next[0]>=7)quads.push(c);
+    if(improves&&next[0]===4&&canOpponentMakeHigherStraight(hole,board,c,next))
+      dominatedStraight.push(c);
+    const boardScore=boardOnlyScore(nextBoard);
+    if(boardScore&&compareScores(boardScore,next)===0){
+      chop.push(c);
+      if(improves)counterfeit.push(c);
+    }else if(current[0]===2&&boardCounts[c.r]&&next[0]===2){
+      /* A board pair can erase the lower half of two pair without changing the
+         category shown by a conventional evaluator. */
+      counterfeit.push(c);
+    }
+    if(improves)cards.push(c);
+  }
+  const boardDraw=detectBoardOnlyDraws(board);
+  const backdoor=runnerRunnerPairAnalysis(hole,board);
+  const pairPlusDraw=current[0]>=1&&madeUsesHole&&
+    !!(drawInfo?.draw.flush||drawInfo?.draw.oesd||drawInfo?.draw.doubleGutshot||drawInfo?.draw.gutshot);
+  const redraw=current[0]>=2&&(fullHouse.length||quads.length||
+    drawInfo?.draw.flush||drawInfo?.draw.oesd||drawInfo?.draw.doubleGutshot||drawInfo?.draw.gutshot);
+  const nonNutFlush=!!(drawInfo?.draw.flush&&drawInfo.higherFlushThreats>0);
+  const classifications=new Map();
+  for(const c of drawInfo?.unique||[])classifications.set(c.r*4+c.s,{card:c,kind:'clean',weight:1});
+  const mark=(list,kind,weight)=>{for(const c of list){
+    const k=c.r*4+c.s,old=classifications.get(k);
+    if(!old||weight<old.weight)classifications.set(k,{card:c,kind,weight});
+  }};
+  mark(drawInfo?.dirty?.map(x=>x.card)||[],'dirty',.25);
+  mark(overcards,'overcard',.65);
+  mark(pairImprove,'pairImprove',.85);
+  mark(fullHouse,'fullHouse',1);
+  mark(quads,'quads',1);
+  mark(dominatedStraight,'dominated',.55);
+  mark(chop,'chop',.5);
+  if(nonNutFlush)mark(drawInfo.flush,'nonNut',.75);
+  const weightedOuts=[...classifications.values()].reduce((s,x)=>s+x.weight,0);
+  return {current,cards,overcards,pairImprove,fullHouse,quads,counterfeit,chop,
+    dominatedStraight,boardDraw,backdoor,pairPlusDraw,redraw,nonNutFlush,
+    nutFlushDraw:!!(drawInfo?.draw.flush&&!nonNutFlush),weightedOuts,
+    rawOuts:classifications.size,classifications:[...classifications.values()]};
+}
+function applyRangeOutWeights(a,oppCaps){
+  if(!a||!a.classifications.length)return a;
+  const strongest=oppCaps?.length?Math.min(...oppCaps.map(o=>o.cap||1)):1;
+  const pressure=clamp((.45-strongest)/.42,0,1);
+  let total=0;
+  for(const x of a.classifications){
+    let w=x.weight;
+    /* Pairing an overcard is far less likely to win against a tight, strength-
+       showing range; full-house/quads redraws remain almost fully clean. */
+    if(x.kind==='overcard')w*=1-.42*pressure;
+    else if(x.kind==='pairImprove')w*=1-.20*pressure;
+    else if(x.kind==='dominated'||x.kind==='nonNut')w*=1-.18*pressure;
+    x.rangeWeight=clamp(w,0,1);total+=x.rangeWeight;
+  }
+  a.weightedOuts=total;
+  a.rangePressure=pressure;
+  return a;
+}
+function detectBoardOnlyDraws(board){
+  if(board.length<3)return {flush:false,straight:false};
+  const suits=[0,0,0,0];for(const c of board)suits[c.s]++;
+  const ranks=straightRankSet(board);
+  let straight=false;
+  for(let lo=1;lo<=10;lo++){
+    let n=0;for(let r=lo;r<lo+5;r++)if(ranks.has(r))n++;
+    if(n>=4){straight=true;break;}
+  }
+  return {flush:Math.max(...suits)>=4,straight};
+}
+function runnerRunnerPairAnalysis(hole,board){
+  if(board.length!==3)return {twoPairChance:0,tripsChance:0};
+  const knownRanks={};for(const c of hole.concat(board))knownRanks[c.r]=(knownRanks[c.r]||0)+1;
+  const unknown=47,total=unknown*(unknown-1)/2;
+  const distinct=[...new Set(hole.map(c=>c.r))];
+  let twoPairCombos=0,tripsCombos=0;
+  if(distinct.length===2&&!board.some(c=>distinct.includes(c.r))){
+    twoPairCombos=(4-knownRanks[distinct[0]])*(4-knownRanks[distinct[1]]);
+    for(const r of distinct){const n=4-knownRanks[r];tripsCombos+=n*(n-1)/2;}
+  }
+  return {twoPairChance:twoPairCombos/total,tripsChance:tripsCombos/total};
+}
+function advancedOutNotes(a){
+  const lang=(typeof cfg!=='undefined'&&cfg.lang)||'en',notes=[];
+  const n=(en,fr,es)=>lang==='fr'?fr:lang==='es'?es:en;
+  if(a.pairPlusDraw)notes.push(n(
+    'This is a pair + draw, not a bare draw: you already have showdown value as well as ways to improve.',
+    'C’est une paire + tirage, pas un tirage nu : vous avez déjà de la valeur au showdown et des améliorations possibles.',
+    'Es pareja + proyecto, no un proyecto desnudo: ya tienes valor al showdown y formas de mejorar.'));
+  if(a.redraw)notes.push(n(
+    'You already have a made hand and redraws to an even stronger hand.',
+    'Vous avez déjà une main faite avec des redraws vers une main encore plus forte.',
+    'Ya tienes una mano hecha y redraws hacia una mano aún más fuerte.'));
+  if(a.nutFlushDraw)notes.push(n(
+    'Nut flush draw: when the flush arrives, no higher flush is possible from a single opponent card.',
+    'Tirage couleur max : quand la couleur rentre, aucune carte adverse seule ne peut faire une couleur supérieure.',
+    'Proyecto de color máximo: si entra, ninguna carta rival por sí sola puede formar un color superior.'));
+  if(a.nonNutFlush)notes.push(n(
+    'Non-nut flush draw: some flush cards can still leave you behind a higher flush. Reverse implied odds apply.',
+    'Tirage couleur non max : certaines couleurs rentrées peuvent rester dominées. Attention aux cotes implicites inversées.',
+    'Proyecto de color no máximo: algunos colores completados aún pueden perder contra uno superior.'));
+  if(a.dominatedStraight.length)notes.push(n(
+    `${a.dominatedStraight.length} straight out(s) are partial: they make your straight, but a higher straight remains possible.`,
+    `${a.dominatedStraight.length} out(s) de quinte sont partiels : ils font votre quinte, mais une quinte supérieure reste possible.`,
+    `${a.dominatedStraight.length} out(s) de escalera son parciales: completan tu escalera, pero sigue siendo posible una superior.`));
+  if(a.counterfeit.length)notes.push(n(
+    `${a.counterfeit.length} card(s) can counterfeit your apparent improvement by making the board play.`,
+    `${a.counterfeit.length} carte(s) peuvent contrefaire l’amélioration affichée en faisant jouer le board.`,
+    `${a.counterfeit.length} carta(s) pueden falsificar la mejora aparente haciendo que juegue la mesa.`));
+  if(a.chop.length)notes.push(n(
+    `${a.chop.length} card(s) mainly create a board-only hand or chop; they count as half-outs, not full wins.`,
+    `${a.chop.length} carte(s) créent surtout une main commune au board ou un partage ; elles comptent comme demi-outs.`,
+    `${a.chop.length} carta(s) crean sobre todo una mano de mesa o empate; cuentan como medios outs.`));
+  if(a.boardDraw.flush||a.boardDraw.straight)notes.push(n(
+    `The ${a.boardDraw.flush&&a.boardDraw.straight?'flush and straight threats are':'draw is'} on the board itself, so every player can use it; it is not a private draw.`,
+    `La menace de ${a.boardDraw.flush&&a.boardDraw.straight?'couleur et de quinte est':'tirage est'} sur le board lui-même : tout le monde peut l’utiliser, ce n’est pas un tirage privé.`,
+    `La amenaza de ${a.boardDraw.flush&&a.boardDraw.straight?'color y escalera está':'proyecto está'} en la mesa: todos pueden usarla, no es un proyecto privado.`));
+  if(a.backdoor.twoPairChance||a.backdoor.tripsChance)notes.push(n(
+    `Runner-runner only: two pair ≈${pct(a.backdoor.twoPairChance)}, trips ≈${pct(a.backdoor.tripsChance)}. These are backdoors, not normal outs.`,
+    `Runner-runner seulement : deux paires ≈${pct(a.backdoor.twoPairChance)}, brelan ≈${pct(a.backdoor.tripsChance)}. Ce sont des backdoors, pas des outs normaux.`,
+    `Solo runner-runner: dobles parejas ≈${pct(a.backdoor.twoPairChance)}, trío ≈${pct(a.backdoor.tripsChance)}. Son backdoors, no outs normales.`));
+  return notes;
+}
 function dirtyOutReason(hole,board,card){
   const br=board.map(c=>c.r), brCnt={};
   for(const r of br) brCnt[r]=(brCnt[r]||0)+1;
@@ -944,12 +1109,14 @@ function coachDrawOutInfo(hole,board,draw=null){
     const known=new Set(hole.concat(board).map(c=>c.r*4+c.s));
     higherFlushThreats=FULL_DECK.filter(c=>c.s===flushSuit&&c.r>heroHigh&&!known.has(c.r*4+c.s)).length;
   }
-  return {draw:d,flush,straight,overlap,unique,clean:split.clean,dirty:split.dirty,
+  const info={draw:d,flush,straight,overlap,unique,clean:split.clean,dirty:split.dirty,
     unknown,streets,flushChance:drawHitChance(flush.length,unknown,streets),
     straightChance:drawHitChance(straight.length,unknown,streets),
     uniqueHitChance:drawHitChance(unique.length,unknown,streets),
     cleanHitChance:drawHitChance(split.clean.length,unknown,streets),
     higherFlushThreats};
+  info.advanced=advancedOutAnalysis(hole,board,info);
+  return info;
 }
 /* Conservative postflop implied-odds estimate. It never assumes the full stack
    will be paid: visibility of the draw, position, line, profile and non-nut risk
@@ -978,13 +1145,14 @@ function coachPostflopImpliedOdds(p,callAmt,pot,drawInfo,actsFirst,actsLast,icmP
   payRate=clamp(payRate,.08,.62);
   const uncappedFuture=maxFuture*payRate;
   const finalPot=Math.max(1,pot+callAmt);
-  const maxCreditFuture=drawInfo.cleanHitChance>0
-    ?finalPot*.06/drawInfo.cleanHitChance
+  const weightedHitChance=drawInfo.rangeWeightedHitChance??drawInfo.cleanHitChance;
+  const maxCreditFuture=weightedHitChance>0
+    ?finalPot*.06/weightedHitChance
     :0;
   const futureChips=Math.min(uncappedFuture,maxCreditFuture);
-  const equityCredit=clamp(drawInfo.cleanHitChance*futureChips/finalPot,0,.06);
+  const equityCredit=clamp(weightedHitChance*futureChips/finalPot,0,.06);
   return {
-    maxFuture,futureChips,payRate,equityCredit,hitChance:drawInfo.cleanHitChance,
+    maxFuture,futureChips,payRate,equityCredit,hitChance:weightedHitChance,
     immediateNeed:callAmt/finalPot,
     realisticNeed:callAmt/(finalPot+futureChips),
     bestCaseNeed:callAmt/(finalPot+maxFuture),
@@ -1799,6 +1967,9 @@ function coachDecide(p){
       const dr=[];
       const backdoorFlush=coachBackdoorFlushInfo(p.hole,state.board);
       drawInfo=coachDrawOutInfo(p.hole,state.board,d);
+      applyRangeOutWeights(drawInfo.advanced,oppCaps);
+      drawInfo.rangeWeightedHitChance=drawHitChance(
+        drawInfo.advanced.weightedOuts,drawInfo.unknown,drawInfo.streets);
       if(d.flush) dr.push(C('drawFlush',drawInfo.flush.length,pct(drawInfo.flushChance)));
       if(d.oesd) dr.push(C('drawOESD',drawInfo.straight.length,pct(drawInfo.straightChance)));
       else if(d.doubleGutshot)dr.push(C('drawDoubleGut',drawInfo.straight.length,pct(drawInfo.straightChance)));
@@ -1830,6 +2001,20 @@ function coachDecide(p){
         }
         if(d.flush||d.oesd||d.gutshot)extra.push(C('drawBaked'));
       }
+      const adv=drawInfo.advanced;
+      if(adv.overcards.length)
+        drawRow+=`<div class="coach-row"><span>${T('overcardOuts')}</span><b>${adv.overcards.length}<br>${formatOutList(adv.overcards)}</b></div>`;
+      if(adv.pairImprove.length)
+        drawRow+=`<div class="coach-row"><span>${T('pairImproveOuts')}</span><b>${adv.pairImprove.length}<br>${formatOutList(adv.pairImprove)}</b></div>`;
+      if(adv.fullHouse.length||adv.quads.length){
+        const redrawCards=[...adv.fullHouse,...adv.quads];
+        drawRow+=`<div class="coach-row"><span>${T('redrawOuts')}</span><b>${new Set(redrawCards.map(c=>c.r*4+c.s)).size}<br>${formatOutList(redrawCards)}</b></div>`;
+      }
+      if(adv.rawOuts){
+        const weighted=Math.round(adv.weightedOuts*10)/10;
+        drawRow+=`<div class="coach-row"><span>${T('outQuality')}</span><b>${weighted} ${T('weightedOuts')}<small class="coach-metric-note">${T('weightedOutsNote')(adv.rawOuts)}</small></b></div>`;
+      }
+      extra.push(...advancedOutNotes(adv));
     }
     /* board texture warnings */
     const bs=[0,0,0,0]; for(const c of state.board) bs[c.s]++;

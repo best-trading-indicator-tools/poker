@@ -264,6 +264,29 @@ const result=vm.runInContext(`(()=>{
   if(!backdoorStraight.draw.backdoorStraight||backdoorStraight.draw.gutshot||
       backdoorStraight.draw.oesd||!(backdoorStraight.draw.backdoorStraightChance>0))
     throw new Error('runner-runner straight classification failed '+JSON.stringify(backdoorStraight));
+  const overcards=drawCase(['As','Kh'],['9c','7d','2s']).info.advanced;
+  if(overcards.overcards.length!==6)
+    throw new Error('two overcards must expose six theoretical pair outs '+JSON.stringify(overcards));
+  const pairDraw=drawCase(['Ah','9h'],['9s','7h','2h']).info.advanced;
+  if(!pairDraw.pairPlusDraw||pairDraw.pairImprove.length!==5)
+    throw new Error('pair + draw and five pair-improvement outs must be explicit '+JSON.stringify(pairDraw));
+  const tripsRedraw=drawCase(['9h','9c'],['9s','7d','2c']).info.advanced;
+  if(tripsRedraw.fullHouse.length!==6||tripsRedraw.quads.length!==1||!tripsRedraw.redraw)
+    throw new Error('trips must expose full-house and quads redraws '+JSON.stringify(tripsRedraw));
+  const boardOnly=drawCase(['As','Kh'],['5c','6d','7s','8h']).info.advanced;
+  if(!boardOnly.boardDraw.straight)
+    throw new Error('board-only straight threat must be explicit '+JSON.stringify(boardOnly));
+  const chopRunout=drawCase(['As','Kh'],['2c','3d','4s','5h']).info.advanced;
+  if(chopRunout.chop.length<4||chopRunout.weightedOuts>=chopRunout.rawOuts)
+    throw new Error('board straight chop cards must be fractional outs '+JSON.stringify(chopRunout));
+  const counterfeit=drawCase(['9h','7c'],['9s','7d','2c','Ks']).info.advanced;
+  if(!counterfeit.counterfeit.length)
+    throw new Error('two-pair counterfeit cards must be detected '+JSON.stringify(counterfeit));
+  const nonNut=drawCase(['8h','3h'],['Kh','7h','2c']).info.advanced;
+  if(!nonNut.nonNutFlush||nonNut.nutFlushDraw||!(nonNut.weightedOuts<nonNut.rawOuts))
+    throw new Error('non-nut flush outs must be range-discounted '+JSON.stringify(nonNut));
+  if(!(overcards.backdoor.twoPairChance>0)&&!(overcards.backdoor.tripsChance>0))
+    throw new Error('runner-runner two-pair/trips probabilities missing '+JSON.stringify(overcards.backdoor));
   newGame({...cfg,numPlayers:6});
   const impliedHero=state.players[0],impliedAgg=state.players[1];
   for(const x of state.players){
