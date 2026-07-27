@@ -655,45 +655,60 @@ function scenarioCardLabel(code){
   const c=parseCardCode(code);
   return `${RANK_CH[c.r]}${SUIT_CH[c.s]}`;
 }
-function scenarioRefreshCardColor(sel){
-  if(!sel)return;
-  sel.classList.toggle('red-card',/[hd]$/.test(sel.value));
+function scenarioRefreshCardSlot(slot){
+  if(!slot)return;
+  const code=slot.dataset.value||'';
+  slot.textContent=code?scenarioCardLabel(code):'+';
+  slot.classList.toggle('filled',!!code);
+  slot.classList.toggle('red-card',/[hd]$/.test(code));
+  slot.setAttribute('aria-label',code?scenarioCardLabel(code):T('scEmptyCard'));
+}
+let scenarioActiveCardSlot=null;
+function scenarioUsedCardCodes(){
+  return new Set([...document.querySelectorAll('.scenario-card-slot')].map(b=>b.dataset.value).filter(Boolean));
+}
+function scenarioOpenDeckPicker(slot){
+  scenarioActiveCardSlot=slot;
+  const used=scenarioUsedCardCodes(),current=slot.dataset.value||'',picker=$('scDeckPicker');
+  picker.innerHTML=`<div class="scenario-deck-head"><span>${slot.closest('#scCards')?T('scCards'):T('scBoard')}</span><button type="button" aria-label="${T('close')}">×</button></div>`+
+    `<div class="scenario-deck-grid">`+
+    [0,1,2,3].flatMap(s=>[14,13,12,11,10,9,8,7,6,5,4,3,2].map(r=>{
+      const code=scenarioCode({r,s}),disabled=used.has(code)&&code!==current;
+      return `<button type="button" class="scenario-deck-card${s===1||s===2?' red-card':''}" data-card-code="${code}"${disabled?' disabled':''}>${scenarioCardLabel(code)}</button>`;
+    })).join('')+
+    `<button type="button" class="scenario-deck-empty" data-card-code="">${T('scEmptyCard')}</button></div>`;
+  picker.classList.remove('hidden');
+  picker.querySelector('.scenario-deck-head button').onclick=()=>picker.classList.add('hidden');
+  picker.querySelectorAll('[data-card-code]').forEach(btn=>btn.onclick=()=>{
+    slot.dataset.value=btn.dataset.cardCode||'';scenarioRefreshCardSlot(slot);picker.classList.add('hidden');
+  });
 }
 function scenarioBuildCardPickers(){
   const build=(rootId,count,defaults)=>{
     const root=$(rootId);if(!root)return;
     if(!root.children.length){
       for(let i=0;i<count;i++){
-        const sel=document.createElement('select');
-        sel.className='scenario-card-select';
-        sel.setAttribute('aria-label',`${rootId==='scCards'?T('scCards'):T('scBoard')} ${i+1}`);
-        sel.innerHTML=`<option value="">${T('scEmptyCard')}</option>`+
-          [14,13,12,11,10,9,8,7,6,5,4,3,2].flatMap(r=>[0,1,2,3].map(s=>{
-            const code=scenarioCode({r,s});return `<option value="${code}">${scenarioCardLabel(code)}</option>`;
-          })).join('');
-        sel.value=defaults[i]||'';
-        sel.onchange=()=>scenarioRefreshCardColor(sel);
-        scenarioRefreshCardColor(sel);root.appendChild(sel);
+        const slot=document.createElement('button');
+        slot.type='button';slot.className='scenario-card-slot';slot.dataset.value=defaults[i]||'';
+        slot.onclick=()=>scenarioOpenDeckPicker(slot);
+        scenarioRefreshCardSlot(slot);root.appendChild(slot);
       }
-    }else [...root.querySelectorAll('select')].forEach(sel=>{
-      if(sel.options[0])sel.options[0].textContent=T('scEmptyCard');
-      scenarioRefreshCardColor(sel);
-    });
+    }else [...root.querySelectorAll('.scenario-card-slot')].forEach(scenarioRefreshCardSlot);
   };
   build('scCards',2,['As','Kh']);build('scBoard',5,[]);
 }
 function scenarioSelectedCards(rootId){
-  return [...$(rootId).querySelectorAll('select')].map(s=>s.value).filter(Boolean);
+  return [...$(rootId).querySelectorAll('.scenario-card-slot')].map(s=>s.dataset.value||'').filter(Boolean);
 }
 function scenarioSetCards(rootId,codes){
   scenarioBuildCardPickers();
-  [...$(rootId).querySelectorAll('select')].forEach((sel,i)=>{sel.value=codes[i]||'';scenarioRefreshCardColor(sel);});
+  [...$(rootId).querySelectorAll('.scenario-card-slot')].forEach((slot,i)=>{slot.dataset.value=codes[i]||'';scenarioRefreshCardSlot(slot);});
 }
 function scenarioRead(){
   const holeCodes=scenarioSelectedCards('scCards'),boardCodes=scenarioSelectedCards('scBoard');
   const hole=holeCodes.map(parseCardCode),board=boardCodes.map(parseCardCode);
   const all=hole.concat(board),unique=new Set(all.map(c=>c.r*4+c.s));
-  const boardSlots=[...$('scBoard').querySelectorAll('select')].map(s=>s.value);
+  const boardSlots=[...$('scBoard').querySelectorAll('.scenario-card-slot')].map(s=>s.dataset.value||'');
   const hasGap=boardSlots.some((v,i)=>!v&&boardSlots.slice(i+1).some(Boolean));
   if(hole.length!==2||![0,3,4,5].includes(board.length)||unique.size!==all.length||hasGap)return null;
   return {
@@ -805,6 +820,7 @@ function scenarioStartDrill(s){
 }
 function openScenarioBuilder(){
   scenarioBuildCardPickers();
+  $('scDeckPicker').classList.add('hidden');
   scenarioShowError('');$('scenarioResult').innerHTML='';
   try{
     const raw=location.hash.startsWith('#scenario=')?location.hash.slice(10):'';

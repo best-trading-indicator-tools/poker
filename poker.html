@@ -588,15 +588,26 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
 #practiceNext{background:var(--gold);color:#1a1408;border:none;}
 #practiceClose{background:none;color:var(--text);border:1px solid var(--line);}
 #scenarioOv{position:fixed;inset:0;background:rgba(8,10,14,.9);display:flex;align-items:center;justify-content:center;z-index:70;}
-.scenario-card{background:var(--panel);border:1px solid rgba(113,181,224,.38);border-radius:16px;padding:24px 28px;width:780px;max-width:94vw;max-height:92vh;overflow-y:auto;box-shadow:0 24px 65px rgba(0,0,0,.72);}
+.scenario-card{position:relative;background:var(--panel);border:1px solid rgba(113,181,224,.38);border-radius:16px;padding:24px 28px;width:780px;max-width:94vw;max-height:92vh;overflow-y:auto;box-shadow:0 24px 65px rgba(0,0,0,.72);}
 .scenario-card h2{font-size:19px;color:#8fd0f8;margin-bottom:4px;}
 .scenario-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:17px 0;}
 .scenario-field{font-size:11px;color:var(--dim);}
 .scenario-field.wide{grid-column:span 2;}
+.scenario-field.card-row{grid-column:1/-1;}
 .scenario-field input,.scenario-field select{display:block;width:100%;margin-top:5px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text);padding:9px 10px;font-size:13px;}
-.scenario-card-pickers{display:flex;gap:7px;margin-top:5px;flex-wrap:wrap;}
-.scenario-card-pickers select{width:auto;min-width:86px;margin-top:0;font-size:17px;font-weight:750;padding:9px 28px 9px 10px;}
-.scenario-card-pickers select.red-card{color:#ef6f68;}
+.scenario-card-pickers{display:flex;gap:7px;margin-top:7px;flex-wrap:nowrap;}
+.scenario-card-slot{display:grid;place-items:center;width:58px;height:72px;flex:0 0 58px;border:1px dashed #526074;border-radius:9px;background:#151b24;color:#758195;font-size:22px;font-weight:850;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.03);}
+.scenario-card-slot.filled{background:#f4f1e8;color:#171b22;border-style:solid;border-color:#d8d2c2;box-shadow:0 4px 10px rgba(0,0,0,.25);}
+.scenario-card-slot.red-card{color:#d94b45;}
+.scenario-card-slot:hover,.scenario-card-slot:focus-visible{border-color:#8fd0f8;outline:none;box-shadow:0 0 0 2px rgba(84,163,218,.3);}
+.scenario-deck-picker{position:absolute;z-index:5;left:28px;right:28px;top:125px;border:1px solid #58758d;border-radius:12px;background:#10151d;padding:13px;box-shadow:0 18px 45px rgba(0,0,0,.72);}
+.scenario-deck-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:12px;color:var(--dim);}
+.scenario-deck-head button{border:0;background:none;color:var(--text);font-size:20px;cursor:pointer;}
+.scenario-deck-grid{display:grid;grid-template-columns:repeat(13,minmax(32px,1fr));gap:5px;}
+.scenario-deck-card{border:1px solid #d8d2c2;border-radius:6px;background:#f4f1e8;color:#171b22;padding:8px 2px;font-size:15px;font-weight:850;cursor:pointer;}
+.scenario-deck-card.red-card{color:#d94b45;}
+.scenario-deck-card:disabled{opacity:.18;cursor:not-allowed;}
+.scenario-deck-empty{grid-column:1/-1;border:1px solid var(--line);border-radius:7px;background:#202735;color:var(--dim);padding:7px;cursor:pointer;}
 .scenario-card-help{display:block;margin-top:5px;color:#788599;font-size:10.5px;line-height:1.35;}
 .scenario-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;}
 .scenario-actions button{flex:1;min-width:120px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);padding:10px;font-weight:700;cursor:pointer;}
@@ -630,6 +641,9 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
   .scenario-grid{grid-template-columns:1fr 1fr;}
   .scenario-field.wide{grid-column:span 2;}
   .scenario-play-actions{grid-template-columns:1fr 1fr;}
+  .scenario-card-slot{width:48px;height:62px;flex-basis:48px;font-size:18px;}
+  .scenario-deck-picker{left:12px;right:12px;top:105px;}
+  .scenario-deck-grid{grid-template-columns:repeat(7,1fr);}
 }
 
 /* ---------- REWARDS ROOM ---------- */
@@ -1299,9 +1313,10 @@ body.fl #chipPreview{display:none!important;}
   <div class="scenario-card" role="document">
     <h2 id="scenarioTitle">Custom Scenario Builder</h2>
     <p id="scenarioSub" class="rev-intro">Build a decision, analyze it, save it or practice variations.</p>
+    <div id="scDeckPicker" class="scenario-deck-picker hidden"></div>
     <div class="scenario-grid">
-      <label class="scenario-field wide"><span id="scCardsLbl">Hero cards</span><span id="scCards" class="scenario-card-pickers"></span><small id="scCardsHelp" class="scenario-card-help">Choose your two private cards.</small></label>
-      <label class="scenario-field"><span id="scBoardLbl">Board</span><span id="scBoard" class="scenario-card-pickers"></span><small id="scBoardHelp" class="scenario-card-help">Leave empty preflop, or choose 3–5 community cards.</small></label>
+      <label class="scenario-field card-row"><span id="scCardsLbl">Hero cards</span><span id="scCards" class="scenario-card-pickers"></span><small id="scCardsHelp" class="scenario-card-help">Choose your two private cards.</small></label>
+      <label class="scenario-field card-row"><span id="scBoardLbl">Board</span><span id="scBoard" class="scenario-card-pickers"></span><small id="scBoardHelp" class="scenario-card-help">Leave empty preflop, or choose 3–5 community cards.</small></label>
       <label class="scenario-field"><span id="scPosLbl">Position</span><select id="scPos"><option>UTG</option><option>HJ</option><option>CO</option><option selected>BTN</option><option>SB</option><option>BB</option></select></label>
       <label class="scenario-field"><span id="scOppLbl">Opponents</span><input id="scOpps" type="number" min="1" max="5" value="1"></label>
       <label class="scenario-field"><span id="scStackLbl">Effective stack (BB)</span><input id="scStack" type="number" min="2" max="300" value="100"></label>
