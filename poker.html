@@ -272,12 +272,14 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 .coach-live-math .coach-info-tip{margin-top:0;}
 .coach-key-reason{border-left:3px solid var(--gold);border-radius:0 9px 9px 0;background:rgba(232,182,76,.07);padding:9px 10px;margin:0 0 11px;color:#dde4ed;font-size:12.5px;line-height:1.48;}
 .coach-key-reason-label{display:block;color:var(--gold);font-size:9.5px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;margin-bottom:4px;}
-.coach-details{border-top:1px solid var(--line);padding-top:2px;margin-top:2px;}
-.coach-details>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 2px;color:var(--dim);font-size:11.5px;font-weight:800;cursor:pointer;user-select:none;}
+.coach-details{margin-top:4px;}
+.coach-details>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 13px;color:#e4e9f0;font-size:14.5px;font-weight:850;cursor:pointer;user-select:none;border:1px solid rgba(232,182,76,.34);border-radius:10px;background:linear-gradient(135deg,rgba(232,182,76,.11),rgba(255,255,255,.035));box-shadow:inset 0 1px 0 rgba(255,255,255,.045);transition:background .15s,border-color .15s,transform .15s;}
 .coach-details>summary::-webkit-details-marker{display:none;}
-.coach-details>summary::after{content:'＋';color:var(--gold);font-size:14px;}
+.coach-details>summary::after{content:'＋';display:grid;place-items:center;flex:0 0 25px;width:25px;height:25px;color:#171109;background:var(--gold);border-radius:7px;font-size:16px;font-weight:950;line-height:1;}
+.coach-details>summary:hover{border-color:var(--gold);background:linear-gradient(135deg,rgba(232,182,76,.18),rgba(255,255,255,.055));transform:translateY(-1px);}
+.coach-details[open]>summary{color:var(--gold);border-color:rgba(232,182,76,.62);border-radius:10px 10px 7px 7px;}
 .coach-details[open]>summary::after{content:'−';}
-.coach-details-body{padding:3px 1px 1px;}
+.coach-details-body{padding:12px 2px 1px;}
 .coach-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:12px;margin-bottom:8px;color:var(--dim);}
 .coach-row b{color:var(--text);text-align:right;font-weight:600;}
 .coach-info-btn{margin-left:5px;background:none;border:1px solid var(--line);color:var(--dim);border-radius:50%;width:18px;height:18px;padding:0;font-size:11px;line-height:1;cursor:pointer;vertical-align:middle;}
