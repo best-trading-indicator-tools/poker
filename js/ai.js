@@ -951,8 +951,38 @@ function aiActorPressureBias(p, eq){
   if(sid==='maniac') return value?1.05:1.35;
   return value?0.85:0.75;
 }
+const AI_HUMAN_MODEL_STORE='sg_poker_human_model_v1';
+const AI_HUMAN_MODEL_FIELDS=['actions','preActions','preRaises','facing','folds','postActions','postBets','postCalls','postChecks'];
+const AI_ADAPT_PROFILE={
+  easy:{strength:.15,minActions:18,fullSample:70},
+  medium:{strength:.55,minActions:10,fullSample:45},
+  hard:{strength:1,minActions:5,fullSample:28}
+};
+function aiHumanModelDefault(){
+  return Object.fromEntries(AI_HUMAN_MODEL_FIELDS.map(k=>[k,0]));
+}
+function aiHumanModelNormalize(raw){
+  const m=aiHumanModelDefault();
+  for(const k of AI_HUMAN_MODEL_FIELDS)m[k]=Math.max(0,Math.round(Number(raw?.[k])||0));
+  m.preRaises=Math.min(m.preRaises,m.preActions);
+  m.folds=Math.min(m.folds,m.facing);
+  m.postBets=Math.min(m.postBets,m.postActions);
+  m.postCalls=Math.min(m.postCalls,m.postActions);
+  m.postChecks=Math.min(m.postChecks,m.postActions);
+  return m;
+}
+function aiLoadHumanModel(){
+  try{return aiHumanModelNormalize(JSON.parse(localStorage.getItem(AI_HUMAN_MODEL_STORE)||'null'));}catch(e){return aiHumanModelDefault();}
+}
+function aiSaveHumanModel(m){
+  try{localStorage.setItem(AI_HUMAN_MODEL_STORE,JSON.stringify(aiHumanModelNormalize(m)));}catch(e){}
+}
+function aiHumanModelAge(m){
+  if((m.actions||0)<=400)return;
+  for(const k of AI_HUMAN_MODEL_FIELDS)m[k]=Math.round(m[k]*.75);
+}
 function aiObserveAction(p,type,ctx){
-  if(!p?.isHuman||!state?.humanModel||state.cfg?.difficulty!=='hard')return;
+  if(!p?.isHuman||!state?.humanModel)return;
   const m=state.humanModel;
   m.actions++;
   if(state.stage==='preflop'){
@@ -965,27 +995,41 @@ function aiObserveAction(p,type,ctx){
     else if(type==='call')m.postChecks++;
   }
   if((ctx.callAmt||0)>0){m.facing++;if(type==='fold')m.folds++;}
+  aiHumanModelAge(m);
+  aiSaveHumanModel(m);
 }
-function aiHumanRead(){
-  const m=state?.humanModel;
-  if(!m||m.actions<6)return {reliable:false,fold:0.35,preAgg:0.22,postAgg:0.35,call:0.40,checks:0.35};
+function aiHumanRead(difficulty=state?.cfg?.difficulty||'medium',model=state?.humanModel){
+  const m=aiHumanModelNormalize(model);
+  const profile=AI_ADAPT_PROFILE[difficulty]||AI_ADAPT_PROFILE.medium;
+  const confidence=clamp((m.actions-profile.minActions)/(profile.fullSample-profile.minActions),0,1);
+  const smooth=(hits,total,prior,weight=12)=>(hits+prior*weight)/(total+weight);
   return {
-    reliable:true,
-    fold:m.facing?m.folds/m.facing:0.35,
-    preAgg:m.preActions?m.preRaises/m.preActions:0.22,
-    postAgg:m.postActions?m.postBets/m.postActions:0.35,
-    call:m.postActions?m.postCalls/m.postActions:0.40,
-    checks:m.postActions?m.postChecks/m.postActions:0.35
+    reliable:m.actions>=profile.minActions,
+    confidence,strength:profile.strength,effective:profile.strength*confidence,sample:m.actions,
+    fold:smooth(m.folds,m.facing,.40,10),
+    preAgg:smooth(m.preRaises,m.preActions,.22,14),
+    postAgg:smooth(m.postBets,m.postActions,.34,14),
+    call:smooth(m.postCalls,m.postActions,.32,14),
+    checks:smooth(m.postChecks,m.postActions,.34,14)
   };
 }
 function aiHumanExploit(p){
-  if(state.cfg?.difficulty!=='hard'||!inHand().some(q=>q.isHuman&&!q.folded))return {margin:0,raiseF:0,bluff:0,size:0};
+  if(!inHand().some(q=>q.isHuman&&!q.folded))return {margin:0,raiseF:0,bluff:0,size:0,effective:0};
   const r=aiHumanRead();
-  if(!r.reliable)return {margin:0,raiseF:0,bluff:0,size:0};
+  if(!r.reliable)return {margin:0,raiseF:0,bluff:0,size:0,effective:0};
   const overfold=clamp((r.fold-0.42)*0.55,-0.06,0.13);
   const sticky=clamp((0.34-r.fold)*0.45,0,0.10)+clamp((r.call-0.42)*0.35,0,0.08);
   const aggressive=clamp((r.postAgg-0.40)*0.28,0,0.09);
-  return {margin:-sticky*0.35,raiseF:overfold+sticky*0.25-aggressive*0.25,bluff:overfold-sticky,size:sticky+aggressive*0.35};
+  const passive=clamp((r.checks-.42)*.32,0,.08);
+  const preAgg=clamp((r.preAgg-.27)*.25,-.035,.06);
+  const w=r.effective;
+  return {
+    margin:(-sticky*.35+aggressive*.28+preAgg*.22)*w,
+    raiseF:(overfold+sticky*.25-aggressive*.25+passive)*w,
+    bluff:(overfold-sticky+passive*.55)*w,
+    size:(sticky+aggressive*.35)*w,
+    effective:w
+  };
 }
 function aiVillainFoldChance(actor,q,betSize,potBefore,d,tex){
   if(q.allIn||q.out||q.folded) return 0;
@@ -993,9 +1037,9 @@ function aiVillainFoldChance(actor,q,betSize,potBefore,d,tex){
   const ratio=betSize/pot;
   let f=0.26;
   f+=aiStyleFoldBias(q);
-  if(q.isHuman&&d==='hard'){
-    const r=aiHumanRead();
-    if(r.reliable)f+=clamp((r.fold-0.35)*0.65,-0.12,0.22);
+  if(q.isHuman){
+    const r=aiHumanRead(d);
+    if(r.reliable)f+=clamp((r.fold-0.40)*0.65,-0.12,0.22)*r.effective;
   }
   if(q.checkedStreet||(q.checkStreets||[]).includes(state.stage)) f+=0.12;
   if((q.checkStreets||[]).length>=2) f+=0.08;

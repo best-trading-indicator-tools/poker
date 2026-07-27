@@ -539,6 +539,19 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
 #revFilter button.on{border-color:var(--gold);color:var(--gold);background:rgba(212,175,55,.08);}
 #revSpark{margin-bottom:14px;}
 #revRewards{margin-bottom:14px;}
+.adaptive-ai-review{margin:0 0 16px;border:1px solid rgba(113,181,224,.38);border-radius:13px;background:linear-gradient(145deg,rgba(65,139,190,.11),rgba(255,255,255,.018));padding:13px;}
+.adaptive-ai-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}
+.adaptive-ai-head h3{margin:0;color:#8fd0f8;font-size:14px;}
+.adaptive-ai-head p{margin:4px 0 0;color:var(--dim);font-size:11.5px;line-height:1.4;}
+.adaptive-ai-confidence{flex:0 0 auto;border-radius:999px;padding:5px 9px;background:rgba(113,181,224,.12);color:#a8d9f8;font-size:10px;font-weight:850;}
+.adaptive-ai-meters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:11px;}
+.adaptive-ai-meter{border:1px solid var(--line);border-radius:9px;background:rgba(12,17,24,.44);padding:8px;}
+.adaptive-ai-meter b{display:block;font-size:11.5px;color:var(--text);}
+.adaptive-ai-meter span{display:block;margin-top:3px;font-size:10px;color:var(--dim);}
+.adaptive-ai-meter.current{border-color:var(--gold);background:rgba(232,182,76,.08);}
+.adaptive-ai-meter.current b{color:var(--gold);}
+.adaptive-ai-read{margin:10px 0 0;padding:9px 10px;border-left:3px solid #71b5e0;border-radius:0 8px 8px 0;background:rgba(113,181,224,.06);color:#dbe5ee;font-size:11.5px;line-height:1.45;}
+@media(max-width:650px){.adaptive-ai-head{display:block}.adaptive-ai-confidence{display:inline-block;margin-top:8px}.adaptive-ai-meters{grid-template-columns:1fr}}
 .reward-review{border:1px solid rgba(230,180,60,.35);background:rgba(230,180,60,.06);border-radius:11px;padding:10px 12px;font-size:12px;color:var(--dim);}
 .reward-review b{color:var(--gold);}
 .reward-review .rr-row{display:flex;justify-content:space-between;gap:10px;margin-top:5px;}
@@ -1366,6 +1379,7 @@ body.fl #chipPreview{display:none!important;}
     <div id="revSummary"></div>
     <div id="revSpark"></div>
     <div id="revRewards"></div>
+    <div id="revAdaptiveAI"></div>
     <div id="revFocus"></div>
     <div id="revAnalytics"></div>
     <div id="revLeaks"></div>

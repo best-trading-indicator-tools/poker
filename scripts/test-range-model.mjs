@@ -479,6 +479,28 @@ const result=vm.runInContext(`(()=>{
   if(!['FOLD','CALL','RAISE'].includes(customScenario.rec)||
       !(customScenario.eq>=0&&customScenario.eq<=1)||customScenario.stage!=='flop')
     throw new Error('custom scenario analysis invalid '+JSON.stringify(customScenario));
+  const adaptiveModel={actions:80,preActions:28,preRaises:12,facing:30,folds:20,
+    postActions:52,postBets:24,postCalls:8,postChecks:20};
+  const adaptiveReads=['easy','medium','hard'].map(d=>aiHumanRead(d,adaptiveModel));
+  if(!adaptiveReads.every(r=>r.reliable)||
+      !(adaptiveReads[0].effective<adaptiveReads[1].effective&&adaptiveReads[1].effective<adaptiveReads[2].effective))
+    throw new Error('adaptive strength must increase with difficulty '+JSON.stringify(adaptiveReads));
+  state.humanModel={...adaptiveModel};
+  state.players[0].isHuman=true;
+  state.players[0].folded=false;
+  state.players[0].out=false;
+  const adaptiveExploit={};
+  for(const d of ['easy','medium','hard']){
+    state.cfg.difficulty=d;
+    adaptiveExploit[d]=aiHumanExploit(state.players[1]);
+  }
+  if(!(Math.abs(adaptiveExploit.easy.bluff)<Math.abs(adaptiveExploit.medium.bluff)&&
+      Math.abs(adaptiveExploit.medium.bluff)<Math.abs(adaptiveExploit.hard.bluff)))
+    throw new Error('adaptive exploit must be difficulty weighted '+JSON.stringify(adaptiveExploit));
+  aiSaveHumanModel(adaptiveModel);
+  const adaptiveReload=aiLoadHumanModel();
+  if(adaptiveReload.actions!==adaptiveModel.actions||adaptiveReload.folds!==adaptiveModel.folds)
+    throw new Error('adaptive player profile did not persist '+JSON.stringify(adaptiveReload));
   return {policy,jamAA,jamA5,topCheck,airCheck,kingBeforeCheck,kingAfterCheck,
     effective:metrics.effective,legal:metrics.legal,underpair,withBackdoor,smallIp,
     underpairDecision:{rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL},
@@ -497,6 +519,7 @@ const result=vm.runInContext(`(()=>{
       squeezeRisk:playersBehind.squeezeRisk,squeezeNeed:playersBehind.requiredEq,committedOppCount
     },
     customScenario:{rec:customScenario.rec,eq:customScenario.eq,stage:customScenario.stage},
+    adaptiveAI:{reads:adaptiveReads.map(r=>({effective:r.effective,sample:r.sample})),exploit:adaptiveExploit},
     ordinals};
 })()`,context);
 

@@ -32,6 +32,15 @@ planLessonPfFace:"Before calling a raise, compare the price with usable—not ra
 planLessonCbet:"Defend c-bets according to board texture, bet size and future-street playability—not just whether you paired.",
 planLessonMultiway:"Tighten up as more opponents enter. One-pair hands and weak draws lose value quickly in multiway pots.",
 planLessonRiver:"On the river, count the value hands and credible bluffs. Do not pay simply because your hand was strong earlier.",
+adaptiveAiTitle:"What the opponents learn about you",adaptiveAiSub:"Only your visible actions are measured — never your hidden cards.",adaptiveAiSample:n=>`${n} observed action${n!==1?'s':''}`,adaptiveAiEarly:"Early read",adaptiveAiReliable:"Reliable read",
+adaptiveAiEasy:"Easy · barely adapts",adaptiveAiMedium:"Medium · adapts carefully",adaptiveAiHard:"Hard · fully adapts",
+adaptiveAiNeedMore:n=>`The bots need ${n} more visible actions before this difficulty starts adapting.`,
+adaptiveAiBalanced:"No strong tendency yet. The bots keep their normal strategy.",
+adaptiveAiOverfold:"You often fold when facing pressure. The bots will bluff and apply pressure more often.",
+adaptiveAiSticky:"You call pressure frequently. The bots will bluff less and value-bet stronger hands for larger sizes.",
+adaptiveAiAggressive:"You bet and raise often after the flop. The bots will continue tighter and trap more often.",
+adaptiveAiPassive:"You check frequently after the flop. The bots will stab more often when you show weakness.",
+adaptiveAiPreAgg:"You raise often before the flop. The bots will defend with stronger ranges.",
 revDecisionsTitle:"Costliest decisions",revDecisionsSub:"Filter your mistakes, then open the exact hand to understand the action in context.",
 revSpot:"Spot",revStreet:"Street",revPeriod:"Sessions",revAny:"All",revRecent10:"Latest 10",revRecent25:"Latest 25",
 revReplayHand:"Replay hand",revNoDecisions:"No mistakes match these filters. Try a broader filter or play another session.",
@@ -157,7 +166,16 @@ planLessonPfFace:"Avant de payer une relance, comparez le prix à l'équité ré
 planLessonCbet:"Défendez les c-bets selon la texture du board, la taille de mise et la jouabilité des streets suivantes — pas seulement parce que vous avez touché.",
 planLessonMultiway:"Resserrez votre range quand plusieurs adversaires entrent. Une paire et les tirages faibles perdent vite de la valeur en multiway.",
 planLessonRiver:"À la rivière, comptez les mains de value et les bluffs crédibles. Ne payez pas uniquement parce que votre main était forte plus tôt.",
-revDecisionsTitle:"Décisions les plus coûteuses",revDecisionsSub:"Filtrez vos erreurs puis ouvrez la main exacte pour revoir toute l'action.",
+adaptiveAiTitle:"Ce que les adversaires apprennent sur vous",adaptiveAiSub:"Seules vos actions visibles sont mesurées — jamais vos cartes cachées.",adaptiveAiSample:n=>`${n} action${n!==1?'s':''} observée${n!==1?'s':''}`,adaptiveAiEarly:"Lecture précoce",adaptiveAiReliable:"Lecture fiable",
+adaptiveAiEasy:"Facile · s’adapte à peine",adaptiveAiMedium:"Moyen · s’adapte prudemment",adaptiveAiHard:"Difficile · s’adapte pleinement",
+adaptiveAiNeedMore:n=>`Les bots ont besoin de ${n} action${n!==1?'s':''} visible${n!==1?'s':''} supplémentaire${n!==1?'s':''} avant de s’adapter à ce niveau.`,
+adaptiveAiBalanced:"Aucune tendance forte pour le moment. Les bots conservent leur stratégie normale.",
+adaptiveAiOverfold:"Vous vous couchez souvent sous la pression. Les bots vont bluffer et mettre la pression plus souvent.",
+adaptiveAiSticky:"Vous payez souvent sous la pression. Les bots vont moins bluffer et miser plus gros leurs bonnes mains.",
+adaptiveAiAggressive:"Vous misez et relancez souvent après le flop. Les bots vont continuer plus serré et tendre davantage de pièges.",
+adaptiveAiPassive:"Vous checkez souvent après le flop. Les bots vont miser plus souvent quand vous montrez de la faiblesse.",
+adaptiveAiPreAgg:"Vous relancez souvent préflop. Les bots vont défendre avec des ranges plus fortes.",
+revDecisionsTitle:"Décisions les plus coûteuses",revDecisionsSub:"Filtrez vos erreurs puis ouvrez la main exacte pour revoir toute l’action.",
 revSpot:"Spot",revStreet:"Street",revPeriod:"Sessions",revAny:"Tous",revRecent10:"10 dernières",revRecent25:"25 dernières",
 revReplayHand:"Rejouer la main",revNoDecisions:"Aucune erreur ne correspond à ces filtres. Élargissez-les ou jouez une nouvelle session.",
 revPractice:n=>`Pratiquer ${n} spot${n!==1?'s':''} similaire${n!==1?'s':''}`,practiceTitle:"Entraînement ciblé",practiceSub:"Décidez d'abord. La réponse du coach apparaît ensuite.",practiceProgress:(n,t)=>`Spot ${n} sur ${t}`,
@@ -282,6 +300,15 @@ planLessonPfFace:"Antes de igualar una subida, compara el precio con la equity r
 planLessonCbet:"Defiende c-bets según la textura, el tamaño y la jugabilidad futura, no solo porque conectaste algo.",
 planLessonMultiway:"Cierra tu rango cuando entran más rivales. Las parejas y proyectos débiles pierden valor rápidamente en botes multiway.",
 planLessonRiver:"En el river, cuenta las manos de valor y los faroles creíbles. No pagues solo porque tu mano era fuerte antes.",
+adaptiveAiTitle:"Lo que los rivales aprenden de ti",adaptiveAiSub:"Solo se miden tus acciones visibles, nunca tus cartas ocultas.",adaptiveAiSample:n=>`${n} acción${n!==1?'es':''} observada${n!==1?'s':''}`,adaptiveAiEarly:"Lectura inicial",adaptiveAiReliable:"Lectura fiable",
+adaptiveAiEasy:"Fácil · apenas se adapta",adaptiveAiMedium:"Medio · se adapta con cuidado",adaptiveAiHard:"Difícil · se adapta plenamente",
+adaptiveAiNeedMore:n=>`Los bots necesitan ${n} acción${n!==1?'es':''} visible${n!==1?'s':''} más antes de adaptarse en este nivel.`,
+adaptiveAiBalanced:"Aún no hay una tendencia fuerte. Los bots mantienen su estrategia normal.",
+adaptiveAiOverfold:"Te retiras a menudo bajo presión. Los bots harán más faroles y presionarán más.",
+adaptiveAiSticky:"Igualas a menudo bajo presión. Los bots harán menos faroles y apostarán más fuerte por valor.",
+adaptiveAiAggressive:"Apuestas y subes a menudo postflop. Los bots continuarán con rangos más fuertes y tenderán más trampas.",
+adaptiveAiPassive:"Pasas a menudo postflop. Los bots apostarán más cuando muestras debilidad.",
+adaptiveAiPreAgg:"Subes a menudo preflop. Los bots defenderán con rangos más fuertes.",
 revDecisionsTitle:"Decisiones más costosas",revDecisionsSub:"Filtra tus errores y abre la mano exacta para revisar la acción completa.",
 revSpot:"Situación",revStreet:"Calle",revPeriod:"Sesiones",revAny:"Todas",revRecent10:"Últimas 10",revRecent25:"Últimas 25",
 revReplayHand:"Repetir mano",revNoDecisions:"Ningún error coincide con estos filtros. Amplía los filtros o juega otra sesión.",
@@ -2833,6 +2860,33 @@ function cashBB100(games){
   const hands=cash.reduce((s,g)=>s+g.hands,0);
   return hands>0?Math.round(bbTot/hands*1000)/10:0;
 }
+function renderAdaptiveAIReview(games){
+  if(typeof aiHumanRead!=='function')return '';
+  const difficulty=(state?.cfg?.difficulty||games?.[0]?.diff||'medium').toLowerCase();
+  const read=aiHumanRead(difficulty);
+  const profile=AI_ADAPT_PROFILE[difficulty]||AI_ADAPT_PROFILE.medium;
+  let insight=T('adaptiveAiBalanced');
+  if(read.fold>.49)insight=T('adaptiveAiOverfold');
+  else if(read.fold<.32||read.call>.41)insight=T('adaptiveAiSticky');
+  else if(read.postAgg>.43)insight=T('adaptiveAiAggressive');
+  else if(read.checks>.42)insight=T('adaptiveAiPassive');
+  else if(read.preAgg>.30)insight=T('adaptiveAiPreAgg');
+  if(!read.reliable)insight=T('adaptiveAiNeedMore')(Math.max(0,profile.minActions-read.sample));
+  const confidence=Math.round(read.confidence*100);
+  const modes=[
+    ['easy',T('adaptiveAiEasy'),15],
+    ['medium',T('adaptiveAiMedium'),55],
+    ['hard',T('adaptiveAiHard'),100]
+  ];
+  const strengthLabel=lang==='fr'?'de force adaptative':lang==='es'?'de fuerza adaptativa':'adaptation strength';
+  return `<section class="adaptive-ai-review"><div class="adaptive-ai-head"><div>`+
+    `<h3>🧠 ${T('adaptiveAiTitle')}</h3><p>${T('adaptiveAiSub')}</p></div>`+
+    `<span class="adaptive-ai-confidence">${T('adaptiveAiSample')(read.sample)} · ${read.reliable?T('adaptiveAiReliable'):T('adaptiveAiEarly')} ${confidence}%</span></div>`+
+    `<div class="adaptive-ai-meters">${modes.map(([id,label,pct])=>
+      `<div class="adaptive-ai-meter ${id===difficulty?'current':''}"><b>${label}</b>`+
+      `<span>${pct}% ${strengthLabel}${id===difficulty?' · ●':''}</span></div>`
+    ).join('')}</div><p class="adaptive-ai-read">💡 ${insight}</p></section>`;
+}
 function showSessionReview(){
   if(!HAS_DOM)return;
   const allGames=loadGames().filter(g=>!g.mp).reverse();
@@ -2881,6 +2935,7 @@ function showSessionReview(){
   $('revSummary').innerHTML=summary;
   $('revSpark').innerHTML=n>=2?evSparklineSVG(games.slice().reverse()):'';
   $('revRewards').innerHTML=renderRewardReview();
+  $('revAdaptiveAI').innerHTML=renderAdaptiveAIReview(games);
   $('revFocus').innerHTML=renderReviewFocus(games);
   $('revAnalytics').innerHTML=renderAdvancedAnalytics(games);
   $('revLeaks').innerHTML=renderRevLeaks(games.slice().reverse());
@@ -3460,8 +3515,10 @@ function initUI(){
       localStorage.removeItem('sg_poker_games');
       localStorage.removeItem('sg_poker_scenarios');
       localStorage.removeItem(IMPROVEMENT_STORE);
+      localStorage.removeItem('sg_poker_human_model_v1');
     }catch(e){}
     Object.assign(lifeStats,{hands:0,won:0,net:0,biggest:0,decisions:0,followed:0});
+    if(state&&typeof aiHumanModelDefault==='function')state.humanModel=aiHumanModelDefault();
     applyRewardCosmetics();
     renderRewardTop();
     refreshResume();
