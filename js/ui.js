@@ -121,6 +121,8 @@ youWinSub:(n,h)=>`Outlasted ${n} opponents over ${h} hands.`,
 bustedTitle:p=>`Busted in ${p} place`,bustedSub:h=>`Survived ${h} hands. Run it back?`,
 evTotal:"📉 Total EV leaked",deviations:"deviations",cleanGame:"No EV leaked vs the coach — clean game! 🎯",smallerLeaks:"smaller leaks",
 handNavP:"‹ hand",handNavN:"hand ›",streetNavP:"‹ street",streetNavN:"street ›",jumpHand:"Go to hand",jumpGo:"Go",handNotFound:n=>`Hand #${n} is not available in this session.`,close:"Close",replayTitle:"Hand replay",
+cfTitle:"Counterfactual explorer",cfSub:"Compare what could have happened at each of your decisions.",cfDecision:n=>`Decision ${n}`,cfActual:"You chose",cfCoach:"Coach",cfBest:"Highest EV",cfEv:"Estimated EV",cfLoss:"Gap to best",cfCaptured:"Captured at the table",cfEstimated:"Reconstructed estimate",
+cfFoldWhy:"Fold risks no more chips and has 0 additional chip EV.",cfCheckWhy:eq=>`Check costs nothing, keeps your hand alive and realizes about ${eq}% equity without growing the pot.`,cfCallWhy:(eq,need,amt)=>`Call invests ${amt} with about ${eq}% usable equity versus ${need}% required.`,cfRaiseWhy:(eq,amt)=>`Raise to ${amt} combines about ${eq}% equity with modeled fold equity when opponents release weaker ranges.`,cfAssumption:"EV is directional, not a promise: future cards and opponent responses remain uncertain.",
 won:"won",foldedTag:"folded",showdown:"showdown",fullHand:"Full hand",preflop:"Preflop",flop:"Flop",turnSt:"Turn",riverSt:"River",noHands:"No completed hand yet this game.",
 ord:n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}},
 fr:{sub:"Tournoi de Texas Hold'em No-Limit contre l'IA",subCash:"Cash game Texas Hold'em No-Limit contre l'IA",modeLbl:"Mode de jeu",modeSng:"Sit & Go",modeCash:"Cash game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
@@ -244,6 +246,8 @@ youWinSub:(n,h)=>`Vous avez survécu à ${n} adversaires en ${h} mains.`,
 bustedTitle:p=>`Éliminé à la ${p} place`,bustedSub:h=>`${h} mains jouées. On remet ça ?`,
 evTotal:"📉 EV totale perdue",deviations:"écarts",cleanGame:"Aucune EV perdue face au coach — partie parfaite ! 🎯",smallerLeaks:"autres fuites mineures",
 handNavP:"‹ main",handNavN:"main ›",streetNavP:"‹ rue",streetNavN:"rue ›",jumpHand:"Aller à la main",jumpGo:"Aller",handNotFound:n=>`La main nº ${n} n'est pas disponible dans cette session.`,close:"Fermer",replayTitle:"Revoir la main",
+cfTitle:"Explorateur contrefactuel",cfSub:"Comparez ce qui aurait pu se produire à chacune de vos décisions.",cfDecision:n=>`Décision ${n}`,cfActual:"Votre choix",cfCoach:"Coach",cfBest:"EV maximale",cfEv:"EV estimée",cfLoss:"Écart au meilleur choix",cfCaptured:"Capturé à la table",cfEstimated:"Estimation reconstruite",
+cfFoldWhy:"Se coucher ne risque aucun jeton supplémentaire et vaut 0 EV additionnelle.",cfCheckWhy:eq=>`Checker ne coûte rien, garde votre main en jeu et réalise environ ${eq} % d'équité sans grossir le pot.`,cfCallWhy:(eq,need,amt)=>`Payer investit ${amt} avec environ ${eq} % d'équité utilisable pour ${need} % requis.`,cfRaiseWhy:(eq,amt)=>`Relancer à ${amt} combine environ ${eq} % d'équité avec la fold equity modélisée quand les adversaires abandonnent leurs ranges faibles.`,cfAssumption:"L'EV indique une direction, pas une promesse : les prochaines cartes et les réponses adverses restent incertaines.",
 won:"gagné",foldedTag:"couché",showdown:"abattage",fullHand:"Main complète",preflop:"Pré-flop",flop:"Flop",turnSt:"Turn",riverSt:"River",noHands:"Aucune main terminée pour cette partie.",
 ord:n=>n===1?'1re':n+'e'},
 es:{sub:"Torneo de Texas Hold'em No-Limit contra la IA",subCash:"Cash game Texas Hold'em No-Limit contra la IA",modeLbl:"Modo de juego",modeSng:"Sit & Go",modeCash:"Cash game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
@@ -367,6 +371,8 @@ youWinSub:(n,h)=>`Sobreviviste a ${n} rivales en ${h} manos.`,
 bustedTitle:p=>`Eliminado en ${p} lugar`,bustedSub:h=>`Aguantaste ${h} manos. ¿Otra vez?`,
 evTotal:"📉 EV total perdido",deviations:"desviaciones",cleanGame:"Sin EV perdido frente al coach — ¡partida perfecta! 🎯",smallerLeaks:"fugas menores",
 handNavP:"‹ mano",handNavN:"mano ›",streetNavP:"‹ calle",streetNavN:"calle ›",jumpHand:"Ir a la mano",jumpGo:"Ir",handNotFound:n=>`La mano n.º ${n} no está disponible en esta sesión.`,close:"Cerrar",replayTitle:"Repetición",
+cfTitle:"Explorador contrafactual",cfSub:"Compara qué podría haber ocurrido en cada una de tus decisiones.",cfDecision:n=>`Decisión ${n}`,cfActual:"Elegiste",cfCoach:"Coach",cfBest:"EV máxima",cfEv:"EV estimada",cfLoss:"Diferencia con la mejor",cfCaptured:"Capturado en la mesa",cfEstimated:"Estimación reconstruida",
+cfFoldWhy:"Retirarse no arriesga más fichas y tiene 0 EV adicional.",cfCheckWhy:eq=>`Pasar no cuesta nada, mantiene viva tu mano y realiza cerca del ${eq}% de equity sin aumentar el bote.`,cfCallWhy:(eq,need,amt)=>`Igualar invierte ${amt} con cerca de ${eq}% de equity utilizable frente al ${need}% necesario.`,cfRaiseWhy:(eq,amt)=>`Subir a ${amt} combina cerca de ${eq}% de equity con fold equity modelada cuando los rivales abandonan sus rangos débiles.`,cfAssumption:"La EV es orientativa, no una promesa: las cartas futuras y respuestas rivales siguen siendo inciertas.",
 won:"ganó",foldedTag:"retirado",showdown:"showdown",fullHand:"Mano completa",preflop:"Pre-flop",flop:"Flop",turnSt:"Turn",riverSt:"River",noHands:"Aún no hay manos terminadas en esta partida.",
 ord:n=>n+'º'}};
 try{lang=localStorage.getItem('sg_poker_lang')||'en';}catch(e){}
@@ -605,7 +611,7 @@ function openReviewDecision(d){
   const hands=replayHandsForGame(d.game);
   const idx=hands.findIndex(h=>Number(h.hand)===Number(d.hand));
   if(idx<0)return;
-  rpAll=hands;rpHandIdx=idx;rpStreet=99;
+  rpAll=hands;rpHandIdx=idx;rpStreet=99;rpDecisionIdx=0;rpCfAction='';
   closeDialog($('reviewOv'));rpRender();openDialog($('replayOv'),'rpTitle');
 }
 function renderReviewDecisions(games){
@@ -2331,7 +2337,7 @@ function updateCoach(p){
     const cb=$('chartViewBtn');
     if(cb) cb.onclick=()=>showChartMatrix(activeChart,R.code);
   }
-  coachRecNow={rec,stage:state.stage,evs,eq,eqAdj:R.eqAdj??eq,odds,needEq:R.needEq,callAmt,pot,
+  coachRecNow={rec,stage:state.stage,evs,coachT:R.coachT,eq,eqAdj:R.eqAdj??eq,odds,needEq:R.needEq,callAmt,pot,
     airPen:R.airPen||0,opps,pos,confidenceKind:coachConfidence(R).kind};
 
   /* GTO mini-solver: heads-up postflop spots */
@@ -2424,7 +2430,7 @@ function renderStats(){
   renderRewardTop();
 }
 /* ---------- hand replayer: browse hands (this game or saved history), step through streets ---------- */
-let rpHandIdx=0, rpStreet=99, rpAll=null;
+let rpHandIdx=0, rpStreet=99, rpAll=null, rpDecisionIdx=0, rpCfAction='';
 const STREET_NM=['Preflop','Flop','Turn','River'];
 function findReplayHandIndex(hands,value,currentIdx=0){
   const wanted=Number(value);
@@ -2449,6 +2455,7 @@ function jumpReplayToHand(value){
   if(input)input.setCustomValidity('');
   rpHandIdx=idx;
   rpStreet=99;
+  rpDecisionIdx=0;rpCfAction='';
   rpRender();
   return true;
 }
@@ -2456,6 +2463,78 @@ function parseCardCode(code){
   return {r:+(RANK_CH_INV[code.slice(0,-1)]||2), s:Math.max(0,'shdc'.indexOf(code.slice(-1)))};
 }
 const RANK_CH_INV=Object.fromEntries(Object.entries(RANK_CH).map(([k,v])=>[v,k]));
+function counterfactualActionKey(action){
+  return action==='fold'||action==='FOLD'?'FOLD':action==='raise'||action==='RAISE'||action==='ALLIN'?'RAISE':'CALL';
+}
+function counterfactualModel(d){
+  const captured=d&&d.evs&&['FOLD','CALL','RAISE'].every(k=>Number.isFinite(Number(d.evs[k])));
+  if(captured)return {evs:Object.fromEntries(['FOLD','CALL','RAISE'].map(k=>[k,Math.round(Number(d.evs[k]))])),captured:true};
+  const eq=clamp(Number(d?.eqAdj??d?.eq)||0,0,1);
+  const pot=Math.max(0,Number(d?.pot)||0),callAmt=Math.max(0,Number(d?.callAmt)||0);
+  const opps=Math.max(1,Number(d?.opps)||1);
+  const raiseCost=Math.max(callAmt*2,Math.round(pot*.66),1);
+  const foldEquity=clamp(.42-.09*(opps-1),.08,.45);
+  return {captured:false,evs:{
+    FOLD:0,
+    CALL:Math.round(callAmt>0?eq*(pot+callAmt)-callAmt:eq*pot),
+    RAISE:Math.round(foldEquity*pot+(1-foldEquity)*(eq*(pot+2*raiseCost)-raiseCost))
+  }};
+}
+function counterfactualVisibleDecisions(hand){
+  const stageIndex={preflop:0,flop:1,turn:2,river:3};
+  return (hand?.myDecisions||[]).filter(d=>(stageIndex[d.stage]??3)<=rpStreet);
+}
+function counterfactualActionLabel(key,d){
+  if(key==='FOLD')return recWord('FOLD');
+  if(key==='CALL')return recWord((Number(d.callAmt)||0)>0?'CALL':'CHECK');
+  return recWord(d.rec==='ALLIN'?'ALLIN':'RAISE');
+}
+function renderCounterfactualExplorer(hand){
+  const decisions=counterfactualVisibleDecisions(hand);
+  if(!decisions.length)return '';
+  rpDecisionIdx=clamp(rpDecisionIdx,0,decisions.length-1);
+  const d=decisions[rpDecisionIdx],model=counterfactualModel(d),keys=['FOLD','CALL','RAISE'];
+  const best=keys.reduce((a,k)=>model.evs[k]>model.evs[a]?k:a,keys[0]);
+  const actual=counterfactualActionKey(d.action),coach=counterfactualActionKey(d.rec);
+  if(!keys.includes(rpCfAction))rpCfAction=best;
+  const selected=rpCfAction,eq=Math.round(clamp(Number(d.eqAdj??d.eq)||0,0,1)*100);
+  const need=Math.round(clamp(Number(d.needEq)||0,0,1)*100);
+  const raiseTo=d.raiseTo>0?usd(d.raiseTo):usd(Math.max(Number(d.callAmt)||0,Math.round((Number(d.pot)||0)*.66)));
+  const why=selected==='FOLD'?T('cfFoldWhy')
+    :selected==='CALL'?(Number(d.callAmt)||0)>0?T('cfCallWhy')(eq,need,usd(Number(d.callAmt)||0)):T('cfCheckWhy')(eq)
+    :T('cfRaiseWhy')(eq,raiseTo);
+  return `<section id="rpCounterfactual" class="cf-explorer"><div class="cf-head"><div><h3>↗ ${T('cfTitle')}</h3><p>${T('cfSub')}</p></div>`+
+    `<span class="cf-source ${model.captured?'captured':'estimated'}">${T(model.captured?'cfCaptured':'cfEstimated')}</span></div>`+
+    `<div class="cf-decision-tabs">${decisions.map((x,i)=>`<button type="button" data-cf-decision="${i}" class="${i===rpDecisionIdx?'on':''}">`+
+      `${T('cfDecision')(i+1)} · ${reviewStreetLabel(x.stage)}</button>`).join('')}</div>`+
+    `<div class="cf-context"><span>${T('cfActual')}: <b>${counterfactualActionLabel(actual,d)}</b></span>`+
+      `<span>${T('cfCoach')}: <b>${counterfactualActionLabel(coach,d)}</b></span></div>`+
+    `<div class="cf-actions">${keys.map(key=>{
+      const gap=Math.max(0,model.evs[best]-model.evs[key]);
+      return `<button type="button" data-cf-action="${key}" class="cf-action ${key===selected?'selected':''} ${key===best?'best':''}">`+
+        `<span class="cf-action-name">${counterfactualActionLabel(key,d)}</span>`+
+        `<strong>${model.evs[key]>=0?'+':'−'}${usd(Math.abs(model.evs[key]))}</strong>`+
+        `<small>${T('cfEv')}${gap?` · ${T('cfLoss')} −${usd(gap)}`:''}</small>`+
+        `<em>${key===actual?T('cfActual'):''}${key===actual&&key===coach?' · ':''}${key===coach?T('cfCoach'):''}${key===best?`${key===actual||key===coach?' · ':''}${T('cfBest')}`:''}</em></button>`;
+    }).join('')}</div>`+
+    `<div class="cf-explanation"><b>${counterfactualActionLabel(selected,d)}</b><p>${why}</p><small>${T('cfAssumption')}</small></div></section>`;
+}
+function wireCounterfactualExplorer(hand){
+  const root=$('rpCounterfactual');
+  if(!root)return;
+  const refresh=()=>{
+    const current=$('rpCounterfactual');
+    if(!current)return;
+    current.outerHTML=renderCounterfactualExplorer(hand);
+    wireCounterfactualExplorer(hand);
+  };
+  root.querySelectorAll('[data-cf-decision]').forEach(btn=>btn.onclick=()=>{
+    rpDecisionIdx=Number(btn.dataset.cfDecision)||0;rpCfAction='';refresh();
+  });
+  root.querySelectorAll('[data-cf-action]').forEach(btn=>btn.onclick=()=>{
+    rpCfAction=btn.dataset.cfAction;refresh();
+  });
+}
 function rpRender(){
   if(!HAS_DOM)return;
   const arr=rpAll||(state&&state.gameHands)||[];
@@ -2505,13 +2584,16 @@ function rpRender(){
       `<span class="tag${q.won&&final?' win':''}">${final?(q.won?T('won'):q.folded?T('foldedTag'):T('showdown')):''}</span></div>`
     ).join('')+
     (final?`<div class="rp-result">${e.result}</div>`:'')+
+    renderCounterfactualExplorer(e)+
     `<div class="rp-log">${shownLog.map(l=>`<div>${l}</div>`).join('')}</div>`;
+  wireCounterfactualExplorer(e);
 }
 function showReplay(){
   if(!HAS_DOM)return;
   rpAll=null;           // in-game: this game's hands
   rpHandIdx=((state&&state.gameHands)||[]).length-1;
   rpStreet=99;          // open on the final street
+  rpDecisionIdx=0;rpCfAction='';
   rpRender();
   openDialog($('replayOv'),'rpTitle');
 }
@@ -2520,7 +2602,7 @@ function showHistoryReplay(){
   let hist=[];
   try{hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');}catch(e){}
   rpAll=hist;
-  rpHandIdx=hist.length-1; rpStreet=99;
+  rpHandIdx=hist.length-1; rpStreet=99;rpDecisionIdx=0;rpCfAction='';
   rpRender();
   openDialog($('replayOv'),'rpTitle');
 }
@@ -2642,6 +2724,8 @@ function humanAct(type,amount){
     const decisionContext={stage:state.stage,rec:r,action:type,followed,evLoss,spot,opps,
       pos:coachRecNow.pos||'',confidenceKind:coachRecNow.confidenceKind||'heuristic',
       pot:coachRecNow.pot,callAmt:coachRecNow.callAmt,eq:coachRecNow.eq,needEq:coachRecNow.needEq,
+      eqAdj:coachRecNow.eqAdj,raiseTo:coachRecNow.coachT||0,
+      evs:coachRecNow.evs?{FOLD:coachRecNow.evs.FOLD,CALL:coachRecNow.evs.CALL,RAISE:coachRecNow.evs.RAISE}:null,
       stackBB:state.bb>0?Math.round((p.chips+p.bet)/state.bb*10)/10:0,potType,
       logIndex:(state.handLog||[]).length};
     state.humanDecisions.push(decisionContext);
@@ -2824,7 +2908,7 @@ function showSessionReview(){
       const openGame=()=>{
         const g=games[Number(el.dataset.idx)];
         rpAll=replayHandsForGame(g);
-        rpHandIdx=0; rpStreet=99;
+        rpHandIdx=0; rpStreet=99;rpDecisionIdx=0;rpCfAction='';
         closeDialog($('reviewOv'));
         rpRender();
         openDialog($('replayOv'),'rpTitle');
@@ -3412,8 +3496,8 @@ function initUI(){
     }else if(k==='n'&&!$('nextHandBtn').classList.contains('hidden')){e.preventDefault();doNextHand();}
   });
   /* --- replayer navigation --- */
-  $('rpPrevH').onclick=()=>{rpHandIdx--;rpStreet=99;rpRender();};
-  $('rpNextH').onclick=()=>{rpHandIdx++;rpStreet=99;rpRender();};
+  $('rpPrevH').onclick=()=>{rpHandIdx--;rpStreet=99;rpDecisionIdx=0;rpCfAction='';rpRender();};
+  $('rpNextH').onclick=()=>{rpHandIdx++;rpStreet=99;rpDecisionIdx=0;rpCfAction='';rpRender();};
   $('rpPrevS').onclick=()=>{rpStreet--;rpRender();};
   $('rpNextS').onclick=()=>{rpStreet++;rpRender();};
   $('rpJump').onsubmit=e=>{e.preventDefault();jumpReplayToHand($('rpHandInput').value);};

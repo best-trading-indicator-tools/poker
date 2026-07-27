@@ -142,10 +142,20 @@ const result=vm.runInContext(`(()=>{
   if(!pfAfter||pfAfter.mastery!==71||pfAfter.evidence!==7||pfAfter.latest.score!==4)
     throw new Error('adaptive practice persistence regression '+JSON.stringify(pfAfter));
 
+  const cfCaptured=counterfactualModel({evs:{FOLD:0,CALL:-12,RAISE:44}});
+  if(!cfCaptured.captured||JSON.stringify(cfCaptured.evs)!==JSON.stringify({FOLD:0,CALL:-12,RAISE:44}))
+    throw new Error('captured counterfactual EV regression '+JSON.stringify(cfCaptured));
+  const cfEstimated=counterfactualModel({eqAdj:.4,pot:100,callAmt:25,opps:1});
+  if(cfEstimated.captured||cfEstimated.evs.FOLD!==0||cfEstimated.evs.CALL!==25||cfEstimated.evs.RAISE!==58)
+    throw new Error('estimated counterfactual EV regression '+JSON.stringify(cfEstimated));
+  if(counterfactualActionKey('fold')!=='FOLD'||counterfactualActionKey('call')!=='CALL'||counterfactualActionKey('raise')!=='RAISE')
+    throw new Error('counterfactual action normalization regression');
+
   return {actual,balanced,custom,fallback,randomIds,multiplayerBots:multiplayerBots.map(p=>p.style.id),
     blindDisplay,raisedBlindDisplay,tournamentBlinds,cashBlinds,screenshotExample,
     soundPacks:Object.fromEntries(soundPacks.map(pack=>[pack,soundKinds.length])),replayJumps,
-    adaptivePlan:{priority:planBefore.map(r=>r.spot),masteryBefore:planBefore[1].mastery,masteryAfter:pfAfter.mastery}};
+    adaptivePlan:{priority:planBefore.map(r=>r.spot),masteryBefore:planBefore[1].mastery,masteryAfter:pfAfter.mastery},
+    counterfactual:{captured:cfCaptured.evs,estimated:cfEstimated.evs}};
 })()`,context);
 
 assert.ok(result);
@@ -163,4 +173,8 @@ assert.match(html,/id="rpHandInput"[^>]*type="number"[^>]*required/,
 const uiSource=fs.readFileSync(path.join(ROOT,'js','ui.js'),'utf8');
 assert.match(uiSource,/classList\.toggle\('setup-mode-hidden',cash\)/,
   'Sit & Go mode visibility must not remove the KO disclosure hidden state');
+assert.match(uiSource,/evs:coachRecNow\.evs\?\{FOLD:/,
+  'saved decisions must retain their table-time counterfactual EV snapshot');
+assert.match(uiSource,/id="rpCounterfactual"/,
+  'replayer must render the counterfactual explorer');
 console.log(JSON.stringify(result,null,2));
