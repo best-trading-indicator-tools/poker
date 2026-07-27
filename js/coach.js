@@ -49,6 +49,7 @@ checkedDownStab:(e,n)=>`${n===1?'Villain has':'Opponents have'} checked the free
 probeStab:(e,n,o)=>`${n===1?'Villain has':'Opponents have'} checked multiple streets, so the line is capped. Even ${o?'out of position, ':''}with ~${e} and no bet to call, a small bluff/probe bet can fold air and weak showdown hands — keep it small, then shut down if raised.`,
 midRiver:e=>`A decent but unspectacular ~${e}. The board is complete — betting mostly gets called by better hands. Check and try to get to showdown cheaply.`,
 midCheck:e=>`A decent but unspectacular ~${e}. Not strong enough to build a big pot; check and keep the pot small while you see what develops.`,
+drySidePotCheck:(h,e)=>`${h} is strong enough to contest the main pot, but one opponent is already all-in and the side pot is still empty. On this dry board there is little to protect: checking keeps weaker hands and bluffs in, while betting would mostly build a new side pot against the only opponent who can still act. Your ~${e} equity includes the all-in player — it is not a reason to force a side pot.`,
 weakRiverLast:e=>`Only ~${e} to win and no cards left to come — your hand is final. Everyone has checked to you: check behind and take the free showdown.`,
 weakRiverFirst:e=>`Only ~${e} to win and no cards left to come — your hand can't improve anymore. Check, and fold to any serious bet.`,
 weakFree:e=>`Only ~${e} to win, but checking costs nothing. Take the free card and fold to any serious bet.`,
@@ -206,6 +207,7 @@ checkedDownStab:(e,n)=>`${n===1?'Vilain a':'Les adversaires ont'} checké l'opti
 probeStab:(e,n,o)=>`${n===1?'Vilain a':'Les adversaires ont'} checké plusieurs streets, donc la ligne est capée. Même ${o?'hors de position, ':''}avec ~${e} et aucune mise à payer, une petite mise bluff/probe peut faire folder l'air et les mains faibles de showdown — gardez-la petite, puis abandonnez si ça relance.`,
 midRiver:e=>`Un score correct mais quelconque : ~${e}. Le board est complet — miser ne se fait payer que par mieux. Checkez et essayez d’atteindre l’abattage à bas prix.`,
 midCheck:e=>`Un score correct mais quelconque : ~${e}. Pas assez fort pour gonfler le pot ; checkez et gardez le pot petit en attendant la suite.`,
+drySidePotCheck:(h,e)=>`${h} est assez forte pour disputer le pot principal, mais un adversaire est déjà à tapis et le side pot est encore vide. Sur ce board sec, il y a peu à protéger : checker garde les mains plus faibles et les bluffs, tandis qu'une mise construirait surtout un nouveau side pot contre le seul adversaire encore actif. Votre équité d'environ ${e} inclut le joueur à tapis — elle ne justifie pas à elle seule de créer un side pot.`,
 weakRiverLast:e=>`Seulement ~${e} de chances de gain et plus aucune carte à venir — votre main est figée. Tout le monde a checké : checkez derrière et prenez l’abattage gratuit.`,
 weakRiverFirst:e=>`Seulement ~${e} de chances de gain et plus aucune carte à venir — votre main ne peut plus s’améliorer. Checkez, et couchez-vous face à toute mise sérieuse.`,
 weakFree:e=>`Seulement ~${e} de chances de gain, mais checker ne coûte rien. Prenez la carte gratuite et couchez-vous face à toute mise sérieuse.`,
@@ -363,6 +365,7 @@ checkedDownStab:(e,n)=>`${n===1?'El rival ha':'Los rivales han'} pasado la opci�
 probeStab:(e,n,o)=>`${n===1?'El rival ha':'Los rivales han'} pasado varias calles, así que su línea está limitada. Incluso ${o?'fuera de posición, ':''}con ~${e} y sin apuesta que pagar, una apuesta pequeña de bluff/probe puede tirar aire y manos débiles de showdown — mantenla pequeña y abandona si resuben.`,
 midRiver:e=>`Un ~${e} decente pero sin más. La mesa está completa — apostar solo lo pagan manos mejores. Pasa e intenta llegar barato al showdown.`,
 midCheck:e=>`Un ~${e} decente pero sin más. No da para inflar el bote; pasa y mantén el bote pequeño mientras ves qué pasa.`,
+drySidePotCheck:(h,e)=>`${h} es suficientemente fuerte para disputar el bote principal, pero un rival ya está all-in y el bote lateral sigue vacío. En esta mesa seca hay poco que proteger: pasar mantiene manos peores y faroles, mientras apostar construiría sobre todo un nuevo bote lateral contra el único rival que aún puede actuar. Tu ~${e} de equity incluye al jugador all-in; no basta por sí solo para crear un bote lateral.`,
 weakRiverLast:e=>`Solo ~${e} de probabilidad y no quedan cartas — tu mano es definitiva. Todos han pasado: pasa también y llévate el showdown gratis.`,
 weakRiverFirst:e=>`Solo ~${e} de probabilidad y no quedan cartas — tu mano ya no puede mejorar. Pasa, y retírate ante cualquier apuesta seria.`,
 weakFree:e=>`Solo ~${e} de probabilidad, pero pasar no cuesta nada. Toma la carta gratis y retírate ante cualquier apuesta seria.`,
@@ -1948,7 +1951,7 @@ function coachDecide(p){
   const code=holeCode(p.hole), pr=handPct[code]||1;
   let eq,handDesc,drawRow='',extra=[];
   let eqAdj,airPen=0,underpairPen=0,underpairInfo=null;
-  let madeScore=null,flushInfo=null,drawInfo=null,impliedInfo=null;
+  let madeScore=null,flushInfo=null,drawInfo=null,impliedInfo=null,drySidePot=false;
   const tightOpps=oppCaps.filter(o=>o.cap<1).length;
   const weakOpps=oppCaps.filter(o=>o.floor>0).length;
   if(tightOpps>0) extra.push(C('rangesNote',tightOpps,Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)));
@@ -2380,6 +2383,9 @@ function coachDecide(p){
       :null;
     const thinBoardKickerValue=boardKickerValue&&checkedInFront>0&&boardKickerValue.kicker>=13;
     const strongMade=realTwoPairOrBetter(madeScore,p.hole);
+    drySidePot=state.players.some(q=>q!==p&&!q.folded&&!q.out&&q.allIn)&&
+      inHand().some(q=>q!==p&&!q.allIn)&&boardTexture(state.board).dry&&
+      madeScore?.[0]===1&&hasTopPairOrBetter(madeScore,p.hole,state.board);
     const freeDraw=state.stage!=='river'?detectDraws(p.hole,state.board):null;
     const drawOnlyFree=freeDraw&&(freeDraw.flush||freeDraw.oesd||freeDraw.gutshot)&&madeScore&&madeScore[0]<1;
     const multiwayDrawCaution=drawOnlyFree&&opps>=2&&!realTwoPairOrBetter(madeScore,p.hole);
@@ -2412,6 +2418,9 @@ function coachDecide(p){
       rec='RAISE';
       smallStab=true;
       why.push(C('probeStab',pct(eq),passiveStabbers.length,!actsLast));
+    }else if(drySidePot){
+      rec='CHECK';
+      why.push(C('drySidePotCheck',handDesc,pct(eq)));
     }else if(eq>0.42){
       rec='CHECK';
       why.push(river?C('midRiver',pct(eq)):C('midCheck',pct(eq)));
@@ -2549,7 +2558,7 @@ function coachDecide(p){
     callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,icmInfo,chartInfo,rangeCharts,code,spr,sprZone,
-          preflopCallInfo,drawInfo,impliedInfo,needEq:decisionNeed};
+          preflopCallInfo,drawInfo,impliedInfo,drySidePot,needEq:decisionNeed};
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */

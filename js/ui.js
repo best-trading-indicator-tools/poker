@@ -88,6 +88,7 @@ yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrde
 firstToAct:"first to act (OOP)",lastToAct:"last to act (IP)",ofN:"of",need:"need ",vs:"vs",opp:"opponent",opps:"opponents",
 beginnerMath:(raw,usable,need,enough)=>`Raw equity: ${raw}%. Usable after position and risk: ~${usable}%. A call needs ${need}% — ${enough?'enough to continue':'not enough, so fold'}.`,
 beginnerFree:"In plain English: checking costs no chips. You keep your hand alive and see what develops without making the pot bigger.",
+beginnerDrySidePot:"In plain English: you do have top pair. The check is recommended because one player is already all-in and there is no side pot yet. On this dry board, betting mainly makes worse hands fold and creates a new pot against stronger hands.",
 beginnerAgg:"In plain English: your win chance is only part of a bet or raise. Opponents may fold immediately (fold equity), and weaker hands may still call.",
 beginnerOpenFold:"In plain English: no chips are required yet, but this starting hand is too weak to enter profitably from this seat. Folding preserves your stack.",
 thisGame:"THIS GAME",lifetime:"LIFETIME",handsPW:"Hands played / won",net:"Net",biggestPot:"Biggest pot won",vpipPfr:"VPIP / PFR",aggF:"Aggression factor",wonSd:"Won at showdown",evLeak:"EV leaked vs coach",coachFollowed:"Coach followed",followedCoach:"followed coach",coachSaid:"coach said",youChose:"you chose",
@@ -229,6 +230,7 @@ yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflop
 firstToAct:"premier à parler (OOP)",lastToAct:"dernier à parler (IP)",ofN:"sur",need:"requis ",vs:"vs",opp:"adversaire",opps:"adversaires",
 beginnerMath:(raw,usable,need,enough)=>`Équité brute : ${raw} %. Utilisable après position et risque : ~${usable} %. Un call exige ${need} % — ${enough?'assez pour continuer':'pas assez, couchez-vous'}.`,
 beginnerFree:"En clair : checker ne coûte aucun jeton. Vous gardez votre main en vie et voyez la suite sans grossir le pot.",
+beginnerDrySidePot:"En clair : vous avez bien top paire. Le check est recommandé parce qu'un joueur est déjà à tapis et qu'il n'existe encore aucun side pot. Sur ce board sec, miser ferait surtout coucher les mains moins bonnes et créerait un nouveau pot contre les mains plus fortes.",
 beginnerAgg:"En clair : votre chance de gagner n’est qu’une partie d’un bet ou d’une relance. Les adversaires peuvent se coucher immédiatement (fold equity), et des mains moins bonnes peuvent payer.",
 beginnerOpenFold:"En clair : aucun jeton supplémentaire n’est encore requis, mais cette main est trop faible pour entrer rentablement depuis cette position. Se coucher préserve votre tapis.",
 thisGame:"CETTE PARTIE",lifetime:"GLOBAL",handsPW:"Mains jouées / gagnées",net:"Net",biggestPot:"Plus gros pot gagné",vpipPfr:"VPIP / PFR",aggF:"Facteur d'agression",wonSd:"Gagné à l'abattage",evLeak:"EV perdue vs coach",coachFollowed:"Coach suivi",followedCoach:"coach suivi",coachSaid:"le coach a dit",youChose:"vous avez choisi",
@@ -370,6 +372,7 @@ yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopO
 firstToAct:"primero en hablar (OOP)",lastToAct:"último en hablar (IP)",ofN:"de",need:"necesitas ",vs:"vs",opp:"rival",opps:"rivales",
 beginnerMath:(raw,usable,need,enough)=>`Equity bruta: ${raw} %. Utilizable tras posición y riesgo: ~${usable} %. Igualar exige ${need} % — ${enough?'suficiente para continuar':'insuficiente, retírate'}.`,
 beginnerFree:"En claro: pasar no cuesta fichas. Mantienes viva la mano y ves qué ocurre sin agrandar el bote.",
+beginnerDrySidePot:"En claro: sí tienes top pair. Se recomienda pasar porque un jugador ya está all-in y todavía no hay bote lateral. En esta mesa seca, apostar haría retirarse sobre todo a manos peores y crearía un bote nuevo contra manos más fuertes.",
 beginnerAgg:"En claro: tu probabilidad de ganar es solo una parte de apostar o subir. Los rivales pueden retirarse de inmediato (fold equity), y manos peores aún pueden pagar.",
 beginnerOpenFold:"En claro: todavía no hacen falta más fichas, pero esta mano es demasiado débil para entrar con beneficio desde esta posición. Retirarse conserva tu stack.",
 thisGame:"ESTA PARTIDA",lifetime:"GLOBAL",handsPW:"Manos jugadas / ganadas",net:"Neto",biggestPot:"Mayor bote ganado",vpipPfr:"VPIP / PFR",aggF:"Factor de agresión",wonSd:"Ganadas en showdown",evLeak:"EV perdido vs coach",coachFollowed:"Coach seguido",followedCoach:"coach seguido",coachSaid:"el coach dijo",youChose:"tú elegiste",
@@ -2364,7 +2367,9 @@ function updateCoach(p){
   const liveMathRows=drawRow+impliedRow+sprRow+effectiveRow;
   const usableEq=clamp(R.eqAdj==null?eq:R.eqAdj,0,1);
   const decisionNeed=R.needEq==null?odds:R.needEq;
-  const beginnerRead=openingDecision
+  const beginnerRead=R.drySidePot
+    ?T('beginnerDrySidePot')
+    :openingDecision
     ?(rec==='FOLD'?T('beginnerOpenFold'):T('beginnerAgg'))
     :callAmt>0
     ?T('beginnerMath')(Math.round(eq*100),Math.round(usableEq*100),Math.round(decisionNeed*100),usableEq>=decisionNeed)

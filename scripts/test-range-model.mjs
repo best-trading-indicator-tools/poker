@@ -215,6 +215,30 @@ const result=vm.runInContext(`(()=>{
   if(underpairDecision.rec!=='FOLD'||underpairDecision.underpairPen<.08||underpairDecision.evs.CALL>=0)
     throw new Error('33/K96 vs 80% c-bet must fold '+JSON.stringify({rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL}));
 
+  /* Dry side pot: top pair is recognized, but betting a dry flop into the only
+     player with chips behind mostly folds worse hands while the short stack is
+     already guaranteed a showdown. The coach must explain that specific check. */
+  newGame(cfg);
+  const sideHero=state.players[0],sideAllin=state.players[1],sideLive=state.players[2];
+  for(const x of state.players){
+    x.out=false;x.folded=x!==sideHero&&x!==sideAllin&&x!==sideLive;x.allIn=false;
+    x.bet=0;x.totalBet=x.folded?0:100;x.acted=x.folded;x.checkedStreet=false;
+    x.rangeCap=1;x.rangeFloor=0;x.lineRead='';
+  }
+  state.stage='flop';state.board=[C(10,1),C(6,0),C(4,3)];
+  state._rangeComboInfoCache=Object.create(null);state._rangeBoardTextureCache=Object.create(null);
+  state.bb=40;state.sb=20;state.currentBet=0;state.lastAggIdx=sideAllin.i;state.pfAggIdx=sideAllin.i;
+  sideHero.pos='HJ';sideHero.hole=H(C(10,0),C(13,1));sideHero.chips=3940;sideHero.acted=false;
+  sideAllin.pos='UTG+1';sideAllin.chips=0;sideAllin.allIn=true;sideAllin.acted=true;rangeModelInit(sideAllin);
+  sideLive.pos='BTN';sideLive.chips=1810;sideLive.acted=false;rangeModelInit(sideLive);
+  const savedSideEquity=mcEquityR;mcEquityR=()=>.57;
+  const sidePotDecision=coachDecide(sideHero);
+  mcEquityR=savedSideEquity;
+  if(sidePotDecision.rec!=='CHECK'||!sidePotDecision.drySidePot||
+      !sidePotDecision.why.some(x=>x.includes('side pot')))
+    throw new Error('KT/T64 dry side pot must explain the top-pair check '+
+      JSON.stringify({rec:sidePotDecision.rec,dry:sidePotDecision.drySidePot,why:sidePotDecision.why}));
+
   /* Four-flush turn: category-level "Ace-high flush" is misleading when the fifth
      card is a three. Exact opponent combos and their continue policies must block
      the automatic protection bet. */
