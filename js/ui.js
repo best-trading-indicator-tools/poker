@@ -19,6 +19,12 @@ sprLbl:"SPR",sprZoneDeep:"deep",sprZoneMid:"medium",sprZoneLow:"low",
 statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Leak finder (by spot)",revLeaksNone:"No classified leaks yet — deviate from the coach and finish games to populate this.",
 leakPfOpen:"Preflop opens",leakPfFace:"Facing raises",leakCbet:"C-bet defense",leakMultiway:"Multiway pots",leakRiver:"River calls",leakRiverAir:n=>`${n} river call${n>1?'s':''} with high card / no hand`,
+revIntro:"Find the decisions costing you the most, spot repeated habits, and replay the exact hands.",
+revFocusTitle:"What to work on next",revFocusSub:"Prioritized by total EV lost and repetition. A frequent small mistake can matter more than one dramatic hand.",
+revFocusRank:n=>`Priority ${n}`,revTimes:n=>`${n} time${n!==1?'s':''}`,revAvgLoss:"average loss",
+revDecisionsTitle:"Costliest decisions",revDecisionsSub:"Filter your mistakes, then open the exact hand to understand the action in context.",
+revSpot:"Spot",revStreet:"Street",revPeriod:"Sessions",revAny:"All",revRecent10:"Latest 10",revRecent25:"Latest 25",
+revReplayHand:"Replay hand",revNoDecisions:"No mistakes match these filters. Try a broader filter or play another session.",
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
 resetData:"Clear saved data",resetInfo:"Deletes lifetime stats, hand history, session reviews and any unfinished game you could resume. Your Rewards level, XP, unlocks, equipped cosmetics and language choice are kept. This can't be undone.",resetConfirm:"Delete all stats, hand history, session reviews and unfinished games? Rewards level and progress will be kept.",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Quit this tournament?",quitCash:"Leave the table?",
@@ -95,6 +101,12 @@ sprLbl:"SPR",sprZoneDeep:"deep",sprZoneMid:"medium",sprZoneLow:"low",
 statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Fuites par type de spot",revLeaksNone:"Pas encore de fuites classées — écartez-vous du coach et terminez des parties.",
 leakPfOpen:"Ouvertures préflop",leakPfFace:"Face aux relances",leakCbet:"Défense c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls rivière",leakRiverAir:n=>`${n} call${n>1?'s':''} rivière sans main`,
+revIntro:"Repérez les décisions qui vous coûtent le plus, les erreurs répétées et rejouez les mains exactes.",
+revFocusTitle:"Prochain axe de travail",revFocusSub:"Priorisé selon l'EV totale perdue et la répétition. Une petite erreur fréquente peut coûter plus qu'une main spectaculaire.",
+revFocusRank:n=>`Priorité ${n}`,revTimes:n=>`${n} fois`,revAvgLoss:"perte moyenne",
+revDecisionsTitle:"Décisions les plus coûteuses",revDecisionsSub:"Filtrez vos erreurs puis ouvrez la main exacte pour revoir toute l'action.",
+revSpot:"Spot",revStreet:"Street",revPeriod:"Sessions",revAny:"Tous",revRecent10:"10 dernières",revRecent25:"25 dernières",
+revReplayHand:"Rejouer la main",revNoDecisions:"Aucune erreur ne correspond à ces filtres. Élargissez-les ou jouez une nouvelle session.",
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
 resetData:"Effacer les données sauvegardées",resetInfo:"Supprime les statistiques globales, l’historique des mains, les bilans de sessions et toute partie en cours à reprendre. Votre niveau Rewards, XP, éléments débloqués, cosmétiques équipés et choix de langue sont conservés. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l’historique, les bilans de sessions et les parties en cours ? Le niveau et la progression Rewards seront conservés.",resetDone:"✓ Effacé",
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter ce tournoi ?",quitCash:"Quitter la table ?",
@@ -171,6 +183,12 @@ sprLbl:"SPR",sprZoneDeep:"deep",sprZoneMid:"medium",sprZoneLow:"low",
 statBB100:"BB/100",statNetBB:"Net (BB)",statRebuys:"Rebuys",
 revLeaksTitle:"Fugas por tipo de spot",revLeaksNone:"Sin fugas clasificadas aún — desvíate del coach y termina partidas.",
 leakPfOpen:"Aperturas preflop",leakPfFace:"Frente a subidas",leakCbet:"Defensa c-bet",leakMultiway:"Pots multiway",leakRiver:"Calls en river",leakRiverAir:n=>`${n} call${n>1?'s':''} en river sin mano`,
+revIntro:"Encuentra las decisiones que más te cuestan, detecta errores repetidos y reproduce las manos exactas.",
+revFocusTitle:"Qué trabajar ahora",revFocusSub:"Priorizado por EV total perdido y repetición. Un error pequeño y frecuente puede importar más que una mano espectacular.",
+revFocusRank:n=>`Prioridad ${n}`,revTimes:n=>`${n} vez${n!==1?'es':''}`,revAvgLoss:"pérdida media",
+revDecisionsTitle:"Decisiones más costosas",revDecisionsSub:"Filtra tus errores y abre la mano exacta para revisar la acción completa.",
+revSpot:"Situación",revStreet:"Calle",revPeriod:"Sesiones",revAny:"Todas",revRecent10:"Últimas 10",revRecent25:"Últimas 25",
+revReplayHand:"Repetir mano",revNoDecisions:"Ningún error coincide con estos filtros. Amplía los filtros o juega otra sesión.",
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
 resetData:"Borrar datos guardados",resetInfo:"Elimina estadísticas globales, historial de manos, resúmenes de sesiones y cualquier partida sin terminar. Se conservan tu nivel Rewards, XP, desbloqueos, cosméticos equipados e idioma. No se puede deshacer.",resetConfirm:"¿Borrar estadísticas, historial, resúmenes de sesiones y partidas sin terminar? El nivel y progreso Rewards se conservarán.",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Salir de este torneo?",quitCash:"¿Dejar la mesa?",
@@ -284,6 +302,89 @@ function renderRevLeaks(games){
         `<span class="leak-meta">${r.n} ${T('deviations')}</span>${sub}</div>`+
         `<span class="leak-ev neg">−${usd(r.ev)}</span></div>`;
     }).join('');
+}
+let revDecisionSpot='all',revDecisionStreet='all',revDecisionPeriod='25';
+function reviewDecisions(games){
+  const out=[];
+  games.forEach(g=>{
+    (g.decisions||[]).forEach(d=>{
+      if((d.evLoss||0)<=0)return;
+      out.push({...d,spot:classifyLeakSpotRetro(d),game:g});
+    });
+  });
+  return out;
+}
+function reviewFilteredGames(games){
+  const lim=revDecisionPeriod==='all'?games.length:Number(revDecisionPeriod)||25;
+  return games.slice(0,lim);
+}
+function renderReviewFocus(games){
+  const totals={};
+  reviewDecisions(reviewFilteredGames(games)).forEach(d=>{
+    const r=totals[d.spot]||(totals[d.spot]={spot:d.spot,n:0,ev:0});
+    r.n++;r.ev+=d.evLoss||0;
+  });
+  const rows=Object.values(totals).filter(r=>LEAK_LABEL[r.spot]).sort((a,b)=>b.ev-a.ev).slice(0,3);
+  if(!rows.length)return '';
+  return `<h3 class="rev-section-title">${T('revFocusTitle')}</h3>`+
+    `<p class="rev-section-sub">${T('revFocusSub')}</p><div class="rev-focus">`+
+    rows.map((r,i)=>`<div class="rev-focus-card"><div class="rev-focus-rank">${T('revFocusRank')(i+1)}</div>`+
+      `<b>${T(LEAK_LABEL[r.spot])}</b><span>${T('revTimes')(r.n)} · ${T('revAvgLoss')} −${usd(Math.round(r.ev/r.n))}</span>`+
+      `<span class="rev-focus-ev">−${usd(r.ev)} EV</span></div>`).join('')+`</div>`;
+}
+function reviewStreetLabel(stage){
+  return T(stage==='turn'?'turnSt':stage==='river'?'riverSt':stage)||stage;
+}
+function renderReviewDecisionTools(){
+  const spotOptions=[['all',T('revAny')],...LEAK_ORDER.map(k=>[k,T(LEAK_LABEL[k])])];
+  const streetOptions=[['all',T('revAny')],['preflop',T('preflop')],['flop',T('flop')],['turn',T('turnSt')],['river',T('riverSt')]];
+  const periodOptions=[['10',T('revRecent10')],['25',T('revRecent25')],['all',T('revAny')]];
+  const opts=(rows,current)=>rows.map(([v,l])=>`<option value="${v}"${v===current?' selected':''}>${l}</option>`).join('');
+  return `<h3 class="rev-section-title">${T('revDecisionsTitle')}</h3><p class="rev-section-sub">${T('revDecisionsSub')}</p>`+
+    `<div class="rev-controls"><label>${T('revSpot')}<select id="revSpotSel">${opts(spotOptions,revDecisionSpot)}</select></label>`+
+    `<label>${T('revStreet')}<select id="revStreetSel">${opts(streetOptions,revDecisionStreet)}</select></label>`+
+    `<label>${T('revPeriod')}<select id="revPeriodSel">${opts(periodOptions,revDecisionPeriod)}</select></label></div>`;
+}
+function openReviewDecision(d){
+  const hands=replayHandsForGame(d.game);
+  const idx=hands.findIndex(h=>Number(h.hand)===Number(d.hand));
+  if(idx<0)return;
+  rpAll=hands;rpHandIdx=idx;rpStreet=99;
+  closeDialog($('reviewOv'));rpRender();openDialog($('replayOv'),'rpTitle');
+}
+function renderReviewDecisions(games){
+  const rows=reviewDecisions(reviewFilteredGames(games))
+    .filter(d=>revDecisionSpot==='all'||d.spot===revDecisionSpot)
+    .filter(d=>revDecisionStreet==='all'||d.stage===revDecisionStreet)
+    .sort((a,b)=>(b.evLoss||0)-(a.evLoss||0)).slice(0,20);
+  if(!rows.length){
+    $('revDecisions').innerHTML=`<div class="rev-empty">${T('revNoDecisions')}</div>`;
+    return;
+  }
+  $('revDecisions').innerHTML=rows.map((d,i)=>{
+    const label=LEAK_LABEL[d.spot]?T(LEAK_LABEL[d.spot]):reviewStreetLabel(d.stage);
+    const when=new Date(d.game.t).toLocaleDateString();
+    return `<div class="rev-decision"><div class="rev-decision-main"><div class="rev-decision-title">${label} · ${T('hand')}#${d.hand}</div>`+
+      `<div class="rev-decision-meta">${when} · ${reviewStreetLabel(d.stage)} · ${T('coachSaid')} ${recWord(d.rec)} · ${T('youChose')} ${actWord(d.action)}</div></div>`+
+      `<div class="rev-decision-actions"><span class="rev-decision-ev">−${usd(d.evLoss)} EV</span>`+
+      `<button type="button" class="rev-hand-btn" data-decision="${i}">${T('revReplayHand')}</button></div></div>`;
+  }).join('');
+  $('revDecisions').querySelectorAll('.rev-hand-btn').forEach(btn=>{
+    btn.onclick=()=>openReviewDecision(rows[Number(btn.dataset.decision)]);
+  });
+}
+function wireReviewDecisionTools(games){
+  const rerender=()=>{
+    $('revFocus').innerHTML=renderReviewFocus(games);
+    renderReviewDecisions(games);
+  };
+  $('revSpotSel').onchange=e=>{revDecisionSpot=e.target.value;rerender();};
+  $('revStreetSel').onchange=e=>{revDecisionStreet=e.target.value;rerender();};
+  $('revPeriodSel').onchange=e=>{
+    revDecisionPeriod=e.target.value;
+    $('revFocus').innerHTML=renderReviewFocus(games);
+    renderReviewDecisions(games);
+  };
 }
 function showInstantLesson(text){
   if(!HAS_DOM||!text) return;
@@ -2106,6 +2207,7 @@ function showSessionReview(){
   const cashNetBB=cashGames.reduce((s,g)=>s+(g.bbNet!=null?g.bbNet:(g.startBlind>0?(g.net||0)/g.startBlind:0)),0);
   const cashRebuys=cashGames.reduce((s,g)=>s+(g.rebuys||0),0);
   const bb100=cashBB100(cashGames);
+  $('revIntro').textContent=T('revIntro');
   let summary='';
   if(revFilter==='cash'){
     summary=
@@ -2135,7 +2237,11 @@ function showSessionReview(){
   $('revSummary').innerHTML=summary;
   $('revSpark').innerHTML=n>=2?evSparklineSVG(games.slice().reverse()):'';
   $('revRewards').innerHTML=renderRewardReview();
+  $('revFocus').innerHTML=renderReviewFocus(games);
   $('revLeaks').innerHTML=renderRevLeaks(games.slice().reverse());
+  $('revDecisionTools').innerHTML=renderReviewDecisionTools();
+  renderReviewDecisions(games);
+  wireReviewDecisionTools(games);
   if(!n){
     $('revList').innerHTML=`<p style="color:var(--dim);font-size:13px;">${T(revFilter==='cash'?'revNoGamesCash':'revNoGames')}</p>`;
   }else{

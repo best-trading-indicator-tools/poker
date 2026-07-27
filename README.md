@@ -53,7 +53,7 @@ Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel s
 - **Per-game poker stats**: VPIP, PFR, aggression factor and won-at-showdown tracked live in the coach panel
 - **Resume tournament**: progress is saved at every hand boundary; refreshing or closing the tab mid-game offers a "Resume tournament" button on the start screen
 - **Mid-hand resume (solo)**: progress is also saved after every action — refresh mid-pot and pick up exactly where you left off (cards, board, bets, whose turn)
-- **Session review dashboard**: finished games are logged with win rate, ITM %, avg finish, total net, cumulative EV leaked chart, and tap-any-game → hand replayer
+- **Session Review 2.0**: finished games are logged with win rate, ITM %, avg finish, total net and cumulative EV leaked; repeated leaks are ranked by total cost and frequency, individual mistakes can be filtered by spot/street/recent sessions, and every listed decision opens its exact hand in the replayer
 - **Keyboard shortcuts**: F fold · C check/call · R raise · 1–4 bet sizes (min / ½ pot / pot / all-in) · N next hand
 - **Offline mode (PWA)**: visit the hosted game once and it works with no internet afterwards; installable to home screen / dock. The local file always works offline by nature
 - **Multi-language**: English, Français, Español — selector on the start screen and in the game header; choice persists. everything is translated, including the coach's full reasoning, hand names ("une Paire de Dix", "Trío de Seises"), draw names and board warnings
