@@ -9,7 +9,8 @@
     "build:extract": "node scripts/build.mjs extract",
     "test:ranges": "node scripts/test-range-model.mjs",
     "test:scenarios": "node scripts/test-table-scenarios.mjs",
-    "test:landscape": "node scripts/test-landscape-mobile.cjs"
+    "test:landscape": "node scripts/test-landscape-mobile.cjs",
+    "audit:coach": "node scripts/audit-coach.mjs --strict"
   },
   "devDependencies": {
     "playwright": "^1.49.1"
