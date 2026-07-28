@@ -183,6 +183,17 @@ const result=vm.runInContext(`(()=>{
       !madeFilter.includes('range-filtered')||!airFilter.includes('range-filtered'))
     throw new Error('interactive range filters or selectable cells missing');
 
+  const drawBoard=[C(9,2),C(6,2),C(2,0)];
+  const nutFd=rangeComboDrawFeatures(H(C(14,2),C(12,2)),drawBoard);
+  const comboFd=rangeComboDrawFeatures(H(C(8,2),C(7,2)),drawBoard);
+  const pairDrawFeatures=rangeComboDrawFeatures(H(C(14,2),C(10,0)),[C(10,2),C(9,2),C(2,2)]);
+  if(!nutFd.includes('nutFlushDraw')||nutFd.includes('nonNutFlushDraw'))
+    throw new Error('exact nut-flush draw classification failed '+JSON.stringify(nutFd));
+  if(!comboFd.includes('nonNutFlushDraw')||!comboFd.includes('straightDraw')||!comboFd.includes('comboDraw'))
+    throw new Error('non-nut combo-draw classification failed '+JSON.stringify(comboFd));
+  if(!pairDrawFeatures.includes('nutFlushDraw')||!pairDrawFeatures.includes('pairPlusDraw'))
+    throw new Error('pair-plus-draw overlay missing '+JSON.stringify(pairDrawFeatures));
+
   const k96=[C(13,1),C(9,2),C(6,1)],threes=H(C(3,0),C(3,2));
   const underpair=coachUnderpairRealization(threes,k96,.80,true,detectDraws(threes,k96));
   if(!underpair||underpair.overcards!==3||underpair.penalty<.08)

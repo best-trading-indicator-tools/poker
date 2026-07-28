@@ -2594,6 +2594,33 @@ function rangeComboCurrentClass(hole,board){
   if(category===1)return 'onePair';
   return rangeComboDrawOrAir(hole,board);
 }
+/* Draw texture is an overlay rather than a made-hand bucket: a combo may be
+   both one pair and a draw. Keep exact suits here so A♣Q♣ and the other AQs
+   combinations are not described as if they had the same flush potential. */
+function rangeComboDrawFeatures(hole,board){
+  if(!board||board.length<3||board.length>=5)return [];
+  const draw=detectDraws(hole,board),features=[];
+  const straight=!!(draw.oesd||draw.doubleGutshot||draw.gutshot);
+  if(draw.flush){
+    let nut=false;
+    for(let suit=0;suit<4;suit++){
+      const suited=hole.filter(c=>c.s===suit);
+      if(!suited.length||suited.length+board.filter(c=>c.s===suit).length!==4)continue;
+      const known=new Set(hole.concat(board).filter(c=>c.s===suit).map(c=>c.r));
+      const highestMissing=Math.max(0,...Array.from({length:13},(_,i)=>i+2).filter(r=>!known.has(r)));
+      if(Math.max(...suited.map(c=>c.r))>highestMissing)nut=true;
+    }
+    features.push(nut?'nutFlushDraw':'nonNutFlushDraw');
+  }
+  if(straight)features.push('straightDraw');
+  if(draw.flush&&straight)features.push('comboDraw');
+  const backdoorFlush=board.length===3&&!!coachBackdoorFlushInfo(hole,board);
+  if(!draw.flush&&!straight&&(backdoorFlush||draw.backdoorStraight))
+    features.push('backdoorDraw');
+  const score=evalBest(hole.concat(board));
+  if(score[0]>=1&&(draw.flush||straight))features.push('pairPlusDraw');
+  return features;
+}
 function rangeHandClassVector(board){
   if(!board||board.length<3)return null;
   const key=board.map(c=>c.r*4+c.s).sort((a,b)=>a-b).join('-');
@@ -2604,6 +2631,18 @@ function rangeHandClassVector(board){
     out.push(dead.has(FULL_DECK[i].r*4+FULL_DECK[i].s)||dead.has(FULL_DECK[j].r*4+FULL_DECK[j].s)
       ?null:rangeComboCurrentClass([FULL_DECK[i],FULL_DECK[j]],board));
   state._rangeHandClassCache[key]=out;
+  return out;
+}
+function rangeDrawFeatureVector(board){
+  if(!board||board.length<3||board.length>=5)return null;
+  const key=board.map(c=>c.r*4+c.s).sort((a,b)=>a-b).join('-');
+  if(!state._rangeDrawFeatureCache)state._rangeDrawFeatureCache=Object.create(null);
+  if(state._rangeDrawFeatureCache[key])return state._rangeDrawFeatureCache[key];
+  const dead=new Set(board.map(c=>c.r*4+c.s)),out=[];
+  for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++)
+    out.push(dead.has(FULL_DECK[i].r*4+FULL_DECK[i].s)||dead.has(FULL_DECK[j].r*4+FULL_DECK[j].s)
+      ?null:rangeComboDrawFeatures([FULL_DECK[i],FULL_DECK[j]],board));
+  state._rangeDrawFeatureCache[key]=out;
   return out;
 }
 function rangeMatrixMetrics(info){
@@ -2621,16 +2660,20 @@ function rangeMatrixMetrics(info){
     const lift=s.lift||Object.create(null);
     if(!s.lift)for(const code of Object.keys(s.mass||{}))
       lift[code]=(s.mass[code]/Math.max(available[code]||1,1))*(s.legal||1);
-    return info._rangeMetrics={mass:s.mass||{},available,lift,
-      composition:s.composition||null,classMass:s.classMass||{},effective:s.effective||0,legal:s.legal||0};
+    return info._rangeMetrics={mass:s.mass||{},available,active:s.active||available,lift,
+      composition:s.composition||null,classMass:s.classMass||{},
+      drawFeatures:s.drawFeatures||null,classDrawFeatures:s.classDrawFeatures||{},
+      effective:s.effective||0,legal:s.legal||0};
   }
-  const mass=Object.create(null),available=Object.create(null),comboWeights=[];
+  const mass=Object.create(null),available=Object.create(null),active=Object.create(null),comboWeights=[];
   if(info.kind!=='range'){
     for(const code of info.list||[]){mass[code]=1;available[code]=1;}
     return info._rangeMetrics={mass,available,lift:mass,composition:null,effective:(info.list||[]).length,legal:(info.list||[]).length};
   }
   const dead=new Set((info.board||[]).concat(info.dead||[]).map(c=>c.r*4+c.s));
-  const classVector=rangeHandClassVector(info.board||[]),composition=Object.create(null),classMass=Object.create(null);
+  const classVector=rangeHandClassVector(info.board||[]),drawVector=rangeDrawFeatureVector(info.board||[]);
+  const composition=Object.create(null),classMass=Object.create(null);
+  const drawFeatures=Object.create(null),classDrawFeatures=Object.create(null);
   let total=0,legal=0,k=0;
   for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++,k++){
     const a=FULL_DECK[i],b=FULL_DECK[j];
@@ -2643,6 +2686,7 @@ function rangeMatrixMetrics(info){
       else w=(info.list||[]).includes(holeCode([a,b]))?1:0;
     }
     if(w<=0)continue;
+    active[code]=(active[code]||0)+1;
     mass[code]=(mass[code]||0)+w;total+=w;comboWeights.push(w);
     if(classVector){
       const bucket=classVector[k];
@@ -2650,15 +2694,24 @@ function rangeMatrixMetrics(info){
       const byCode=classMass[code]||(classMass[code]=Object.create(null));
       byCode[bucket]=(byCode[bucket]||0)+w;
     }
+    for(const feature of drawVector?.[k]||[]){
+      drawFeatures[feature]=(drawFeatures[feature]||0)+w;
+      const byCode=classDrawFeatures[code]||(classDrawFeatures[code]=Object.create(null));
+      byCode[feature]=(byCode[feature]||0)+w;
+    }
   }
   if(total>0)for(const code of Object.keys(mass))mass[code]/=total;
   if(total>0)for(const bucket of Object.keys(composition))composition[bucket]/=total;
   if(total>0)for(const code of Object.keys(classMass))
     for(const bucket of Object.keys(classMass[code]))classMass[code][bucket]/=total;
+  if(total>0)for(const feature of Object.keys(drawFeatures))drawFeatures[feature]/=total;
+  if(total>0)for(const code of Object.keys(classDrawFeatures))
+    for(const feature of Object.keys(classDrawFeatures[code]))classDrawFeatures[code][feature]/=total;
   const lift=Object.create(null);
   for(const code of Object.keys(mass))lift[code]=(mass[code]/Math.max(available[code]||1,1))*legal;
   let sq=0;for(const w of comboWeights){const n=w/Math.max(total,1e-12);sq+=n*n;}
-  return info._rangeMetrics={mass,available,lift,composition:classVector?composition:null,classMass,
+  return info._rangeMetrics={mass,available,active,lift,composition:classVector?composition:null,classMass,
+    drawFeatures:drawVector?drawFeatures:null,classDrawFeatures,
     effective:Math.round(1/Math.max(sq,1/Math.max(legal,1))),legal};
 }
 function rangeMatrixMassMap(info){
@@ -2682,10 +2735,10 @@ function rangeMatrixCells(info,heroCode,compact=false,mode='density',filter='all
     cells.push({h,mass,lift,combos,in2:inSet2.has(h),me:h===heroCode});
   }
   const html=cells.map(c=>{
-    const buckets=metrics.classMass?.[c.h]||{};
+    const buckets=metrics.classMass?.[c.h]||{},features=metrics.classDrawFeatures?.[c.h]||{};
     const madeMass=['fullHousePlus','flush','straight','trips','twoPair','onePair'].reduce((s,k)=>s+(buckets[k]||0),0);
     const visible=filter==='all'||(filter==='made'?madeMass:filter==='draws'?buckets.drawOnly:
-      filter==='air'?(buckets.air||0)+(buckets.boardOnly||0):buckets[filter]||0)>0;
+      filter==='air'?(buckets.air||0)+(buckets.boardOnly||0):(buckets[filter]||0)+(features[filter]||0))>0;
     const score=mode==='mass'?c.mass:c.lift;
     const tier=info.kind!=='range'?(c.mass>0?' rw4':''):mode==='mass'
       ?score>=0.02?' rw4':score>=0.01?' rw3':score>=0.0035?' rw2':score>=0.0003?' rw1':''
@@ -2702,8 +2755,10 @@ function rangeSnapshot(info){
   return {kind:'range',pos:info.pos,cap:info.cap,floor:info.floor,
     board:(info.board||[]).map(c=>({r:c.r,s:c.s})),dead:(info.dead||[]).map(c=>({r:c.r,s:c.s})),
     model:{history:plain(info.model?.history||[])},
-    snapshotMetrics:{mass:plain(m.mass),composition:plain(m.composition),
-      classMass:plain(m.classMass),effective:m.effective,legal:m.legal}};
+    snapshotMetrics:{mass:plain(m.mass),available:plain(m.available),active:plain(m.active),
+      composition:plain(m.composition),
+      classMass:plain(m.classMass),drawFeatures:plain(m.drawFeatures),
+      classDrawFeatures:plain(m.classDrawFeatures),effective:m.effective,legal:m.legal}};
 }
 function rangeMatrixLegend(){
   return `<div class="range-heat-legend"><span><i class="rw1"></i>${T('rangeFringe')}</span><span><i class="rw2"></i>${T('rangePossible')}</span><span><i class="rw3"></i>${T('rangeLikely')}</span><span><i class="rw4"></i>${T('rangeVeryLikely')}</span></div>`;
@@ -2756,6 +2811,31 @@ function rangeCompositionHtml(composition){
     ?`<div class="range-line range-read range-composition"><b>${T('rangeComposition')}:</b> ${parts.join(' · ')}</div>`
     :'';
 }
+function rangeDrawFeaturesHtml(features){
+  if(!features)return '';
+  const order=[
+    ['comboDraw','rangeComboDraw'],['nutFlushDraw','rangeNutFlushDraw'],
+    ['nonNutFlushDraw','rangeNonNutFlushDraw'],['straightDraw','rangeStraightDraw'],
+    ['pairPlusDraw','rangePairPlusDraw'],['backdoorDraw','rangeBackdoorDraw']
+  ];
+  const parts=order.filter(([bucket])=>(features[bucket]||0)>0)
+    .map(([bucket,key])=>`${T(key)} ≈ ${rangePct(features[bucket])}%`);
+  return parts.length
+    ?`<div class="range-line range-read range-draw-features"><b>${T('rangeDrawBreakdown')}:</b> ${parts.join(' · ')}</div>`
+    :'';
+}
+function rangeComboBaseline(code){
+  return code.length===2?6:code.endsWith('s')?4:12;
+}
+function rangeCellWeightReason(info,code,lift,active,available){
+  const history=info.model?.history||[],last=history.at(-1),action=last?.action||'';
+  const direction=lift>=1.15?'up':lift<=0.75?'down':'flat';
+  const actionKey=action==='raise'?'rangeWeightRaise':action==='call'?'rangeWeightCall':
+    action==='check'?'rangeWeightCheck':'rangeWeightPrior';
+  return T(actionKey)(direction,Math.round(lift*10)/10,code)+
+    (available<rangeComboBaseline(code)?` ${T('rangeBlockerImpact')(rangeComboBaseline(code)-available)}`:'')+
+    (active<available?` ${T('rangeActionRemoved')(available-active)}`:'');
+}
 function rangeMatrixMetaHtml(info,controls=false,mode='density'){
   if(info.kind!=='range')return '';
   const metrics=rangeMatrixMetrics(info),trail=rangeActionTrail(info),top=rangeMostLikelyCodes(info,5).join(' · ');
@@ -2767,6 +2847,7 @@ function rangeMatrixMetaHtml(info,controls=false,mode='density'){
     `</div>${trail?`<div class="range-line"><b>${T('rangeLine')}:</b> ${trail}</div>`:''}`+
     rangeEnteringStreetHtml(info)+
     rangeCompositionHtml(metrics.composition)+
+    rangeDrawFeaturesHtml(metrics.drawFeatures)+
     (topCardMass?`<div class="range-line range-read"><b>${T('rangeTopCard')}:</b> ${topChar}x ≈ ${topCardPct}%</div>`:'')+
     (top?`<div class="range-line range-top"><b>${T('rangeTopHands')}:</b> ${top}</div>`:'');
 }
@@ -2779,21 +2860,34 @@ function showChartMatrix(info,heroCode,alternatives=null){
     trips:'rangeTrips',twoPair:'rangeTwoPair',onePair:'rangeOnePair',drawOnly:'rangeDrawOnly',
     air:'rangeAir',boardOnly:'rangeBoardOnly'
   };
+  const featureLabels={
+    comboDraw:'rangeComboDraw',nutFlushDraw:'rangeNutFlushDraw',
+    nonNutFlushDraw:'rangeNonNutFlushDraw',straightDraw:'rangeStraightDraw',
+    pairPlusDraw:'rangePairPlusDraw',backdoorDraw:'rangeBackdoorDraw'
+  };
   const detail=code=>{
-    const m=rangeMatrixMetrics(active),mass=m.mass[code]||0,combos=m.available[code]||0,lift=m.lift[code]||0;
+    const m=rangeMatrixMetrics(active),mass=m.mass[code]||0,combos=m.available[code]||0;
+    const liveCombos=m.active?.[code]||0,lift=m.lift[code]||0;
     if(!mass)return `<div class="range-cell-empty">${T('rangeUnavailable')}</div>`;
     const buckets=m.classMass?.[code]||{},parts=Object.keys(bucketLabels)
       .filter(k=>(buckets[k]||0)>0)
       .map(k=>`${T(bucketLabels[k])} ${Math.round((buckets[k]/mass)*100)}%`);
+    const features=m.classDrawFeatures?.[code]||{},drawParts=Object.keys(featureLabels)
+      .filter(k=>(features[k]||0)>0)
+      .map(k=>`${T(featureLabels[k])} ${Math.round((features[k]/mass)*100)}%`);
     return `<div class="range-cell-title">${code} · ${rangePct(mass)}%</div>`+
-      `<p>${T('rangeCellShare')(code,rangePct(mass),combos)}</p>`+
+      `<p>${T('rangeCellShare')(code,rangePct(mass),liveCombos,combos)}</p>`+
       `<p>${T('rangeCellDensity')(Math.round(lift*10)/10+'×')}</p>`+
-      (parts.length?`<div class="range-cell-mix"><b>${T('rangeCellMix')}:</b> ${parts.join(' · ')}</div>`:'');
+      `<p class="range-cell-reason">${rangeCellWeightReason(active,code,lift,liveCombos,combos)}</p>`+
+      (parts.length?`<div class="range-cell-mix"><b>${T('rangeCellMix')}:</b> ${parts.join(' · ')}</div>`:'')+
+      (drawParts.length?`<div class="range-cell-mix"><b>${T('rangeDrawBreakdown')}:</b> ${drawParts.join(' · ')}</div>`:'');
   };
   const controls=()=>active.kind!=='range'?'':`<div class="range-explorer-controls">`+
     (ranges.length>1?ranges.map((x,i)=>`<button type="button" data-range-opponent="${i}" class="${active===x?'on':''}">${x.pos}</button>`).join(''):'')+
     `<span>${T('rangeFilter')}</span>`+
-    [['all','rangeFilterAll'],['made','rangeFilterMade'],['draws','rangeFilterDraws'],['air','rangeFilterAir']]
+    [['all','rangeFilterAll'],['made','rangeFilterMade'],['draws','rangeFilterDraws'],
+      ['nutFlushDraw','rangeFilterNut'],['nonNutFlushDraw','rangeFilterNonNut'],
+      ['backdoorDraw','rangeFilterBackdoor'],['air','rangeFilterAir']]
       .map(([v,k])=>`<button type="button" data-range-filter="${v}" class="${filter===v?'on':''}">${T(k)}</button>`).join('')+
     `</div>`;
   const paint=()=>{
