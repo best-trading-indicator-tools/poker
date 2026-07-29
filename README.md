@@ -46,6 +46,11 @@ Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel s
 - **Money display**: $ and BB shown everywhere, casino-style chip stacks
 - **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, order-of-action awareness (first/last to talk, including your *future* postflop position when advising preflop), bet-size-aware range reading, plain-English reasoning
 - **Visible ICM teaching**: tournament calls affected by prize value receive a dedicated Live Coach section showing stack rank, stack at risk, coverage and the exact increase from chip-odds break-even to the ICM-adjusted threshold; cash games never show it
+- **Bluff break-even teaching**: recommended bets and raises show `risk ÷ (pot + risk)`, the fold rate a pure bluff needs, beside the coach's modeled fold rate; showdown equity is explicitly treated as additional value rather than double-counted
+- **Strategy intent labels**: every recommendation identifies itself as a balanced baseline or an exploitative adjustment driven by opponent profiles and observed action
+- **Read sample confidence**: opponent range panels show the number of visible actions behind the read and label it early, tentative or reliable so small samples are not presented as certainty
+- **Process over outcome**: post-hand feedback calls out correct decisions that lost and winning hands containing estimated-EV mistakes
+- **Situation plans in plain language**: the coach identifies squeeze opportunities over capped callers, warns about dominated top pairs and counterfeit-prone two pair, sizes postflop bets from board texture, labels purposeful flop floats, categorizes the turn plan, and selects river blocker bluffs only against credible folders
 - **Draw Engine 2.0**: the coach distinguishes open-ended straights, single gutshots, double gutshots, ace-low edge cases and runner-runner straight/flush backdoors; exact outs are deduplicated across combined draws, filtered for dirty cards and never produce negative usable equity after risk discounts
 - **GTO mini-solver**: real CFR (counterfactual regret minimization) for heads-up postflop spots — shows the equilibrium mixed strategy with EVs
 - **Stats & training**: post-hand feedback, session + lifetime stats (persisted), full hand-history export to JSON

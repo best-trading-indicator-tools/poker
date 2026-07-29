@@ -54,6 +54,11 @@ confidenceChart:"Preflop chart",confidenceMath:"Exact pot math + equity simulati
 confidenceChartNote:"Uses the position and stack-depth chart for this preflop spot.",
 confidenceMathNote:"Pot odds are exact; equity and future action use simulations and estimated opponent ranges.",
 confidenceHeuristicNote:"Multiway ranges and future actions require broader assumptions, so treat the recommendation as directional.",
+strategyLabel:"Strategy",strategyBaseline:"Baseline / balanced",strategyExploit:"Exploitative adjustment",
+bluffBreakEven:"Pure-bluff break-even",bluffBreakEvenNote:(f,fe)=>`Needs about ${f}% folds at this size; the model estimates about ${fe}%. Showdown equity adds value when called.`,
+readConfidence:"Read confidence",readSample:n=>`${n} visible action${n!==1?'s':''}`,readConfidenceEarly:"early — lean on the default profile",readConfidenceTentative:"tentative tendency",readConfidenceReliable:"reliable table sample",
+processGoodBad:"Good process, bad outcome: your decisions matched the +EV coach line. Variance does not make them mistakes.",
+processBadGood:"Good outcome, questionable process: you won chips, but at least one decision gave up estimated EV. Do not let the result validate the play.",
 analyticsTitle:"Advanced leak analytics",analyticsSub:"Every coach decision is grouped by context. Accuracy means how often your action matched the coach.",
 analyticsPosition:"By position",analyticsStreet:"By street",analyticsDepth:"By stack depth",analyticsPotType:"By pot type",analyticsTableSize:"By players remaining",
 analyticsDecisions:n=>`${n} decision${n!==1?'s':''}`,analyticsAccuracy:"accuracy",analyticsRecent:"Latest 10 sessions",analyticsPrevious:"Previous 10",
@@ -202,6 +207,11 @@ confidenceChart:"Charte préflop",confidenceMath:"Calcul du pot exact + simulati
 confidenceChartNote:"Utilise la charte de position et de profondeur pour ce spot préflop.",
 confidenceMathNote:"Les cotes du pot sont exactes ; l'équité et l'action future utilisent des simulations et des ranges adverses estimées.",
 confidenceHeuristicNote:"Les ranges multiway et les actions futures demandent plus d'hypothèses : considérez ce conseil comme directionnel.",
+strategyLabel:"Stratégie",strategyBaseline:"Base / équilibrée",strategyExploit:"Ajustement exploitant",
+bluffBreakEven:"Seuil d'un bluff pur",bluffBreakEvenNote:(f,fe)=>`Cette taille exige environ ${f} % de folds ; le modèle en estime environ ${fe} %. L'équité à l'abattage ajoute de la valeur si vous êtes payé.`,
+readConfidence:"Confiance de la lecture",readSample:n=>`${n} action${n!==1?'s':''} visible${n!==1?'s':''}`,readConfidenceEarly:"précoce — privilégiez le profil par défaut",readConfidenceTentative:"tendance provisoire",readConfidenceReliable:"échantillon fiable à cette table",
+processGoodBad:"Bonne décision, mauvais résultat : vos choix suivaient la ligne +EV du coach. La variance n'en fait pas des erreurs.",
+processBadGood:"Bon résultat, processus discutable : vous avez gagné des jetons, mais au moins une décision a sacrifié de l'EV estimée. Le résultat ne valide pas le choix.",
 analyticsTitle:"Analyse avancée des leaks",analyticsSub:"Chaque décision du coach est regroupée par contexte. La précision indique à quelle fréquence votre action correspond au coach.",
 analyticsPosition:"Par position",analyticsStreet:"Par street",analyticsDepth:"Par profondeur",analyticsPotType:"Par type de pot",analyticsTableSize:"Par joueurs restants",
 analyticsDecisions:n=>`${n} décision${n!==1?'s':''}`,analyticsAccuracy:"de précision",analyticsRecent:"10 dernières sessions",analyticsPrevious:"10 précédentes",
@@ -350,6 +360,11 @@ confidenceChart:"Tabla preflop",confidenceMath:"Cálculo exacto del bote + simul
 confidenceChartNote:"Usa la tabla de posición y profundidad para esta situación preflop.",
 confidenceMathNote:"Las odds del bote son exactas; la equity y la acción futura usan simulaciones y rangos rivales estimados.",
 confidenceHeuristicNote:"Los rangos multiway y las acciones futuras requieren más supuestos; interpreta el consejo como direccional.",
+strategyLabel:"Estrategia",strategyBaseline:"Base / equilibrada",strategyExploit:"Ajuste explotador",
+bluffBreakEven:"Umbral de farol puro",bluffBreakEvenNote:(f,fe)=>`Este tamaño necesita cerca del ${f}% de folds; el modelo estima cerca del ${fe}%. La equity al showdown añade valor cuando pagan.`,
+readConfidence:"Confianza de la lectura",readSample:n=>`${n} acción${n!==1?'es':''} visible${n!==1?'s':''}`,readConfidenceEarly:"temprana — apóyate en el perfil por defecto",readConfidenceTentative:"tendencia provisional",readConfidenceReliable:"muestra fiable en esta mesa",
+processGoodBad:"Buen proceso, mal resultado: tus decisiones siguieron la línea +EV del coach. La varianza no las convierte en errores.",
+processBadGood:"Buen resultado, proceso cuestionable: ganaste fichas, pero al menos una decisión cedió EV estimada. No dejes que el resultado valide la jugada.",
 analyticsTitle:"Análisis avanzado de fugas",analyticsSub:"Cada decisión del coach se agrupa por contexto. La precisión indica con qué frecuencia tu acción coincidió con el coach.",
 analyticsPosition:"Por posición",analyticsStreet:"Por calle",analyticsDepth:"Por profundidad",analyticsPotType:"Por tipo de bote",analyticsTableSize:"Por jugadores restantes",
 analyticsDecisions:n=>`${n} decisión${n!==1?'es':''}`,analyticsAccuracy:"de precisión",analyticsRecent:"Últimas 10 sesiones",analyticsPrevious:"10 anteriores",
@@ -2382,7 +2397,9 @@ function updateCoach(p){
     ?`<div class="coach-row"><span>${T('impliedOdds')}</span><b>~${pct(R.impliedInfo.realisticNeed)} ${T('realisticNeed')}<br>${pct(R.impliedInfo.bestCaseNeed)} ${T('bestCaseNeed')} · ${usd(R.impliedInfo.maxFuture)} max</b></div>`:'';
   const effectiveRow=callAmt>0&&R.needEq!=null&&Math.abs(R.needEq-odds)>=.005
     ?`<div class="coach-row"><span>${T('effectiveNeed')}</span><b>~${pct(R.needEq)}<small class="coach-row-note">${T('effectiveNeedNote')}</small></b></div>`:'';
-  const liveMathRows=drawRow+impliedRow+sprRow+effectiveRow;
+  const bluffRow=R.bluffBreakEven!=null
+    ?`<div class="coach-row"><span>${T('bluffBreakEven')}</span><b>${pct(R.bluffBreakEven)}<small class="coach-row-note">${T('bluffBreakEvenNote')(Math.round(R.bluffBreakEven*100),Math.round((R.modeledFoldEquity||0)*100))}</small></b></div>`:'';
+  const liveMathRows=drawRow+impliedRow+sprRow+effectiveRow+bluffRow;
   const usableEq=clamp(R.eqAdj==null?eq:R.eqAdj,0,1);
   const decisionNeed=R.needEq==null?odds:R.needEq;
   const beginnerRead=R.drySidePot
@@ -2393,6 +2410,7 @@ function updateCoach(p){
     ?T('beginnerMath')(Math.round(eq*100),Math.round(usableEq*100),Math.round(decisionNeed*100),usableEq>=decisionNeed)
     :(rec==='CHECK'?T('beginnerFree'):rec==='FOLD'?T('beginnerOpenFold'):T('beginnerAgg'));
   const detailRows=
+    `<div class="coach-row"><span>${T('strategyLabel')}</span><b>${T(R.strategyMode==='exploit'?'strategyExploit':'strategyBaseline')}</b></div>`+
     (pos?`<div class="coach-row"><span>${T('position')}</span><b>${pos}${early?' (early)':late?' (late)':''}</b></div>`:'')+
     (opps>0?`<div class="coach-row"><span>${state.stage==='preflop'?T('postflopOrder'):T('actingOrder')}</span><b>${actsFirst?T('firstToAct'):actsLast?T('lastToAct'):(ordIdx+1)+' '+T('ofN')+' '+ordLen}</b></div>`:'')+
     `<div class="coach-row"><span>${T('yourStack')}</span><b>${bbs(p.chips+p.bet)}</b></div>`+
@@ -2489,6 +2507,8 @@ function renderFeedback(net){
     html+=` · ${T('followedCoach')} ${f}/${n}`;
     for(const d of state.humanDecisions.filter(x=>!x.followed))
       html+=`<div class="dev">${d.stage}: ${T('coachSaid')} ${recWord(d.rec)}, ${T('youChose')} ${actWord(d.action)}${d.evLoss>0?` <span class="neg">(−${usd(d.evLoss)} EV)</span>`:''}</div>`;
+    if(f===n&&net<0)html+=`<div class="dev">🎯 ${T('processGoodBad')}</div>`;
+    else if(f<n&&net>0)html+=`<div class="dev">⚠️ ${T('processBadGood')}</div>`;
   }
   html+=rewardSummaryLine(state.lastRewardSummary);
   el.innerHTML=html;

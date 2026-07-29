@@ -66,6 +66,13 @@ callOk:(amt,pt,o,e,disc,ea,need)=>`The call costs ${amt} to win a ${pt} pot, so 
 foldAdv:(o,amt,pt,ea,resp,need)=>`The immediate price needs ${o} equity to call (${amt} into ${pt}). After position, prize pressure and realistic implied odds, the effective requirement is ~${need}, but your usable equity is only ~${ea}${resp?' once this bet size is respected':''}. Fold and wait for a better spot.`,
 impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Implied odds: the immediate price needs ${now}. With about ${hit} to hit a clean out and up to ${max} still available behind, the coach conservatively credits about ${future} of future payment; that lowers the realistic break-even price to ~${real}. The absolute best case is ${best} if every remaining chip is paid${reverse?' — but the non-nut draw also carries reverse-implied-odds risk, so that best case is not used':''}.`,
 chart3bet:(c,e)=>`${c} is in the re-raise (3-bet) chart against ${e?'an early-position raiser':'a late-position raiser'} — solver ranges re-raise these hands instead of just calling: the big pairs for value, and hands like A5s as "blocker bluffs" (your ace makes his monster hands less likely). Flat-calling would let players behind you in cheaply.`,
+squeezePlay:(c,n)=>`${c} is a squeeze: one player raised and ${n} caller${n>1?'s have':' has'} put dead money in with a usually capped hand. Re-raise large enough to pressure both; you can win now, and this hand still has value when called.`,
+dominatedTopPair:(k,n)=>` Top pair is useful, but the ${k} kicker is vulnerable: ${n} higher kicker${n>1?'s are':' is'} still possible. Avoid turning one pair into a huge pot against strong action.`,
+madeCounterfeit:(r,n)=>` Your two pair is vulnerable to counterfeiting: ${n} remaining ${r}${n>1?'s':''} pair the high board card and can make your smaller pair stop playing. Bet for value/protection, but reassess if that card arrives.`,
+textureSize:(kind,p)=>` Board-aware sizing: this is a ${kind} board, so the suggested bet uses about ${p}% pot — smaller on safe boards, larger when draws need charging.`,
+floatPlan:` This flop call is a float with a plan, not a hopeful call: you have position and enough equity to continue, then can attack many turn checks. If the opponent barrels again or the turn strongly favors their range, shut down.`,
+turnPlan:k=>` Turn plan: ${k==='value'?'strong value — keep building the pot':k==='draw'?'strong draw — semi-bluff only when fold equity is credible':k==='control'?'medium strength — control the pot and avoid a huge river decision':'weak hand — stop investing without a clear bluff opportunity'}.`,
+riverBlockerBluff:` River blocker bluff: your ace removes the nut-flush hands from the opponent's range, while their passive line contains many folds. Use a small, disciplined bluff; this is not permission to bluff a player who calls too often.`,
 fourBetFold:(c,amt,bb,eff,read)=>`This is not a 3-bet spot: you already raised and now face a 3-bet to ${amt} (${bb}). ${c} is not strong enough to continue${read?' against this large/tight line':''}. The ace blocker can make it an occasional 4-bet bluff against a normal, wide 3-bet when stacks are deep, but at ${eff} BB effective this sizing commits too much — fold.`,
 fourBetValue:(c,amt,bb)=>`You already raised and now face a 3-bet to ${amt} (${bb}). ${c} belongs to the value 4-bet range; with this much already in the middle, use a committed raise rather than an awkward size that leaves a tiny stack behind.`,
 fourBetBluff:(c,amt,bb)=>`You already raised and now face a 3-bet to ${amt} (${bb}). ${c} can be used as a selective 4-bet bluff here: your ace blocks AA/AK, the 3-bettor's range is wide, the size is still normal, and stacks are deep enough to fold if shoved on.`,
@@ -224,6 +231,13 @@ callOk:(amt,pt,o,e,disc,ea,need)=>`Le call coûte ${amt} pour gagner un pot de $
 foldAdv:(o,amt,pt,ea,resp,need)=>`Le prix immédiat demande ${o} d'équité pour payer (${amt} dans ${pt}). Après la position, la pression des prix et les cotes implicites réalistes, le seuil effectif monte à ~${need}, mais votre équité utilisable n'est que de ~${ea}${resp?' une fois cette taille de mise respectée':''}. Couchez-vous et attendez un meilleur spot.`,
 impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Cotes implicites : le prix immédiat demande ${now}. Avec environ ${hit} de chances de toucher un out propre et jusqu'à ${max} encore disponible derrière, le coach crédite prudemment environ ${future} de paiement futur ; le seuil réaliste descend ainsi à ~${real}. Le meilleur cas absolu serait ${best} si tous les jetons restants étaient payés${reverse?' — mais le tirage non max comporte aussi des cotes implicites inverses, donc ce meilleur cas n\'est pas utilisé':''}.`,
 chart3bet:(c,e)=>`${c} figure dans la charte de sur-relance (3-bet) contre ${e?'un relanceur en début de parole':'un relanceur en fin de parole'} — les ranges solveur sur-relancent ces mains au lieu de suivre : les grosses paires pour la valeur, et des mains comme A5s en « bluff à blocker » (votre as rend ses monstres moins probables). Suivre laisserait entrer les joueurs derrière à bas prix.`,
+squeezePlay:(c,n)=>`${c} est un squeeze : un joueur a relancé et ${n} autre${n>1?'s ont':' a'} mis de l'argent mort avec une main souvent capée. Sur-relancez assez pour mettre les deux sous pression ; vous pouvez gagner tout de suite et gardez de la valeur si vous êtes payé.`,
+dominatedTopPair:(k,n)=>` La top paire est utile, mais le kicker ${k} reste vulnérable : ${n} kicker${n>1?'s supérieurs restent':' supérieur reste'} possible${n>1?'s':''}. Évitez de transformer une paire en pot énorme face à une forte action.`,
+madeCounterfeit:(r,n)=>` Vos deux paires peuvent être contrefaites : les ${n} ${r} restant${n>1?'s':''} doublent la plus haute carte du board et peuvent faire disparaître votre petite paire. Misez pour valeur/protection, puis réévaluez si cette carte tombe.`,
+textureSize:(kind,p)=>` Taille adaptée au board : board ${kind}, donc la mise suggérée fait environ ${p} % du pot — petite sur board sûr, plus grosse quand il faut faire payer les tirages.`,
+floatPlan:` Ce call au flop est un float avec un plan, pas un call d'espoir : vous avez la position et assez d'équité, puis pourrez attaquer beaucoup de checks au turn. S'il mise encore ou si le turn favorise fortement sa range, abandonnez.`,
+turnPlan:k=>` Plan au turn : ${k==='value'?'forte valeur — continuez à construire le pot':k==='draw'?'gros tirage — semi-bluffez seulement avec une fold equity crédible':k==='control'?'force moyenne — contrôlez le pot et évitez une énorme décision river':'main faible — n’investissez plus sans occasion claire de bluff'}.`,
+riverBlockerBluff:` Bluff river avec blocker : votre as retire les couleurs max de la range adverse, tandis que sa ligne passive contient beaucoup de folds. Faites un petit bluff discipliné ; ne le tentez pas contre un joueur qui paie trop.`,
 fourBetFold:(c,amt,bb,eff,read)=>`Ce n'est pas un spot de 3-bet : vous avez déjà relancé et faites maintenant face à un 3-bet à ${amt} (${bb}). ${c} n'est pas assez forte pour continuer${read?' contre cette ligne grosse/serrée':''}. Le bloqueur As peut servir de bluff 4-bet occasionnel contre un 3-bet normal et large avec des tapis profonds, mais à ${eff} BB effectives cette taille engage trop de jetons — couchez-vous.`,
 fourBetValue:(c,amt,bb)=>`Vous avez déjà relancé et faites maintenant face à un 3-bet à ${amt} (${bb}). ${c} appartient à la range de 4-bet pour valeur ; avec autant de jetons déjà au milieu, utilisez une relance engagée plutôt qu'une taille bancale qui laisse un tout petit tapis.`,
 fourBetBluff:(c,amt,bb)=>`Vous avez déjà relancé et faites maintenant face à un 3-bet à ${amt} (${bb}). ${c} peut servir de bluff 4-bet sélectif : votre As bloque AA/AK, la range de 3-bet adverse est large, la taille reste normale et les tapis permettent encore de folder face à un shove.`,
@@ -382,6 +396,13 @@ callOk:(amt,pt,o,e,disc,ea,need)=>`La llamada cuesta ${amt} para ganar un bote d
 foldAdv:(o,amt,pt,ea,resp,need)=>`El precio inmediato exige ${o} de equity para igualar (${amt} en ${pt}). Tras posición, presión de premios y odds implícitas realistas, el requisito efectivo es ~${need}, pero tu equity utilizable es solo ~${ea}${resp?' una vez respetado este tamaño de apuesta':''}. Retírate y espera un mejor momento.`,
 impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Odds implícitas: el precio inmediato exige ${now}. Con cerca de ${hit} de ligar un out limpio y hasta ${max} aún disponibles detrás, el coach acredita prudentemente unos ${future} de pago futuro; así, el umbral realista baja a ~${real}. El mejor caso absoluto sería ${best} si se pagaran todas las fichas restantes${reverse?' — pero el proyecto no máximo también tiene riesgo de odds implícitas inversas, así que no se usa ese mejor caso':''}.`,
 chart3bet:(c,e)=>`${c} está en la tabla de resubida (3-bet) contra ${e?'quien sube desde posición temprana':'quien sube desde posición tardía'} — los rangos de solver resuben estas manos en vez de solo igualar: las parejas grandes por valor, y manos como A5s como "farol con blocker" (tu as hace menos probables sus monstruos). Solo igualar dejaría entrar barato a los de detrás.`,
+squeezePlay:(c,n)=>`${c} es un squeeze: un jugador subió y ${n} caller${n>1?'s pusieron':' puso'} dinero muerto con una mano normalmente limitada. Resube lo suficiente para presionar a ambos; puedes ganar ya y conservar valor si pagan.`,
+dominatedTopPair:(k,n)=>` La pareja máxima sirve, pero el kicker ${k} es vulnerable: todavía ${n===1?'queda':'quedan'} ${n} kicker${n>1?'s':''} superior${n>1?'es':''}. Evita convertir una pareja en un bote enorme ante acción fuerte.`,
+madeCounterfeit:(r,n)=>` Tus dobles parejas pueden quedar falsificadas: los ${n} ${r} restantes emparejan la carta alta de la mesa y pueden hacer que tu pareja pequeña deje de jugar. Apuesta por valor/protección y reevalúa si llega esa carta.`,
+textureSize:(kind,p)=>` Tamaño según la mesa: es una mesa ${kind}, así que la apuesta sugerida usa cerca del ${p}% del bote — menor en mesas seguras y mayor cuando hay que cobrar proyectos.`,
+floatPlan:` Este call del flop es un float con plan, no una esperanza: tienes posición y equity suficiente, y puedes atacar muchos checks del turn. Si el rival vuelve a apostar o el turn favorece mucho su rango, abandona.`,
+turnPlan:k=>` Plan del turn: ${k==='value'?'valor fuerte — sigue construyendo el bote':k==='draw'?'proyecto fuerte — semifarolea solo con fold equity creíble':k==='control'?'fuerza media — controla el bote y evita una enorme decisión en river':'mano débil — deja de invertir sin una oportunidad clara de farol'}.`,
+riverBlockerBluff:` Farol de river con blocker: tu as elimina los colores máximos del rango rival y su línea pasiva contiene muchos folds. Haz un farol pequeño y disciplinado; no lo intentes contra quien paga demasiado.`,
 fourBetFold:(c,amt,bb,eff,read)=>`Este no es un spot de 3-bet: ya subiste y ahora afrontas un 3-bet a ${amt} (${bb}). ${c} no es lo bastante fuerte para continuar${read?' contra esta línea grande/cerrada':''}. El bloqueo del As puede servir como farol de 4-bet ocasional contra un 3-bet normal y amplio con stacks profundos, pero con ${eff} BB efectivas este tamaño compromete demasiado — retírate.`,
 fourBetValue:(c,amt,bb)=>`Ya subiste y ahora afrontas un 3-bet a ${amt} (${bb}). ${c} pertenece al rango de 4-bet por valor; con tanto dinero ya en medio, usa una subida comprometida en vez de un tamaño incómodo que deje un stack diminuto.`,
 fourBetBluff:(c,amt,bb)=>`Ya subiste y ahora afrontas un 3-bet a ${amt} (${bb}). ${c} puede usarse como farol selectivo de 4-bet: tu As bloquea AA/AK, el rango rival es amplio, el tamaño aún es normal y los stacks permiten retirarse ante un shove.`,
@@ -1266,6 +1287,17 @@ function coachPostflopRaiseSizing(p,pot,callAmt){
     betRatio
   };
 }
+function coachPostflopOpenSizing(pot,smallStab,madeScore,drawInfo){
+  const texture=boardTexture(state.board);
+  const strong=!!(madeScore&&madeScore[0]>=2);
+  const strongDraw=!!(drawInfo&&(drawInfo.flush?.length>=8||drawInfo.straight?.length>=8));
+  let ratio;
+  if(smallStab)ratio=texture.dry ? .33 : .42;
+  else if(texture.wet&&(strong||strongDraw))ratio=.72;
+  else if(texture.dry)ratio=.38;
+  else ratio=.58;
+  return {target:pot*ratio,ratio,texture:texture.dry?'dry':texture.wet?'wet':'neutral'};
+}
 function boardTexture(board){
   if(!board.length) return {paired:false,monotone:false,wet:false,flushDraw:false,dry:true};
   const bs=[0,0,0,0]; for(const c of board)bs[c.s]++;
@@ -1276,6 +1308,35 @@ function boardTexture(board){
   const connected=br.length>=3&&br[br.length-1]-br[0]<=4;
   const wet=paired||monotone||twoTone||connected;
   return {paired,monotone,wet,flushDraw:monotone||twoTone,dry:!wet};
+}
+function coachTopPairDomination(hole,board,score){
+  if(!score||score[0]!==1||board.length<3)return null;
+  const top=Math.max(...board.map(c=>c.r));
+  if(score[1]!==top)return null;
+  const pairCard=hole.find(c=>c.r===top),kicker=hole.find(c=>c!==pairCard);
+  if(!pairCard||!kicker||kicker.r>=13)return null;
+  const higher=[];
+  for(let r=kicker.r+1;r<=14;r++)if(r!==top&&!board.some(c=>c.r===r))higher.push(r);
+  return higher.length?{kicker:kicker.r,higher:higher.length}:null;
+}
+function coachMadeCounterfeit(hole,board,score){
+  if(!score||score[0]!==2||board.length<3||board.length>=5)return null;
+  const holeRanks=new Set(hole.map(c=>c.r));
+  if(!holeRanks.has(score[1])||!holeRanks.has(score[2]))return null;
+  const boardHigh=Math.max(...board.map(c=>c.r));
+  if(boardHigh===score[1]||boardHigh===score[2])return null;
+  const seen=hole.concat(board).filter(c=>c.r===boardHigh).length;
+  return seen<4?{rank:boardHigh,remaining:4-seen}:null;
+}
+function coachRiverNutBlockerBluff(p,score,opps){
+  if(state.stage!=='river'||opps!==1||!score||score[0]>=1)return null;
+  const suits=[0,0,0,0];for(const c of state.board)suits[c.s]++;
+  const suit=suits.findIndex(n=>n===3);
+  if(suit<0||!p.hole.some(c=>c.r===14&&c.s===suit))return null;
+  const villain=inHand().find(q=>q!==p);
+  if(villain?.style?.id==='station')return null;
+  const passive=!!(villain&&(villain.checkedStreet||passiveLineLen(villain.checkStreets)>=2));
+  return passive?{suit}:null;
 }
 function coachSpotBrief(p,extra,ctx){
   const {eq,eqAdj,odds,needEq,callAmt,pot,opps,pos,actsFirst,actsLast,airPen}=ctx;
@@ -1949,7 +2010,7 @@ function coachDecide(p){
     })
     .sort((a,b)=>a.cap-b.cap).slice(0,4);
   const code=holeCode(p.hole), pr=handPct[code]||1;
-  let eq,handDesc,drawRow='',extra=[];
+  let eq,handDesc,drawRow='',extra=[],concepts=[];
   let eqAdj,airPen=0,underpairPen=0,underpairInfo=null;
   let madeScore=null,flushInfo=null,drawInfo=null,impliedInfo=null,drySidePot=false;
   const tightOpps=oppCaps.filter(o=>o.cap<1).length;
@@ -1971,6 +2032,10 @@ function coachDecide(p){
     handDesc=handName(score);
     flushInfo=coachFlushRelativeStrength(p,state.board,oppCaps,pot);
     extra.push(classifyMade(p.hole,state.board,score));
+    const domination=coachTopPairDomination(p.hole,state.board,score);
+    if(domination){extra.push(C('dominatedTopPair',rankNm(domination.kicker),domination.higher));concepts.push('dominatedTopPair');}
+    const counterfeitMade=coachMadeCounterfeit(p.hole,state.board,score);
+    if(counterfeitMade){extra.push(C('madeCounterfeit',rankNm(counterfeitMade.rank),counterfeitMade.remaining));concepts.push('madeCounterfeit');}
     /* draws (only before the river) */
     if(state.stage!=='river'){
       const d=detectDraws(p.hole,state.board);
@@ -2087,6 +2152,7 @@ function coachDecide(p){
     ?clamp(odds+icmPrem,0,.95)
     :clamp(odds+posAdj+icmPrem-(impliedInfo?.equityCredit||0),0,.95);
   let rec,why=[],chartInfo=null,rangeCharts=[],smallStab=false,preflopCallInfo=null;
+  let strategyMode='baseline';
   if(state.stage==='preflop'){
     const bucket=posBucket(pos), prTxt='top ~'+Math.round(pr*100)+'%';
     const unopened=state.currentBet<=state.bb;
@@ -2178,6 +2244,7 @@ function coachDecide(p){
           const mlt={rock:1.25,station:0.8,shark:0.95,maniac:0.7};
           fProf=behind.reduce((s,q)=>s+(mlt[q.style.id]||1),0)/behind.length;
           profDir=fProf>1.08?1:fProf<0.92?-1:0;
+          if(profDir!==0)strategyMode='exploit';
         }
       }
       if(lateSteal&&difficultyApplies){
@@ -2240,6 +2307,7 @@ function coachDecide(p){
       /* facing a raise: BB defense vs steals, then per-raiser-position chart, then EP/LP bucket */
       const raiser=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
       const facingReraise=p.bet>state.bb;
+      const squeezeCallers=flatCallerCount(p);
       const shortCtBase=clamp(0.13+(late?0.05:0)+(early?-0.03:0),0.06,0.25);
       const shortCt=clamp(shortCtBase*tableSizeFacingFactor(aliveN,pos),0.06,aliveN<=2?0.45:aliveN===3?0.36:aliveN===4?0.30:0.25);
       if(aliveN<=4&&shortCt>shortCtBase*1.08) extra.push(C('tableSizeNote',aliveN,Math.round(shortCtBase*100),Math.round(shortCt*100)));
@@ -2322,7 +2390,14 @@ function coachDecide(p){
         const vsEarlyR=raiser?/^(UTG|MP)/.test(raiser.pos||''):false;
         if(fc.raise.includes(code)){
           rec='RAISE';
-          why.push(C('chart3bet',code,vsEarlyR));
+          why.push(squeezeCallers>0?C('squeezePlay',code,squeezeCallers):C('chart3bet',code,vsEarlyR));
+          if(squeezeCallers>0)concepts.push('squeeze');
+        }else if(squeezeCallers>0&&raiser?.style?.id!=='rock'&&icmPrem<.02&&
+          ['A5s','A4s','KQs','AQs','JJ','QQ','KK','AA'].includes(code)){
+          rec='RAISE';
+          strategyMode='exploit';
+          why.push(C('squeezePlay',code,squeezeCallers));
+          concepts.push('squeeze');
         }else if(fc.call.includes(code)&&contextCallOk()){
           rec='CALL';
           why.push(contextProse('pfContextCall')||C('chartCallRaise',code,pct(eq),pct(odds)));
@@ -2389,6 +2464,7 @@ function coachDecide(p){
     const freeDraw=state.stage!=='river'?detectDraws(p.hole,state.board):null;
     const drawOnlyFree=freeDraw&&(freeDraw.flush||freeDraw.oesd||freeDraw.gutshot)&&madeScore&&madeScore[0]<1;
     const multiwayDrawCaution=drawOnlyFree&&opps>=2&&!realTwoPairOrBetter(madeScore,p.hole);
+    const riverBlocker=coachRiverNutBlockerBluff(p,madeScore,opps);
     const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&strongMade;
     const leadStrongMade=!river&&checkedInFront===0&&opps<=2&&eq>=0.45&&strongMade;
     const protectTopPair=!river&&checkedInFront>0&&opps<=3&&eq>=0.48&&hasTopPairOrBetter(madeScore,p.hole,state.board);
@@ -2418,6 +2494,11 @@ function coachDecide(p){
       rec='RAISE';
       smallStab=true;
       why.push(C('probeStab',pct(eq),passiveStabbers.length,!actsLast));
+    }else if(riverBlocker){
+      rec='RAISE';
+      smallStab=true;
+      why.push(C('riverBlockerBluff'));
+      concepts.push('riverBlockerBluff');
     }else if(drySidePot){
       rec='CHECK';
       why.push(C('drySidePotCheck',handDesc,pct(eq)));
@@ -2444,6 +2525,7 @@ function coachDecide(p){
     const profileAlreadyModeled=!!(difficultyApplies&&difficulty==='hard'&&agg?.rangeModel&&
       Array.isArray(agg.rangeModel.weights));
     if(agg&&agg.style&&!agg.folded){
+      strategyMode='exploit';
       if(agg.style.id==='rock'){if(!profileAlreadyModeled)exploitAdj=-0.04;extra.push(C('profRock'));}
       else if(agg.style.id==='maniac'){if(!profileAlreadyModeled)exploitAdj=+0.05;extra.push(C('profManiac'));}
       else if(agg.style.id==='station'){if(!profileAlreadyModeled)exploitAdj=-0.03;extra.push(C('profStation'));}
@@ -2497,6 +2579,8 @@ function coachDecide(p){
       rec='CALL';
       why.push(C('callOk',usd(callAmt),usd(pot),pct(odds),pct(eq),
         !!(bigBetPen||airPen||underpairPen),pct(eqAdj),pct(decisionNeed)));
+      if(state.stage==='flop'&&actsLast&&agg?.lineRead==='cbet'&&(madeScore?.[0]<2||eqAdj<=.68))
+        {extra.push(C('floatPlan'));concepts.push('floatPlan');}
     }else{
       rec='FOLD';
       why.push(C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),!!bigBetPen,pct(decisionNeed)));
@@ -2517,6 +2601,14 @@ function coachDecide(p){
       });
     }
   }
+  if(state.stage==='turn'){
+    const strongDraw=!!(drawInfo&&(drawInfo.flush?.length>=8||drawInfo.straight?.length>=8));
+    const plan=(rec==='RAISE'||rec==='ALLIN')&&madeScore?.[0]>=2?'value':
+      (rec==='RAISE'||rec==='CALL')&&strongDraw?'draw':
+      rec==='CHECK'||(rec==='CALL'&&madeScore?.[0]>=1)?'control':'giveup';
+    extra.push(C('turnPlan',plan));
+    concepts.push('turnPlan');
+  }
   let coachT=0, sizePlan=null, postSizePlan=null;
   if(rec==='RAISE'||rec==='ALLIN'){
     let t;
@@ -2528,20 +2620,26 @@ function coachDecide(p){
       postSizePlan=coachPostflopRaiseSizing(p,pot,callAmt);
       t=postSizePlan.target;
     }else{
-      t=state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*(smallStab?0.33:0.66)));
+      postSizePlan=coachPostflopOpenSizing(pot,smallStab,madeScore,drawInfo);
+      t=state.currentBet+Math.max(state.lastRaiseSize,Math.round(postSizePlan.target));
     }
     coachT=clamp(Math.round(t/state.sb)*state.sb, state.currentBet+state.lastRaiseSize, p.bet+p.chips);
     if(sizePlan) extra.push(sizePlan.kind==='fourBet'
       ?C('fourBetSize',usd(coachT),bbs(coachT),Math.round(sizePlan.mult*10)/10)
       :C('pfRaiseSize',usd(coachT),bbs(coachT),sizePlan.posKey,sizePlan.callers,sizePlan.anteAdj,sizePlan.depthAdj));
-    if(postSizePlan) extra.push(C('postflopRaiseSize',usd(coachT),bbs(coachT),Math.round(postSizePlan.mult*10)/10,usd(callAmt),Math.round(postSizePlan.betRatio*100)));
+    if(postSizePlan){
+      if(callAmt>0)extra.push(C('postflopRaiseSize',usd(coachT),bbs(coachT),Math.round(postSizePlan.mult*10)/10,usd(callAmt),Math.round(postSizePlan.betRatio*100)));
+      else extra.push(C('textureSize',postSizePlan.texture,Math.round(postSizePlan.ratio*100)));
+      if(callAmt===0)concepts.push('textureSizing');
+    }
   }
   /* rough chip-EV per available action (for blunder tracking) */
   const evRaiseTarget=state.stage==='preflop'
       ? coachPreflopRaiseSizing(p,actsLast).target
       : callAmt>0
       ? coachPostflopRaiseSizing(p,pot,callAmt).target
-      : state.currentBet+Math.max(state.lastRaiseSize,Math.round(pot*(smallStab?0.33:0.66)));
+      : state.currentBet+Math.max(state.lastRaiseSize,Math.round(
+          coachPostflopOpenSizing(pot,smallStab,madeScore,drawInfo).target));
   const tEv=clamp(Math.round(evRaiseTarget/state.sb)*state.sb,
     state.currentBet+state.lastRaiseSize, p.bet+p.chips);
   const FE=clamp(0.42-0.09*(opps-1),0.08,0.45);            // fold equity vs # of opponents
@@ -2554,11 +2652,15 @@ function coachDecide(p){
       :eq*pot),
     RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
   };
+  const raiseInvestment=Math.max(0,(rec==='ALLIN'?p.bet+p.chips:coachT)-p.bet);
+  const bluffBreakEven=(rec==='RAISE'||rec==='ALLIN')&&raiseInvestment>0
+    ?raiseInvestment/Math.max(pot+raiseInvestment,1):null;
   coachSpotBrief(p,extra,{eq,eqAdj,odds,needEq:callAmt>0?decisionNeed:null,
     callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,icmInfo,chartInfo,rangeCharts,code,spr,sprZone,
-          preflopCallInfo,drawInfo,impliedInfo,drySidePot,needEq:decisionNeed};
+          preflopCallInfo,drawInfo,impliedInfo,drySidePot,needEq:decisionNeed,
+          strategyMode,bluffBreakEven,modeledFoldEquity:FE,concepts};
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */
@@ -2567,9 +2669,11 @@ function coachRangeChartInfo(villain,hero,difficultyApplies,difficulty){
   if(difficultyApplies){const adjusted=coachDifficultyRange(villain,cap,floor,difficulty);cap=adjusted.cap;floor=adjusted.floor;}
   floor=Math.min(floor,cap*0.5);
   const list=HAND_ORDER.filter(h=>{const pct=handPct[h];return pct<=cap&&pct>floor;});
+  const sample=Math.max(0,villain.observedActions||0);
+  const sampleConfidence=sample>=60?'reliable':sample>=15?'tentative':'early';
   return {kind:'range',pos:`${villain.name}${villain.pos?' ('+villain.pos+')':''}`,list,
     model:villain.rangeModel?Object.assign({},villain.rangeModel):null,cap,floor,
-    board:state.board.slice(),dead:hero.hole.slice()};
+    board:state.board.slice(),dead:hero.hole.slice(),sample,sampleConfidence};
 }
 function rangeComboDrawOrAir(hole,board){
   if(board.length<5){
@@ -2842,9 +2946,12 @@ function rangeMatrixMetaHtml(info,controls=false,mode='density'){
   const topRank=(info.board||[]).length?Math.max(...info.board.map(c=>c.r)):0,topChar=topRank?RANK_CH[topRank]:'',topCode=topRank?CODE_R[topRank]:'';
   const topCardMass=topCode?Object.keys(metrics.mass).reduce((s,code)=>s+(code.slice(0,2).includes(topCode)?metrics.mass[code]:0),0):0;
   const topCardPct=rangePct(topCardMass);
+  const sampleLine=info.sample!=null
+    ?`<div class="range-line"><b>${T('readConfidence')}:</b> ${T('readSample')(info.sample)} · ${T('readConfidence'+
+      (info.sampleConfidence==='reliable'?'Reliable':info.sampleConfidence==='tentative'?'Tentative':'Early'))}</div>`:'';
   return `<div class="range-meta"><span>≈${metrics.effective} ${T('rangeEffective')}</span>`+
     (controls?`<span class="range-mode"><button data-range-mode="density" class="${mode==='density'?'on':''}">${T('rangeDensity')}</button><button data-range-mode="mass" class="${mode==='mass'?'on':''}">${T('rangeClassProb')}</button></span>`:`<span>${T('rangeDensity')}</span>`)+
-    `</div>${trail?`<div class="range-line"><b>${T('rangeLine')}:</b> ${trail}</div>`:''}`+
+    `</div>${sampleLine}${trail?`<div class="range-line"><b>${T('rangeLine')}:</b> ${trail}</div>`:''}`+
     rangeEnteringStreetHtml(info)+
     rangeCompositionHtml(metrics.composition)+
     rangeDrawFeaturesHtml(metrics.drawFeatures)+

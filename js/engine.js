@@ -299,6 +299,8 @@ function promptNext(){
 
 function applyAction(p,type,amt){
   if(p.bankInUse){p.bank=Math.max(0,(p.bank||0)-(Date.now()-p.bankInUse));p.bankInUse=0;state.turnBank=false;}
+  /* Visible-action sample used by the coach's opponent-read confidence label. */
+  if(!p.isHuman)p.observedActions=(p.observedActions||0)+1;
   const callAmt=Math.max(0,Math.min(state.currentBet-p.bet,p.chips));
   if(type==='fold'&&callAmt<=0) type='call'; // checking is the only legal zero-price fold alternative
   /* A short all-in increases the price but does not reopen raising for players

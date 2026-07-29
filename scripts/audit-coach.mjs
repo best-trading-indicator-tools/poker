@@ -26,7 +26,7 @@ const audit=vm.runInContext(`(()=>{
   };
   function spot({stage='preflop',hole=['As','Ah'],board=[],players=2,stackBB=40,
     potBB=3,betBB=0,pos='BTN',difficulty='hard',gameType='sng',style='shark',
-    heroBetBB=0,ante=0,out=0,seed='audit'}={}){
+    heroBetBB=0,ante=0,out=0,callers=0,seed='audit'}={}){
     setGameSeed(seed);
     newGame({gameType,numPlayers:players,startBB:100,startBlind:100,ante,speed:'standard',
       difficulty,allAI:true,seed});
@@ -53,6 +53,9 @@ const audit=vm.runInContext(`(()=>{
         v.bet=betBB*100;v.totalBet=v.bet;v.lineRead=stage==='flop'?'cbet':stage==='turn'?'barrel2':stage==='river'?'barrel3':'';
       }
     });
+    for(let i=1;i<=callers&&i<live.length;i++){
+      live[i].bet=betBB*100;live[i].totalBet=live[i].bet;live[i].acted=true;
+    }
     const targetPot=potBB*100,current=state.players.reduce((s,p)=>s+p.totalBet,0);
     if(live[0])live[0].totalBet+=Math.max(0,targetPot-current);
     state.turnIdx=hero.i;
@@ -92,7 +95,48 @@ const audit=vm.runInContext(`(()=>{
   for(const [name,cfg,oracle] of anchors){
     const R=spot({...cfg,players:2,stackBB:50,pos:'BTN',seed:'anchor-'+name}).R;
     record('Postflop anchors',name,legal(R)&&oracle(R),{rec:R.rec,eq:Math.round(R.eq*100),usable:Math.round(R.eqAdj*100)});
+    if(R.rec==='RAISE'||R.rec==='ALLIN')record('Teaching metrics',name+' bluff threshold',
+      Number.isFinite(R.bluffBreakEven)&&R.bluffBreakEven>0&&R.bluffBreakEven<1&&
+      Number.isFinite(R.modeledFoldEquity)&&R.modeledFoldEquity>=0&&R.modeledFoldEquity<=1,
+      {breakEven:R.bluffBreakEven,foldEquity:R.modeledFoldEquity});
+    if(R.rangeCharts?.length)record('Teaching metrics',name+' read confidence',
+      Number.isFinite(R.rangeCharts[0].sample)&&['early','tentative','reliable'].includes(R.rangeCharts[0].sampleConfidence),
+      {sample:R.rangeCharts[0].sample,confidence:R.rangeCharts[0].sampleConfidence});
+    record('Teaching metrics',name+' strategy label',
+      R.strategyMode==='baseline'||R.strategyMode==='exploit',{strategy:R.strategyMode});
   }
+
+  /* New plain-English teaching concepts must be attached to real decisions. */
+  const squeeze=spot({players:3,hole:['As','5s'],pos:'BTN',potBB:7.5,betBB:2.5,callers:1,
+    style:'maniac',seed:'teach-squeeze'}).R;
+  record('Teaching concepts','squeeze opportunity is identified',
+    squeeze.rec==='RAISE'&&squeeze.concepts.includes('squeeze'),{rec:squeeze.rec,concepts:squeeze.concepts});
+  const dominated=spot({stage:'flop',hole:['Kh','9s'],board:['Kd','7c','2s'],potBB:8,betBB:0,
+    seed:'teach-dominated'}).R;
+  record('Teaching concepts','dominated top pair warning',
+    dominated.concepts.includes('dominatedTopPair'),{rec:dominated.rec,concepts:dominated.concepts});
+  const counterfeit=spot({stage:'flop',hole:['8h','7s'],board:['Kd','8c','7d'],potBB:8,betBB:0,
+    seed:'teach-counterfeit'}).R;
+  record('Teaching concepts','made two-pair counterfeit warning',
+    counterfeit.concepts.includes('madeCounterfeit'),{rec:counterfeit.rec,concepts:counterfeit.concepts});
+  const texture=spot({stage:'flop',hole:['Kh','Qh'],board:['Kd','8c','2s'],potBB:8,betBB:0,
+    seed:'teach-texture'}).R;
+  record('Teaching concepts','texture-aware open sizing',
+    texture.rec==='RAISE'&&texture.concepts.includes('textureSizing'),{rec:texture.rec,target:texture.coachT,concepts:texture.concepts});
+  const floating=spot({stage:'flop',hole:['Ah','5h'],board:['Kh','7h','2c'],potBB:12,betBB:2,
+    pos:'BTN',seed:'teach-float'}).R;
+  record('Teaching concepts','float carries a turn plan',
+    floating.rec==='CALL'&&floating.concepts.includes('floatPlan'),{rec:floating.rec,concepts:floating.concepts});
+  const turn=spot({stage:'turn',hole:['Qh','Js'],board:['Qc','8s','3h','2d'],potBB:10,betBB:0,
+    seed:'teach-turn'}).R;
+  record('Teaching concepts','turn is categorized',
+    turn.concepts.includes('turnPlan'),{rec:turn.rec,concepts:turn.concepts});
+  spot({stage:'river',hole:['As','4d'],board:['Ks','8s','2c','7d','3s'],potBB:10,betBB:0,
+    pos:'BTN',style:'rock',seed:'teach-blocker'});
+  state.players[1].checkedStreet=true;state.players[1].checkStreets=['turn','river'];
+  const blocker=coachDecide(state.players[0]);
+  record('Teaching concepts','selective river blocker bluff',
+    blocker.rec==='RAISE'&&blocker.concepts.includes('riverBlockerBluff'),{rec:blocker.rec,concepts:blocker.concepts});
 
   /* Price monotonicity: making the same call more expensive must not turn a fold
      into a call unless some other material state changed. */
