@@ -138,6 +138,49 @@ const audit=vm.runInContext(`(()=>{
   record('Teaching concepts','selective river blocker bluff',
     blocker.rec==='RAISE'&&blocker.concepts.includes('riverBlockerBluff'),{rec:blocker.rec,concepts:blocker.concepts});
 
+  /* Guardrails: teach each concept only when its prerequisites are actually present. */
+  const strongKicker=spot({stage:'flop',hole:['Kh','As'],board:['Kd','7c','2s'],potBB:8,betBB:0,
+    seed:'guard-strong-kicker'}).R;
+  record('Teaching guardrails','ace-kicker top pair is not marked dominated',
+    !strongKicker.concepts.includes('dominatedTopPair'),{concepts:strongKicker.concepts});
+  const topTwo=spot({stage:'flop',hole:['Kh','8s'],board:['Kd','8c','7d'],potBB:8,betBB:0,
+    seed:'guard-top-two'}).R;
+  record('Teaching guardrails','top two pair is not marked counterfeit-prone',
+    !topTwo.concepts.includes('madeCounterfeit'),{concepts:topTwo.concepts});
+  const tightSqueeze=spot({players:3,hole:['As','5s'],pos:'BTN',potBB:7.5,betBB:2.5,callers:1,
+    style:'rock',seed:'guard-tight-squeeze'}).R;
+  record('Teaching guardrails','blocker squeeze is suppressed versus a tight raiser',
+    !tightSqueeze.concepts.includes('squeeze'),{rec:tightSqueeze.rec,concepts:tightSqueeze.concepts});
+  const premiumSqueeze=spot({players:3,hole:['As','Ah'],pos:'BTN',potBB:7.5,betBB:2.5,callers:1,
+    style:'rock',seed:'guard-premium-squeeze'}).R;
+  record('Teaching guardrails','premium value squeeze remains available versus tight range',
+    premiumSqueeze.rec==='RAISE'&&premiumSqueeze.concepts.includes('squeeze'),
+    {rec:premiumSqueeze.rec,concepts:premiumSqueeze.concepts});
+  const drySize=spot({stage:'flop',hole:['Kh','Qh'],board:['Kd','8c','2s'],potBB:10,betBB:0,
+    seed:'guard-dry-size'}).R;
+  const wetSize=spot({stage:'flop',hole:['Jh','Th'],board:['Jd','Tc','8s'],potBB:10,betBB:0,
+    seed:'guard-wet-size'}).R;
+  record('Teaching guardrails','strong hand sizes larger on wet board than dry board',
+    drySize.rec==='RAISE'&&wetSize.rec==='RAISE'&&
+      wetSize.postSizePlan?.ratio>drySize.postSizePlan?.ratio,
+    {dry:drySize.coachT,wet:wetSize.coachT,dryRatio:drySize.postSizePlan?.ratio,wetRatio:wetSize.postSizePlan?.ratio});
+  spot({stage:'flop',hole:['Ah','5h'],board:['Kh','7h','2c'],potBB:12,betBB:2,
+    pos:'UTG',seed:'guard-float-oop'});
+  state.dealerIdx=state.players[1].i;
+  const oopFloat=coachDecide(state.players[0]);
+  record('Teaching guardrails','out-of-position call is not called a float',
+    !oopFloat.concepts.includes('floatPlan'),{rec:oopFloat.rec,concepts:oopFloat.concepts});
+  spot({stage:'river',hole:['As','4d'],board:['Ks','8s','2c','7d','3s'],potBB:10,betBB:0,
+    pos:'BTN',style:'station',seed:'guard-station-blocker'});
+  state.players[1].checkedStreet=true;state.players[1].checkStreets=['turn','river'];
+  const stationBlocker=coachDecide(state.players[0]);
+  record('Teaching guardrails','nut blocker is not used to bluff a calling station',
+    !stationBlocker.concepts.includes('riverBlockerBluff'),{rec:stationBlocker.rec,concepts:stationBlocker.concepts});
+  const noPassiveBlocker=spot({stage:'river',hole:['As','4d'],board:['Ks','8s','2c','7d','3s'],
+    potBB:10,betBB:0,pos:'BTN',style:'rock',seed:'guard-no-passive-blocker'}).R;
+  record('Teaching guardrails','nut blocker alone is insufficient without a passive line',
+    !noPassiveBlocker.concepts.includes('riverBlockerBluff'),{rec:noPassiveBlocker.rec,concepts:noPassiveBlocker.concepts});
+
   /* Price monotonicity: making the same call more expensive must not turn a fold
      into a call unless some other material state changed. */
   const priceHands=[

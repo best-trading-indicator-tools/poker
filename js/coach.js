@@ -2308,6 +2308,8 @@ function coachDecide(p){
       const raiser=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
       const facingReraise=p.bet>state.bb;
       const squeezeCallers=flatCallerCount(p);
+      const squeezeEligible=squeezeCallers>0&&
+        (['JJ','QQ','KK','AA','AKs','AKo'].includes(code)||raiser?.style?.id!=='rock');
       const shortCtBase=clamp(0.13+(late?0.05:0)+(early?-0.03:0),0.06,0.25);
       const shortCt=clamp(shortCtBase*tableSizeFacingFactor(aliveN,pos),0.06,aliveN<=2?0.45:aliveN===3?0.36:aliveN===4?0.30:0.25);
       if(aliveN<=4&&shortCt>shortCtBase*1.08) extra.push(C('tableSizeNote',aliveN,Math.round(shortCtBase*100),Math.round(shortCt*100)));
@@ -2390,8 +2392,8 @@ function coachDecide(p){
         const vsEarlyR=raiser?/^(UTG|MP)/.test(raiser.pos||''):false;
         if(fc.raise.includes(code)){
           rec='RAISE';
-          why.push(squeezeCallers>0?C('squeezePlay',code,squeezeCallers):C('chart3bet',code,vsEarlyR));
-          if(squeezeCallers>0)concepts.push('squeeze');
+          why.push(squeezeEligible?C('squeezePlay',code,squeezeCallers):C('chart3bet',code,vsEarlyR));
+          if(squeezeEligible)concepts.push('squeeze');
         }else if(squeezeCallers>0&&raiser?.style?.id!=='rock'&&icmPrem<.02&&
           ['A5s','A4s','KQs','AQs','JJ','QQ','KK','AA'].includes(code)){
           rec='RAISE';
@@ -2482,6 +2484,11 @@ function coachDecide(p){
     }else if(multiwayDrawCaution){
       rec='CHECK';
       why.push(C('drawMwCheck',opps));
+    }else if(riverBlocker){
+      rec='RAISE';
+      smallStab=true;
+      why.push(C('riverBlockerBluff'));
+      concepts.push('riverBlockerBluff');
     }else if(checkedDown.length&&eq>probeMin){
       rec='RAISE';
       smallStab=true;
@@ -2494,11 +2501,6 @@ function coachDecide(p){
       rec='RAISE';
       smallStab=true;
       why.push(C('probeStab',pct(eq),passiveStabbers.length,!actsLast));
-    }else if(riverBlocker){
-      rec='RAISE';
-      smallStab=true;
-      why.push(C('riverBlockerBluff'));
-      concepts.push('riverBlockerBluff');
     }else if(drySidePot){
       rec='CHECK';
       why.push(C('drySidePotCheck',handDesc,pct(eq)));
@@ -2660,7 +2662,7 @@ function coachDecide(p){
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,icmInfo,chartInfo,rangeCharts,code,spr,sprZone,
           preflopCallInfo,drawInfo,impliedInfo,drySidePot,needEq:decisionNeed,
-          strategyMode,bluffBreakEven,modeledFoldEquity:FE,concepts};
+          strategyMode,bluffBreakEven,modeledFoldEquity:FE,concepts,postSizePlan};
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */

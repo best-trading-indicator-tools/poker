@@ -2588,7 +2588,8 @@ function jumpReplayToHand(value){
   return true;
 }
 function parseCardCode(code){
-  return {r:+(RANK_CH_INV[code.slice(0,-1)]||2), s:Math.max(0,'shdc'.indexOf(code.slice(-1)))};
+  const rank=code.slice(0,-1).toUpperCase();
+  return {r:rank==='T'?10:+(RANK_CH_INV[rank]||2), s:Math.max(0,'shdc'.indexOf(code.slice(-1)))};
 }
 const RANK_CH_INV=Object.fromEntries(Object.entries(RANK_CH).map(([k,v])=>[v,k]));
 function counterfactualActionKey(action){
