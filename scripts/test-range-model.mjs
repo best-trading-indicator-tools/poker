@@ -87,6 +87,16 @@ const result=vm.runInContext(`(()=>{
   if(!(learnedProfile.raise>fixedProfile.raise&&learnedProfile.bluff>fixedProfile.bluff&&learnedProfile.size>fixedProfile.size))
     throw new Error('observed aggression did not move the profile '+JSON.stringify({fixedProfile,learnedProfile}));
 
+  const riverLearner=state.players[5];
+  riverLearner.rangeTendencies=null;
+  state.stage='river';
+  rangeTendencyObserve(riverLearner,'fold',{stage:'river',callAmt:200});
+  rangeTendencyObserve(riverLearner,'call',{stage:'river',callAmt:200});
+  const riverRead=rangeTendencyRead(riverLearner);
+  if(riverRead.riverSample!==2||riverLearner.rangeTendencies.riverFolds!==1||
+      riverLearner.rangeTendencies.riverCalls!==1)
+    throw new Error('river pressure history was not persisted '+JSON.stringify(riverLearner.rangeTendencies));
+
   state.stage='turn';state.board=[C(13,3),C(6,3),C(4,2),C(2,0)];
   const postCtx={stage:'turn',callAmt:0,cbBefore:0,betRatio:0,rangeCheckedTo:true,rangePriorPostChecks:1};
   const top=H(C(13,0),C(9,1)),air=H(C(9,0),C(8,1));

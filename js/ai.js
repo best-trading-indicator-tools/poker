@@ -157,9 +157,12 @@ function rangeProfilePrior(p){
 function rangeTendencyStatsEnsure(p){
   const defaults={v:1,hands:0,vpipHands:0,pfrHands:0,lastHand:0,handVpip:false,handPfr:false,
     preActions:0,postActions:0,postRaises:0,postChecks:0,
-    faced:0,folds:0,calls:0,faceRaises:0,sizeN:0,sizeSum:0};
+    faced:0,folds:0,calls:0,faceRaises:0,riverFaced:0,riverFolds:0,riverCalls:0,
+    sizeN:0,sizeSum:0};
   if(!p.rangeTendencies||p.rangeTendencies.v!==1)
-    p.rangeTendencies=Object.assign(defaults,p.rangeTendencies||{});
+    p.rangeTendencies=Object.assign({},defaults,p.rangeTendencies||{});
+  else for(const [k,v] of Object.entries(defaults))
+    if(p.rangeTendencies[k]===undefined)p.rangeTendencies[k]=v;
   return p.rangeTendencies;
 }
 function rangeSmoothStat(hits,n,prior,priorN){
@@ -167,6 +170,7 @@ function rangeSmoothStat(hits,n,prior,priorN){
 }
 function rangeTendencyRead(p){
   const prior=rangeProfilePrior(p),s=rangeTendencyStatsEnsure(p),priorN=20;
+  const riverPriorN=12;
   return {
     sample:s.preActions+s.postActions,
     confidence:clamp((s.preActions+s.postActions)/(s.preActions+s.postActions+priorN),0,1),
@@ -175,6 +179,10 @@ function rangeTendencyRead(p){
     postAgg:rangeSmoothStat(s.postRaises,s.postActions,prior.postAgg,priorN),
     foldRate:rangeSmoothStat(s.folds,s.faced,prior.foldRate,priorN),
     callRate:rangeSmoothStat(s.calls,s.faced,prior.callRate,priorN),
+    riverSample:s.riverFaced,
+    riverConfidence:clamp(s.riverFaced/(s.riverFaced+riverPriorN),0,1),
+    riverFoldRate:rangeSmoothStat(s.riverFolds,s.riverFaced,prior.foldRate,riverPriorN),
+    riverCallRate:rangeSmoothStat(s.riverCalls,s.riverFaced,prior.callRate,riverPriorN),
     checkRate:rangeSmoothStat(s.postChecks,s.postActions,prior.checkRate,priorN),
     size:(s.sizeSum+prior.size*10)/(s.sizeN+10)
   };
@@ -213,6 +221,11 @@ function rangeTendencyObserve(p,type,ctx){
       if(type==='fold')s.folds++;
       else if(type==='call')s.calls++;
       else if(type==='raise')s.faceRaises++;
+      if((ctx.stage||state.stage)==='river'){
+        s.riverFaced++;
+        if(type==='fold')s.riverFolds++;
+        else if(type==='call'||type==='raise')s.riverCalls++;
+      }
     }
     if(type==='raise'&&(ctx.actionPotRatio||0)>0){
       s.sizeN++;s.sizeSum+=clamp(ctx.actionPotRatio,0,2.5);

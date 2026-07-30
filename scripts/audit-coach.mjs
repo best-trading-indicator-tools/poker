@@ -205,6 +205,38 @@ const audit=vm.runInContext(`(()=>{
       noBluffFold.bluffInfo?.plan==='preserveStack',
     {rec:noBluffFold.rec,intent:noBluffFold.actionIntent,info:noBluffFold.bluffInfo});
 
+  const historyBluff=(difficulty,riverFolds,riverFaced,seed)=>{
+    spot({stage:'river',hole:['As','4d'],board:['Ks','8s','2c','7d','3s'],potBB:10,betBB:0,
+      pos:'BTN',style:'shark',difficulty,seed});
+    const v=state.players[1];
+    v.checkedStreet=true;v.checkStreets=['turn','river'];
+    v.rangeTendencies={v:1,hands:Math.max(1,riverFaced),preActions:riverFaced,
+      postActions:riverFaced*2,postRaises:0,postChecks:riverFaced,
+      faced:riverFaced,folds:riverFolds,calls:Math.max(0,riverFaced-riverFolds),faceRaises:0,
+      riverFaced,riverFolds,riverCalls:Math.max(0,riverFaced-riverFolds),sizeN:0,sizeSum:0};
+    return coachDecide(state.players[0]);
+  };
+  const historyOverfold=historyBluff('hard',18,20,'history-overfold');
+  const historySticky=historyBluff('hard',2,20,'history-sticky');
+  const historyTiny=historyBluff('hard',1,1,'history-tiny');
+  const historyMedium=historyBluff('medium',18,20,'history-medium');
+  const historyEasy=historyBluff('easy',18,20,'history-easy');
+  record('Opponent history','repeated folds increase bluff fold estimate',
+    historyOverfold.bluffInfo.historyAdjustment>.05&&
+      historyOverfold.bluffInfo.reasons.includes('historyFolds'),
+    {info:historyOverfold.bluffInfo});
+  record('Opponent history','repeated calls reduce bluff fold estimate',
+    historySticky.bluffInfo.historyAdjustment<-.05&&
+      historySticky.bluffInfo.reasons.includes('historyCalls'),
+    {info:historySticky.bluffInfo});
+  record('Opponent history','tiny sample cannot overpower profile prior',
+    Math.abs(historyTiny.bluffInfo.historyAdjustment)<.02,{info:historyTiny.bluffInfo});
+  record('Opponent history','difficulty scales learned exploit strength',
+    historyOverfold.bluffInfo.historyAdjustment>historyMedium.bluffInfo.historyAdjustment&&
+      historyMedium.bluffInfo.historyAdjustment>historyEasy.bluffInfo.historyAdjustment,
+    {hard:historyOverfold.bluffInfo.historyAdjustment,medium:historyMedium.bluffInfo.historyAdjustment,
+      easy:historyEasy.bluffInfo.historyAdjustment});
+
   /* Price monotonicity: making the same call more expensive must not turn a fold
      into a call unless some other material state changed. */
   const priceHands=[

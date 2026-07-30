@@ -1363,6 +1363,29 @@ function coachBluffAssessment(p,ctx){
   if(texture?.dry)estimatedFolds+=.04;
   if(opps>=2)estimatedFolds-=.05;
   if(blocker&&state.stage==='river')estimatedFolds+=.06;
+  const difficulty=state.cfg?.difficulty||'medium';
+  const learnStrength={easy:.25,medium:.65,hard:1}[difficulty]||.65;
+  let historyAdjustment=0,historySample=0,historyWeight=0,learnedFoldRate=null;
+  if(typeof rangeTendencyRead==='function'&&typeof rangeProfilePrior==='function'&&villains.length){
+    let weightedDelta=0,weightedRate=0,totalWeight=0;
+    for(const v of villains){
+      const read=rangeTendencyRead(v),prior=rangeProfilePrior(v);
+      const river=state.stage==='river'&&read.riverSample>0;
+      const sample=river?read.riverSample:read.sample;
+      const confidence=river?read.riverConfidence:read.confidence;
+      const foldRate=river?read.riverFoldRate:read.foldRate;
+      if(!sample||!Number.isFinite(foldRate))continue;
+      const weight=Math.max(.05,confidence);
+      weightedDelta+=(foldRate-prior.foldRate)*weight;
+      weightedRate+=foldRate*weight;totalWeight+=weight;historySample+=sample;
+    }
+    if(totalWeight>0){
+      historyWeight=clamp(totalWeight/villains.length,0,1)*learnStrength;
+      historyAdjustment=clamp(weightedDelta/totalWeight*historyWeight,-.14,.14);
+      learnedFoldRate=weightedRate/totalWeight;
+      estimatedFolds+=historyAdjustment;
+    }
+  }
   estimatedFolds=clamp(estimatedFolds,.04,.72);
 
   let intent;
@@ -1385,6 +1408,8 @@ function coachBluffAssessment(p,ctx){
   if(texture?.dry)reasons.push('dry');
   if(station)reasons.push('station');
   if(opps>=2)reasons.push('multiway');
+  if(historyAdjustment>=.02)reasons.push('historyFolds');
+  else if(historyAdjustment<=-.02)reasons.push('historyCalls');
   if(callAmt>0&&!passive)reasons.push('strength');
   if(made>=1&&!bluffing)reasons.push('showdown');
   if(!reasons.length)reasons.push('range');
@@ -1398,7 +1423,8 @@ function coachBluffAssessment(p,ctx){
     intent==='value'||intent==='protection'?'continueForValue':
     intent==='bluffCatch'?'callNoRaise':rec==='CHECK'?'takeFreeCard':rec==='FOLD'?'preserveStack':'followAction';
   return {intent,verdict,reasons,plan,bluffing,requiredFolds:bluffBreakEven,
-    estimatedFolds,equityWhenCalled:eqAdj,pot,callAmt};
+    estimatedFolds,equityWhenCalled:eqAdj,pot,callAmt,historyAdjustment,
+    historySample,historyWeight,learnedFoldRate,difficulty};
 }
 function coachSpotBrief(p,extra,ctx){
   const {eq,eqAdj,odds,needEq,callAmt,pot,opps,pos,actsFirst,actsLast,airPen}=ctx;
@@ -2738,7 +2764,8 @@ function coachRangeChartInfo(villain,hero,difficultyApplies,difficulty){
   if(difficultyApplies){const adjusted=coachDifficultyRange(villain,cap,floor,difficulty);cap=adjusted.cap;floor=adjusted.floor;}
   floor=Math.min(floor,cap*0.5);
   const list=HAND_ORDER.filter(h=>{const pct=handPct[h];return pct<=cap&&pct>floor;});
-  const sample=Math.max(0,villain.observedActions||0);
+  const tendency=typeof rangeTendencyRead==='function'?rangeTendencyRead(villain):null;
+  const sample=Math.max(0,tendency?.sample??villain.observedActions??0);
   const sampleConfidence=sample>=60?'reliable':sample>=15?'tentative':'early';
   return {kind:'range',pos:`${villain.name}${villain.pos?' ('+villain.pos+')':''}`,list,
     model:villain.rangeModel?Object.assign({},villain.rangeModel):null,cap,floor,
