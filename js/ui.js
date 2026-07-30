@@ -56,6 +56,12 @@ confidenceMathNote:"Pot odds are exact; equity and future action use simulations
 confidenceHeuristicNote:"Multiway ranges and future actions require broader assumptions, so treat the recommendation as directional.",
 strategyLabel:"Strategy",strategyBaseline:"Baseline / balanced",strategyExploit:"Exploitative adjustment",
 bluffBreakEven:"Pure-bluff break-even",bluffBreakEvenNote:(f,fe)=>`Needs about ${f}% folds at this size; the model estimates about ${fe}%. Showdown equity adds value when called.`,
+bluffTitle:"Bluff assessment",bluffVerdict:"Verdict",bluffWhy:"Why",bluffPlan:"If called or raised",
+intentBluff:"BLUFF",intentSemiBluff:"SEMI-BLUFF",intentValue:"VALUE",intentProtection:"PROTECTION",intentRangeBluff:"RANGE BLUFF",intentRangeRaise:"RANGE RAISE",intentBluffCatch:"BLUFF-CATCH",intentCall:"CALL",intentCheck:"CHECK",intentFold:"FOLD",
+bluffGood:"Good bluff candidate",bluffThin:"Thin bluff — use caution",bluffSemi:"Semi-bluff: folds now + draw equity",bluffNot:"Not a bluff — build the pot for value",bluffNo:"Bluff not recommended",
+bluffFoldCompare:(need,est)=>`Needs about ${need}% folds · estimated folds ~${est}%`,bluffCalledEquity:e=>`About ${e}% usable equity if called`,
+bluffReasonPassive:"Opponents have shown weakness by checking, so their ranges contain many hands that can fold.",bluffReasonBlocker:"Your cards block some of the opponent's strongest possible hands.",bluffReasonDraw:"Your draw can still improve when the bluff gets called.",bluffReasonPosition:"Acting last gives you more information and makes pressure safer.",bluffReasonDry:"This dry board leaves opponents with fewer strong draws and continues.",bluffReasonStation:"A loose calling player is unlikely to fold enough, which makes bluffing worse.",bluffReasonMultiway:"Several opponents remain, so somebody is more likely to call.",bluffReasonStrength:"You are facing active aggression, so the opponent's range is less likely to fold.",bluffReasonShowdown:"Your hand has showdown value; turning it into a bluff would often fold worse hands and get action from better ones.",bluffReasonRange:"This action follows the position and range strategy rather than a postflop pure bluff.",
+bluffPlanGiveUp:"If called, usually give up unless the next card materially improves your story or hand. Fold to a strong raise.",bluffPlanDraw:"Continue on cards that complete or strengthen the draw; slow down after a bad card or strong raise.",bluffPlanValue:"Continue for value on safe cards, but reassess when the board or opponent's action becomes dangerous.",bluffPlanCatch:"Call to catch bluffs; do not re-raise because worse hands usually fold and stronger hands continue.",bluffPlanFree:"Take the free card/showdown and reconsider after the next action.",bluffPlanFold:"Fold now and preserve chips; no bluff investment is justified.",bluffPlanFollow:"Follow the recommended action and reassess using the next card and opponent response.",
 readConfidence:"Read confidence",readSample:n=>`${n} visible action${n!==1?'s':''}`,readConfidenceEarly:"early — lean on the default profile",readConfidenceTentative:"tentative tendency",readConfidenceReliable:"reliable table sample",
 processGoodBad:"Good process, bad outcome: your decisions matched the +EV coach line. Variance does not make them mistakes.",
 processBadGood:"Good outcome, questionable process: you won chips, but at least one decision gave up estimated EV. Do not let the result validate the play.",
@@ -209,6 +215,12 @@ confidenceMathNote:"Les cotes du pot sont exactes ; l'équité et l'action futur
 confidenceHeuristicNote:"Les ranges multiway et les actions futures demandent plus d'hypothèses : considérez ce conseil comme directionnel.",
 strategyLabel:"Stratégie",strategyBaseline:"Base / équilibrée",strategyExploit:"Ajustement exploitant",
 bluffBreakEven:"Seuil d'un bluff pur",bluffBreakEvenNote:(f,fe)=>`Cette taille exige environ ${f} % de folds ; le modèle en estime environ ${fe} %. L'équité à l'abattage ajoute de la valeur si vous êtes payé.`,
+bluffTitle:"Évaluation du bluff",bluffVerdict:"Verdict",bluffWhy:"Pourquoi",bluffPlan:"Si vous êtes payé ou relancé",
+intentBluff:"BLUFF",intentSemiBluff:"SEMI-BLUFF",intentValue:"VALUE",intentProtection:"PROTECTION",intentRangeBluff:"BLUFF DE RANGE",intentRangeRaise:"RELANCE DE RANGE",intentBluffCatch:"BLUFF-CATCH",intentCall:"CALL",intentCheck:"CHECK",intentFold:"FOLD",
+bluffGood:"Bon candidat au bluff",bluffThin:"Bluff limite — prudence",bluffSemi:"Semi-bluff : folds immédiats + équité du tirage",bluffNot:"Pas un bluff — construisez le pot pour valeur",bluffNo:"Bluff déconseillé",
+bluffFoldCompare:(need,est)=>`Environ ${need} % de folds requis · estimation ~${est} %`,bluffCalledEquity:e=>`Environ ${e} % d'équité utilisable si vous êtes payé`,
+bluffReasonPassive:"Les adversaires ont montré de la faiblesse en checkant ; leurs ranges contiennent beaucoup de mains qui peuvent folder.",bluffReasonBlocker:"Vos cartes bloquent certaines des mains adverses les plus fortes.",bluffReasonDraw:"Votre tirage peut encore s'améliorer quand le bluff est payé.",bluffReasonPosition:"Parler en dernier apporte plus d'informations et rend la pression plus sûre.",bluffReasonDry:"Ce board sec laisse moins de gros tirages et de mains capables de continuer.",bluffReasonStation:"Un joueur loose qui paie souvent ne foldera probablement pas assez.",bluffReasonMultiway:"Plusieurs adversaires restent ; l'un d'eux est donc plus susceptible de payer.",bluffReasonStrength:"Vous faites face à de l'agression ; la range adverse est moins susceptible de folder.",bluffReasonShowdown:"Votre main a de la valeur à l'abattage ; la transformer en bluff ferait souvent folder moins bien et continuer mieux.",bluffReasonRange:"Cette action suit la stratégie de position/range plutôt qu'un bluff pur postflop.",
+bluffPlanGiveUp:"Si vous êtes payé, abandonnez généralement sauf si la prochaine carte améliore vraiment votre histoire ou votre main. Foldez face à une forte relance.",bluffPlanDraw:"Continuez sur les cartes qui complètent ou renforcent le tirage ; ralentissez après une mauvaise carte ou une forte relance.",bluffPlanValue:"Continuez pour valeur sur les cartes sûres, mais réévaluez si le board ou l'action adverse devient dangereux.",bluffPlanCatch:"Payez pour attraper les bluffs ; ne relancez pas, car les mains moins bonnes folderont et les meilleures continueront.",bluffPlanFree:"Prenez la carte gratuite/l'abattage et réévaluez après la prochaine action.",bluffPlanFold:"Foldez maintenant et préservez vos jetons ; aucun investissement de bluff n'est justifié.",bluffPlanFollow:"Suivez l'action recommandée puis réévaluez avec la prochaine carte et la réponse adverse.",
 readConfidence:"Confiance de la lecture",readSample:n=>`${n} action${n!==1?'s':''} visible${n!==1?'s':''}`,readConfidenceEarly:"précoce — privilégiez le profil par défaut",readConfidenceTentative:"tendance provisoire",readConfidenceReliable:"échantillon fiable à cette table",
 processGoodBad:"Bonne décision, mauvais résultat : vos choix suivaient la ligne +EV du coach. La variance n'en fait pas des erreurs.",
 processBadGood:"Bon résultat, processus discutable : vous avez gagné des jetons, mais au moins une décision a sacrifié de l'EV estimée. Le résultat ne valide pas le choix.",
@@ -362,6 +374,12 @@ confidenceMathNote:"Las odds del bote son exactas; la equity y la acción futura
 confidenceHeuristicNote:"Los rangos multiway y las acciones futuras requieren más supuestos; interpreta el consejo como direccional.",
 strategyLabel:"Estrategia",strategyBaseline:"Base / equilibrada",strategyExploit:"Ajuste explotador",
 bluffBreakEven:"Umbral de farol puro",bluffBreakEvenNote:(f,fe)=>`Este tamaño necesita cerca del ${f}% de folds; el modelo estima cerca del ${fe}%. La equity al showdown añade valor cuando pagan.`,
+bluffTitle:"Evaluación del farol",bluffVerdict:"Veredicto",bluffWhy:"Por qué",bluffPlan:"Si pagan o resuben",
+intentBluff:"FAROL",intentSemiBluff:"SEMIFAROL",intentValue:"VALOR",intentProtection:"PROTECCIÓN",intentRangeBluff:"FAROL DE RANGO",intentRangeRaise:"SUBIDA DE RANGO",intentBluffCatch:"CAZAFAROLES",intentCall:"IGUALAR",intentCheck:"PASAR",intentFold:"RETIRARSE",
+bluffGood:"Buen candidato a farol",bluffThin:"Farol ajustado — precaución",bluffSemi:"Semifarol: folds ahora + equity del proyecto",bluffNot:"No es farol — construye el bote por valor",bluffNo:"Farol no recomendado",
+bluffFoldCompare:(need,est)=>`Necesita cerca del ${need}% de folds · estimación ~${est}%`,bluffCalledEquity:e=>`Cerca del ${e}% de equity utilizable si pagan`,
+bluffReasonPassive:"Los rivales mostraron debilidad al pasar; sus rangos contienen muchas manos que pueden foldear.",bluffReasonBlocker:"Tus cartas bloquean algunas de las manos rivales más fuertes.",bluffReasonDraw:"Tu proyecto todavía puede mejorar cuando pagan el farol.",bluffReasonPosition:"Actuar último aporta más información y hace la presión más segura.",bluffReasonDry:"Esta mesa seca deja menos proyectos fuertes y manos capaces de continuar.",bluffReasonStation:"Un jugador loose que paga mucho probablemente no foldeará lo suficiente.",bluffReasonMultiway:"Quedan varios rivales, así que es más probable que alguno pague.",bluffReasonStrength:"Afrontas agresión activa; el rango rival tiene menos probabilidades de retirarse.",bluffReasonShowdown:"Tu mano tiene valor al showdown; convertirla en farol suele tirar manos peores y recibir acción de mejores.",bluffReasonRange:"Esta acción sigue la estrategia de posición y rango, no un farol puro postflop.",
+bluffPlanGiveUp:"Si pagan, normalmente abandona salvo que la siguiente carta mejore mucho tu historia o tu mano. Retírate ante una subida fuerte.",bluffPlanDraw:"Continúa con cartas que completen o refuercen el proyecto; frena tras una mala carta o una subida fuerte.",bluffPlanValue:"Sigue por valor en cartas seguras, pero reevalúa si la mesa o la acción rival se vuelve peligrosa.",bluffPlanCatch:"Paga para cazar faroles; no resubas porque las manos peores suelen retirarse y las mejores continúan.",bluffPlanFree:"Toma la carta gratis/showdown y reevalúa después de la siguiente acción.",bluffPlanFold:"Retírate ahora y conserva fichas; no se justifica invertir en un farol.",bluffPlanFollow:"Sigue la acción recomendada y reevalúa con la siguiente carta y la respuesta rival.",
 readConfidence:"Confianza de la lectura",readSample:n=>`${n} acción${n!==1?'es':''} visible${n!==1?'s':''}`,readConfidenceEarly:"temprana — apóyate en el perfil por defecto",readConfidenceTentative:"tendencia provisional",readConfidenceReliable:"muestra fiable en esta mesa",
 processGoodBad:"Buen proceso, mal resultado: tus decisiones siguieron la línea +EV del coach. La varianza no las convierte en errores.",
 processBadGood:"Buen resultado, proceso cuestionable: ganaste fichas, pero al menos una decisión cedió EV estimada. No dejes que el resultado valide la jugada.",
@@ -2359,6 +2377,32 @@ function coachIcmHtml(info){
     `<div class="coach-icm-chip coach-icm-threshold">${T('icmThreshold')(pctRound(info.chipNeed),pctRound(info.icmNeed),pctRound(info.premium))}</div>`+
     `</div></section>`;
 }
+function coachIntentLabel(intent){
+  const key={bluff:'intentBluff',semiBluff:'intentSemiBluff',value:'intentValue',
+    protection:'intentProtection',rangeBluff:'intentRangeBluff',rangeRaise:'intentRangeRaise',
+    bluffCatch:'intentBluffCatch',call:'intentCall',check:'intentCheck',fold:'intentFold'}[intent];
+  return key?T(key):'';
+}
+function coachBluffHtml(info){
+  if(!info)return '';
+  const verdictKey={goodBluff:'bluffGood',thinBluff:'bluffThin',semiBluff:'bluffSemi',
+    notBluff:'bluffNot',doNotBluff:'bluffNo'}[info.verdict]||'bluffNo';
+  const reasonKey={passive:'bluffReasonPassive',blocker:'bluffReasonBlocker',draw:'bluffReasonDraw',
+    position:'bluffReasonPosition',dry:'bluffReasonDry',station:'bluffReasonStation',
+    multiway:'bluffReasonMultiway',strength:'bluffReasonStrength',showdown:'bluffReasonShowdown',
+    range:'bluffReasonRange'};
+  const planKey={giveUpIfCalled:'bluffPlanGiveUp',continueGoodCards:'bluffPlanDraw',
+    continueForValue:'bluffPlanValue',callNoRaise:'bluffPlanCatch',takeFreeCard:'bluffPlanFree',
+    preserveStack:'bluffPlanFold',followAction:'bluffPlanFollow'}[info.plan]||'bluffPlanFollow';
+  const foldMath=info.requiredFolds!=null
+    ?`<div class="coach-bluff-math">${T('bluffFoldCompare')(Math.round(info.requiredFolds*100),Math.round(info.estimatedFolds*100))}<br>${T('bluffCalledEquity')(Math.round(info.equityWhenCalled*100))}</div>`:'';
+  return `<section class="coach-bluff coach-bluff-${info.verdict}">`+
+    `<div class="coach-bluff-head"><span>🎭 ${T('bluffTitle')}</span><b>${coachIntentLabel(info.intent)}</b></div>`+
+    `<div class="coach-bluff-verdict"><span>${T('bluffVerdict')}</span><strong>${T(verdictKey)}</strong></div>`+
+    foldMath+
+    `<div class="coach-bluff-copy"><b>${T('bluffWhy')}</b><ul>${info.reasons.slice(0,4).map(r=>`<li>${T(reasonKey[r]||'bluffReasonRange')}</li>`).join('')}</ul></div>`+
+    `<div class="coach-bluff-plan"><b>${T('bluffPlan')}</b><p>${T(planKey)}</p></div></section>`;
+}
 
 function updateCoach(p){
   if(!HAS_DOM)return;
@@ -2374,9 +2418,12 @@ function updateCoach(p){
       else{ clearRaiseExact(); sl.value=clamp(coachT,+sl.min,+sl.max); updateRaiseLabel(); }
     }
   }
-  const recLabel = rec==='ALLIN' ? `${T('recALLIN')} ${usd(p.bet+p.chips)}`
+  const recLabelBase = rec==='ALLIN' ? `${T('recALLIN')} ${usd(p.bet+p.chips)}`
     : rec==='RAISE' ? `${state.currentBet>0?T('recRAISETO'):T('recBET')} ${usd(coachT)} · ${bbs(coachT)}`
     : T('rec'+rec);
+  const intentLabel=coachIntentLabel(R.actionIntent);
+  const showIntent=!['call','check','fold'].includes(R.actionIntent);
+  const recLabel=recLabelBase+(showIntent&&intentLabel?` · ${intentLabel}`:'');
   const showM=flags.mRatio;
   const sprRow=flags.showSpr&&spr!=null&&state.stage!=='preflop'
     ?`<div class="coach-row"><span>${T('sprLbl')}</span><b>~${Math.round(spr*10)/10} · ${T(sprZone==='deep'?'sprZoneDeep':sprZone==='mid'?'sprZoneMid':'sprZoneLow')}</b></div>`:'';
@@ -2428,6 +2475,7 @@ function updateCoach(p){
     `</div>`+
     coachConfidenceHtml(R)+
     `<div class="coach-beginner-read"><span>💡</span><p>${beginnerRead}</p></div>`+
+    coachBluffHtml(R.bluffInfo)+
     coachIcmHtml(R.icmInfo)+
     (liveMathRows?`<div class="coach-live-math"><span class="coach-live-math-title">${coachMathLabel()}</span>${liveMathRows}</div>`:'')+
     (keyReason?`<div class="coach-key-reason"><span class="coach-key-reason-label">${coachReasonLabel()}</span>${keyReason}</div>`:'')+

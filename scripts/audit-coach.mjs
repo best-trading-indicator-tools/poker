@@ -181,6 +181,30 @@ const audit=vm.runInContext(`(()=>{
   record('Teaching guardrails','nut blocker alone is insufficient without a passive line',
     !noPassiveBlocker.concepts.includes('riverBlockerBluff'),{rec:noPassiveBlocker.rec,concepts:noPassiveBlocker.concepts});
 
+  /* Dedicated bluff panel: intent, verdict, math and follow-up plan stay aligned. */
+  record('Bluff assessment','river blocker raise is labelled bluff',
+    blocker.actionIntent==='bluff'&&blocker.bluffInfo?.bluffing&&
+      ['goodBluff','thinBluff'].includes(blocker.bluffInfo.verdict)&&
+      Number.isFinite(blocker.bluffInfo.requiredFolds)&&Number.isFinite(blocker.bluffInfo.estimatedFolds),
+    {rec:blocker.rec,intent:blocker.actionIntent,info:blocker.bluffInfo});
+  record('Bluff assessment','calling station spot does not recommend a bluff',
+    stationBlocker.actionIntent!=='bluff'&&stationBlocker.bluffInfo?.verdict!=='goodBluff',
+    {rec:stationBlocker.rec,intent:stationBlocker.actionIntent,info:stationBlocker.bluffInfo});
+  record('Bluff assessment','made-hand bet is labelled value rather than bluff',
+    ['value','protection'].includes(texture.actionIntent)&&texture.bluffInfo?.verdict==='notBluff',
+    {rec:texture.rec,intent:texture.actionIntent,info:texture.bluffInfo});
+  const semi=spot({stage:'flop',hole:['Ah','5h'],board:['Kh','7h','2c'],potBB:10,betBB:0,
+    pos:'BTN',seed:'bluff-semi'}).R;
+  record('Bluff assessment','draw aggression is labelled semi-bluff',
+    semi.rec==='RAISE'&&semi.actionIntent==='semiBluff'&&semi.bluffInfo?.plan==='continueGoodCards',
+    {rec:semi.rec,intent:semi.actionIntent,info:semi.bluffInfo});
+  const noBluffFold=spot({stage:'river',hole:['8s','3h'],board:['Ac','Kd','7c','2d','2s'],
+    potBB:12,betBB:4,seed:'bluff-fold'}).R;
+  record('Bluff assessment','fold recommendation explicitly rejects bluffing',
+    noBluffFold.rec==='FOLD'&&noBluffFold.bluffInfo?.verdict==='doNotBluff'&&
+      noBluffFold.bluffInfo?.plan==='preserveStack',
+    {rec:noBluffFold.rec,intent:noBluffFold.actionIntent,info:noBluffFold.bluffInfo});
+
   /* Price monotonicity: making the same call more expensive must not turn a fold
      into a call unless some other material state changed. */
   const priceHands=[

@@ -1338,6 +1338,68 @@ function coachRiverNutBlockerBluff(p,score,opps){
   const passive=!!(villain&&(villain.checkedStreet||passiveLineLen(villain.checkStreets)>=2));
   return passive?{suit}:null;
 }
+function coachBluffAssessment(p,ctx){
+  const {rec,madeScore,drawInfo,eqAdj,callAmt,pot,opps,actsLast,concepts,
+    smallStab,bluffBreakEven,baseFoldEquity,code}=ctx;
+  const aggressive=rec==='RAISE'||rec==='ALLIN';
+  const postflop=state.stage!=='preflop';
+  const made=madeScore?.[0]||0;
+  const strongDraw=postflop&&state.stage!=='river'&&!!(drawInfo&&
+    ((drawInfo.flush?.length||0)>=8||(drawInfo.straight?.length||0)>=8));
+  const villains=inHand().filter(q=>q!==p);
+  const station=villains.some(q=>q.style?.id==='station');
+  const tight=villains.length>0&&villains.every(q=>q.style?.id==='rock');
+  const passive=villains.length>0&&villains.every(q=>q.checkedStreet||passiveLineLen(q.checkStreets)>=2);
+  const texture=postflop?boardTexture(state.board):null;
+  const boardSuits=[0,0,0,0];if(postflop)for(const c of state.board)boardSuits[c.s]++;
+  const nutSuit=boardSuits.findIndex(n=>n>=3);
+  const blocker=concepts.includes('riverBlockerBluff')||
+    (nutSuit>=0&&p.hole.some(c=>c.r===14&&c.s===nutSuit));
+  let estimatedFolds=baseFoldEquity;
+  if(passive)estimatedFolds+=.12;
+  if(tight)estimatedFolds+=.06;
+  if(station)estimatedFolds-=.18;
+  if(actsLast)estimatedFolds+=.03;
+  if(texture?.dry)estimatedFolds+=.04;
+  if(opps>=2)estimatedFolds-=.05;
+  if(blocker&&state.stage==='river')estimatedFolds+=.06;
+  estimatedFolds=clamp(estimatedFolds,.04,.72);
+
+  let intent;
+  if(aggressive&&postflop&&concepts.includes('riverBlockerBluff'))intent='bluff';
+  else if(aggressive&&postflop&&strongDraw&&made<2)intent='semiBluff';
+  else if(aggressive&&postflop&&smallStab&&made===0&&eqAdj<.50)intent='bluff';
+  else if(aggressive&&postflop&&(made>=2||eqAdj>=.64))intent='value';
+  else if(aggressive&&postflop&&made>=1)intent='protection';
+  else if(aggressive&&state.stage==='preflop'&&['A5s','A4s'].includes(code))intent='rangeBluff';
+  else if(aggressive)intent='rangeRaise';
+  else if(rec==='CALL'&&postflop&&callAmt>0&&made>=1&&eqAdj<.62)intent='bluffCatch';
+  else intent=rec.toLowerCase();
+
+  const bluffing=intent==='bluff'||intent==='semiBluff'||intent==='rangeBluff';
+  const reasons=[];
+  if(passive)reasons.push('passive');
+  if(blocker)reasons.push('blocker');
+  if(strongDraw)reasons.push('draw');
+  if(actsLast)reasons.push('position');
+  if(texture?.dry)reasons.push('dry');
+  if(station)reasons.push('station');
+  if(opps>=2)reasons.push('multiway');
+  if(callAmt>0&&!passive)reasons.push('strength');
+  if(made>=1&&!bluffing)reasons.push('showdown');
+  if(!reasons.length)reasons.push('range');
+  const enoughFolds=bluffBreakEven!=null&&estimatedFolds>=bluffBreakEven;
+  let verdict;
+  if(intent==='value'||intent==='protection'||intent==='rangeRaise')verdict='notBluff';
+  else if(intent==='bluff')verdict=enoughFolds?'goodBluff':'thinBluff';
+  else if(intent==='semiBluff'||intent==='rangeBluff')verdict='semiBluff';
+  else verdict='doNotBluff';
+  const plan=intent==='bluff'?'giveUpIfCalled':intent==='semiBluff'?'continueGoodCards':
+    intent==='value'||intent==='protection'?'continueForValue':
+    intent==='bluffCatch'?'callNoRaise':rec==='CHECK'?'takeFreeCard':rec==='FOLD'?'preserveStack':'followAction';
+  return {intent,verdict,reasons,plan,bluffing,requiredFolds:bluffBreakEven,
+    estimatedFolds,equityWhenCalled:eqAdj,pot,callAmt};
+}
 function coachSpotBrief(p,extra,ctx){
   const {eq,eqAdj,odds,needEq,callAmt,pot,opps,pos,actsFirst,actsLast,airPen}=ctx;
   const eqShow=pct(eqAdj!=null?eqAdj:eq);
@@ -2465,6 +2527,8 @@ function coachDecide(p){
       madeScore?.[0]===1&&hasTopPairOrBetter(madeScore,p.hole,state.board);
     const freeDraw=state.stage!=='river'?detectDraws(p.hole,state.board):null;
     const drawOnlyFree=freeDraw&&(freeDraw.flush||freeDraw.oesd||freeDraw.gutshot)&&madeScore&&madeScore[0]<1;
+    const stationPresent=inHand().some(q=>q!==p&&q.style?.id==='station');
+    const pureAirFree=madeScore?.[0]===0&&!(freeDraw&&(freeDraw.flush||freeDraw.oesd||freeDraw.doubleGutshot));
     const multiwayDrawCaution=drawOnlyFree&&opps>=2&&!realTwoPairOrBetter(madeScore,p.hole);
     const riverBlocker=coachRiverNutBlockerBluff(p,madeScore,opps);
     const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&strongMade;
@@ -2489,15 +2553,15 @@ function coachDecide(p){
       smallStab=true;
       why.push(C('riverBlockerBluff'));
       concepts.push('riverBlockerBluff');
-    }else if(checkedDown.length&&eq>probeMin){
+    }else if(checkedDown.length&&eq>probeMin&&!(stationPresent&&pureAirFree)){
       rec='RAISE';
       smallStab=true;
       why.push(C('checkedDownStab',pct(eq),checkedDown.length));
-    }else if(!river&&checkedToMe&&eq>stabMin){
+    }else if(!river&&checkedToMe&&eq>stabMin&&!(stationPresent&&pureAirFree)){
       rec='RAISE';
       smallStab=true;
       why.push(C('stab',pct(eq)));
-    }else if(probeStab){
+    }else if(probeStab&&!(stationPresent&&pureAirFree)){
       rec='RAISE';
       smallStab=true;
       why.push(C('probeStab',pct(eq),passiveStabbers.length,!actsLast));
@@ -2657,12 +2721,15 @@ function coachDecide(p){
   const raiseInvestment=Math.max(0,(rec==='ALLIN'?p.bet+p.chips:coachT)-p.bet);
   const bluffBreakEven=(rec==='RAISE'||rec==='ALLIN')&&raiseInvestment>0
     ?raiseInvestment/Math.max(pot+raiseInvestment,1):null;
+  const bluffInfo=coachBluffAssessment(p,{rec,madeScore,drawInfo,eqAdj,callAmt,pot,opps,
+    actsLast,concepts,smallStab,bluffBreakEven,baseFoldEquity:FE,code});
   coachSpotBrief(p,extra,{eq,eqAdj,odds,needEq:callAmt>0?decisionNeed:null,
     callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,icmInfo,chartInfo,rangeCharts,code,spr,sprZone,
           preflopCallInfo,drawInfo,impliedInfo,drySidePot,needEq:decisionNeed,
-          strategyMode,bluffBreakEven,modeledFoldEquity:FE,concepts,postSizePlan};
+          strategyMode,bluffBreakEven,modeledFoldEquity:bluffInfo.estimatedFolds,
+          bluffInfo,actionIntent:bluffInfo.intent,concepts,postSizePlan};
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */
