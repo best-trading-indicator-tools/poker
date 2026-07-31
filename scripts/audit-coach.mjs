@@ -92,7 +92,9 @@ const audit=vm.runInContext(`(()=>{
   lockedVillains[1].bet=540;lockedVillains[1].totalBet=540;lockedVillains[1].rangeCap=.16;
   const lockedR=coachDecide(locked.hero);
   record('Preflop anchors','two all-in opponents cannot trigger a range raise',
-    lockedR.rec==='FOLD'&&lockedR.preflopCallInfo?.lockedShowdown===true,
+    !['RAISE','ALLIN'].includes(lockedR.rec)&&
+      lockedR.rec===(lockedR.eqAdj>=lockedR.needEq?'CALL':'FOLD')&&
+      lockedR.preflopCallInfo?.lockedShowdown===true,
     {rec:lockedR.rec,eq:lockedR.eq,usable:lockedR.eqAdj,need:lockedR.needEq,
       locked:lockedR.preflopCallInfo?.lockedShowdown});
 
@@ -282,6 +284,73 @@ const audit=vm.runInContext(`(()=>{
         legal(R),{rec:R.rec,eq:R.eq});
     }
 
+  /* Large invariant fuzz: these are rules of the game or direct consequences of
+     the coach's own displayed math. They must hold across positions, player
+     counts, stack depths, difficulties, streets, hands and prices. */
+  const invariantStages=[
+    ['preflop',[]],['flop',['As','Kd','7c']],['turn',['As','Kd','7c','2h']],
+    ['river',['As','Kd','7c','2h','2s']]
+  ];
+  const invariantHands=[
+    ['Qh','Jh'],['9h','9s'],['8h','7h'],['4s','3d'],['Ac','Qc'],['6s','5s']
+  ];
+  const difficulties=['easy','medium','hard'],playerCounts=[2,3,5],stackDepths=[10,30,80];
+  let invariantScenarios=0;
+  const invariantDetail=R=>({rec:R.rec,eq:R.eq,usable:R.eqAdj,need:R.needEq,
+    odds:R.odds,intent:R.actionIntent,bluffing:R.bluffInfo?.bluffing});
+
+  /* A free action can be checked; folding can never improve on checking. */
+  for(const [stage,board] of invariantStages)for(const players of playerCounts)
+    for(const difficulty of difficulties)for(const hole of invariantHands){
+      const pre=stage==='preflop';
+      const R=spot({stage,board,hole,players,stackBB:30,potBB:pre?1.5:12,
+        betBB:pre?1:0,heroBetBB:pre?1:0,difficulty,
+        seed:'inv-free-'+stage+'-'+players+'-'+difficulty+'-'+hole.join('')}).R;
+      invariantScenarios++;
+      record('Invariant fuzz','free action never folds '+stage+' '+players+'p '+difficulty+' '+hole.join(''),
+        R.rec!=='FOLD',invariantDetail(R));
+    }
+
+  /* Calls must clear the coach's final usable-equity threshold, and increasing
+     only the price cannot turn a fold into a call. */
+  for(const [stage,board] of invariantStages)for(const players of playerCounts)
+    for(const difficulty of difficulties)for(const stackBB of stackDepths)
+      for(const hole of invariantHands){
+        const decisions=[];
+        for(const betBB of [2,5,8]){
+          const R=spot({stage,board,hole,players,stackBB,potBB:12,betBB,difficulty,
+            seed:'inv-price-'+stage+'-'+players+'-'+difficulty+'-'+stackBB+'-'+hole.join('')}).R;
+          invariantScenarios++;decisions.push(R);
+          record('Invariant fuzz','call clears threshold '+stage+' '+players+'p '+difficulty+
+            ' '+stackBB+'BB '+hole.join('')+' price '+betBB,
+            R.rec!=='CALL'||R.eqAdj+1e-9>=R.needEq,invariantDetail(R));
+        }
+        for(let i=1;i<decisions.length;i++){
+          const cheap=decisions[i-1],dear=decisions[i];
+          record('Invariant fuzz','higher price cannot improve fold to call '+stage+' '+players+'p '+
+            difficulty+' '+stackBB+'BB '+hole.join('')+' step '+i,
+            !(cheap.rec==='FOLD'&&dear.rec==='CALL'),
+            {cheap:invariantDetail(cheap),dear:invariantDetail(dear)});
+        }
+      }
+
+  /* If every opponent is all-in, nobody can respond or fold: raising and
+     bluffing are impossible, on every street and at every difficulty. */
+  for(const [stage,board] of invariantStages)for(const players of playerCounts)
+    for(const difficulty of difficulties)for(const hole of invariantHands){
+      const setup=spot({stage,board,hole,players,stackBB:30,potBB:12,betBB:5,difficulty,
+        seed:'inv-locked-'+stage+'-'+players+'-'+difficulty+'-'+hole.join('')});
+      for(const v of state.players.slice(1)){
+        v.allIn=true;v.acted=true;v.chips=0;
+        if(v.bet===0){v.bet=300;v.totalBet=Math.max(v.totalBet,300);}
+      }
+      const R=coachDecide(setup.hero);
+      invariantScenarios++;
+      record('Invariant fuzz','all-in lock has no raise or bluff '+stage+' '+players+'p '+
+        difficulty+' '+hole.join(''),
+        !['RAISE','ALLIN'].includes(R.rec)&&!R.bluffInfo?.bluffing,invariantDetail(R));
+    }
+
   /* ICM must never lower the required equity for the same tournament call. */
   const icm=spot({stage:'river',hole:['Qh','Qs'],board:['Ah','7d','4c','2s','2h'],players:5,
     stackBB:10,potBB:12,betBB:4,gameType:'sng',seed:'icm'}).R;
@@ -291,7 +360,8 @@ const audit=vm.runInContext(`(()=>{
   const byArea={};
   for(const r of results){const a=byArea[r.area]||(byArea[r.area]={checks:0,passed:0,failed:0});
     a.checks++;if(r.pass)a.passed++;else a.failed++;}
-  return {summary:{checks:results.length,passed:results.length-failures.length,failed:failures.length,sweep},
+  return {summary:{checks:results.length,passed:results.length-failures.length,failed:failures.length,
+      sweep,invariantScenarios},
     byArea,failures};
 })()`,context);
 

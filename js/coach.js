@@ -2692,6 +2692,24 @@ function coachDecide(p){
       why.push(C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),!!bigBetPen,pct(decisionNeed)));
     }
   }
+  /* Normally the engine runs the board automatically when action is locked, but
+     the coach can render during that transition or from a restored snapshot.
+     With nobody left able to respond, betting and bluffing have zero purpose. */
+  if(bettingLocked){
+    why=[];
+    if(callAmt<=0){
+      rec='CHECK';
+      why.push(C('weakFree',pct(eqAdj)));
+    }else if(eqAdj>=decisionNeed){
+      rec='CALL';
+      why.push(C('callOk',usd(callAmt),usd(pot),pct(odds),pct(eq),
+        eqAdj!==eq,pct(eqAdj),pct(decisionNeed)));
+    }else{
+      rec='FOLD';
+      why.push(C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),
+        eqAdj!==eq,pct(decisionNeed)));
+    }
+  }
   /* Every live opponent gets a matrix. Current aggressor first, then checked/acted players. */
   if(state.stage!=='preflop'){
     const villains=inHand().filter(q=>q!==p).sort((a,b)=>{
