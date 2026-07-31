@@ -2429,7 +2429,7 @@ function updateCoach(p){
     : rec==='RAISE' ? `${state.currentBet>0?T('recRAISETO'):T('recBET')} ${usd(coachT)} · ${bbs(coachT)}`
     : T('rec'+rec);
   const intentLabel=coachIntentLabel(R.actionIntent);
-  const showIntent=!['call','check','fold'].includes(R.actionIntent);
+  const showIntent=!['call','check','fold','rangeRaise'].includes(R.actionIntent);
   const recLabel=recLabelBase+(showIntent&&intentLabel?` · ${intentLabel}`:'');
   const showM=flags.mRatio;
   const sprRow=flags.showSpr&&spr!=null&&state.stage!=='preflop'
