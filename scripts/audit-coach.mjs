@@ -81,6 +81,21 @@ const audit=vm.runInContext(`(()=>{
   const q5=spot({players:5,stackBB:14,hole:['Qh','Js'],pos:'UTG',potBB:1.5,betBB:1,seed:'q5'}).R;
   record('Short-handed','QJo opens UTG five-handed at 14 BB',q5.rec==='RAISE',{rec:q5.rec});
 
+  /* Once every remaining opponent is all-in, fold equity is zero: even a hand
+     present in a normal 3-bet chart must be judged only as a call or fold. */
+  const locked=spot({players:3,stackBB:17.1,hole:['Ts','Js'],pos:'BB',potBB:15,
+    betBB:8.6,heroBetBB:1,seed:'two-allins'});
+  const lockedVillains=state.players.slice(1);
+  lockedVillains[0].allIn=true;lockedVillains[0].acted=true;lockedVillains[0].chips=0;
+  lockedVillains[0].rangeCap=.12;
+  lockedVillains[1].allIn=true;lockedVillains[1].acted=true;lockedVillains[1].chips=0;
+  lockedVillains[1].bet=540;lockedVillains[1].totalBet=540;lockedVillains[1].rangeCap=.16;
+  const lockedR=coachDecide(locked.hero);
+  record('Preflop anchors','two all-in opponents cannot trigger a range raise',
+    lockedR.rec==='FOLD'&&lockedR.preflopCallInfo?.lockedShowdown===true,
+    {rec:lockedR.rec,eq:lockedR.eq,usable:lockedR.eqAdj,need:lockedR.needEq,
+      locked:lockedR.preflopCallInfo?.lockedShowdown});
+
   /* Obvious postflop anchors: free actions, nuts, air, draws and river finality. */
   const anchors=[
     ['Flop nuts facing bet',{stage:'flop',hole:['9s','9h'],board:['9d','7c','2s'],potBB:8,betBB:3},r=>r.rec!=='FOLD'],

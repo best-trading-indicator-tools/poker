@@ -1772,7 +1772,8 @@ function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,i
   }
   let squeezeRisk=clamp(1-noSqueeze,0,.55);
   const allInCall=callAmt>=p.chips;
-  const lockedShowdown=!!(raiser?.allIn&&!behind.length&&callers===0);
+  const lockedShowdown=!!(raiser?.allIn&&!behind.length&&
+    inHand().filter(q=>q!==p).every(q=>q.allIn));
   if(allInCall||lockedShowdown)squeezeRisk=0;
   const multiway=coachPreflopMultiwayProfile(shape,callers,effBB,openBB,odds,position);
 
@@ -2071,6 +2072,7 @@ function coachDecide(p){
   const callAmt=Math.min(state.currentBet-p.bet,p.chips);
   const pot=state.players.reduce((s,q)=>s+q.totalBet,0);
   const liveOpponents=inHand().filter(q=>q!==p);
+  const bettingLocked=liveOpponents.length>0&&liveOpponents.every(q=>q.allIn);
   /* Before players behind have responded to an open, do not pretend they have
      already called and drag raw equity into a fictitious multiway showdown.
      Their possible calls/3-bets are handled by the branch/squeeze model below. */
@@ -2429,7 +2431,19 @@ function coachDecide(p){
       const setMineX=setMineMultiple(p,callAmt,raiser);
       const setMineOk=smallPair&&callAmt>0&&setMineX>=15;
       const setMineThin=smallPair&&callAmt>0&&setMineX<15;
-      if(facingReraise){
+      if(bettingLocked){
+        /* With every remaining opponent already all-in there is nobody left to
+           fold, so raising cannot isolate, bluff, or gain value. This decision
+           is purely call versus fold at the current pot price. */
+        if(callAmt>0&&contextCallOk()){
+          rec='CALL';
+          why.push(contextProse('pfContextCall')||C('chartCallRaise',code,pct(eq),pct(odds)));
+        }else{
+          rec=callAmt>0?'FOLD':'CHECK';
+          if(callAmt>0)
+            why.push(contextProse('pfContextFold')||C('chartIcmFold',code,pct(eq),pct(odds)));
+        }
+      }else if(facingReraise){
         /* Hero already opened (or 3-bet): this is a 4-bet-or-fold decision, never the 3-bet chart. */
         const four=coachFourBetPlan(p,raiser,actsLast,code,icmPrem);
         const villainPos=raiser&&raiser.pos?raiser.pos:'villain';
