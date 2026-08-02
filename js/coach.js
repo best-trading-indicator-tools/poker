@@ -1236,7 +1236,10 @@ function coachFourBetSizing(p,actsLast){
 }
 function coachPreflopRaiseSizing(p,actsLast){
   const facingRaise=state.currentBet>state.bb;
-  if(facingRaise&&p.bet>state.bb) return coachFourBetSizing(p,actsLast);
+  /* A player can face a 3-bet cold (for example BTN opens, SB 3-bets and the
+     hero is still in the BB). Their own contribution is then only one blind,
+     so p.bet cannot tell us which raise level the action has reached. */
+  if(facingRaise&&(state.preflopRaiseCount||0)>=2) return coachFourBetSizing(p,actsLast);
   const unit=facingRaise?state.currentBet:state.bb;
   const callers=facingRaise?flatCallerCount(p):limperCount(p);
   const stackBB=(p.chips+p.bet)/state.bb;
@@ -2396,7 +2399,10 @@ function coachDecide(p){
     }else{
       /* facing a raise: BB defense vs steals, then per-raiser-position chart, then EP/LP bucket */
       const raiser=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
-      const facingReraise=p.bet>state.bb;
+      /* Use the action level, not the hero's contribution. In a cold 3-bet
+         spot the hero may have posted only the BB, but this is still a
+         4-bet/call/fold decision rather than an ordinary BB steal defense. */
+      const facingReraise=(state.preflopRaiseCount||0)>=2;
       const squeezeCallers=flatCallerCount(p);
       const squeezeEligible=squeezeCallers>0&&
         (['JJ','QQ','KK','AA','AKs','AKo'].includes(code)||raiser?.style?.id!=='rock');

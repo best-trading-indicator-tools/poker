@@ -466,6 +466,16 @@ const result=vm.runInContext(`(()=>{
   state.currentBet=500;state.lastRaiseSize=250;suitedOpener.chips=9500;
   suitedOpener.bet=500;suitedOpener.totalBet=500;
   const largeConnector=coachDecide(suitedHero);
+  /* Regression: BTN open, SB 3-bet, hero still has only the BB posted. This is
+     a cold 3-bet decision; 76s must not be read as a BB-vs-SB steal 3-bet. */
+  deadBlind.folded=false;deadBlind.out=false;deadBlind.acted=true;
+  deadBlind.pos='SB';deadBlind.style=STYLES.find(x=>x.id==='maniac');
+  deadBlind.chips=9050;deadBlind.bet=950;deadBlind.totalBet=950;
+  suitedOpener.pos='BTN';suitedOpener.acted=true;suitedOpener.bet=250;suitedOpener.totalBet=250;
+  suitedHero.hole=H(C(7,0),C(6,0));suitedHero.bet=100;suitedHero.totalBet=100;
+  state.currentBet=950;state.lastRaiseSize=700;state.lastAggIdx=deadBlind.i;
+  state.pfAggIdx=deadBlind.i;state.streetRaiseCount=2;state.preflopRaiseCount=2;
+  const coldThreeBetConnector=coachDecide(suitedHero);
   mcEquityR=savedPreflopEquity;
   if(largeConnector.rec!=='FOLD'||largeConnector.preflopCallInfo?.profitable||
       largeConnector.evs.CALL>=0||largeConnector.preflopCallInfo?.realization>=standardConnector.preflopCallInfo.realization||
@@ -473,6 +483,13 @@ const result=vm.runInContext(`(()=>{
     throw new Error('87s must fold when the same range uses a 5 BB open '+JSON.stringify({
       rec:largeConnector.rec,info:largeConnector.preflopCallInfo,evs:largeConnector.evs
     }));
+  if(coldThreeBetConnector.rec!=='FOLD'||coldThreeBetConnector.chartInfo?.kind!=='fourBet')
+    throw new Error('76s in BB must fold cold to BTN open + SB 3-bet '+JSON.stringify({
+      rec:coldThreeBetConnector.rec,chart:coldThreeBetConnector.chartInfo,
+      why:coldThreeBetConnector.why
+    }));
+  state.lastAggIdx=suitedOpener.i;state.pfAggIdx=suitedOpener.i;
+  state.streetRaiseCount=1;state.preflopRaiseCount=1;
   const deepIp=coachPreflopCallModel(suitedHero,suitedOpener,400,650,.44,400/1050,
     false,true,0,0,'hard');
   const deepOop=coachPreflopCallModel(suitedHero,suitedOpener,400,650,.44,400/1050,
