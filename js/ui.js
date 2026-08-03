@@ -2482,9 +2482,9 @@ function updateCoach(p){
     `</div>`+
     coachConfidenceHtml(R)+
     `<div class="coach-beginner-read"><span>💡</span><p>${beginnerRead}</p></div>`+
+    (liveMathRows?`<div class="coach-live-math"><span class="coach-live-math-title">${coachMathLabel()}</span>${liveMathRows}</div>`:'')+
     coachBluffHtml(R.bluffInfo)+
     coachIcmHtml(R.icmInfo)+
-    (liveMathRows?`<div class="coach-live-math"><span class="coach-live-math-title">${coachMathLabel()}</span>${liveMathRows}</div>`:'')+
     (keyReason?`<div class="coach-key-reason"><span class="coach-key-reason-label">${coachReasonLabel()}</span>${keyReason}</div>`:'')+
     `<details class="coach-details"><summary>${coachDetailsLabel()}</summary><div class="coach-details-body">`+
       detailRows+
