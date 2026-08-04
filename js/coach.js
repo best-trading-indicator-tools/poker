@@ -49,6 +49,7 @@ checkedDownStab:(e,n)=>`${n===1?'Villain has':'Opponents have'} checked the free
 probeStab:(e,n,o)=>`${n===1?'Villain has':'Opponents have'} checked multiple streets, so the line is capped. Even ${o?'out of position, ':''}with ~${e} and no bet to call, a small bluff/probe bet can fold air and weak showdown hands — keep it small, then shut down if raised.`,
 midRiver:e=>`A decent but unspectacular ~${e}. The board is complete — betting mostly gets called by better hands. Check and try to get to showdown cheaply.`,
 midCheck:e=>`A decent but unspectacular ~${e}. Not strong enough to build a big pot; check and keep the pot small while you see what develops.`,
+multiwayTopPairCheck:(e,k,n)=>`You have top pair, but the ${k} kicker is vulnerable in a ${n+1}-way pot, and the preflop raiser still acts behind you. Leading folds much of the air you beat while stronger Jx and overpairs can call or raise. Check, keep their bluffs in, and decide after seeing the raiser's action. Your ~${e} equity is a share of a multiway pot, not a reason to build one immediately.`,
 drySidePotCheck:(h,e)=>`${h} is strong enough to contest the main pot, but one opponent is already all-in and the side pot is still empty. On this dry board there is little to protect: checking keeps weaker hands and bluffs in, while betting would mostly build a new side pot against the only opponent who can still act. Your ~${e} equity includes the all-in player — it is not a reason to force a side pot.`,
 weakRiverLast:e=>`Only ~${e} to win and no cards left to come — your hand is final. Everyone has checked to you: check behind and take the free showdown.`,
 weakRiverFirst:e=>`Only ~${e} to win and no cards left to come — your hand can't improve anymore. Check, and fold to any serious bet.`,
@@ -214,6 +215,7 @@ checkedDownStab:(e,n)=>`${n===1?'Vilain a':'Les adversaires ont'} checké l'opti
 probeStab:(e,n,o)=>`${n===1?'Vilain a':'Les adversaires ont'} checké plusieurs streets, donc la ligne est capée. Même ${o?'hors de position, ':''}avec ~${e} et aucune mise à payer, une petite mise bluff/probe peut faire folder l'air et les mains faibles de showdown — gardez-la petite, puis abandonnez si ça relance.`,
 midRiver:e=>`Un score correct mais quelconque : ~${e}. Le board est complet — miser ne se fait payer que par mieux. Checkez et essayez d’atteindre l’abattage à bas prix.`,
 midCheck:e=>`Un score correct mais quelconque : ~${e}. Pas assez fort pour gonfler le pot ; checkez et gardez le pot petit en attendant la suite.`,
+multiwayTopPairCheck:(e,k,n)=>`Vous avez top paire, mais le kicker ${k} est vulnérable dans un pot à ${n+1} joueurs, et le relanceur préflop doit encore parler derrière vous. Miser fait coucher une grande partie de l'air que vous battez, tandis que les meilleurs Jx et les overpairs peuvent payer ou relancer. Checkez, gardez ses bluffs et décidez après son action. Vos ~${e} d'équité représentent une part d'un pot multiway, pas une raison de le gonfler immédiatement.`,
 drySidePotCheck:(h,e)=>`${h} est assez forte pour disputer le pot principal, mais un adversaire est déjà à tapis et le side pot est encore vide. Sur ce board sec, il y a peu à protéger : checker garde les mains plus faibles et les bluffs, tandis qu'une mise construirait surtout un nouveau side pot contre le seul adversaire encore actif. Votre équité d'environ ${e} inclut le joueur à tapis — elle ne justifie pas à elle seule de créer un side pot.`,
 weakRiverLast:e=>`Seulement ~${e} de chances de gain et plus aucune carte à venir — votre main est figée. Tout le monde a checké : checkez derrière et prenez l’abattage gratuit.`,
 weakRiverFirst:e=>`Seulement ~${e} de chances de gain et plus aucune carte à venir — votre main ne peut plus s’améliorer. Checkez, et couchez-vous face à toute mise sérieuse.`,
@@ -379,6 +381,7 @@ checkedDownStab:(e,n)=>`${n===1?'El rival ha':'Los rivales han'} pasado la opci�
 probeStab:(e,n,o)=>`${n===1?'El rival ha':'Los rivales han'} pasado varias calles, así que su línea está limitada. Incluso ${o?'fuera de posición, ':''}con ~${e} y sin apuesta que pagar, una apuesta pequeña de bluff/probe puede tirar aire y manos débiles de showdown — mantenla pequeña y abandona si resuben.`,
 midRiver:e=>`Un ~${e} decente pero sin más. La mesa está completa — apostar solo lo pagan manos mejores. Pasa e intenta llegar barato al showdown.`,
 midCheck:e=>`Un ~${e} decente pero sin más. No da para inflar el bote; pasa y mantén el bote pequeño mientras ves qué pasa.`,
+multiwayTopPairCheck:(e,k,n)=>`Tienes pareja máxima, pero el kicker ${k} es vulnerable en un bote de ${n+1} jugadores, y quien subió preflop todavía actúa detrás. Apostar tira buena parte del aire que ya ganas, mientras mejores Jx y overpairs pueden pagar o subir. Pasa, mantén sus faroles dentro y decide después de ver su acción. Tu ~${e} de equity es una parte de un bote multiway, no una razón para inflarlo de inmediato.`,
 drySidePotCheck:(h,e)=>`${h} es suficientemente fuerte para disputar el bote principal, pero un rival ya está all-in y el bote lateral sigue vacío. En esta mesa seca hay poco que proteger: pasar mantiene manos peores y faroles, mientras apostar construiría sobre todo un nuevo bote lateral contra el único rival que aún puede actuar. Tu ~${e} de equity incluye al jugador all-in; no basta por sí solo para crear un bote lateral.`,
 weakRiverLast:e=>`Solo ~${e} de probabilidad y no quedan cartas — tu mano es definitiva. Todos han pasado: pasa también y llévate el showdown gratis.`,
 weakRiverFirst:e=>`Solo ~${e} de probabilidad y no quedan cartas — tu mano ya no puede mejorar. Pasa, y retírate ante cualquier apuesta seria.`,
@@ -2577,6 +2580,10 @@ function coachDecide(p){
     const pureAirFree=madeScore?.[0]===0&&!(freeDraw&&(freeDraw.flush||freeDraw.oesd||freeDraw.doubleGutshot));
     const multiwayDrawCaution=drawOnlyFree&&opps>=2&&!realTwoPairOrBetter(madeScore,p.hole);
     const riverBlocker=coachRiverNutBlockerBluff(p,madeScore,opps);
+    const weakTopPair=coachTopPairDomination(p.hole,state.board,madeScore);
+    const preflopAggressor=state.pfAggIdx>=0?state.players[state.pfAggIdx]:null;
+    const preflopAggressorBehind=preflopAggressor&&preflopAggressor!==p&&
+      !preflopAggressor.folded&&!preflopAggressor.allIn&&ord.indexOf(preflopAggressor)>ordIdx;
     const protectMade=!river&&checkedInFront>0&&opps<=3&&eq>=0.32&&strongMade;
     const leadStrongMade=!river&&checkedInFront===0&&opps<=2&&eq>=0.45&&strongMade;
     const protectTopPair=!river&&checkedInFront>0&&opps<=3&&eq>=0.48&&hasTopPairOrBetter(madeScore,p.hole,state.board);
@@ -2614,6 +2621,9 @@ function coachDecide(p){
     }else if(drySidePot){
       rec='CHECK';
       why.push(C('drySidePotCheck',handDesc,pct(eq)));
+    }else if(weakTopPair&&opps>=2&&preflopAggressorBehind){
+      rec='CHECK';
+      why.push(C('multiwayTopPairCheck',pct(eq),rankNm(weakTopPair.kicker),opps));
     }else if(eq>0.42){
       rec='CHECK';
       why.push(river?C('midRiver',pct(eq)):C('midCheck',pct(eq)));
