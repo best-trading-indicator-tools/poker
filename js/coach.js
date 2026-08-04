@@ -84,6 +84,7 @@ pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} may look playabl
 pfMultiwayValue:(c,n)=>`${n} caller${n>1?'s':''} improve the immediate price for ${c}. This hand retains its equity relatively well multiway and can make a strong disguised hand, so the coach gives it a small, capped implied-odds credit when stacks are deep enough. The benefit is not unlimited: every extra opponent still lowers raw equity and adds non-nut and reverse-implied-odds risk.`,
 chartIcmFold:(c,e,o)=>`${c} is normally a call here, but right now your simulated win chance (${e}) doesn't cover the price (${o}) once prize pressure and this raiser's range are counted. The chart is a guide — the math of THIS table says fold.`,
 chartFoldVs:(c,r,b,d)=>`${c} is outside both the re-raise and calling ranges versus this ${r||'position'} open.${d?' A weak suited ace is often dominated by the opener’s stronger aces, creating costly reverse implied odds.':''}${b?` ${b} player${b>1?'s':''} behind can still squeeze or enter the pot.`:''} The equity estimate is close, but equity alone does not override the position-specific range — fold.`,
+broadwayFlat:(c,o,s,b)=>`${c} is a connected or one-gap high-card hand facing a small ${o} BB raise. Under the wider multiway-building strategy, call this price with ${s} BB behind${b?` even though ${b} player${b>1?'s':''} can still enter`:''}. This is an intentional loose/exploit adjustment, not the standard solver chart; fold the same hand to a larger raise or with a shorter stack.`,
 chartOpen:(c,p)=>`${c} is in the ${p} opening chart — a hand list taken from solver-computed ranges: raising it first-in from this seat is profitable in the long run. Come in raising, not limping.`,
 chartIso:(c,p,n)=>`${c} is in the ${p} iso chart — solver-style ranges for raising over ${n} limper${n>1?'s':''}. Isolate with a raise; calling behind limpers bleeds chips.`,
 chartNotInIso:(c,p)=>`${c} is not in the ${p} iso chart — even over limpers, this hand loses money as a raise long-term. Fold, or make a very tight exception only with a huge stack edge.`,
@@ -250,6 +251,7 @@ pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} peut sembler jou
 pfMultiwayValue:(c,n)=>`${n} caller${n>1?'s':''} améliore${n>1?'nt':''} le prix immédiat pour ${c}. Cette main conserve relativement bien son équité en multiway et peut toucher une grosse main cachée : le coach lui accorde donc un petit crédit de cotes implicites, plafonné, si les tapis sont assez profonds. Le bénéfice n'est pas illimité : chaque adversaire supplémentaire réduit toujours l'équité brute et augmente les risques de main non max et de cotes implicites inverses.`,
 chartIcmFold:(c,e,o)=>`${c} serait normalement un call ici, mais votre chance de gain simulée (${e}) ne couvre pas le prix (${o}) une fois la pression des prix et la range de ce relanceur comptées. La charte est un guide — le calcul de CETTE table dit de se coucher.`,
 chartFoldVs:(c,r,b,d)=>`${c} est hors des ranges de sur-relance et de call face à cette ouverture de ${r||'cette position'}.${d?' Un As suité faible est souvent dominé par les meilleurs As de l’ouvreur, avec de coûteuses cotes implicites inverses.':''}${b?` ${b} joueur${b>1?'s':''} derrière peu${b>1?'vent':'t'} encore squeeze ou entrer dans le pot.`:''} L’estimation d’équité est proche, mais elle ne remplace pas la range propre à la position — couchez-vous.`,
+broadwayFlat:(c,o,s,b)=>`${c} est une main haute connectée ou à un écart face à une petite relance de ${o} BB. Selon la stratégie élargie de construction de pots multiway, payez ce prix avec ${s} BB derrière${b?`, même si ${b} joueur${b>1?'s peuvent':' peut'} encore entrer`:''}. C’est un ajustement volontairement loose/exploit, pas la charte solveur standard ; couchez la même main face à une relance plus grosse ou avec un tapis plus court.`,
 chartOpen:(c,p)=>`${c} figure dans la charte d'ouverture ${p} — une liste de mains issue de ranges calculées par solveur : la relancer en premier depuis ce siège est rentable à long terme. Entrez en relançant, pas en limpant.`,
 chartIso:(c,p,n)=>`${c} figure dans la charte iso ${p} — ranges pour relancer sur ${n} limpeur${n>1?'s':''}. Isolez en relançant ; suivre derrière des limps perd des jetons.`,
 chartNotInIso:(c,p)=>`${c} n'est pas dans la charte iso ${p} — même sur des limps, cette main perd de l'argent en relance. Couchez-vous.`,
@@ -416,6 +418,7 @@ pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} puede parecer ju
 pfMultiwayValue:(c,n)=>`${n} caller${n>1?'s':''} mejora${n>1?'n':''} el precio inmediato para ${c}. Esta mano conserva relativamente bien su equity multiway y puede ligar una mano fuerte y escondida, así que el coach le concede un pequeño crédito de odds implícitas, limitado, si los stacks son suficientemente profundos. El beneficio no es ilimitado: cada rival adicional sigue reduciendo la equity bruta y añade riesgo de mano no máxima y odds implícitas inversas.`,
 chartIcmFold:(c,e,o)=>`${c} normalmente sería una llamada aquí, pero tu probabilidad simulada (${e}) no cubre el precio (${o}) contando la presión de premios y el rango de quien sube. La tabla es una guía — las cuentas de ESTA mesa dicen retirarse.`,
 chartFoldVs:(c,r,b,d)=>`${c} queda fuera de los rangos de resubida y call contra esta apertura desde ${r||'esa posición'}.${d?' Un as suited débil suele estar dominado por los ases mejores de quien abre, creando costosas odds implícitas inversas.':''}${b?` ${b} jugador${b>1?'es':''} detrás todavía puede${b>1?'n':''} hacer squeeze o entrar en el bote.`:''} La estimación de equity está cerca, pero por sí sola no invalida el rango específico por posición — retírate.`,
+broadwayFlat:(c,o,s,b)=>`${c} es una mano alta conectada o con un hueco ante una subida pequeña de ${o} BB. Con la estrategia ampliada de construir botes multiway, paga este precio con ${s} BB detrás${b?`, aunque ${b} jugador${b>1?'es':''} todavía puede${b>1?'n':''} entrar`:''}. Es un ajuste loose/exploit intencional, no la tabla solver estándar; tira la misma mano ante una subida mayor o con un stack más corto.`,
 chartOpen:(c,p)=>`${c} está en la tabla de apertura de ${p} — una lista de manos sacada de rangos calculados por solver: subirla primero desde este asiento es rentable a largo plazo. Entra subiendo, no de limp.`,
 chartIso:(c,p,n)=>`${c} está en la tabla iso de ${p} — rangos para subir sobre ${n} limper${n>1?'s':''}. Aísla con subida; pagar detrás de limps pierde fichas.`,
 chartNotInIso:(c,p)=>`${c} no está en la tabla iso de ${p} — incluso sobre limps, subir pierde dinero a largo plazo. Retírate.`,
@@ -2437,6 +2440,10 @@ function coachDecide(p){
           x.behindCount,Math.round(x.squeezeRisk*100)):null;
       };
       const stackCallOk=list=>isPair&&domCall.tier===2&&list.includes(code)&&callAmt>0&&contextNearOk(.05);
+      const highCards=p.hole[0].r>=10&&p.hole[1].r>=10&&p.hole[0].r!==p.hole[1].r;
+      const connectedBroadway=highCards&&Math.abs(p.hole[0].r-p.hole[1].r)<=2;
+      const cheapBroadwayFlat=connectedBroadway&&callAmt>0&&state.currentBet<=state.bb*2.5&&
+        stackBB>=20&&callAmt/(p.chips+p.bet)<=.12&&icmPrem<=.02;
       const setMineX=setMineMultiple(p,callAmt,raiser);
       const setMineOk=smallPair&&callAmt>0&&setMineX>=15;
       const setMineThin=smallPair&&callAmt>0&&setMineX<15;
@@ -2523,6 +2530,12 @@ function coachDecide(p){
         }else if(aliveN<=4&&pr<=shortCt&&contextCallOk()){
           rec='CALL';
           why.push(contextProse('pfContextCall')||C('pfCallRange',pos,Math.round(shortCt*100),code,prTxt,pct(eq),pct(odds)));
+        }else if(cheapBroadwayFlat){
+          rec='CALL';
+          strategyMode='exploit';
+          concepts.push('broadwayFlat');
+          why.push(C('broadwayFlat',code,Math.round(state.currentBet/state.bb*10)/10,
+            Math.round((p.chips-callAmt)/state.bb),preflopCallInfo?.behindCount||0));
         }else if(setMineThin){
           rec='FOLD';
           why.push(C('pfSetMineFold',code,usd(callAmt),setMineX));

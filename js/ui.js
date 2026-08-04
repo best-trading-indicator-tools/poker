@@ -100,6 +100,7 @@ yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrde
 firstToAct:"first to act (OOP)",lastToAct:"last to act (IP)",ofN:"of",need:"need ",vs:"vs",opp:"opponent",opps:"opponents",
 beginnerMath:(raw,usable,need,enough)=>`Raw equity: ${raw}%. Usable after position and risk: ~${usable}%. A call needs ${need}% — ${enough?'enough to continue':'not enough, so fold'}.`,
 beginnerChartFold:(raw,usable,need)=>`Raw equity is ${raw}% and the contextual estimate is close (~${usable}% vs ${need}% needed), but this hand is outside the position-specific continue range. The chart takes priority because it accounts for domination, difficult future streets and players still behind — fold.`,
+beginnerBroadwayFlat:(raw,usable,need)=>`This is a deliberate loose call with connected high cards against a small raise. The strict model has ~${usable}% usable equity versus ${need}% needed, so this is a multiway-building style adjustment—not a standard solver call. Fold it when the raise or stack risk is larger.`,
 beginnerFree:"In plain English: checking costs no chips. You keep your hand alive and see what develops without making the pot bigger.",
 beginnerDrySidePot:"In plain English: you do have top pair. The check is recommended because one player is already all-in and there is no side pot yet. On this dry board, betting mainly makes worse hands fold and creates a new pot against stronger hands.",
 beginnerAgg:"In plain English: your win chance is only part of a bet or raise. Opponents may fold immediately (fold equity), and weaker hands may still call.",
@@ -261,6 +262,7 @@ yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflop
 firstToAct:"premier à parler (OOP)",lastToAct:"dernier à parler (IP)",ofN:"sur",need:"requis ",vs:"vs",opp:"adversaire",opps:"adversaires",
 beginnerMath:(raw,usable,need,enough)=>`Équité brute : ${raw} %. Utilisable après position et risque : ~${usable} %. Un call exige ${need} % — ${enough?'assez pour continuer':'pas assez, couchez-vous'}.`,
 beginnerChartFold:(raw,usable,need)=>`L’équité brute est de ${raw} % et l’estimation contextuelle est proche (~${usable} % pour ${need} % requis), mais cette main est hors de la range de continuation propre à la position. La charte prime car elle tient compte de la domination, des streets futures difficiles et des joueurs derrière — couchez-vous.`,
+beginnerBroadwayFlat:(raw,usable,need)=>`C’est un call volontairement loose avec des cartes hautes connectées face à une petite relance. Le modèle strict donne ~${usable} % d’équité utilisable pour ${need} % requis : c’est donc un ajustement de style pour construire un pot multiway, pas un call solveur standard. Couchez face à une relance ou un risque de tapis plus important.`,
 beginnerFree:"En clair : checker ne coûte aucun jeton. Vous gardez votre main en vie et voyez la suite sans grossir le pot.",
 beginnerDrySidePot:"En clair : vous avez bien top paire. Le check est recommandé parce qu'un joueur est déjà à tapis et qu'il n'existe encore aucun side pot. Sur ce board sec, miser ferait surtout coucher les mains moins bonnes et créerait un nouveau pot contre les mains plus fortes.",
 beginnerAgg:"En clair : votre chance de gagner n’est qu’une partie d’un bet ou d’une relance. Les adversaires peuvent se coucher immédiatement (fold equity), et des mains moins bonnes peuvent payer.",
@@ -422,6 +424,7 @@ yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopO
 firstToAct:"primero en hablar (OOP)",lastToAct:"último en hablar (IP)",ofN:"de",need:"necesitas ",vs:"vs",opp:"rival",opps:"rivales",
 beginnerMath:(raw,usable,need,enough)=>`Equity bruta: ${raw} %. Utilizable tras posición y riesgo: ~${usable} %. Igualar exige ${need} % — ${enough?'suficiente para continuar':'insuficiente, retírate'}.`,
 beginnerChartFold:(raw,usable,need)=>`La equity bruta es ${raw}% y la estimación contextual está cerca (~${usable}% frente al ${need}% requerido), pero esta mano queda fuera del rango de continuación específico por posición. La tabla tiene prioridad porque incluye dominación, calles futuras difíciles y jugadores detrás — retírate.`,
+beginnerBroadwayFlat:(raw,usable,need)=>`Es un call deliberadamente loose con cartas altas conectadas ante una subida pequeña. El modelo estricto da ~${usable}% de equity utilizable frente al ${need}% requerido, así que es un ajuste de estilo para construir un bote multiway, no un call solver estándar. Tírala cuando la subida o el riesgo del stack sea mayor.`,
 beginnerFree:"En claro: pasar no cuesta fichas. Mantienes viva la mano y ves qué ocurre sin agrandar el bote.",
 beginnerDrySidePot:"En claro: sí tienes top pair. Se recomienda pasar porque un jugador ya está all-in y todavía no hay bote lateral. En esta mesa seca, apostar haría retirarse sobre todo a manos peores y crearía un bote nuevo contra manos más fuertes.",
 beginnerAgg:"En claro: tu probabilidad de ganar es solo una parte de apostar o subir. Los rivales pueden retirarse de inmediato (fold equity), y manos peores aún pueden pagar.",
@@ -2356,7 +2359,7 @@ function coachMetric(label,value,cls=''){
 }
 function coachConfidence(R){
   const preflop=state.stage==='preflop';
-  const chart=preflop&&R.chartInfo&&R.chartInfo.kind!=='range';
+  const chart=preflop&&R.chartInfo&&R.chartInfo.kind!=='range'&&R.strategyMode!=='exploit';
   if(chart)return{
     kind:'chart',source:T('confidenceChart'),level:T('confidenceHigh'),note:T('confidenceChartNote'),icon:'▦'
   };
@@ -2467,6 +2470,8 @@ function updateCoach(p){
     ?(rec==='FOLD'?T('beginnerOpenFold'):T('beginnerAgg'))
     :chartExcludedFold
     ?T('beginnerChartFold')(Math.round(eq*100),Math.round(usableEq*100),Math.round(decisionNeed*100))
+    :R.concepts?.includes('broadwayFlat')
+    ?T('beginnerBroadwayFlat')(Math.round(eq*100),Math.round(usableEq*100),Math.round(decisionNeed*100))
     :callAmt>0
     ?T('beginnerMath')(Math.round(eq*100),Math.round(usableEq*100),Math.round(decisionNeed*100),usableEq>=decisionNeed)
     :(rec==='CHECK'?T('beginnerFree'):rec==='FOLD'?T('beginnerOpenFold'):T('beginnerAgg'));
