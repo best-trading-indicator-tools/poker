@@ -236,6 +236,43 @@ const result=vm.runInContext(`(()=>{
   if(underpairDecision.rec!=='FOLD'||underpairDecision.underpairPen<.08||underpairDecision.evs.CALL>=0)
     throw new Error('33/K96 vs 80% c-bet must fold '+JSON.stringify({rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL}));
 
+  /* Heads-up flop after a BTN open: AK with two live overcards is a small c-bet,
+     not "pure air" that must auto-check merely because the BB is a station. */
+  newGame({...cfg,numPlayers:6,difficulty:'hard'});
+  const cbetHero=state.players[0],cbetBlind=state.players[1];
+  for(const x of state.players){
+    x.out=x!==cbetHero&&x!==cbetBlind;x.folded=x.out;x.allIn=false;x.bet=0;x.totalBet=0;
+    x.acted=x.out;x.checkedStreet=false;x.aggStreets=[];x.checkStreets=[];x.rangeCap=1;x.rangeFloor=0;x.lineRead='';
+  }
+  state.stage='flop';state.board=['3s','7s','9d'].map(parseCardCode);
+  state._rangeComboInfoCache=Object.create(null);state._rangeBoardTextureCache=Object.create(null);
+  state.bb=800;state.sb=400;state.ante=0;state.dealerIdx=cbetHero.i;
+  state.currentBet=0;state.lastRaiseSize=800;state.lastAggIdx=-1;state.pfAggIdx=cbetHero.i;
+  cbetHero.pos='BTN';cbetHero.hole=['Ad','Ks'].map(parseCardCode);cbetHero.chips=10550;
+  cbetHero.totalBet=2400;cbetHero.acted=false;cbetHero.aggStreets=['preflop'];
+  cbetBlind.pos='BB';cbetBlind.style=STYLES.find(x=>x.id==='station');cbetBlind.chips=5250;
+  cbetBlind.totalBet=2400;cbetBlind.acted=true;cbetBlind.checkedStreet=true;cbetBlind.checkStreets=['flop'];
+  cbetBlind.rangeFloor=.08;rangeModelInit(cbetBlind);
+  state.players[2].totalBet=400;
+  const savedCbetEquity=mcEquityR;mcEquityR=()=>.55;
+  const overcardCbetDecision=coachDecide(cbetHero);
+  mcEquityR=savedCbetEquity;
+  if(overcardCbetDecision.rec!=='RAISE'||overcardCbetDecision.coachT<=0||
+      !overcardCbetDecision.why.some(x=>x.includes('continuation bet'))||
+      !overcardCbetDecision.concepts.includes('overcardCbet'))
+    throw new Error('AK/973 heads-up after BB check must continuation-bet '+JSON.stringify({
+      rec:overcardCbetDecision.rec,target:overcardCbetDecision.coachT,
+      why:overcardCbetDecision.why,actsLast:overcardCbetDecision.actsLast}));
+  state.dealerIdx=cbetBlind.i;cbetHero.pos='BB';cbetBlind.pos='BTN';
+  cbetBlind.acted=false;cbetBlind.checkedStreet=false;cbetBlind.checkStreets=[];cbetBlind.rangeFloor=0;
+  mcEquityR=()=>.55;
+  const firstToActCbetDecision=coachDecide(cbetHero);
+  mcEquityR=savedCbetEquity;
+  if(firstToActCbetDecision.rec!=='RAISE'||!firstToActCbetDecision.actsFirst)
+    throw new Error('AK/973 heads-up must retain the c-bet when first to act '+JSON.stringify({
+      rec:firstToActCbetDecision.rec,actsFirst:firstToActCbetDecision.actsFirst,
+      why:firstToActCbetDecision.why}));
+
   /* Dry side pot: top pair is recognized, but betting a dry flop into the only
      player with chips behind mostly folds worse hands while the short stack is
      already guaranteed a showdown. The coach must explain that specific check. */
@@ -690,7 +727,7 @@ const result=vm.runInContext(`(()=>{
     x.bet=0;x.totalBet=0;x.acted=i!==0;x.rangeCap=1;x.rangeFloor=0;
   }
   state.stage='preflop';state.board=[];state.handOver=false;state.bb=100;state.sb=50;
-  state.currentBet=100;state.lastRaiseSize=100;state.lastAggIdx=-1;state.preflopRaiseCount=0;
+  state.dealerIdx=4;state.currentBet=100;state.lastRaiseSize=100;state.lastAggIdx=-1;state.preflopRaiseCount=0;
   bbHero.hole=H(C(13,0),C(12,1));bbHero.bet=100;bbHero.totalBet=100;bbHero.chips=9900;bbHero.acted=false;
   for(const i of [2,4,5]){state.players[i].bet=100;state.players[i].totalBet=100;state.players[i].chips=9900;}
   const bbIsoKQo=coachDecide(bbHero);
@@ -704,6 +741,8 @@ const result=vm.runInContext(`(()=>{
   if(!(easyThree.open<hardThree.open&&easyThree.raiseF<hardThree.raiseF))
     throw new Error('table-size precision must scale with AI difficulty '+JSON.stringify({easyThree,hardThree}));
   return {policy,jamAA,jamA5,topCheck,airCheck,kingBeforeCheck,kingAfterCheck,
+    overcardCbet:{rec:overcardCbetDecision.rec,targetBB:overcardCbetDecision.coachT/800,
+      actsLast:overcardCbetDecision.actsLast,firstToAct:firstToActCbetDecision.rec},
     effective:metrics.effective,legal:metrics.legal,underpair,withBackdoor,smallIp,
     underpairDecision:{rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL},
     flushDecision:{rec:flushDecision.rec,higher:flushDecision.flushInfo.higherCount,
