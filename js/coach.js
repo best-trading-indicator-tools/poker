@@ -91,6 +91,7 @@ chartIso:(c,p,n)=>`${c} is in the ${p} iso chart — solver-style ranges for rai
 chartNotInIso:(c,p)=>`${c} is not in the ${p} iso chart — even over limpers, this hand loses money as a raise long-term. Fold, or make a very tight exception only with a huge stack edge.`,
 limpPotNote:n=>` ${n} limper${n>1?'s':''} — dead money widens iso-raise ranges slightly, but speculative suited connectors need position/depth before you build a big pot.`,
 pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Suggested preflop size: ${amt} (${bb}). Start around ${pos==='IP'?'3x in position':'4x out of position'}; add about +1x for each flat caller or limper${callers?` (${callers} here)`:''}${ante?' and size up when antes add dead money':''}${depth>0?' and when stacks are deep enough that callers can realize implied odds':depth<0?' while keeping it controlled because stacks are shallower':''}.`,
+pfOpenSize:(amt,bb)=>` Suggested open size: ${amt} (${bb}). In an unopened pot, use a small raise with your whole opening range; there is no need to size up just because you will often be out of position.`,
 fourBetSize:(amt,bb,x)=>` Suggested 4-bet size: ${amt} (${bb}), about ${x}x the 3-bet. This is deliberately much smaller than a 3x 3-bet sizing; if that size would commit roughly 40% of the effective stack, the clean choice with a value hand is all-in instead.`,
 chartNotIn:(c,p)=>`${c} is not in the ${p} opening chart — solver-computed ranges say this hand loses money when raised from this seat over the long run. Folding now saves chips for a better spot.`,
 chartShove:(c,bb,p)=>`At ${bb} BB, ${c} is in the ${p} all-in chart (solver-computed shove ranges for short stacks). Going all-in maximizes your chance of winning the blinds and antes uncontested.`,
@@ -259,6 +260,7 @@ chartIso:(c,p,n)=>`${c} figure dans la charte iso ${p} — ranges pour relancer 
 chartNotInIso:(c,p)=>`${c} n'est pas dans la charte iso ${p} — même sur des limps, cette main perd de l'argent en relance. Couchez-vous.`,
 limpPotNote:n=>` ${n} limpeur${n>1?'s':''} — l'argent mort élargit un peu les ranges d'iso, mais les connecteurs assortis spéculatifs ont besoin de position/profondeur avant de grossir le pot.`,
 pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Taille préflop suggérée : ${amt} (${bb}). Basez-vous sur environ ${pos==='IP'?'3x en position':'4x hors position'} ; ajoutez environ +1x par caller/limpeur${callers?` (${callers} ici)`:''}${ante?' et augmentez quand les antes ajoutent de l\'argent mort':''}${depth>0?' et quand les tapis profonds donnent des cotes implicites aux callers':depth<0?' tout en contrôlant la taille avec des tapis plus courts':''}.`,
+pfOpenSize:(amt,bb)=>` Taille d'ouverture suggérée : ${amt} (${bb}). Dans un pot non ouvert, utilisez une petite relance avec toute votre range d'ouverture ; inutile d'augmenter uniquement parce que vous serez souvent hors de position.`,
 fourBetSize:(amt,bb,x)=>` Taille de 4-bet suggérée : ${amt} (${bb}), soit environ ${x}x le 3-bet. C'est volontairement bien moins que la formule 3x d'un 3-bet ; si cette taille engage environ 40 % du tapis effectif, le choix propre avec une main de valeur est le tapis.`,
 chartNotIn:(c,p)=>`${c} ne figure pas dans la charte d'ouverture ${p} — les ranges calculées par solveur indiquent que cette main perd de l'argent relancée depuis ce siège. Se coucher maintenant garde des jetons pour un meilleur spot.`,
 chartShove:(c,bb,p)=>`À ${bb} BB, ${c} figure dans la charte de tapis ${p} (ranges de shove calculées par solveur pour tapis courts). Partir à tapis maximise vos chances de gagner blinds et antes sans bagarre.`,
@@ -427,6 +429,7 @@ chartIso:(c,p,n)=>`${c} está en la tabla iso de ${p} — rangos para subir sobr
 chartNotInIso:(c,p)=>`${c} no está en la tabla iso de ${p} — incluso sobre limps, subir pierde dinero a largo plazo. Retírate.`,
 limpPotNote:n=>` ${n} limper${n>1?'s':''} — el dinero muerto amplía un poco los rangos de iso, pero los conectores suited especulativos necesitan posición/profundidad antes de inflar el bote.`,
 pfRaiseSize:(amt,bb,pos,callers,ante,depth)=>` Tamaño preflop sugerido: ${amt} (${bb}). Empieza cerca de ${pos==='IP'?'3x en posición':'4x fuera de posición'}; añade alrededor de +1x por cada caller o limper${callers?` (${callers} aquí)`:''}${ante?' y sube el tamaño cuando los antes añaden dinero muerto':''}${depth>0?' y cuando los stacks profundos dan odds implícitas a los callers':depth<0?' manteniéndolo controlado con stacks más cortos':''}.`,
+pfOpenSize:(amt,bb)=>` Tamaño de apertura sugerido: ${amt} (${bb}). En un bote sin abrir, usa una subida pequeña con todo tu rango de apertura; no hace falta subir más solo porque a menudo jugarás fuera de posición.`,
 fourBetSize:(amt,bb,x)=>` Tamaño de 4-bet sugerido: ${amt} (${bb}), unas ${x}x el 3-bet. Es deliberadamente mucho menor que una fórmula 3x de 3-bet; si ese tamaño compromete cerca del 40 % del stack efectivo, con una mano de valor la opción limpia es ir all-in.`,
 chartNotIn:(c,p)=>`${c} no está en la tabla de apertura de ${p} — los rangos calculados por solver dicen que esta mano pierde dinero subida desde este asiento. Retirarse ahora guarda fichas para un momento mejor.`,
 chartShove:(c,bb,p)=>`Con ${bb} BB, ${c} está en la tabla de all-in de ${p} (rangos de shove calculados por solver para stacks cortos). Ir all-in maximiza tus opciones de llevarte ciegas y antes sin pelea.`,
@@ -1254,6 +1257,11 @@ function coachPreflopRaiseSizing(p,actsLast){
   const stackBB=(p.chips+p.bet)/state.bb;
   const anteBB=state.ante*alive().length/Math.max(state.bb,1);
   const posKey=actsLast?'IP':'OOP';
+  if(!facingRaise&&callers===0){
+    let mult=stackBB<=20?2:stackBB<=40?2.25:2.5;
+    if(anteBB>=1&&mult>2)mult-=0.25;
+    return {kind:'open',target:state.bb*mult,mult,posKey,callers:0,anteAdj:anteBB>0,depthAdj:0};
+  }
   let mult=actsLast?3:4;
   mult+=callers;
   if(anteBB>=1) mult+=0.5;
@@ -2816,6 +2824,7 @@ function coachDecide(p){
     coachT=clamp(Math.round(t/state.sb)*state.sb, state.currentBet+state.lastRaiseSize, p.bet+p.chips);
     if(sizePlan) extra.push(sizePlan.kind==='fourBet'
       ?C('fourBetSize',usd(coachT),bbs(coachT),Math.round(sizePlan.mult*10)/10)
+      :sizePlan.kind==='open'?C('pfOpenSize',usd(coachT),bbs(coachT))
       :C('pfRaiseSize',usd(coachT),bbs(coachT),sizePlan.posKey,sizePlan.callers,sizePlan.anteAdj,sizePlan.depthAdj));
     if(postSizePlan){
       if(callAmt>0)extra.push(C('postflopRaiseSize',usd(coachT),bbs(coachT),Math.round(postSizePlan.mult*10)/10,usd(callAmt),Math.round(postSizePlan.betRatio*100)));

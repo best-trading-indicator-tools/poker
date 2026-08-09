@@ -721,10 +721,10 @@ const result=vm.runInContext(`(()=>{
   state.players[5].bet=10;state.players[5].totalBet=10;state.players[5].chips=1990;
   state.players[6].bet=20;state.players[6].totalBet=20;state.players[6].chips=1980;
   const sevenUtgFives=coachDecide(sevenUtg);
-  if(sevenUtgFives.rec!=='RAISE'||sevenUtgFives.chartInfo?.kind!=='rfi'||
+  if(sevenUtgFives.rec!=='RAISE'||sevenUtgFives.coachT!==50||sevenUtgFives.chartInfo?.kind!=='rfi'||
       !sevenUtgFives.chartInfo?.list?.includes('55')||!sevenUtgFives.chartInfo?.pos?.includes('→ MP'))
     throw new Error('7-handed 100 BB UTG 55 must use the equivalent MP chart and open-raise '+JSON.stringify({
-      rec:sevenUtgFives.rec,why:sevenUtgFives.why,chartInfo:sevenUtgFives.chartInfo}));
+      rec:sevenUtgFives.rec,coachT:sevenUtgFives.coachT,why:sevenUtgFives.why,chartInfo:sevenUtgFives.chartInfo}));
   newGame({...cfg,numPlayers:5,difficulty:'hard'});
   const fiveUtg=state.players[0];
   for(const x of state.players){
