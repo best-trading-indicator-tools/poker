@@ -1797,6 +1797,33 @@ function layoutCompactRows(felt,W,H){
     place(opps.slice(back),topPad+oH+rowGap);
   }
 }
+/* The empty preflop board is a layout placeholder, not a real obstacle. Treat
+   only the pot text as occupied until community cards exist; otherwise side
+   seats can have their chips pushed outward across the rail on narrow tables. */
+function betChipCenterBox(centerBox){
+  if(state.board.length)return centerBox;
+  const pot=$('pot');
+  const textW=Math.max(70,Math.min(180,((pot?.textContent||'').length||8)*8+20));
+  const h=Math.max(28,(pot?.offsetHeight||16)+16);
+  const y=pot&&centerBox.t!=null
+    ?centerBox.t+pot.offsetTop+pot.offsetHeight/2
+    :centerBox.y;
+  return {x:centerBox.x,y,w:textW,h,l:centerBox.x-textW/2,t:y-h/2,
+    r:centerBox.x+textW/2,b:y+h/2};
+}
+/* Keep the whole label safely inside the rounded felt. Collision resolution can
+   otherwise solve a tight center/seat gap by moving a chip into the outer rail. */
+function clampBetChipToFelt(x,y,w,h,W,H,felt){
+  const cs=getComputedStyle(felt);
+  const border=Math.max(parseFloat(cs.borderLeftWidth)||0,parseFloat(cs.borderTopWidth)||0);
+  const cx=W/2,cy=H/2;
+  const rx=Math.max(1,W*.48-border-w/2-6);
+  const ry=Math.max(1,H*.46-border-h/2-6);
+  const dx=x-cx,dy=y-cy;
+  const d=Math.sqrt((dx*dx)/(rx*rx)+(dy*dy)/(ry*ry));
+  if(d<=1)return {x,y};
+  return {x:cx+dx/d,y:cy+dy/d};
+}
 function layoutSeats(){
   if(!HAS_DOM||!state||BENCH)return;
   const felt=$('felt');
@@ -1816,6 +1843,7 @@ function layoutSeats(){
     resolveCenterClearance(W,H,cx,cy,centerAreaBox(felt),pad,compact?1:2);
   }
   const centerBox=centerAreaBox(felt);
+  const chipCenterBox=betChipCenterBox(centerBox);
   /* bet chips: anchored to the seat's FINAL position, pushed toward the table center,
      never on top of the seat box and never inside the board/pot zone */
   for(const p of state.players){
@@ -1831,10 +1859,10 @@ function layoutSeats(){
     const off=Math.abs(ux)*(r.width/2+bw/2)+Math.abs(uy)*(r.height/2+bh/2)+12;
     let bx=scx+ux*off, by=scy+uy*off;
     /* rectangular exclusion zone around the board + pot text */
-    const ezX=centerBox.w/2+10, ezY=centerBox.h/2+8;
-    if(Math.abs(bx-centerBox.x)<ezX&&Math.abs(by-centerBox.y)<ezY){
-      const s=Math.min(ezX/Math.max(Math.abs(bx-centerBox.x),1), ezY/Math.max(Math.abs(by-centerBox.y),1));
-      const bx2=centerBox.x+(bx-centerBox.x)*s, by2=centerBox.y+(by-centerBox.y)*s;
+    const ezX=chipCenterBox.w/2+10, ezY=chipCenterBox.h/2+8;
+    if(Math.abs(bx-chipCenterBox.x)<ezX&&Math.abs(by-chipCenterBox.y)<ezY){
+      const s=Math.min(ezX/Math.max(Math.abs(bx-chipCenterBox.x),1), ezY/Math.max(Math.abs(by-chipCenterBox.y),1));
+      const bx2=chipCenterBox.x+(bx-chipCenterBox.x)*s, by2=chipCenterBox.y+(by-chipCenterBox.y)*s;
       /* if escaping the board zone would shove the label back onto its own seat
          (hero on short screens), put it BESIDE the seat instead */
       const hitsSeat=Math.abs(bx2-scx)<(r.width+bw)/2+6 && Math.abs(by2-scy)<(r.height+bh)/2+6;
@@ -1860,7 +1888,7 @@ function layoutSeats(){
       if(!b||(b.offsetWidth||0)<12)continue;   // empty = no bet this street
       labels.push({el:b,w:b.offsetWidth,h:b.offsetHeight||56});
     }
-    const boardBox={x:centerBox.x,y:centerBox.y,w:centerBox.w,h:centerBox.h};
+    const boardBox={x:chipCenterBox.x,y:chipCenterBox.y,w:chipCenterBox.w,h:chipCenterBox.h};
     for(let it=0;it<3;it++){
       for(const L of labels){
         /* label is anchored with translate(-50%,-60%): visual center ≈ (left, top-0.1h) */
@@ -1881,7 +1909,11 @@ function layoutSeats(){
           lastAxis=axis;
           lx=clamp(lx,L.w/2+2,W-L.w/2-2);
           ly=clamp(ly,L.h/2+2,H-L.h/2-2);
+          const safe=clampBetChipToFelt(lx,ly,L.w,L.h,W,H,felt);
+          lx=safe.x;ly=safe.y;
         }
+        const safe=clampBetChipToFelt(lx,ly,L.w,L.h,W,H,felt);
+        lx=safe.x;ly=safe.y;
         L.el.style.left=lx+'px'; L.el.style.top=(ly+0.1*L.h)+'px';
       }
     }

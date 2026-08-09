@@ -2365,7 +2365,10 @@ function coachDecide(p){
         thrEff=Math.min(Math.max(openCap,0.65),thrEff*(1+0.04*Math.min(nLimps,3)));
       }
       /* solver chart: iso over limpers, else raise-first-in */
-      const isoList=limpPot?chartFor('iso',pos):null;
+      /* The BB has a free check after limpers, but strong hands still belong in
+         an isolation range. The chart data has no dedicated BB key, so use its
+         tightest existing iso range instead of falling through to a check. */
+      const isoList=limpPot?(chartFor('iso',pos)||(pos==='BB'?chartFor('iso','UTG'):null)):null;
       const rfi=chartFor('rfi',pos);
       const chartList=isoList||rfi;
       if(chartList){
@@ -2385,7 +2388,7 @@ function coachDecide(p){
       }else if(scCrowded&&callAmt>0){
         rec='FOLD';
         why.push(C('scFoldEarly',code));
-      }else if(chartHit&&callAmt>0||pressureOpen){
+      }else if((chartHit&&(callAmt>0||limpPot))||pressureOpen){
         rec='RAISE';
         if(chartHit&&isoList) why.push(C('chartIso',code,pos,nLimps));
         else why.push(chartHit?C('chartOpen',code,pos):C('pfOpen',code,prTxt,Math.round(thrEff*100),pos,pairAdj&&pr>thrEff));

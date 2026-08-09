@@ -36,7 +36,12 @@ const VIEWPORT = { width: 844, height: 390 };
   await page.evaluate(() => { if (typeof updateOrient === 'function') updateOrient(); });
   await page.click('#startBtn');
   await page.waitForSelector('.seat.human .hole .card', { timeout: 10000 });
-  await page.evaluate(() => { if (typeof updateOrient === 'function') updateOrient(); if (typeof layoutSeats === 'function') layoutSeats(); });
+  await page.evaluate(() => {
+    /* Keep the table-height assertion independent of who randomly acts first. */
+    document.getElementById('humanCtls')?.classList.add('hidden');
+    if (typeof updateOrient === 'function') updateOrient();
+    if (typeof layoutSeats === 'function') layoutSeats();
+  });
   await page.waitForTimeout(200);
 
   const metrics = await page.evaluate(() => {
@@ -82,9 +87,33 @@ const VIEWPORT = { width: 844, height: 390 };
     };
   });
 
-  console.log(JSON.stringify(metrics, null, 2));
+  const portraitPage = await browser.newPage({ viewport: { width: 960, height: 1100 } });
+  await portraitPage.goto(base, { waitUntil: 'networkidle' });
+  await portraitPage.click('#startBtn');
+  await portraitPage.waitForSelector('.seat.human .hole .card', { timeout: 10000 });
+  const portraitMetrics = await portraitPage.evaluate(() => {
+    const actor=state.players[state.players.length-1];
+    for(const p of state.players){p.bet=0;p.totalBet=0;p.folded=false;p.out=false;p.allIn=false;p.lastAct='';}
+    state.stage='preflop';state.board=[];state.handOver=false;state.currentBet=state.bb;
+    state.turnIdx=actor.i;actor.bet=state.bb;actor.totalBet=state.bb;actor.lastAct='Call '+usd(state.bb);
+    render();layoutSeats();
+    const felt=document.getElementById('felt'),seat=document.getElementById('seat'+actor.i),bet=document.getElementById('bet'+actor.i);
+    const fr=felt.getBoundingClientRect(),sr=seat.getBoundingClientRect(),br=bet.getBoundingClientRect();
+    const fc={x:fr.left+fr.width/2,y:fr.top+fr.height/2};
+    const sc={x:sr.left+sr.width/2,y:sr.top+sr.height/2};
+    const bc={x:br.left+br.width/2,y:br.top+br.height/2};
+    const border=parseFloat(getComputedStyle(felt).borderLeftWidth)||0;
+    const rx=fr.width*.48-border-br.width/2-6,ry=fr.height*.46-border-br.height/2-6;
+    const ellipse=((bc.x-fc.x)**2)/(rx**2)+((bc.y-fc.y)**2)/(ry**2);
+    const seatDistance=Math.hypot(sc.x-fc.x,sc.y-fc.y),betDistance=Math.hypot(bc.x-fc.x,bc.y-fc.y);
+    return {ellipse,seatDistance,betDistance,visible:getComputedStyle(bet).visibility!=='hidden',
+      pass:ellipse<=1.01&&betDistance<seatDistance&&getComputedStyle(bet).visibility!=='hidden'};
+  });
+
+  console.log(JSON.stringify({landscape:metrics,halfScreenPortrait:portraitMetrics}, null, 2));
   await page.screenshot({ path: '/tmp/poker-landscape-mobile.png' });
+  await portraitPage.close();
   await browser.close();
   if(server)await new Promise(resolve=>server.close(resolve));
-  process.exit(metrics.pass ? 0 : 1);
+  process.exit(metrics.pass&&portraitMetrics.pass ? 0 : 1);
 })();

@@ -682,6 +682,21 @@ const result=vm.runInContext(`(()=>{
   if(fiveUtgQJo.rec!=='RAISE')
     throw new Error('5-handed 14 BB UTG QJo must open-raise, not fold '+JSON.stringify({
       rec:fiveUtgQJo.rec,why:fiveUtgQJo.why,stack:fiveUtg.chips/state.bb}));
+  newGame({...cfg,numPlayers:6,difficulty:'hard'});
+  const bbHero=state.players[0];
+  const isoPositions=['BB','UTG','HJ','CO','BTN','SB'];
+  for(const [i,x] of state.players.entries()){
+    x.pos=isoPositions[i];x.out=false;x.folded=i===1||i===3;x.allIn=false;
+    x.bet=0;x.totalBet=0;x.acted=i!==0;x.rangeCap=1;x.rangeFloor=0;
+  }
+  state.stage='preflop';state.board=[];state.handOver=false;state.bb=100;state.sb=50;
+  state.currentBet=100;state.lastRaiseSize=100;state.lastAggIdx=-1;state.preflopRaiseCount=0;
+  bbHero.hole=H(C(13,0),C(12,1));bbHero.bet=100;bbHero.totalBet=100;bbHero.chips=9900;bbHero.acted=false;
+  for(const i of [2,4,5]){state.players[i].bet=100;state.players[i].totalBet=100;state.players[i].chips=9900;}
+  const bbIsoKQo=coachDecide(bbHero);
+  if(bbIsoKQo.rec!=='RAISE'||bbIsoKQo.coachT<700||bbIsoKQo.chartInfo?.kind!=='iso')
+    throw new Error('BB KQo over three limpers must recommend a large isolation raise '+JSON.stringify({
+      rec:bbIsoKQo.rec,target:bbIsoKQo.coachT,chart:bbIsoKQo.chartInfo}));
   newGame({...cfg,numPlayers:3,difficulty:'easy'});
   const easyThree=aiTableSizeDynamics(state.players[1],'easy');
   newGame({...cfg,numPlayers:3,difficulty:'hard'});
@@ -711,7 +726,7 @@ const result=vm.runInContext(`(()=>{
     straightDraws:{openEnded:openEnded.info.straight.length,gutshot:gutshot.info.straight.length,
       doubleGut:doubleGut.info.straight.length,wheel:wheelGut.info.straight.length,
       babyOpen:babyOpen.info.straight.length,backdoor:backdoorStraight.draw.backdoorStraightChance},
-    tableSizeStrategy,
+    tableSizeStrategy,bbIsoKQo:{rec:bbIsoKQo.rec,targetBB:bbIsoKQo.coachT/100,chart:bbIsoKQo.chartInfo.kind},
     ordinals};
 })()`,context);
 
