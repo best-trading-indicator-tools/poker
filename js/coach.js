@@ -1666,6 +1666,25 @@ function chartFor(kind,key){
     return key!==undefined?(GTO_CHARTS[kind][key]||null):GTO_CHARTS[kind];
   }catch(e){return null;}
 }
+/* charts.js stores 9-max ranges, while the engine compresses the early-seat
+   labels as players are eliminated (for example, 7-handed UTG has the same
+   six players behind as 9-max MP). Resolve that strategic position before a
+   chart lookup instead of treating every seat named UTG as full-ring UTG. */
+function fullRingChartPosition(pos,tableSize){
+  if(!pos||!Number.isFinite(tableSize))return pos;
+  if(['HJ','CO','BTN','SB','BB'].includes(pos))return pos;
+  let earlyIndex;
+  if(pos==='UTG')earlyIndex=0;
+  else if(pos==='UTG+1')earlyIndex=1;
+  else if(pos==='MP')earlyIndex=2;
+  else{
+    const m=/^MP\+(\d+)$/.exec(pos);
+    if(!m)return pos;
+    earlyIndex=2+Number(m[1]);
+  }
+  const playersBehind=Math.max(0,tableSize-1-earlyIndex);
+  return ({8:'UTG',7:'UTG+1',6:'MP',5:'MP+1',4:'HJ',3:'CO',2:'BTN',1:'SB',0:'BB'})[playersBehind]||pos;
+}
 /* pick shove ladder by effective stack depth (BB); 15 used for 11–15 BB reshove spots */
 function shoveChartKey(stackBB){
   if(stackBB<=5) return '5';
@@ -2371,13 +2390,15 @@ function coachDecide(p){
       /* The BB has a free check after limpers, but strong hands still belong in
          an isolation range. The chart data has no dedicated BB key, so use its
          tightest existing iso range instead of falling through to a check. */
-      const isoList=limpPot?(chartFor('iso',pos)||(pos==='BB'?chartFor('iso','UTG'):null)):null;
-      const rfi=chartFor('rfi',pos);
+      const chartPos=fullRingChartPosition(pos,aliveN);
+      const isoList=limpPot?(chartFor('iso',chartPos)||(pos==='BB'?chartFor('iso','UTG'):null)):null;
+      const rfi=chartFor('rfi',chartPos);
       const chartList=isoList||rfi;
       if(chartList){
         const adjusted=!isoList&&aliveN<=6
           ?[...new Set(chartList.concat(handsThroughPct(thrEff)))]:chartList;
-        chartInfo={kind:isoList?'iso':'rfi',pos:`${pos}${!isoList&&aliveN<=6?` · ${aliveN}-handed`:''}`,list:adjusted};
+        const shifted=chartPos!==pos?` · ${aliveN}-handed → ${chartPos}`:!isoList&&aliveN<=6?` · ${aliveN}-handed`:'';
+        chartInfo={kind:isoList?'iso':'rfi',pos:`${pos}${shifted}`,list:adjusted};
       }
       const chartHit=chartList?chartList.includes(code):false;
       const pressureOpen=prEff<=thrEff&&callAmt>0||prEff<=Math.min(thrEff,0.10)&&callAmt===0;

@@ -704,6 +704,27 @@ const result=vm.runInContext(`(()=>{
   if(!((handPct.QJo||1)<=OPEN_THR.EP*tableSizeOpenFactor('UTG',5))||
       !((handPct.QJo||1)>OPEN_THR.EP*tableSizeOpenFactor('UTG',6)))
     throw new Error('QJo must open from compressed 5-handed UTG but remain outside baseline 6-max UTG');
+  if(fullRingChartPosition('UTG',9)!=='UTG'||fullRingChartPosition('UTG',8)!=='UTG+1'||
+      fullRingChartPosition('UTG',7)!=='MP'||fullRingChartPosition('UTG',6)!=='MP+1'||
+      fullRingChartPosition('UTG+1',7)!=='MP+1'||fullRingChartPosition('HJ',7)!=='HJ')
+    throw new Error('compressed early seats must map to the 9-max chart with the same players behind');
+  newGame({...cfg,numPlayers:7,difficulty:'hard'});
+  const sevenUtg=state.players[0];
+  const sevenPositions=['UTG','UTG+1','HJ','CO','BTN','SB','BB'];
+  for(const [i,x] of state.players.entries()){
+    x.pos=sevenPositions[i];x.out=false;x.folded=false;x.allIn=false;
+    x.bet=0;x.totalBet=0;x.acted=false;x.rangeCap=1;x.rangeFloor=0;
+  }
+  state.stage='preflop';state.board=[];state.handOver=false;state.bb=20;state.sb=10;
+  state.currentBet=20;state.lastRaiseSize=20;state.lastAggIdx=-1;state.preflopRaiseCount=0;
+  sevenUtg.hole=H(C(5,1),C(5,0));sevenUtg.chips=2000;
+  state.players[5].bet=10;state.players[5].totalBet=10;state.players[5].chips=1990;
+  state.players[6].bet=20;state.players[6].totalBet=20;state.players[6].chips=1980;
+  const sevenUtgFives=coachDecide(sevenUtg);
+  if(sevenUtgFives.rec!=='RAISE'||sevenUtgFives.chartInfo?.kind!=='rfi'||
+      !sevenUtgFives.chartInfo?.list?.includes('55')||!sevenUtgFives.chartInfo?.pos?.includes('→ MP'))
+    throw new Error('7-handed 100 BB UTG 55 must use the equivalent MP chart and open-raise '+JSON.stringify({
+      rec:sevenUtgFives.rec,why:sevenUtgFives.why,chartInfo:sevenUtgFives.chartInfo}));
   newGame({...cfg,numPlayers:5,difficulty:'hard'});
   const fiveUtg=state.players[0];
   for(const x of state.players){
