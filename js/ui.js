@@ -94,7 +94,7 @@ resetData:"Clear saved data",resetInfo:"Deletes lifetime stats, hand history, se
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Quit this tournament?",quitCash:"Leave the table?",
 fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ Your turn",
-log:"Log",lastHand:"Last hand",exportH:"Export history",exportCoach:"AI review (.txt)",exportCoachTitle:"Download the last 10 hands with AI coach metadata as text",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",coachScrollMore:"Scroll for more",
+log:"Log",lastHand:"Last hand",exportH:"Export history",exportCoach:"AI review (.txt)",exportCoachTitle:"Download up to 20 hands from the current game with AI coach metadata as text",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",coachScrollMore:"Scroll for more",
 waiting:"Advice appears here when it's your turn.",
 outQuality:"Out quality",weightedOuts:"range-adjusted outs",weightedOutsNote:n=>`${n} raw cards, discounted when they can chop, be dominated, improve the board for everyone, or lose more often against the opponent's estimated range.`,overcardOuts:"Overcard pair outs",pairImproveOuts:"Trips / two-pair outs",redrawOuts:"Full-house / quads redraws",
 yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",playersBehind:"Players behind",openingDecision:"Opening decision",raiseOrFold:"Raise or fold · no limp",draws:"Draws",outs:"Outs",unique:"unique",shared:"shared",countedOnce:"counted once",dirtyOuts:"Dirty outs",dirtyOutsInfoLbl:"What is a dirty out?",dirtyOutsInfo:"A dirty (tainted) out completes your draw on paper but often doesn't win the pot — e.g. it pairs the board (helping everyone) or is the 4th card to a board flush that gives an opponent the winning flush. Use clean outs for your odds.",potOdds:"Pot odds",impliedOdds:"Implied odds",realisticNeed:"realistic need",bestCaseNeed:"best case",effectiveNeed:"Effective call threshold",effectiveNeedNote:"Equity needed after position, ranges and tournament pressure.",preflopRank:p=>`Preflop rank: top ~${p}% of starting hands`,lowerStronger:"lower is stronger",yourStack:"Your stack",sugSize:"Suggested size",
@@ -257,7 +257,7 @@ resetData:"Effacer les données sauvegardées",resetInfo:"Supprime les statistiq
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter ce tournoi ?",quitCash:"Quitter la table ?",
 fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ À vous",
-log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",exportCoach:"Revue IA (.txt)",exportCoachTitle:"Télécharger les 10 dernières mains avec les métadonnées du coach IA",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",coachScrollMore:"Faites défiler pour voir la suite",
+log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",exportCoach:"Revue IA (.txt)",exportCoachTitle:"Télécharger jusqu'à 20 mains de la partie actuelle avec les métadonnées du coach IA",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",coachScrollMore:"Faites défiler pour voir la suite",
 waiting:"Les conseils apparaissent ici quand c'est votre tour.",
 outQuality:"Qualité des outs",weightedOuts:"outs ajustés à la range",weightedOutsNote:n=>`${n} cartes brutes, réduites lorsqu’elles peuvent partager, être dominées, améliorer le board pour tous ou perdre plus souvent face à la range adverse estimée.`,overcardOuts:"Outs d'overcards vers une paire",pairImproveOuts:"Outs vers brelan / deux paires",redrawOuts:"Redraws full / carré",
 yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",playersBehind:"Joueurs derrière",openingDecision:"Décision d'ouverture",raiseOrFold:"Relancer ou se coucher · pas de limp",draws:"Tirages",outs:"Outs",unique:"uniques",shared:"communs",countedOnce:"comptés une fois",dirtyOuts:"Outs sales",dirtyOutsInfoLbl:"Qu'est-ce qu'un out sale ?",dirtyOutsInfo:"Un out sale complète votre tirage sur le papier mais ne gagne souvent pas le pot — ex. il pair le board (aide tout le monde) ou est la 4e carte d'une couleur au board qui donne la couleur gagnante à l'adversaire. Comptez les outs propres pour vos cotes.",potOdds:"Cote du pot",impliedOdds:"Cotes implicites",realisticNeed:"seuil réaliste",bestCaseNeed:"meilleur cas",effectiveNeed:"Seuil effectif du call",effectiveNeedNote:"Équité requise après position, ranges et pression du tournoi.",preflopRank:p=>`Classement préflop : top ~${p}% des mains de départ`,lowerStronger:"plus bas = plus fort",yourStack:"Votre tapis",sugSize:"Taille suggérée",
@@ -420,7 +420,7 @@ resetData:"Borrar datos guardados",resetInfo:"Elimina estadísticas globales, hi
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Salir de este torneo?",quitCash:"¿Dejar la mesa?",
 fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
 actMenu:"◀ Menú",actTurn:"◀ Tu turno",
-log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",exportCoach:"Revisión IA (.txt)",exportCoachTitle:"Descargar las 10 últimas manos con metadatos del coach IA",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",coachScrollMore:"Desplázate para ver más",
+log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",exportCoach:"Revisión IA (.txt)",exportCoachTitle:"Descargar hasta 20 manos de la partida actual con metadatos del coach IA",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",coachScrollMore:"Desplázate para ver más",
 waiting:"Los consejos aparecen aquí cuando es tu turno.",
 outQuality:"Calidad de los outs",weightedOuts:"outs ajustados al rango",weightedOutsNote:n=>`${n} cartas brutas, reducidas cuando pueden empatar, estar dominadas, mejorar la mesa para todos o perder más contra el rango rival estimado.`,overcardOuts:"Outs de overcards a pareja",pairImproveOuts:"Outs a trío / dobles parejas",redrawOuts:"Redraws a full / póquer",
 yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",playersBehind:"Jugadores por hablar",openingDecision:"Decisión de apertura",raiseOrFold:"Subir o retirarse · sin limp",draws:"Proyectos",outs:"Outs",unique:"únicos",shared:"compartidos",countedOnce:"contados una vez",dirtyOuts:"Outs sucios",dirtyOutsInfoLbl:"¿Qué es un out sucio?",dirtyOutsInfo:"Un out sucio completa tu proyecto en papel pero a menudo no gana el bote — p. ej. empareja la mesa (ayuda a todos) o es la 4ª carta a color en la mesa que da el color ganador al rival. Cuenta los outs limpios para tus odds.",potOdds:"Odds del bote",impliedOdds:"Odds implícitas",realisticNeed:"umbral realista",bestCaseNeed:"mejor caso",effectiveNeed:"Umbral efectivo del call",effectiveNeedNote:"Equity necesaria tras posición, rangos y presión del torneo.",preflopRank:p=>`Rango preflop: top ~${p}% de las manos iniciales`,lowerStronger:"más bajo = más fuerte",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
@@ -1168,9 +1168,9 @@ function aiReviewPlayerAction(decision){
   return String(decision.action||'unknown').toUpperCase();
 }
 function aiCoachReviewText(history){
-  const hands=(Array.isArray(history)?history:[]).filter(Boolean).slice(-10);
+  const hands=(Array.isArray(history)?history:[]).filter(Boolean).slice(-20);
   const lines=[
-    'POKER AI - LAST 10 HANDS / AI COACH AUDIT',
+    'POKER AI - CURRENT GAME (UP TO 20 HANDS) / AI COACH AUDIT',
     `Generated: ${new Date().toISOString()}`,
     'Format version: 2',
     `Hands included: ${hands.length} (oldest to newest)`,
@@ -1273,20 +1273,29 @@ function aiCoachReviewText(history){
   return lines.join('\n');
 }
 function aiReviewSavedHands(){
-  let history=[],audit=[];
-  try{history=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');}catch(e){}
-  try{audit=JSON.parse(localStorage.getItem('sg_poker_ai_review_history_v1')||'[]');}catch(e){}
-  const merged=new Map();
-  [...(Array.isArray(history)?history.slice(-10):[]),...(Array.isArray(audit)?audit:[])].forEach(hand=>{
-    if(!hand)return;
-    const key=`${hand.gameId||''}|${hand.hand??''}|${hand.t||''}`;
-    merged.set(key,hand); // the detailed audit copy is later and replaces the compact replay copy
-  });
-  return [...merged.values()].sort((a,b)=>(Date.parse(a.t)||0)-(Date.parse(b.t)||0)).slice(-10);
+  const currentGameId=typeof state!=='undefined'&&state&&state.gameId!=null?state.gameId:null;
+  try{
+    const raw=localStorage.getItem('sg_poker_ai_review_history_v1');
+    if(raw!==null){
+      const audit=JSON.parse(raw);
+      return (Array.isArray(audit)?audit:[])
+        .filter(hand=>hand&&(currentGameId==null||hand.gameId===currentGameId)).slice(-20);
+    }
+  }catch(e){}
+  /* Upgrade path: before the dedicated audit ring exists, older compact history
+     can still produce a useful (less detailed) first export. */
+  try{
+    const history=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');
+    return (Array.isArray(history)?history:[])
+      .filter(hand=>hand&&(currentGameId==null||hand.gameId===currentGameId)).slice(-20);
+  }catch(e){return[];}
+}
+function resetAiCoachReviewHistory(){
+  try{localStorage.setItem('sg_poker_ai_review_history_v1','[]');}catch(e){}
 }
 function downloadAiCoachReview(){
   const stamp=new Date().toISOString().replace(/[:.]/g,'-');
-  downloadBrowserFile(aiCoachReviewText(aiReviewSavedHands()),'text/plain;charset=utf-8',`poker-ai-review-last-10-${stamp}.txt`);
+  downloadBrowserFile(aiCoachReviewText(aiReviewSavedHands()),'text/plain;charset=utf-8',`poker-ai-review-current-game-${stamp}.txt`);
 }
 function downloadBrowserFile(content,type,filename){
   const url=URL.createObjectURL(new Blob([content],{type}));
@@ -3856,6 +3865,7 @@ function initUI(){
       cfg.speed=document.querySelector('input[name=speed]:checked').value;
       cfg.koBonus=$('koBonusChk').checked;
     }
+    resetAiCoachReviewHistory();
     logLines=[];
     $('setup').classList.add('hidden');
     $('game').classList.remove('hidden');
@@ -3915,7 +3925,7 @@ function initUI(){
     let nHist=0; try{nHist=(JSON.parse(localStorage.getItem('sg_poker_history')||'[]')).length;}catch(e){}
     let nGames=0; try{nGames=loadGames().length;}catch(e){}
     $('reviewBtn').classList.toggle('hidden',!nHist&&!nGames);
-    $('aiReviewSetupBtn').classList.toggle('hidden',!nHist);
+    $('aiReviewSetupBtn').classList.toggle('hidden',!aiReviewSavedHands().length);
     return sv;
   };
   refreshResume();

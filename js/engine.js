@@ -710,13 +710,14 @@ function finishHand(pause){
     };
     (state.gameHands=state.gameHands||[]).push(entry);
     while(state.gameHands.length>300) state.gameHands.shift();
-    /* Detailed coach traces are intentionally kept in a separate 10-hand ring.
+    /* Detailed coach traces are intentionally kept in a separate 20-hand ring.
        Putting them in the 3,000-hand replay store would eventually exhaust the
        browser's localStorage quota. */
     try{
-      const audit=JSON.parse(localStorage.getItem('sg_poker_ai_review_history_v1')||'[]');
+      const savedAudit=JSON.parse(localStorage.getItem('sg_poker_ai_review_history_v1')||'[]');
+      const audit=(Array.isArray(savedAudit)?savedAudit:[]).filter(hand=>hand&&hand.gameId===entry.gameId);
       audit.push(entry);
-      while(audit.length>10)audit.shift();
+      while(audit.length>20)audit.shift();
       localStorage.setItem('sg_poker_ai_review_history_v1',JSON.stringify(audit));
     }catch(e){}
     try{

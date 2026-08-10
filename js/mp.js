@@ -147,6 +147,7 @@ function mpClientData(d){
   if(!MP)return;
   if(d.t==='lobby'){MP.names=d.names;mpRosterRender(d.names);}
   else if(d.t==='start'){
+    if(typeof resetAiCoachReviewHistory==='function')resetAiCoachReviewHistory();
     MP.seat=d.seat; MP.spectator=false; MP.ended=false; gameSeries=[]; MP.lastHand=null;
     closeDialog($('mpLobby'));
     $('setup').classList.add('hidden');
@@ -357,6 +358,7 @@ function mpStartGame(){
   };
   Object.assign(cfg,typeof selectedTableScenarioConfig==='function'?selectedTableScenarioConfig():{tableScenario:'balanced'});
   MP.conns.forEach(c=>{try{c.conn.send({t:'start',seat:c.seat});}catch(e){}});
+  if(typeof resetAiCoachReviewHistory==='function')resetAiCoachReviewHistory();
   closeDialog($('mpLobby'));
   logLines=[];
   $('setup').classList.add('hidden');
@@ -398,6 +400,7 @@ function mpRematch(){
   const old=state,cfg={...old.cfg,mpRemotes:MP.conns.map(c=>({name:c.name,seat:c.seat}))};
   MP.ended=false;MP.lastCK=null;
   MP.conns.forEach(c=>{try{c.conn.send({t:'start',seat:c.seat,rematch:true});}catch(e){}});
+  if(typeof resetAiCoachReviewHistory==='function')resetAiCoachReviewHistory();
   closeDialog($('overlay'));newGame(cfg);state.players[0].name=MP.myName;
   buildSeats();hideActions();renderStats();setTimeout(startHand,600);
 }
