@@ -2118,6 +2118,7 @@ function coachDecide(p){
 
   /* ICM prize pressure: extra win-chance this call needs because busting costs prize equity */
   const icmPrem=flags.icm&&callAmt>0&&aliveN>2?icmPremium(p,callAmt,pot):0;
+  const icmActive=!!(flags.icm&&aliveN>2&&typeof PAYOUTS==='function'&&PAYOUTS(state.cfg.numPlayers).length>1);
   const icmInfo=flags.icm?icmDecisionContext(p,callAmt,pot,icmPrem):null;
   impliedInfo=coachPostflopImpliedOdds(p,callAmt,pot,drawInfo,actsFirst,actsLast,icmPrem);
   if(impliedInfo)extra.push(C('impliedOddsNote',pct(impliedInfo.immediateNeed),
@@ -2717,7 +2718,7 @@ function coachDecide(p){
   coachSpotBrief(p,extra,{eq,eqAdj,odds,needEq:callAmt>0?decisionNeed:null,
     callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   const result={rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
-          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,icmInfo,chartInfo,rangeCharts,code,spr,sprZone,
+          actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,icmActive,icmInfo,chartInfo,rangeCharts,code,spr,sprZone,
           preflopCallInfo,drawInfo,impliedInfo,drySidePot,sidePotInfo,needEq:decisionNeed,
           strategyMode,bluffBreakEven,modeledFoldEquity:bluffInfo.estimatedFolds,
           bluffInfo,actionIntent:bluffInfo.intent,concepts,postSizePlan};

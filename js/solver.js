@@ -11,7 +11,8 @@ const GTO_ENGINE_META = Object.freeze({
   mode: 'heads-up postflop chip-EV',
 });
 
-const GTO_CACHE_KEY = 'sg_solver_cache_v1';
+const GTO_PROVIDER_VERSION = 2;
+const GTO_CACHE_KEY = 'sg_solver_cache_v2';
 const GTO_CACHE_LIMIT = 48;
 const GTO_MEMORY_LIMIT = 512 * 1024 * 1024;
 const GTO_HAS_BROWSER = typeof window !== 'undefined' && typeof document !== 'undefined';
@@ -38,7 +39,7 @@ const gtoRuntime = {
 function solverText(key) {
   const table = {
     en: {
-      title: 'Exact GTO solver',
+      title: 'Postflop equilibrium solver',
       ready: 'Solved with b-inary postflop-solver.',
       pending: 'Solving this node in the browser…',
       loading: 'Loading the solver…',
@@ -52,17 +53,19 @@ function solverText(key) {
       state: 'The street began before solver tracking was available. Using the heuristic fallback for this node.',
       browser: 'The WASM solver is unavailable in this browser. Using the heuristic fallback.',
       memoryFail: 'This tree exceeds the browser memory budget. Using the heuristic fallback.',
+      convergence: 'The solver did not reach its exploitability target. Using the heuristic fallback.',
+      line: 'The exact action or sizing is not present in this tree. It was not mapped to a nearby node; using the heuristic fallback.',
       error: 'The exact solver could not finish this node. Using the heuristic fallback.',
-      approximate: 'Bet sizes are solved with a practical discrete abstraction.',
+      approximate: 'Resolved for inferred ranges and a discrete bet-size tree; this is not a universal GTO chart.',
       exploit: 'exploitability',
       iterations: 'iterations',
       cache: 'cached result',
       mix: 'Recommended mix',
-      source: 'Authoritative for this heads-up chip-EV node',
-      solverReason: 'The exact CFR strategy for your hand mixes {mix}. The recommended action is the highest-EV legal branch in that mix.',
+      source: 'Equilibrium for this heads-up chip-EV tree and the supplied inferred ranges',
+      solverReason: 'For your hand, the resolved CFR strategy mixes {mix}. The primary suggestion is the highest-frequency branch; every displayed positive-frequency branch belongs to the mix.',
     },
     fr: {
-      title: 'Solveur GTO exact',
+      title: 'Solveur d’équilibre post-flop',
       ready: 'Résolu avec b-inary postflop-solver.',
       pending: 'Résolution de ce nœud dans le navigateur…',
       loading: 'Chargement du solveur…',
@@ -76,17 +79,19 @@ function solverText(key) {
       state: 'La street a commencé avant le suivi du solveur. Le fallback heuristique est utilisé pour ce nœud.',
       browser: 'Le solveur WASM est indisponible dans ce navigateur. Le fallback heuristique est utilisé.',
       memoryFail: 'Cet arbre dépasse le budget mémoire du navigateur. Le fallback heuristique est utilisé.',
+      convergence: 'Le solveur n’a pas atteint sa cible d’exploitabilité. Le fallback heuristique est utilisé.',
+      line: 'L’action ou le sizing exact n’existe pas dans cet arbre. Aucun nœud voisin n’a été substitué ; le fallback heuristique est utilisé.',
       error: 'Le solveur exact n’a pas terminé ce nœud. Le fallback heuristique est utilisé.',
-      approximate: 'Les sizings sont résolus avec une abstraction discrète pratique.',
+      approximate: 'Résolu pour des ranges estimées et un arbre de sizings discret ; ce n’est pas une charte GTO universelle.',
       exploit: 'exploitabilité',
       iterations: 'itérations',
       cache: 'résultat en cache',
       mix: 'Mix recommandé',
-      source: 'Prioritaire pour ce nœud heads-up en chip-EV',
-      solverReason: 'La stratégie CFR exacte pour votre main mélange {mix}. L’action recommandée est la branche légale avec la meilleure EV dans ce mix.',
+      source: 'Équilibre de cet arbre heads-up en chip-EV pour les ranges estimées fournies',
+      solverReason: 'Pour votre main, la stratégie CFR résolue mélange {mix}. La suggestion principale est la branche la plus fréquente ; chaque branche affichée avec une fréquence positive appartient au mix.',
     },
     es: {
-      title: 'Solver GTO exacto',
+      title: 'Solver de equilibrio postflop',
       ready: 'Resuelto con b-inary postflop-solver.',
       pending: 'Resolviendo este nodo en el navegador…',
       loading: 'Cargando el solver…',
@@ -100,14 +105,16 @@ function solverText(key) {
       state: 'La calle empezó antes del seguimiento del solver. Se usa el fallback heurístico para este nodo.',
       browser: 'El solver WASM no está disponible en este navegador. Se usa el fallback heurístico.',
       memoryFail: 'Este árbol supera el límite de memoria del navegador. Se usa el fallback heurístico.',
+      convergence: 'El solver no alcanzó su objetivo de explotabilidad. Se usa el fallback heurístico.',
+      line: 'La acción o el tamaño exacto no existe en este árbol. No se sustituyó por un nodo cercano; se usa el fallback heurístico.',
       error: 'El solver exacto no pudo terminar este nodo. Se usa el fallback heurístico.',
-      approximate: 'Los tamaños de apuesta se resuelven con una abstracción discreta práctica.',
+      approximate: 'Resuelto para rangos inferidos y un árbol discreto de tamaños; no es una tabla GTO universal.',
       exploit: 'explotabilidad',
       iterations: 'iteraciones',
       cache: 'resultado en caché',
       mix: 'Mezcla recomendada',
-      source: 'Autoritativo para este nodo heads-up de chip-EV',
-      solverReason: 'La estrategia CFR exacta para tu mano mezcla {mix}. La acción recomendada es la rama legal de mayor EV dentro de esa mezcla.',
+      source: 'Equilibrio de este árbol heads-up de chip-EV para los rangos inferidos proporcionados',
+      solverReason: 'Para tu mano, la estrategia CFR resuelta mezcla {mix}. La sugerencia principal es la rama más frecuente; cada rama mostrada con frecuencia positiva pertenece a la mezcla.',
     },
   };
   const language = typeof lang === 'string' && table[lang] ? lang : 'en';
@@ -205,9 +212,16 @@ function solverRangeForPlayer(player) {
 }
 
 function solverRangeSignature(raw) {
-  let quantized = '';
-  for (let i = 0; i < raw.length; i++) quantized += String.fromCharCode(Math.round(raw[i] * 255));
-  return solverHash(quantized);
+  const bytes = new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength);
+  let first = 2166136261;
+  let second = 2246822519;
+  for (let i = 0; i < bytes.length; i++) {
+    first ^= bytes[i];
+    first = Math.imul(first, 16777619);
+    second ^= bytes[i] + (i & 255);
+    second = Math.imul(second, 3266489917);
+  }
+  return `${(first >>> 0).toString(36)}.${(second >>> 0).toString(36)}`;
 }
 
 function solverPlayersInPostflopOrder(players) {
@@ -248,7 +262,10 @@ function solverObserveAction(player, action, rangeContext) {
   if (typeof state === 'undefined' || state.stage === 'preflop' || state.stage === 'showdown') return;
   const street = state.solverStreet;
   if (!street || street.stage !== state.stage || !street.playerSeats.includes(player.i)) return;
-  const canonical = action === 'allin' ? 'allin'
+  const checked = action === 'call' && Number(rangeContext && rangeContext.callAmt || 0) <= 0;
+  const aggressiveAllIn = action === 'raise' && Boolean(rangeContext && rangeContext.isAllIn);
+  const canonical = checked ? 'check'
+    : (action === 'allin' || aggressiveAllIn) ? 'allin'
     : action === 'raise' ? ((rangeContext && rangeContext.cbBefore > 0) ? 'raise' : 'bet')
       : action;
   street.actions.push({
@@ -262,13 +279,24 @@ function solverObserveAction(player, action, rangeContext) {
   });
 }
 
+function solverTournamentIcmActive(result) {
+  if (result && result.icmActive === true) return true;
+  try {
+    if (typeof isCashGame === 'function' && isCashGame()) return false;
+    const live = state.players.filter(candidate => !candidate.out);
+    if (live.length <= 2) return false;
+    if (typeof PAYOUTS !== 'function') return true;
+    return PAYOUTS(state.cfg && state.cfg.numPlayers || live.length).length > 1;
+  } catch (_) { return false; }
+}
+
 function solverSupport(player, result) {
   if (typeof state === 'undefined' || state.stage === 'preflop') return { ok: false, reason: 'preflop' };
   if (!GTO_HAS_BROWSER || typeof Worker === 'undefined' || typeof Comlink === 'undefined') return { ok: false, reason: 'browser' };
   const live = state.players.filter(candidate => !candidate.folded);
   if (live.length !== 2) return { ok: false, reason: 'multiway' };
   if (live.some(candidate => candidate.allIn)) return { ok: false, reason: 'allin' };
-  if (result && Number(result.icmPrem || 0) >= 0.01) return { ok: false, reason: 'icm' };
+  if (solverTournamentIcmActive(result) || (result && Number(result.icmPrem || 0) > 0)) return { ok: false, reason: 'icm' };
   const street = state.solverStreet;
   if (street && street.playerSeats && street.playerSeats.length !== 2) return { ok: false, reason: 'multiway' };
   if (!street || street.stage !== state.stage || !street.supported) return { ok: false, reason: 'state' };
@@ -276,32 +304,54 @@ function solverSupport(player, result) {
   return { ok: true, street };
 }
 
+function solverNumberToken(value) {
+  return String(Math.round(value * 100) / 100);
+}
+
 function solverPercentString(values) {
-  return [...new Set(values.map(value => Math.round(value)).filter(value => value >= 15 && value <= 300))]
-    .sort((a, b) => a - b).map(value => `${value}%`).join(',');
+  return [...new Set(values.map(value => Math.round(value * 100) / 100).filter(value => value >= 5 && value <= 500))]
+    .sort((a, b) => a - b).map(value => `${solverNumberToken(value)}%`).join(',');
+}
+
+function solverRaiseString(values) {
+  return [...new Set(values.map(value => Math.round(value * 100) / 100).filter(value => value > 1 && value <= 20))]
+    .sort((a, b) => a - b).map(value => `${solverNumberToken(value)}x`).join(',');
 }
 
 function solverTreeConfig(street, compact) {
-  const observedBets = street.actions.filter(item => item.action === 'bet')
-    .map(item => 100 * item.invested / Math.max(1, item.potBefore));
-  const observedRaises = street.actions.filter(item => item.action === 'raise')
-    .map(item => item.currentBetBefore > 0 ? item.target / item.currentBetBefore : 0)
-    .filter(value => value > 1).map(value => 100 * value);
+  const observed = Object.create(null);
+  const stageName = street.stage.charAt(0).toUpperCase() + street.stage.slice(1);
+  for (const item of street.actions) {
+    const playerIndex = street.playerSeats.indexOf(item.seat);
+    if (playerIndex < 0) continue;
+    const role = playerIndex === 0 ? 'oop' : 'ip';
+    if (item.action === 'bet') {
+      const key = `${role}${stageName}Bet`;
+      (observed[key] ||= []).push(100 * item.invested / Math.max(1, item.potBefore));
+    } else if (item.action === 'raise' && item.currentBetBefore > 0) {
+      const key = `${role}${stageName}Raise`;
+      (observed[key] ||= []).push(item.target / item.currentBetBefore);
+    }
+  }
   const small = compact ? [67] : [33, 67];
   const medium = compact ? [67] : [50, 75];
   const river = compact ? [75] : [50, 75, 100];
-  const raises = compact ? [250] : [250, ...observedRaises];
-  const betsFor = defaults => solverPercentString([...defaults, ...observedBets]);
+  const raises = [2.5];
+  const betsFor = (key, defaults) => solverPercentString([...defaults, ...(observed[key] || [])]);
+  const raisesFor = key => solverRaiseString([...raises, ...(observed[key] || [])]);
   return {
-    flopBet: betsFor(small), flopRaise: raises.map(v => `${v / 100}x`).join(','), flopDonk: compact ? '67%' : '50%,67%',
-    turnBet: betsFor(medium), turnRaise: raises.map(v => `${v / 100}x`).join(','), turnDonk: compact ? '67%' : '50%,67%',
-    riverBet: betsFor(river), riverRaise: raises.map(v => `${v / 100}x`).join(','), riverDonk: compact ? '75%' : '50%,75%',
+    oopFlopBet: betsFor('oopFlopBet', small), oopFlopRaise: raisesFor('oopFlopRaise'),
+    oopTurnBet: betsFor('oopTurnBet', medium), oopTurnRaise: raisesFor('oopTurnRaise'), oopTurnDonk: compact ? '67%' : '50%,67%',
+    oopRiverBet: betsFor('oopRiverBet', river), oopRiverRaise: raisesFor('oopRiverRaise'), oopRiverDonk: compact ? '75%' : '50%,75%',
+    ipFlopBet: betsFor('ipFlopBet', small), ipFlopRaise: raisesFor('ipFlopRaise'),
+    ipTurnBet: betsFor('ipTurnBet', medium), ipTurnRaise: raisesFor('ipTurnRaise'),
+    ipRiverBet: betsFor('ipRiverBet', river), ipRiverRaise: raisesFor('ipRiverRaise'),
   };
 }
 
 function solverBaseKey(street, config) {
   return [
-    GTO_ENGINE_META.engineCommit.slice(0, 12), street.stage,
+    GTO_PROVIDER_VERSION, GTO_ENGINE_META.engineCommit.slice(0, 12), GTO_ENGINE_META.wasmCommit.slice(0, 12), street.stage,
     street.board.map(solverCardId).join('.'), street.startingPot, street.effectiveStack,
     solverRangeSignature(street.rangeRaw[0]), solverRangeSignature(street.rangeRaw[1]),
     solverHash(config),
@@ -312,6 +362,14 @@ function solverSpotKey(street, player, baseKey) {
   const cards = player && player.hole ? player.hole.map(solverCardId).sort((a, b) => a - b) : [];
   const history = street.actions.map(item => `${item.seat}:${item.action}:${item.target}`).join('/');
   return `node|${baseKey}|${history}|${player ? player.i : '-'}|${cards.join('.')}`;
+}
+
+function solverRequestSignature(street, player) {
+  if (!street || !player) return '';
+  const board = (street.board || []).map(solverCardId).join('.');
+  const actions = (street.actions || []).map(item => `${item.seat}:${item.action}:${item.target}`).join('/');
+  const cards = (player.hole || []).map(solverCardId).sort((a, b) => a - b).join('.');
+  return `${street.handId}|${street.stage}|${board}|${actions}|${player.i}|${cards}`;
 }
 
 function solverSetRuntime(patch) {
@@ -347,12 +405,12 @@ async function solverInitTree(street, config) {
   const initError = await handler.init(
     street.rangeRaw[0], street.rangeRaw[1], board,
     street.startingPot, street.effectiveStack, 0, 0, true,
-    config.flopBet, config.flopRaise,
-    config.turnBet, config.turnRaise, config.turnDonk,
-    config.riverBet, config.riverRaise, config.riverDonk,
-    config.flopBet, config.flopRaise,
-    config.turnBet, config.turnRaise,
-    config.riverBet, config.riverRaise,
+    config.oopFlopBet, config.oopFlopRaise,
+    config.oopTurnBet, config.oopTurnRaise, config.oopTurnDonk,
+    config.oopRiverBet, config.oopRiverRaise, config.oopRiverDonk,
+    config.ipFlopBet, config.ipFlopRaise,
+    config.ipTurnBet, config.ipTurnRaise,
+    config.ipRiverBet, config.ipRiverRaise,
     1.5, 0.15, 0.1, '', '',
   );
   if (initError) throw new Error(`solver-init:${initError}`);
@@ -387,9 +445,11 @@ async function solverSolveBase(street) {
     const maxIterations = 1000;
     const target = Math.max(0.01, street.startingPot * 0.003);
     let exploitability = Number(await initialized.handler.exploitability());
+    let iterations = 0;
     for (let iteration = 0; iteration < maxIterations && exploitability > target; iteration++) {
       if (generation !== gtoGeneration) throw new Error('solver-superseded');
       await initialized.handler.iterate(iteration);
+      iterations = iteration + 1;
       if ((iteration + 1) % 10 === 0) {
         exploitability = Number(await initialized.handler.exploitability());
         solverSetRuntime({
@@ -398,13 +458,18 @@ async function solverSolveBase(street) {
         await new Promise(resolve => setTimeout(resolve, 0));
       }
     }
+    if (!Number.isFinite(exploitability) || exploitability > target) {
+      const error = new Error(`solver-not-converged:${exploitability}`);
+      error.solverReason = 'convergence';
+      throw error;
+    }
     await initialized.handler.finalize();
     const baseKey = solverBaseKey(street, config);
     gtoActive = {
       baseKey, street, config, handler: initialized.handler, exploitability, compact,
-      targetExploitability: target, converged: exploitability <= target,
+      targetExploitability: target, converged: true, iterations,
     };
-    solverSetRuntime({ phase: 'ready', message: solverText('ready'), exploitability });
+    solverSetRuntime({ phase: 'ready', message: solverText('ready'), exploitability, iterations });
     return gtoActive;
   } catch (error) {
     if (error && error.message !== 'solver-superseded') solverTerminate();
@@ -417,12 +482,12 @@ async function solverEnsureBase(street) {
   const compactConfig = solverTreeConfig(street, true);
   const possibleKeys = [solverBaseKey(street, fullConfig), solverBaseKey(street, compactConfig)];
   if (gtoActive && possibleKeys.includes(gtoActive.baseKey)) return gtoActive;
-  if (gtoPending && gtoPending.possibleKeys.some(key => possibleKeys.includes(key))) return gtoPending.promise;
+  if (gtoPending && gtoPending.fullKey === possibleKeys[0]) return gtoPending.promise;
   solverTerminate();
   const promise = solverSolveBase(street).finally(() => {
     if (gtoPending && gtoPending.promise === promise) gtoPending = null;
   });
-  gtoPending = { possibleKeys, promise };
+  gtoPending = { fullKey: possibleKeys[0], promise };
   return promise;
 }
 
@@ -434,17 +499,11 @@ function solverParseActions(text) {
   });
 }
 
-function solverNearestAction(actions, observed) {
+function solverMatchAction(actions, observed) {
   const exactType = actions.filter(action => action.type === observed.action);
-  if (exactType.length && !['bet', 'raise', 'allin'].includes(observed.action)) return exactType[0];
-  let candidates = exactType;
-  if (!candidates.length && ['bet', 'raise', 'allin'].includes(observed.action)) {
-    candidates = actions.filter(action => ['bet', 'raise', 'allin'].includes(action.type));
-  }
-  if (!candidates.length) return null;
-  return candidates.reduce((best, action) => (
-    Math.abs(action.amount - observed.target) < Math.abs(best.amount - observed.target) ? action : best
-  ), candidates[0]);
+  if (!['bet', 'raise', 'allin'].includes(observed.action)) return exactType[0] || null;
+  const target = Math.round(Number(observed.target) || 0);
+  return exactType.find(action => Math.round(action.amount) === target) || null;
 }
 
 async function solverReplayHistory(handler, actions) {
@@ -452,8 +511,8 @@ async function solverReplayHistory(handler, actions) {
   const indices = [];
   for (const observed of actions) {
     const available = solverParseActions(await handler.actionsAfter(new Uint32Array(indices)));
-    const matched = solverNearestAction(available, observed);
-    if (!matched) throw new Error(`unmapped-action:${observed.action}`);
+    const matched = solverMatchAction(available, observed);
+    if (!matched) throw new Error(`unmapped-action:${observed.action}:${observed.target}`);
     indices.push(matched.index);
   }
   await handler.applyHistory(new Uint32Array(indices));
@@ -489,7 +548,8 @@ function solverAppAction(action, player) {
   const allInTarget = (player.bet || 0) + (player.chips || 0);
   const target = Math.max(player.bet || 0, Math.min(allInTarget, action.amount));
   const allIn = action.type === 'allin' || target >= allInTarget;
-  return { label: allIn ? 'All-in' : 'Raise', rec: allIn ? 'allin' : 'raise', target };
+  const label = allIn ? 'All-in' : (callAmount > 0 ? 'Raise' : 'Bet');
+  return { label, rec: allIn ? 'allin' : 'raise', target };
 }
 
 function solverActionLegal(mapped, player) {
@@ -497,7 +557,11 @@ function solverActionLegal(mapped, player) {
   if (mapped.rec === 'fold') return callAmount > 0;
   if (mapped.rec === 'check') return callAmount === 0;
   if (mapped.rec === 'call') return callAmount > 0 && player.chips > 0;
-  if (mapped.rec === 'raise' || mapped.rec === 'allin') return player.chips > callAmount;
+  if (mapped.rec === 'raise') {
+    const minTarget = Math.min(state.currentBet + state.lastRaiseSize, (player.bet || 0) + (player.chips || 0));
+    return !player.acted && player.chips > callAmount && mapped.target >= minTarget;
+  }
+  if (mapped.rec === 'allin') return !player.acted && player.chips > callAmount;
   return false;
 }
 
@@ -520,7 +584,7 @@ async function solverExtractNode(active, player, street) {
   const handIndex = privateCards.indexOf(encoded);
   if (handIndex < 0 || !parsed.strategy || !parsed.actionEv) throw new Error('solver-hand-not-in-range');
   const handCount = privateCards.length;
-  const branches = actions.map((action, index) => {
+  const allBranches = actions.map((action, index) => {
     const mapped = solverAppAction(action, player);
     return {
       ...mapped,
@@ -529,16 +593,19 @@ async function solverExtractNode(active, player, street) {
       ev: Number(parsed.actionEv[index * handCount + handIndex]),
       legal: solverActionLegal(mapped, player),
     };
-  }).filter(branch => branch.legal);
+  });
+  if (allBranches.some(branch => !branch.legal && branch.frequency > 0.000001)) {
+    throw new Error('solver-action-state-mismatch');
+  }
+  const branches = allBranches.filter(branch => branch.legal);
   const frequencyTotal = branches.reduce((sum, branch) => sum + Math.max(0, branch.frequency), 0);
+  if (!(frequencyTotal > 0)) throw new Error('solver-empty-strategy');
   branches.forEach(branch => { branch.frequency = frequencyTotal > 0 ? Math.max(0, branch.frequency) / frequencyTotal : 0; });
   if (!branches.length) throw new Error('solver-no-legal-action');
-  const bestEv = Math.max(...branches.map(branch => Number.isFinite(branch.ev) ? branch.ev : -Infinity));
-  const tolerance = Math.max(0.05, street.startingPot * 0.002);
-  const candidates = branches.filter(branch => Number.isFinite(branch.ev) && branch.ev >= bestEv - tolerance);
-  const chosen = (candidates.length ? candidates : branches).reduce((best, branch) => (
-    branch.frequency > best.frequency ? branch : best
-  ), (candidates.length ? candidates : branches)[0]);
+  const chosen = branches.reduce((best, branch) => (
+    branch.frequency > best.frequency ||
+    (branch.frequency === best.frequency && Number.isFinite(branch.ev) && branch.ev > best.ev) ? branch : best
+  ), branches[0]);
   return {
     engine: GTO_ENGINE_META.name,
     engineCommit: GTO_ENGINE_META.engineCommit,
@@ -549,8 +616,10 @@ async function solverExtractNode(active, player, street) {
     exploitability: active.exploitability,
     targetExploitability: active.targetExploitability,
     converged: active.converged,
-    iterations: gtoRuntime.iterations,
+    iterations: active.iterations,
     compactTree: active.compact,
+    rangeSource: 'inferred-posterior',
+    selectionRule: 'highest-frequency',
     abstraction: active.config,
     branches: branches.map(branch => ({
       label: branch.label, rec: branch.rec, target: Math.round(branch.target || 0),
@@ -595,17 +664,17 @@ function solverApplyCoachStrategy(player, fallbackResult) {
   if (!support.ok) return result;
   const solved = solverCachedResult(player);
   if (!solved) return result;
+  if (solved.converged !== true) return result;
   result.heuristicRec = result.rec;
   result.rec = solved.rec.toUpperCase();
   result.coachT = solved.target;
-  result.evs = { ...(result.evs || {}) };
-  const solverActionEvs = {};
+  const solverActionEvs = { FOLD: null, CALL: null, RAISE: null };
   solved.branches.forEach(branch => {
     const label = branch.rec === 'fold' ? 'FOLD'
       : (branch.rec === 'check' || branch.rec === 'call') ? 'CALL' : 'RAISE';
-    if (!Number.isFinite(solverActionEvs[label]) || branch.ev > solverActionEvs[label]) solverActionEvs[label] = branch.ev;
+    if (Number.isFinite(branch.ev) && (!Number.isFinite(solverActionEvs[label]) || branch.ev > solverActionEvs[label])) solverActionEvs[label] = branch.ev;
   });
-  Object.assign(result.evs, solverActionEvs);
+  result.evs = solverActionEvs;
   result.solver = solved;
   result.strategyProvider = 'solver';
   result.strategyMode = 'solver';
@@ -629,7 +698,7 @@ async function solverRequestCoachStrategy(player, fallbackResult) {
     rangeRaw: support.street.rangeRaw.slice(),
     actions: support.street.actions.map(action => ({ ...action })),
   };
-  const requestSignature = `${street.stage}|${street.actions.length}|${player.i}|${player.hole.map(solverCardId).join('.')}`;
+  const requestSignature = solverRequestSignature(street, player);
   solverSetRuntime({ phase: 'pending', message: solverText('pending') });
   try {
     const active = await solverEnsureBase(street);
@@ -638,11 +707,12 @@ async function solverRequestCoachStrategy(player, fallbackResult) {
     solverSaveCache(key, result);
     solverSetRuntime({ phase: 'ready', message: solverText('ready') });
     if (typeof state === 'undefined') return true;
-    const currentSignature = `${state.stage}|${state.solverStreet ? state.solverStreet.actions.length : -1}|${player.i}|${player.hole.map(solverCardId).join('.')}`;
+    const currentSignature = solverRequestSignature(state.solverStreet, player);
     return requestSignature === currentSignature;
   } catch (error) {
     if (error && error.message === 'solver-superseded') return false;
-    const reason = error && error.solverReason ? error.solverReason : 'error';
+    const lineError = error && /^(unmapped-action|solver-action-state-mismatch|solver-no-legal-action|solver-empty-strategy)/.test(error.message || '');
+    const reason = error && error.solverReason ? error.solverReason : lineError ? 'line' : 'error';
     solverSetRuntime({ phase: 'error', message: solverText(reason), error: String(error && error.message || error) });
     return false;
   }
@@ -677,6 +747,9 @@ function solverPanelHtml(result) {
     className += ' solved';
   } else if (!support.ok) {
     body = escapeHtml(solverText(support.reason || 'error'));
+    className += ' fallback';
+  } else if (gtoRuntime.phase === 'error') {
+    body = escapeHtml(gtoRuntime.message || solverText('error'));
     className += ' fallback';
   } else {
     const progress = gtoRuntime.phase === 'iterating'

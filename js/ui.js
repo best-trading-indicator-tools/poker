@@ -50,12 +50,12 @@ practicePot:"Pot",practiceToCall:"To call",practiceOpponents:"Opponents",
 practiceCorrect:"Correct — this matches the coach's recommendation.",practiceWrong:r=>`Not this time. The coach recommends ${r}.`,
 practiceDone:(s,t)=>`Practice complete: ${s}/${t} decisions matched the coach. These are real saved spots from your sessions.`,
 confidenceTitle:(source,level)=>`${source} · ${level} confidence`,confidenceHigh:"High",confidenceMedium:"Medium",confidenceLimited:"Limited",
-confidenceChart:"Preflop chart",confidenceMath:"Exact pot math + equity simulation",confidenceHeuristic:"Range heuristic",confidenceSolver:"Exact postflop solver",
+confidenceChart:"Preflop chart",confidenceMath:"Exact pot math + equity simulation",confidenceHeuristic:"Range heuristic",confidenceSolver:"Postflop range solver",
 confidenceChartNote:"Uses the position and stack-depth chart for this preflop spot.",
 confidenceMathNote:"Pot odds are exact; equity and future action use simulations and estimated opponent ranges.",
 confidenceHeuristicNote:"Multiway ranges and future actions require broader assumptions, so treat the recommendation as directional.",
-confidenceSolverNote:"Uses an exact CFR solution for this heads-up chip-EV tree and your specific hand.",
-strategyLabel:"Strategy",strategyBaseline:"Heuristic fallback",strategyExploit:"Exploitative adjustment",strategySolver:"Exact solver strategy",
+confidenceSolverNote:"Uses a converged CFR equilibrium for this discrete tree and inferred posterior ranges; it is not a universal GTO chart.",
+strategyLabel:"Strategy",strategyBaseline:"Heuristic fallback",strategyExploit:"Exploitative adjustment",strategySolver:"Resolved equilibrium strategy",
 bluffBreakEven:"Pure-bluff break-even",bluffBreakEvenNote:(f,fe)=>`Needs about ${f}% folds at this size; the model estimates about ${fe}%. Showdown equity adds value when called.`,
 bluffTitle:"Bluff assessment",bluffVerdict:"Verdict",bluffWhy:"Why",bluffPlan:"If called or raised",
 intentBluff:"BLUFF",intentSemiBluff:"SEMI-BLUFF",intentValue:"VALUE",intentProtection:"PROTECTION",intentRangeBluff:"RANGE BLUFF",intentRangeRaise:"RANGE RAISE",intentBluffCatch:"BLUFF-CATCH",intentCall:"CALL",intentCheck:"CHECK",intentFold:"FOLD",
@@ -213,12 +213,12 @@ practicePot:"Pot",practiceToCall:"À payer",practiceOpponents:"Adversaires",
 practiceCorrect:"Correct — votre décision correspond à celle du coach.",practiceWrong:r=>`Pas cette fois. Le coach recommande ${r}.`,
 practiceDone:(s,t)=>`Entraînement terminé : ${s}/${t} décisions correspondent au coach. Ce sont de vrais spots sauvegardés de vos sessions.`,
 confidenceTitle:(source,level)=>`${source} · confiance ${level}`,confidenceHigh:"élevée",confidenceMedium:"moyenne",confidenceLimited:"limitée",
-confidenceChart:"Charte préflop",confidenceMath:"Calcul du pot exact + simulation d'équité",confidenceHeuristic:"Heuristique de ranges",confidenceSolver:"Solveur postflop exact",
+confidenceChart:"Charte préflop",confidenceMath:"Calcul du pot exact + simulation d'équité",confidenceHeuristic:"Heuristique de ranges",confidenceSolver:"Solveur de ranges post-flop",
 confidenceChartNote:"Utilise la charte de position et de profondeur pour ce spot préflop.",
 confidenceMathNote:"Les cotes du pot sont exactes ; l'équité et l'action future utilisent des simulations et des ranges adverses estimées.",
 confidenceHeuristicNote:"Les ranges multiway et les actions futures demandent plus d'hypothèses : considérez ce conseil comme directionnel.",
-confidenceSolverNote:"Utilise une solution CFR exacte pour cet arbre heads-up en chip-EV et votre main précise.",
-strategyLabel:"Stratégie",strategyBaseline:"Fallback heuristique",strategyExploit:"Ajustement exploitant",strategySolver:"Stratégie du solveur exact",
+confidenceSolverNote:"Utilise un équilibre CFR convergé pour cet arbre discret et des ranges postérieures estimées ; ce n’est pas une charte GTO universelle.",
+strategyLabel:"Stratégie",strategyBaseline:"Fallback heuristique",strategyExploit:"Ajustement exploitant",strategySolver:"Stratégie d’équilibre résolue",
 bluffBreakEven:"Seuil d'un bluff pur",bluffBreakEvenNote:(f,fe)=>`Cette taille exige environ ${f} % de folds ; le modèle en estime environ ${fe} %. L'équité à l'abattage ajoute de la valeur si vous êtes payé.`,
 bluffTitle:"Évaluation du bluff",bluffVerdict:"Verdict",bluffWhy:"Pourquoi",bluffPlan:"Si vous êtes payé ou relancé",
 intentBluff:"BLUFF",intentSemiBluff:"SEMI-BLUFF",intentValue:"VALUE",intentProtection:"PROTECTION",intentRangeBluff:"BLUFF DE RANGE",intentRangeRaise:"RELANCE DE RANGE",intentBluffCatch:"BLUFF-CATCH",intentCall:"CALL",intentCheck:"CHECK",intentFold:"FOLD",
@@ -376,12 +376,12 @@ practicePot:"Bote",practiceToCall:"A pagar",practiceOpponents:"Rivales",
 practiceCorrect:"Correcto: coincide con la recomendación del coach.",practiceWrong:r=>`Esta vez no. El coach recomienda ${r}.`,
 practiceDone:(s,t)=>`Práctica terminada: ${s}/${t} decisiones coincidieron con el coach. Son situaciones reales guardadas de tus sesiones.`,
 confidenceTitle:(source,level)=>`${source} · confianza ${level}`,confidenceHigh:"alta",confidenceMedium:"media",confidenceLimited:"limitada",
-confidenceChart:"Tabla preflop",confidenceMath:"Cálculo exacto del bote + simulación de equity",confidenceHeuristic:"Heurística de rangos",confidenceSolver:"Solver postflop exacto",
+confidenceChart:"Tabla preflop",confidenceMath:"Cálculo exacto del bote + simulación de equity",confidenceHeuristic:"Heurística de rangos",confidenceSolver:"Solver de rangos postflop",
 confidenceChartNote:"Usa la tabla de posición y profundidad para esta situación preflop.",
 confidenceMathNote:"Las odds del bote son exactas; la equity y la acción futura usan simulaciones y rangos rivales estimados.",
 confidenceHeuristicNote:"Los rangos multiway y las acciones futuras requieren más supuestos; interpreta el consejo como direccional.",
-confidenceSolverNote:"Usa una solución CFR exacta para este árbol heads-up de chip-EV y tu mano concreta.",
-strategyLabel:"Estrategia",strategyBaseline:"Fallback heurístico",strategyExploit:"Ajuste explotador",strategySolver:"Estrategia del solver exacto",
+confidenceSolverNote:"Usa un equilibrio CFR convergido para este árbol discreto y rangos posteriores inferidos; no es una tabla GTO universal.",
+strategyLabel:"Estrategia",strategyBaseline:"Fallback heurístico",strategyExploit:"Ajuste explotador",strategySolver:"Estrategia de equilibrio resuelta",
 bluffBreakEven:"Umbral de farol puro",bluffBreakEvenNote:(f,fe)=>`Este tamaño necesita cerca del ${f}% de folds; el modelo estima cerca del ${fe}%. La equity al showdown añade valor cuando pagan.`,
 bluffTitle:"Evaluación del farol",bluffVerdict:"Veredicto",bluffWhy:"Por qué",bluffPlan:"Si pagan o resuben",
 intentBluff:"FAROL",intentSemiBluff:"SEMIFAROL",intentValue:"VALOR",intentProtection:"PROTECCIÓN",intentRangeBluff:"FAROL DE RANGO",intentRangeRaise:"SUBIDA DE RANGO",intentBluffCatch:"CAZAFAROLES",intentCall:"IGUALAR",intentCheck:"PASAR",intentFold:"RETIRARSE",
@@ -2419,7 +2419,7 @@ function coachMetric(label,value,cls=''){
 }
 function coachConfidence(R){
   if(R.solver)return{
-    kind:'solver',source:T('confidenceSolver'),level:T('confidenceHigh'),note:T('confidenceSolverNote'),icon:'⚖'
+    kind:'solver',source:T('confidenceSolver'),level:T('confidenceMedium'),note:T('confidenceSolverNote'),icon:'⚖'
   };
   const preflop=state.stage==='preflop';
   const chart=preflop&&R.chartInfo&&R.chartInfo.kind!=='range'&&R.strategyMode!=='exploit';
@@ -2491,6 +2491,7 @@ function updateCoach(p){
     if($('raiseCtl').style.visibility!=='hidden'){
       const sl=$('raiseSlider');
       if(rec==='ALLIN') setRaiseExact(p.bet+p.chips);
+      else if(R.solver) setRaiseExact(clamp(coachT,+sl.min,+sl.max));
       else{ clearRaiseExact(); sl.value=clamp(coachT,+sl.min,+sl.max); updateRaiseLabel(); }
     }
   }
@@ -2596,7 +2597,8 @@ function updateCoach(p){
   }
   coachRecNow={rec,stage:state.stage,evs,coachT:R.coachT,eq,eqAdj:R.eqAdj??eq,odds,needEq:R.needEq,callAmt,pot,
     airPen:R.airPen||0,opps,pos,confidenceKind:coachConfidence(R).kind,rangeCharts,heroCode:R.code,
-    strategyProvider:R.strategyProvider||'heuristic',solverMix:R.solver?.branches||null};
+    strategyProvider:R.strategyProvider||'heuristic',solverMix:R.solver?.branches||null,
+    solverBranches:R.solver?.branches||null};
   if(typeof solverRequestCoachStrategy==='function'){
     const turnToken=state.handNum+'-'+state.stage+'-'+state.turnIdx+'-'+state.currentBet;
     solverRequestCoachStrategy(p,R).then(changed=>{
@@ -2617,8 +2619,11 @@ function renderFeedback(net){
   let html=`<b>${T('hand')}#${state.handNum}:</b> <span class="${net>=0?'pos':'neg'}">${net>=0?'+':'−'}${usd(Math.abs(net))}</span>`;
   if(n>0){
     html+=` · ${T('followedCoach')} ${f}/${n}`;
-    for(const d of state.humanDecisions.filter(x=>!x.followed))
-      html+=`<div class="dev">${d.stage}: ${T('coachSaid')} ${recWord(d.rec)}, ${T('youChose')} ${actWord(d.action)}${d.evLoss>0?` <span class="neg">(−${usd(d.evLoss)} EV)</span>`:''}</div>`;
+    for(const d of state.humanDecisions.filter(x=>!x.followed)){
+      const coachChoice=(d.rec==='RAISE'||d.rec==='ALLIN')&&d.raiseTo>0?`${recWord(d.rec)} ${usd(d.raiseTo)}`:recWord(d.rec);
+      const playerChoice=d.action==='raise'&&d.chosenRaiseTo>0?`${actWord(d.action)} ${usd(d.chosenRaiseTo)}`:actWord(d.action);
+      html+=`<div class="dev">${d.stage}: ${T('coachSaid')} ${coachChoice}, ${T('youChose')} ${playerChoice}${d.evLoss>0?` <span class="neg">(−${usd(d.evLoss)} EV)</span>`:''}</div>`;
+    }
     if(f===n&&net<0)html+=`<div class="dev">🎯 ${T('processGoodBad')}</div>`;
     else if(f<n&&net>0)html+=`<div class="dev">⚠️ ${T('processBadGood')}</div>`;
   }
@@ -2708,7 +2713,21 @@ function counterfactualActionKey(action){
   return action==='fold'||action==='FOLD'?'FOLD':action==='raise'||action==='RAISE'||action==='ALLIN'?'RAISE':'CALL';
 }
 function counterfactualModel(d){
-  const captured=d&&d.evs&&['FOLD','CALL','RAISE'].every(k=>Number.isFinite(Number(d.evs[k])));
+  if(Array.isArray(d?.solverMix)&&d.solverMix.length){
+    const primary={};
+    for(const branch of d.solverMix){
+      const key=branch.rec==='fold'?'FOLD':branch.rec==='call'||branch.rec==='check'?'CALL':'RAISE';
+      if(branch.ev!==null&&branch.ev!==undefined&&Number.isFinite(Number(branch.ev))&&
+        (!primary[key]||Number(branch.frequency)>Number(primary[key].frequency)))primary[key]=branch;
+    }
+    if(['FOLD','CALL','RAISE'].every(k=>primary[k]))return{
+      captured:true,
+      evs:Object.fromEntries(['FOLD','CALL','RAISE'].map(k=>[k,Math.round(Number(primary[k].ev))])),
+      raiseTarget:Math.round(Number(primary.RAISE.target)||0)
+    };
+  }
+  const captured=d&&d.evs&&['FOLD','CALL','RAISE'].every(k=>
+    d.evs[k]!==null&&d.evs[k]!==undefined&&Number.isFinite(Number(d.evs[k])));
   if(captured)return {evs:Object.fromEntries(['FOLD','CALL','RAISE'].map(k=>[k,Math.round(Number(d.evs[k]))])),captured:true};
   const eq=clamp(Number(d?.eqAdj??d?.eq)||0,0,1);
   const pot=Math.max(0,Number(d?.pot)||0),callAmt=Math.max(0,Number(d?.callAmt)||0);
@@ -2740,7 +2759,7 @@ function renderCounterfactualExplorer(hand){
   if(!keys.includes(rpCfAction))rpCfAction=best;
   const selected=rpCfAction,eq=Math.round(clamp(Number(d.eqAdj??d.eq)||0,0,1)*100);
   const need=Math.round(clamp(Number(d.needEq)||0,0,1)*100);
-  const raiseTo=d.raiseTo>0?usd(d.raiseTo):usd(Math.max(Number(d.callAmt)||0,Math.round((Number(d.pot)||0)*.66)));
+  const raiseTo=model.raiseTarget>0?usd(model.raiseTarget):d.raiseTo>0?usd(d.raiseTo):usd(Math.max(Number(d.callAmt)||0,Math.round((Number(d.pot)||0)*.66)));
   const why=selected==='FOLD'?T('cfFoldWhy')
     :selected==='CALL'?(Number(d.callAmt)||0)>0?T('cfCallWhy')(eq,need,usd(Number(d.callAmt)||0)):T('cfCheckWhy')(eq)
     :T('cfRaiseWhy')(eq,raiseTo);
@@ -2923,6 +2942,19 @@ function updateRaiseLabel(){
   );
   $('chipPreview').innerHTML=chipStackHTML(v,true);
 }
+function solverBranchForHumanAction(branches,type,amount,callAmount){
+  if(!Array.isArray(branches)||!branches.length)return null;
+  let rec;
+  if(type==='fold')rec='fold';
+  else if(type==='call')rec=callAmount>0?'call':'check';
+  else if(type==='raise')rec=Number(amount)>=raiseAllInAmt()?'allin':'raise';
+  else return null;
+  const matches=branches.filter(branch=>{
+    if(branch.rec!==rec)return false;
+    return type!=='raise'||Math.round(Number(branch.target)||0)===Math.round(Number(amount)||0);
+  });
+  return matches.reduce((best,branch)=>!best||branch.frequency>best.frequency?branch:best,null);
+}
 function humanAct(type,amount){
   /* multiplayer client: send the action to the host instead of applying it locally */
   if(MP&&MP.role==='client'){
@@ -2948,12 +2980,19 @@ function humanAct(type,amount){
   }
   if(coachRecNow&&coachRecNow.stage===state.stage){
     const r=coachRecNow.rec;
-    const followed = r==='FOLD' ? type==='fold'
+    const solverBranches=coachRecNow.solverBranches;
+    const solverBranch=solverBranchForHumanAction(solverBranches,type,amount,callNow);
+    const solverDecision=Array.isArray(solverBranches)&&solverBranches.length>0;
+    const followed = solverDecision ? Boolean(solverBranch&&solverBranch.frequency>=0.005)
+      : r==='FOLD' ? type==='fold'
       : (r==='CALL'||r==='CHECK') ? type==='call'
       : type==='raise';
-    /* EV lost vs the coach's line (rough chip-EV model) */
-    let evLoss=0;
-    if(coachRecNow.evs){
+    /* Native branch EV for solved nodes; rough category EV only for the fallback coach. */
+    let evLoss=solverDecision?null:0;
+    if(solverDecision&&solverBranch&&Number.isFinite(solverBranch.ev)){
+      const finite=solverBranches.filter(branch=>Number.isFinite(branch.ev));
+      if(finite.length)evLoss=Math.max(0,Math.round(Math.max(...finite.map(branch=>branch.ev))-solverBranch.ev));
+    }else if(!solverDecision&&coachRecNow.evs){
       const key=t=>t==='fold'?'FOLD':t==='call'?'CALL':'RAISE';
       const recKey=r==='ALLIN'?'RAISE':r==='CHECK'?'CALL':r;
       evLoss=Math.max(0,Math.round((coachRecNow.evs[recKey]||0)-(coachRecNow.evs[key(type)]||0)));
@@ -2968,7 +3007,8 @@ function humanAct(type,amount){
       eqAdj:coachRecNow.eqAdj,raiseTo:coachRecNow.coachT||0,
       evs:coachRecNow.evs?{FOLD:coachRecNow.evs.FOLD,CALL:coachRecNow.evs.CALL,RAISE:coachRecNow.evs.RAISE}:null,
       heroCode:coachRecNow.heroCode||'',strategyProvider:coachRecNow.strategyProvider||'heuristic',
-      solverMix:coachRecNow.solverMix||null,
+      solverMix:coachRecNow.solverMix||null,chosenRaiseTo:type==='raise'?(Number(amount)||0):0,
+      solverSizeMismatch:solverDecision&&type==='raise'&&!solverBranch,
       stackBB:state.bb>0?Math.round((p.chips+p.bet)/state.bb*10)/10:0,potType,tableSize:alive().length,
       logIndex:(state.handLog||[]).length};
     if(evLoss>0)decisionContext.rangeSnapshots=(coachRecNow.rangeCharts||[]).slice(0,3).map(rangeSnapshot).filter(Boolean);
@@ -2979,7 +3019,7 @@ function humanAct(type,amount){
       (state.gameDecisions=state.gameDecisions||[]).push({hand:state.handNum,...decisionContext,air});
     }
     if(!followed){
-      const lesson=typeof coachMicroLesson==='function'?coachMicroLesson(coachRecNow,type):'';
+      const lesson=!solverDecision&&typeof coachMicroLesson==='function'?coachMicroLesson(coachRecNow,type):'';
       if(lesson) showInstantLesson(lesson);
     }
     coachRecNow=null;

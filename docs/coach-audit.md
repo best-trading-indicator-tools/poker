@@ -50,8 +50,9 @@ obvious failures. It is deliberately deterministic and reproducible.
 
 This Node audit exercises the chart, range, ICM, and heuristic fallback providers; it
 does **not** run the browser-only WASM worker. In a supported heads-up postflop chip-EV
-node, the b-inary solver result replaces the audited fallback recommendation. The UI
-identifies which provider is authoritative for every decision.
+node, a converged b-inary result with an exactly replayed line replaces the audited
+fallback recommendation. The UI identifies the provider and describes solved output as
+an equilibrium for the supplied inferred ranges rather than universal GTO.
 
 Upstream publishes a same-tree comparison against PioSOLVER and GTO+ with closely
 matching frequencies and EVs. Product-specific validation can still compare an exported

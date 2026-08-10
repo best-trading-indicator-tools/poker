@@ -14,37 +14,37 @@ game state + ordered actions + posterior ranges
                     v
              support router
               /          \
-   heads-up chip-EV       preflop / multiway / ICM / error
+ heads-up cash/chip-EV     preflop / multiway / ICM / error
           |                              |
           v                              v
  b-inary WASM worker              explicit fallback provider
           |
           v
- exact hand mix + action EVs
+ converged hand mix + action EVs
           |
-          +---- authoritative coach recommendation
+          +---- conditional coach override
           +---- cached bot mixed-strategy sample
           +---- saved decision provenance
 ```
 
-`js/solver.js` owns this boundary. `js/coach.js` still produces a complete fallback result first; a cached solved strategy replaces its action, sizing, EVs, confidence, mix, and explanation only when the support router says the exact chip-EV result is valid. This keeps poker-domain fallbacks independent from the WASM runtime and prevents a worker or memory failure from blocking the game.
+`js/solver.js` owns this boundary. `js/coach.js` still produces a complete fallback result first; a cached solved strategy replaces its action, native sizing, EVs, confidence, mix, and explanation only when the support router accepts the chip-EV model, the real line replays exactly, and the exploitability target was reached. This keeps poker-domain fallbacks independent from the WASM runtime and prevents a worker or memory failure from blocking the game.
 
 ## Inputs and tree abstraction
 
 - Both players' 1,326-combination posterior ranges are converted from the app's card ordering to the solver's ordering.
 - The board, starting pot, effective stack, and exact ordered action history are captured at the beginning of every street.
 - OOP and IP receive the same baseline action set: 33%/67% flop bets, 50%/75% turn bets, 50%/75%/100% river bets, 2.5× raises, and solver-managed all-ins.
-- A custom size already used in the real line is added to a rebuilt tree when it is not represented by the baseline abstraction.
+- A custom size already used in the real line is added only to that street and actor's action set. The compact retry preserves observed sizes. If the exact action and target still cannot be replayed, the result is rejected rather than mapped to a nearby node.
 - The solver runs compressed, single-threaded DCFR in a Worker. It targets 0.3% of the starting pot in exploitability, with the upstream default ceiling of 1,000 iterations.
-- A tree estimated above 512 MB is retried with one bet size per street. If it remains too large, the provider returns the labeled memory fallback.
+- A tree estimated above 512 MB is retried with one baseline bet size per street plus the sizes required by the observed line. If it remains too large, the provider returns the labeled memory fallback.
 
-The private-card game is not bucketed. “Exact” here means the converged strategy for the full-combo, discrete action tree and supplied ranges; it does not mean a continuous no-limit action space.
+The private-card game is not bucketed. The result is a converged equilibrium for the full-combo, discrete action tree and supplied inferred ranges; it is not a continuous no-limit solution or a claim that the inferred preflop ranges are universal GTO ranges.
 
 ## Cache and invalidation
 
 The LRU cache stores at most 48 compact node results in memory and `localStorage`. A key includes:
 
-- pinned solver commit;
+- provider schema plus pinned solver and WASM commits;
 - street and board;
 - starting pot and effective stack;
 - hashes of both full ranges;
@@ -58,13 +58,14 @@ Changing any material game input naturally invalidates the hit. Cached data cont
 
 | Spot | Authoritative provider | Reason |
 |---|---|---|
-| Heads-up postflop cash/chip-EV | Exact WASM solver | Supported game model |
+| Heads-up postflop cash/chip-EV | Range-resolved WASM solver | Supported game model |
 | Preflop | Existing position/stack chart provider | Vendored engine is postflop-only |
 | Multiway postflop | Range-aware heuristic | Standard postflop solver models are heads-up |
-| Meaningful tournament ICM | ICM-aware heuristic | A chip-EV solution would optimize the wrong objective |
+| Payout-sensitive tournament with more than two players alive | ICM-aware heuristic | A chip-EV solution would optimize the wrong objective, including checked-to betting nodes |
 | Player already all-in | Equity/runout logic | No betting decision remains |
 | Resume began mid-street without solver history | Range-aware heuristic | Cannot reconstruct a trustworthy root pot/range snapshot |
 | Worker, browser, or memory failure | Range-aware heuristic | Game remains responsive and the UI names the fallback |
+| Nonconverged tree or exact line/sizing unavailable | Range-aware heuristic | Approximate output is never promoted to a solved recommendation |
 
 ## Licensing and deployment
 
