@@ -45,6 +45,7 @@ valRiver:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're li
 valBet:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're likely ahead. Bet for value — checking gives weaker hands and draws a free card to outdraw you.`,
 protectBet:(h,e,n)=>`${h} is strong but vulnerable. Bet for value/protection: worse pairs, pair+draws, and straight/flush draws can pay, and checking gives them a free card. Raw equity is only ~${e} vs ${n} opponent${n>1?'s':''} because they share many outs, but betting is still better than giving a free card.`,
 overcardCbet:(c,e,checked)=>`${c} has two live overcards and about ${e} equity heads-up. You were the preflop aggressor${checked?', and the blind has checked a capped range to you':''}, so make a small continuation bet: worse high cards and draws can call, while weak hands may fold. This is not empty air, but slow down if raised.`,
+sidePotOvercardCbet:(c,e,s)=>`${c} has two live overcards, and ${s} is already in a side pot against the only opponent who can still act. They checked a capped range to the preflop aggressor, so make a small continuation bet for protection and fold equity. The displayed ~${e} includes the all-in player and understates this heads-up side-pot opportunity; slow down if raised.`,
 stab:e=>`Everyone has checked to you, and checks usually mean weakness — their ranges look capped. With ~${e} plus all that fold equity, a stab takes this pot down often. If anyone calls or check-raises, slow down: that's real strength.`,
 checkedDownStab:(e,n)=>`${n===1?'Villain has':'Opponents have'} checked the free preflop option and then kept checking down. That line is heavily capped, so with ~${e} and a hand that is not pure trash, make a small stab — you do not need a big bet to pressure nothing.`,
 probeStab:(e,n,o)=>`${n===1?'Villain has':'Opponents have'} checked multiple streets, so the line is capped. Even ${o?'out of position, ':''}with ~${e} and no bet to call, a small bluff/probe bet can fold air and weak showdown hands — keep it small, then shut down if raised.`,
@@ -214,6 +215,7 @@ valRiver:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':'
 valBet:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':''}, vous êtes probablement devant. Misez pour la valeur — checker offre une carte gratuite aux mains plus faibles et aux tirages.`,
 protectBet:(h,e,n)=>`${h} est forte mais vulnérable. Misez pour value/protection : des paires moins bonnes, paire+tirage et tirages quinte/couleur peuvent payer, et checker leur donne une carte gratuite. L’équité brute n’est que ~${e} contre ${n} adversaire${n>1?'s':''} car ils partagent beaucoup d’outs, mais miser reste mieux que donner une carte gratuite.`,
 overcardCbet:(c,e,checked)=>`${c} a deux overcards vivantes et environ ${e} d'équité en heads-up. Vous étiez l'agresseur préflop${checked?', et la grosse blinde a checké une range plafonnée jusqu’à vous':''} : faites un petit continuation bet. Des hauteurs et tirages inférieurs peuvent payer, tandis que les mains faibles peuvent folder. Ce n'est pas de l'air pur, mais ralentissez face à une relance.`,
+sidePotOvercardCbet:(c,e,s)=>`${c} a deux overcards vivantes, et ${s} se trouve déjà dans un side pot contre le seul adversaire pouvant encore agir. Sa range plafonnée a checké vers l'agresseur préflop : faites un petit continuation bet pour protection et fold equity. Les ~${e} affichés incluent le joueur à tapis et sous-estiment ce duel pour le side pot ; ralentissez face à une relance.`,
 stab:e=>`Tout le monde a checké jusqu’à vous, et les checks trahissent souvent la faiblesse — leurs ranges semblent plafonnées. Avec ~${e} plus toute cette fold equity, une mise ramasse souvent ce pot. Si quelqu’un paie ou check-relance, ralentissez : c’est de la vraie force.`,
 checkedDownStab:(e,n)=>`${n===1?'Vilain a':'Les adversaires ont'} checké l'option gratuite préflop puis continué à checker. Cette ligne est très capée : avec ~${e} et une main pas totalement poubelle, faites une petite mise — inutile de miser gros pour faire pression sur rien.`,
 probeStab:(e,n,o)=>`${n===1?'Vilain a':'Les adversaires ont'} checké plusieurs streets, donc la ligne est capée. Même ${o?'hors de position, ':''}avec ~${e} et aucune mise à payer, une petite mise bluff/probe peut faire folder l'air et les mains faibles de showdown — gardez-la petite, puis abandonnez si ça relance.`,
@@ -383,6 +385,7 @@ valRiver:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, prob
 valBet:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, probablemente vas por delante. Apuesta por valor — pasar regala una carta gratis a manos peores y proyectos.`,
 protectBet:(h,e,n)=>`${h} es fuerte pero vulnerable. Apuesta por valor/protección: parejas peores, pareja+proyecto y proyectos de escalera/color pueden pagar, y pasar les regala una carta. La equity bruta es solo ~${e} contra ${n} rival${n>1?'es':''} porque comparten muchos outs, pero apostar sigue siendo mejor que dar carta gratis.`,
 overcardCbet:(c,e,checked)=>`${c} tiene dos overcards vivas y cerca de ${e} de equity heads-up. Fuiste el agresor preflop${checked?', y la ciega grande ha pasado una range limitada hasta ti':''}, así que haz una pequeña apuesta de continuación: alturas y proyectos peores pueden pagar, mientras las manos débiles pueden retirarse. No es aire puro, pero frena si te resuben.`,
+sidePotOvercardCbet:(c,e,s)=>`${c} tiene dos overcards vivas y ya hay ${s} en un bote lateral contra el único rival que aún puede actuar. Su rango limitado ha pasado ante el agresor preflop, así que haz una pequeña apuesta de continuación por protección y fold equity. El ~${e} mostrado incluye al jugador all-in y subestima este duelo por el bote lateral; frena si te resuben.`,
 stab:e=>`Todos han pasado hasta ti, y pasar suele significar debilidad — sus rangos parecen limitados. Con ~${e} más toda esa fold equity, una apuesta se lleva este bote a menudo. Si alguien iguala o sube tras pasar, frena: eso es fuerza de verdad.`,
 checkedDownStab:(e,n)=>`${n===1?'El rival ha':'Los rivales han'} pasado la opción gratis preflop y luego siguieron pasando. Esa línea está muy limitada, así que con ~${e} y una mano que no es basura pura, haz una apuesta pequeña: no necesitas apostar grande para presionar aire.`,
 probeStab:(e,n,o)=>`${n===1?'El rival ha':'Los rivales han'} pasado varias calles, así que su línea está limitada. Incluso ${o?'fuera de posición, ':''}con ~${e} y sin apuesta que pagar, una apuesta pequeña de bluff/probe puede tirar aire y manos débiles de showdown — mantenla pequeña y abandona si resuben.`,
@@ -1318,6 +1321,21 @@ function coachPostflopOpenSizing(pot,smallStab,madeScore,drawInfo){
   else ratio=.58;
   return {target:pot*ratio,ratio,texture:texture.dry?'dry':texture.wet?'wet':'neutral'};
 }
+/* Return the chips already contestable only by players who still have chips.
+   This is distinct from a dry side pot: when two active players contributed
+   above the largest all-in cap, folding one of them wins real chips even though
+   the all-in player remains eligible for the main pot. */
+function coachExistingSidePot(p){
+  const contenders=inHand();
+  const allIns=contenders.filter(q=>q!==p&&q.allIn);
+  const active=contenders.filter(q=>!q.allIn);
+  if(!allIns.length||active.length<2)return {amount:0,activeOpponents:Math.max(0,active.length-1)};
+  const cap=Math.max(...allIns.map(q=>q.totalBet||0));
+  const sideLevel=Math.min(...active.map(q=>q.totalBet||0));
+  if(sideLevel<=cap)return {amount:0,activeOpponents:active.length-1,cap};
+  const amount=state.players.reduce((sum,q)=>sum+Math.max(0,Math.min(q.totalBet||0,sideLevel)-cap),0);
+  return {amount,activeOpponents:active.length-1,cap};
+}
 function boardTexture(board){
   if(!board.length) return {paired:false,monotone:false,wet:false,flushDraw:false,dry:true};
   const bs=[0,0,0,0]; for(const c of board)bs[c.s]++;
@@ -2141,7 +2159,7 @@ function coachDecide(p){
   const code=holeCode(p.hole), pr=handPct[code]||1;
   let eq,handDesc,drawRow='',extra=[],concepts=[];
   let eqAdj,airPen=0,underpairPen=0,underpairInfo=null;
-  let madeScore=null,flushInfo=null,drawInfo=null,impliedInfo=null,drySidePot=false;
+  let madeScore=null,flushInfo=null,drawInfo=null,impliedInfo=null,drySidePot=false,sidePotInfo=null;
   const tightOpps=oppCaps.filter(o=>o.cap<1).length;
   const weakOpps=oppCaps.filter(o=>o.floor>0).length;
   if(tightOpps>0) extra.push(C('rangesNote',tightOpps,Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)));
@@ -2620,8 +2638,9 @@ function coachDecide(p){
       :null;
     const thinBoardKickerValue=boardKickerValue&&checkedInFront>0&&boardKickerValue.kicker>=13;
     const strongMade=realTwoPairOrBetter(madeScore,p.hole);
+    sidePotInfo=coachExistingSidePot(p);
     drySidePot=state.players.some(q=>q!==p&&!q.folded&&!q.out&&q.allIn)&&
-      inHand().some(q=>q!==p&&!q.allIn)&&boardTexture(state.board).dry&&
+      inHand().some(q=>q!==p&&!q.allIn)&&sidePotInfo.amount===0&&boardTexture(state.board).dry&&
       madeScore?.[0]===1&&hasTopPairOrBetter(madeScore,p.hole,state.board);
     const freeDraw=state.stage!=='river'?detectDraws(p.hole,state.board):null;
     const drawOnlyFree=freeDraw&&(freeDraw.flush||freeDraw.oesd||freeDraw.gutshot)&&madeScore&&madeScore[0]<1;
@@ -2629,8 +2648,13 @@ function coachDecide(p){
     const pureAirFree=madeScore?.[0]===0&&!(freeDraw&&(freeDraw.flush||freeDraw.oesd||freeDraw.doubleGutshot));
     const boardHigh=Math.max(...state.board.map(c=>c.r));
     const twoLiveOvercards=madeScore?.[0]===0&&p.hole.filter(c=>c.r>boardHigh).length===2;
-    const overcardCbet=state.stage==='flop'&&state.pfAggIdx===p.i&&opps===1&&
+    const premiumOvercards=/^(AK|AQ)[so]$/.test(code);
+    const standardOvercardCbet=state.stage==='flop'&&state.pfAggIdx===p.i&&opps===1&&
       twoLiveOvercards&&eq>=.48;
+    const sidePotOvercardCbet=state.stage==='flop'&&state.pfAggIdx===p.i&&
+      sidePotInfo.amount>0&&sidePotInfo.activeOpponents===1&&checkedInFront>0&&
+      twoLiveOvercards&&premiumOvercards&&!boardTexture(state.board).monotone;
+    const overcardCbet=standardOvercardCbet||sidePotOvercardCbet;
     const multiwayDrawCaution=drawOnlyFree&&opps>=2&&!realTwoPairOrBetter(madeScore,p.hole);
     const riverBlocker=coachRiverNutBlockerBluff(p,madeScore,opps);
     const weakTopPair=coachTopPairDomination(p.hole,state.board,madeScore);
@@ -2655,7 +2679,10 @@ function coachDecide(p){
       rec='RAISE';
       smallStab=true;
       concepts.push('overcardCbet');
-      why.push(C('overcardCbet',code,pct(eq),checkedInFront>0));
+      if(sidePotOvercardCbet){
+        concepts.push('sidePotCbet');
+        why.push(C('sidePotOvercardCbet',code,pct(eq),usd(sidePotInfo.amount)));
+      }else why.push(C('overcardCbet',code,pct(eq),checkedInFront>0));
     }else if(multiwayDrawCaution){
       rec='CHECK';
       why.push(C('drawMwCheck',opps));
@@ -2818,7 +2845,8 @@ function coachDecide(p){
       postSizePlan=coachPostflopRaiseSizing(p,pot,callAmt);
       t=postSizePlan.target;
     }else{
-      postSizePlan=coachPostflopOpenSizing(pot,smallStab,madeScore,drawInfo);
+      const sizingPot=concepts.includes('sidePotCbet')&&sidePotInfo?.amount>0?sidePotInfo.amount:pot;
+      postSizePlan=coachPostflopOpenSizing(sizingPot,smallStab,madeScore,drawInfo);
       t=state.currentBet+Math.max(state.lastRaiseSize,Math.round(postSizePlan.target));
     }
     coachT=clamp(Math.round(t/state.sb)*state.sb, state.currentBet+state.lastRaiseSize, p.bet+p.chips);
@@ -2860,7 +2888,7 @@ function coachDecide(p){
     callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,icmInfo,chartInfo,rangeCharts,code,spr,sprZone,
-          preflopCallInfo,drawInfo,impliedInfo,drySidePot,needEq:decisionNeed,
+          preflopCallInfo,drawInfo,impliedInfo,drySidePot,sidePotInfo,needEq:decisionNeed,
           strategyMode,bluffBreakEven,modeledFoldEquity:bluffInfo.estimatedFolds,
           bluffInfo,actionIntent:bluffInfo.intent,concepts,postSizePlan};
 }

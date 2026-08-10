@@ -297,6 +297,38 @@ const result=vm.runInContext(`(()=>{
     throw new Error('KT/T64 dry side pot must explain the top-pair check '+
       JSON.stringify({rec:sidePotDecision.rec,dry:sidePotDecision.drySidePot,why:sidePotDecision.why}));
 
+  /* Screenshot regression: the short stack stopped at 270 while hero and BB
+     each put in 400, so this is not a dry side pot. After the BB checks, AK's
+     two overcards should make a small c-bet into the existing 260 side pot. */
+  newGame({...cfg,numPlayers:7,difficulty:'hard'});
+  const sideOverHero=state.players[0],sideOverAllin=state.players[1],sideOverBlind=state.players[2];
+  for(const x of state.players){
+    x.out=false;x.folded=x!==sideOverHero&&x!==sideOverAllin&&x!==sideOverBlind;
+    x.allIn=false;x.bet=0;x.totalBet=0;x.acted=x.folded;x.checkedStreet=false;
+    x.aggStreets=[];x.checkStreets=[];x.rangeCap=1;x.rangeFloor=0;x.lineRead='';
+  }
+  state.stage='flop';state.board=['3d','6s','Jd'].map(parseCardCode);
+  state._rangeComboInfoCache=Object.create(null);state._rangeBoardTextureCache=Object.create(null);
+  state.bb=160;state.sb=80;state.ante=0;state.dealerIdx=sideOverAllin.i;
+  state.currentBet=0;state.lastRaiseSize=160;state.lastAggIdx=-1;state.pfAggIdx=sideOverHero.i;
+  sideOverHero.pos='UTG';sideOverHero.hole=['Ah','Kc'].map(parseCardCode);
+  sideOverHero.chips=3640;sideOverHero.totalBet=400;sideOverHero.acted=false;sideOverHero.aggStreets=['preflop'];
+  sideOverAllin.pos='BTN';sideOverAllin.chips=0;sideOverAllin.totalBet=270;
+  sideOverAllin.allIn=true;sideOverAllin.acted=true;rangeModelInit(sideOverAllin);
+  sideOverBlind.pos='BB';sideOverBlind.chips=3320;sideOverBlind.totalBet=400;
+  sideOverBlind.acted=true;sideOverBlind.checkedStreet=true;sideOverBlind.checkStreets=['flop'];
+  sideOverBlind.rangeCap=.25;rangeModelInit(sideOverBlind);
+  state.players[3].totalBet=80;
+  const savedSideOverEquity=mcEquityR;mcEquityR=()=>.28;
+  const sideOverDecision=coachDecide(sideOverHero);
+  mcEquityR=savedSideOverEquity;
+  if(sideOverDecision.rec!=='RAISE'||sideOverDecision.coachT!==160||sideOverDecision.drySidePot||
+      sideOverDecision.sidePotInfo?.amount!==260||!sideOverDecision.concepts.includes('sidePotCbet')||
+      !sideOverDecision.why.some(x=>x.includes('side pot')))
+    throw new Error('AK/J63 with an existing side pot must make a small c-bet '+JSON.stringify({
+      rec:sideOverDecision.rec,target:sideOverDecision.coachT,dry:sideOverDecision.drySidePot,
+      side:sideOverDecision.sidePotInfo,why:sideOverDecision.why,concepts:sideOverDecision.concepts}));
+
   /* Four-flush turn: category-level "Ace-high flush" is misleading when the fifth
      card is a three. Exact opponent combos and their continue policies must block
      the automatic protection bet. */
