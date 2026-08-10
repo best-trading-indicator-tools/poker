@@ -33,6 +33,24 @@ const VIEWPORT = { width: 844, height: 390 };
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: VIEWPORT });
   await page.goto(base, { waitUntil: 'networkidle' });
+  await page.check('#fourColorChk');
+  const deckMetrics = await page.evaluate(() => {
+    const probe=document.createElement('div');
+    probe.innerHTML=[0,1,2,3].map(s=>cardHTML({r:14,s})).join('');
+    document.body.appendChild(probe);
+    const colors=[...probe.querySelectorAll('.card')].map(card=>getComputedStyle(card).color);
+    probe.remove();
+    const button=document.getElementById('deckBtn'),checkbox=document.getElementById('fourColorChk');
+    return {
+      colors,
+      persisted:localStorage.getItem('sg_poker_four_color'),
+      bodyClass:document.body.classList.contains('four-color'),
+      checkbox:checkbox?.checked,
+      buttonPressed:button?.getAttribute('aria-pressed'),
+      pass:new Set(colors).size===4&&localStorage.getItem('sg_poker_four_color')==='1'&&
+        document.body.classList.contains('four-color')&&checkbox?.checked&&button?.getAttribute('aria-pressed')==='true'
+    };
+  });
   await page.evaluate(() => { if (typeof updateOrient === 'function') updateOrient(); });
   await page.click('#startBtn');
   await page.waitForSelector('.seat.human .hole .card', { timeout: 10000 });
@@ -110,10 +128,10 @@ const VIEWPORT = { width: 844, height: 390 };
       pass:ellipse<=1.01&&betDistance<seatDistance&&getComputedStyle(bet).visibility!=='hidden'};
   });
 
-  console.log(JSON.stringify({landscape:metrics,halfScreenPortrait:portraitMetrics}, null, 2));
+  console.log(JSON.stringify({fourColorDeck:deckMetrics,landscape:metrics,halfScreenPortrait:portraitMetrics}, null, 2));
   await page.screenshot({ path: '/tmp/poker-landscape-mobile.png' });
   await portraitPage.close();
   await browser.close();
   if(server)await new Promise(resolve=>server.close(resolve));
-  process.exit(metrics.pass&&portraitMetrics.pass ? 0 : 1);
+  process.exit(deckMetrics.pass&&metrics.pass&&portraitMetrics.pass ? 0 : 1);
 })();

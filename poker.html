@@ -15,7 +15,7 @@
   --text:#e8ebf0; --dim:#8d99ab; --gold:#e8b64c; --red:#e2574c; --blue:#4c8fe2; --green:#2e7d4f;
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
-.btn:focus-visible,.preset:focus-visible,#actionbar button:focus-visible,.seg button:focus-visible,.rp-nav button:focus-visible,.rp-jump input:focus-visible,.rp-jump button:focus-visible,#revClose:focus-visible,#revAllHands:focus-visible,#rewardClose:focus-visible,#rewardCloseTop:focus-visible,.reward-equip:focus-visible,#tRewards:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.btn:focus-visible,.preset:focus-visible,#actionbar button:focus-visible,.seg button:focus-visible,.rp-nav button:focus-visible,.rp-jump input:focus-visible,.rp-jump button:focus-visible,#revClose:focus-visible,#revAllHands:focus-visible,#rewardClose:focus-visible,#rewardCloseTop:focus-visible,.reward-equip:focus-visible,#tRewards:focus-visible,#deckBtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
 .tb-touch{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:44px;padding:4px 8px;margin:-4px -8px;}
 .tb-touch input{width:22px;height:22px;accent-color:var(--gold);cursor:pointer;}
 .setup-touch{display:flex;align-items:center;gap:10px;cursor:pointer;min-height:44px;}
@@ -228,6 +228,9 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #topbar::-webkit-scrollbar{display:none;}
 #topbar>span,#topbar>label,#topbar>button,#topbar>select{flex:0 0 auto;white-space:nowrap;}
 #topbar b{color:var(--text);font-weight:600;}
+#deckBtn{display:inline-flex;align-items:center;gap:1px;background:none;border:1px solid var(--line);border-radius:7px;padding:4px 8px;cursor:pointer;font-size:15px;font-weight:850;line-height:1;color:var(--dim);}
+#deckBtn .deck-diamond{color:#4ca8ff;}#deckBtn .deck-club{color:#42c878;}
+#deckBtn.on{border-color:var(--gold);background:rgba(232,182,76,.11);box-shadow:inset 0 0 0 1px rgba(232,182,76,.12);}
 #quitBtn{margin-left:auto;flex-shrink:0;background:var(--panel);border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:5px 12px;cursor:pointer;font-size:12px;position:relative;z-index:4;}
 #sitOutBtn{flex:0 0 auto;background:none;border:1px solid var(--line);color:var(--dim);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:12px;white-space:nowrap;}
 .ko-top{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;background:rgba(255,255,255,.025);}
@@ -392,6 +395,8 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 .card .ix.flip{top:auto;left:auto;bottom:4px;right:5px;transform:rotate(180deg);}
 .card .pip{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;text-shadow:0 1px 1px rgba(0,0,0,.12);}
 .card.red{color:#c8332b;}
+body.four-color .card.suit-d{color:#1769aa;}
+body.four-color .card.suit-c{color:#16723a;}
 .card.back{background:#46609f;box-shadow:0 3px 8px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.25);}
 .card.back::before{content:'';position:absolute;inset:0;border-radius:7px;
   background:repeating-linear-gradient(45deg,rgba(255,255,255,.13) 0 2.5px,transparent 2.5px 7px),
@@ -708,6 +713,8 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
 .scenario-card-slot{display:grid;place-items:center;width:58px;height:72px;flex:0 0 58px;border:1px dashed #526074;border-radius:9px;background:#151b24;color:#758195;font-size:22px;font-weight:850;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.03);}
 .scenario-card-slot.filled{background:#f4f1e8;color:#171b22;border-style:solid;border-color:#d8d2c2;box-shadow:0 4px 10px rgba(0,0,0,.25);}
 .scenario-card-slot.red-card{color:#d94b45;}
+body.four-color .scenario-card-slot.suit-d{color:#1769aa;}
+body.four-color .scenario-card-slot.suit-c{color:#16723a;}
 .scenario-card-slot:hover,.scenario-card-slot:focus-visible{border-color:#8fd0f8;outline:none;box-shadow:0 0 0 2px rgba(84,163,218,.3);}
 .scenario-deck-picker{position:absolute;z-index:5;left:28px;right:28px;top:125px;border:1px solid #58758d;border-radius:12px;background:#10151d;padding:13px;box-shadow:0 18px 45px rgba(0,0,0,.72);}
 .scenario-deck-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:12px;color:var(--dim);}
@@ -715,6 +722,8 @@ body #rewardToast.ko-bonus.show{box-shadow:0 16px 44px rgba(0,0,0,.55),0 0 42px 
 .scenario-deck-grid{display:grid;grid-template-columns:repeat(13,minmax(32px,1fr));gap:5px;}
 .scenario-deck-card{border:1px solid #d8d2c2;border-radius:6px;background:#f4f1e8;color:#171b22;padding:8px 2px;font-size:15px;font-weight:850;cursor:pointer;}
 .scenario-deck-card.red-card{color:#d94b45;}
+body.four-color .scenario-deck-card.suit-d{color:#1769aa;}
+body.four-color .scenario-deck-card.suit-c{color:#16723a;}
 .scenario-deck-card:disabled{opacity:.18;cursor:not-allowed;}
 .scenario-deck-empty{grid-column:1/-1;border:1px solid var(--line);border-radius:7px;background:#202735;color:var(--dim);padding:7px;cursor:pointer;}
 .scenario-card-help{display:block;margin-top:5px;color:#788599;font-size:10.5px;line-height:1.35;}
@@ -1235,6 +1244,10 @@ body.fl #chipPreview{display:none!important;}
             <option value="es">Espa&ntilde;ol</option>
           </select>
         </div>
+        <div class="row setup-touch">
+          <label class="main" id="fourColorLbl">Four-color deck</label>
+          <input type="checkbox" id="fourColorChk" aria-labelledby="fourColorLbl">
+        </div>
         <div class="row">
           <label class="main">AI Difficulty</label>
           <div class="seg" id="diffSeg">
@@ -1334,6 +1347,7 @@ body.fl #chipPreview{display:none!important;}
     <select id="langTop" title="Language" style="background:none;border:1px solid var(--line);border-radius:7px;padding:4px 6px;cursor:pointer;font-size:12px;color:var(--dim);">
       <option value="en">EN</option><option value="fr">FR</option><option value="es">ES</option>
     </select>
+    <button id="deckBtn" type="button" aria-pressed="false"><span class="deck-diamond">♦</span><span class="deck-club">♣</span></button>
     <button id="sndBtn" title="Sound on/off" style="background:none;border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer;font-size:14px;">🔊</button>
     <button id="sitOutBtn" class="hidden">Sit out</button>
     <button id="quitBtn">Quit</button>

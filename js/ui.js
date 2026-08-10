@@ -2,7 +2,7 @@
 const TR={
 en:{sub:"No-Limit Texas Hold'em tournament vs AI",subCash:"No-Limit Texas Hold'em cash game vs AI",modeLbl:"Game mode",modeSng:"Sit & Go",modeCash:"Cash Game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
 players:"Players",blinds:"Blinds",buyin:"Buy-in",stackDepth:"Starting stack",ante:"Ante",noAnte:"no ante",
-speed:"Blinds Change Speed",turbo:"Turbo",standard:"Standard",slow:"Slow",koBonusOpt:"🎯 KO bonus",koBonusInfo:"Bounty-style Sit & Go option: when you personally eliminate an opponent, you instantly gain a chip bonus equal to 10% of the starting stack. It rewards knockouts and makes big-stack pressure stronger. Only the player who wins chips from the busted opponent gets the bonus.",koBonusAward:(n,b)=>`🎯 KO bonus: +${b} for eliminating ${n} player${n>1?'s':''}`,diff:"AI Difficulty",easy:"Easy",medium:"Medium",hard:"Hard",language:"Language",
+speed:"Blinds Change Speed",turbo:"Turbo",standard:"Standard",slow:"Slow",koBonusOpt:"🎯 KO bonus",koBonusInfo:"Bounty-style Sit & Go option: when you personally eliminate an opponent, you instantly gain a chip bonus equal to 10% of the starting stack. It rewards knockouts and makes big-stack pressure stronger. Only the player who wins chips from the busted opponent gets the bonus.",koBonusAward:(n,b)=>`🎯 KO bonus: +${b} for eliminating ${n} player${n>1?'s':''}`,diff:"AI Difficulty",easy:"Easy",medium:"Medium",hard:"Hard",language:"Language",fourColorDeck:"Four-color deck",fourColorDeckHint:"Spades black, hearts red, diamonds blue and clubs green",
 tableStyle:"Table style",tableBalanced:"Balanced mix",tableTight:"Tight table",tableLoose:"Loose table",tableAggressive:"Aggressive table",tableWild:"Wild table",tableRandom:"Random",tableCustom:"Custom",
 tableDescBalanced:"A varied table containing every opponent personality.",tableDescTight:"A disciplined table that enters fewer pots and gives large bets more credit.",tableDescLoose:"A sticky table that sees more flops and calls with wider ranges.",tableDescAggressive:"A pressure-heavy table with frequent steals, c-bets and raises.",tableDescWild:"A volatile table with very wide ranges, larger bets and more bluffs.",tableDescRandom:"Every bot receives an independently randomized personality.",tableDescCustom:"Choose the exact number of bots for every personality.",
 profileRock:"Tight",profileStation:"Loose",profileShark:"Aggressive",profileManiac:"Wild",tableRandomLine:n=>`${n} bot${n!==1?'s':''} · roles rerolled when the game starts`,tableCustomTotal:(n,t)=>`${n} of ${t} bot roles assigned`,tableCustomInvalid:t=>`Assign exactly ${t} bot role${t!==1?'s':''} to start.`,
@@ -164,7 +164,7 @@ won:"won",foldedTag:"folded",showdown:"showdown",fullHand:"Full hand",preflop:"P
 ord:n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}},
 fr:{sub:"Tournoi de Texas Hold'em No-Limit contre l'IA",subCash:"Cash game Texas Hold'em No-Limit contre l'IA",modeLbl:"Mode de jeu",modeSng:"Sit & Go",modeCash:"Cash game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
 players:"Joueurs",blinds:"Blinds",buyin:"Cave (buy-in)",stackDepth:"Tapis de départ",ante:"Ante",noAnte:"sans ante",
-speed:"Vitesse des blinds",turbo:"Turbo",standard:"Standard",slow:"Lente",koBonusOpt:"🎯 Bonus KO",koBonusInfo:"Option Sit & Go façon bounty : quand vous éliminez personnellement un adversaire, vous gagnez tout de suite un bonus en jetons égal à 10% du tapis de départ. Cela récompense les éliminations et renforce la pression du gros tapis. Seul le joueur qui gagne les jetons de l'adversaire éliminé reçoit le bonus.",koBonusAward:(n,b)=>`🎯 Bonus KO : +${b} pour ${n} élimination${n>1?'s':''}`,diff:"Niveau de l'IA",easy:"Facile",medium:"Moyen",hard:"Difficile",language:"Langue",
+speed:"Vitesse des blinds",turbo:"Turbo",standard:"Standard",slow:"Lente",koBonusOpt:"🎯 Bonus KO",koBonusInfo:"Option Sit & Go façon bounty : quand vous éliminez personnellement un adversaire, vous gagnez tout de suite un bonus en jetons égal à 10% du tapis de départ. Cela récompense les éliminations et renforce la pression du gros tapis. Seul le joueur qui gagne les jetons de l'adversaire éliminé reçoit le bonus.",koBonusAward:(n,b)=>`🎯 Bonus KO : +${b} pour ${n} élimination${n>1?'s':''}`,diff:"Niveau de l'IA",easy:"Facile",medium:"Moyen",hard:"Difficile",language:"Langue",fourColorDeck:"Jeu à quatre couleurs",fourColorDeckHint:"Piques noirs, cœurs rouges, carreaux bleus et trèfles verts",
 tableStyle:"Style de table",tableBalanced:"Mix équilibré",tableTight:"Table serrée",tableLoose:"Table loose",tableAggressive:"Table agressive",tableWild:"Table sauvage",tableRandom:"Aléatoire",tableCustom:"Personnalisé",
 tableDescBalanced:"Une table variée avec toutes les personnalités adverses.",tableDescTight:"Une table disciplinée qui joue moins de pots et respecte davantage les grosses mises.",tableDescLoose:"Une table collante qui voit plus de flops et suit avec des ranges plus larges.",tableDescAggressive:"Une table sous pression avec beaucoup de steals, c-bets et relances.",tableDescWild:"Une table volatile avec des ranges très larges, de grosses mises et davantage de bluffs.",tableDescRandom:"Chaque bot reçoit une personnalité tirée indépendamment au hasard.",tableDescCustom:"Choisissez le nombre exact de bots pour chaque personnalité.",
 profileRock:"Serré",profileStation:"Loose",profileShark:"Agressif",profileManiac:"Sauvage",tableRandomLine:n=>`${n} bot${n>1?'s':''} · profils retirés au sort au lancement`,tableCustomTotal:(n,t)=>`${n} rôle${n>1?'s':''} attribué${n>1?'s':''} sur ${t}`,tableCustomInvalid:t=>`Attribuez exactement ${t} rôle${t>1?'s':''} de bot pour commencer.`,
@@ -326,7 +326,7 @@ won:"gagné",foldedTag:"couché",showdown:"abattage",fullHand:"Main complète",p
 ord:n=>n===1?'1re':n+'e'},
 es:{sub:"Torneo de Texas Hold'em No-Limit contra la IA",subCash:"Cash game Texas Hold'em No-Limit contra la IA",modeLbl:"Modo de juego",modeSng:"Sit & Go",modeCash:"Cash game",titleSng:"Sit & Go Hold'em",titleCash:"Cash Game Hold'em",
 players:"Jugadores",blinds:"Ciegas",buyin:"Entrada (buy-in)",stackDepth:"Stack inicial",ante:"Ante",noAnte:"sin ante",
-speed:"Velocidad de ciegas",turbo:"Turbo",standard:"Estándar",slow:"Lenta",koBonusOpt:"🎯 Bono KO",koBonusInfo:"Opción Sit & Go estilo bounty: cuando eliminas personalmente a un rival, ganas al instante un bono en fichas igual al 10% del stack inicial. Premia las eliminaciones y hace más fuerte la presión del stack grande. Solo recibe el bono quien gana fichas del rival eliminado.",koBonusAward:(n,b)=>`🎯 Bono KO: +${b} por eliminar ${n} jugador${n>1?'es':''}`,diff:"Nivel de la IA",easy:"Fácil",medium:"Medio",hard:"Difícil",language:"Idioma",
+speed:"Velocidad de ciegas",turbo:"Turbo",standard:"Estándar",slow:"Lenta",koBonusOpt:"🎯 Bono KO",koBonusInfo:"Opción Sit & Go estilo bounty: cuando eliminas personalmente a un rival, ganas al instante un bono en fichas igual al 10% del stack inicial. Premia las eliminaciones y hace más fuerte la presión del stack grande. Solo recibe el bono quien gana fichas del rival eliminado.",koBonusAward:(n,b)=>`🎯 Bono KO: +${b} por eliminar ${n} jugador${n>1?'es':''}`,diff:"Nivel de la IA",easy:"Fácil",medium:"Medio",hard:"Difícil",language:"Idioma",fourColorDeck:"Baraja de cuatro colores",fourColorDeckHint:"Picas negras, corazones rojos, diamantes azules y tréboles verdes",
 tableStyle:"Estilo de mesa",tableBalanced:"Mezcla equilibrada",tableTight:"Mesa cerrada",tableLoose:"Mesa loose",tableAggressive:"Mesa agresiva",tableWild:"Mesa salvaje",tableRandom:"Aleatoria",tableCustom:"Personalizada",
 tableDescBalanced:"Una mesa variada con todas las personalidades rivales.",tableDescTight:"Una mesa disciplinada que juega menos botes y respeta más las apuestas grandes.",tableDescLoose:"Una mesa pegajosa que ve más flops e iguala con rangos más amplios.",tableDescAggressive:"Una mesa de mucha presión, con robos, c-bets y subidas frecuentes.",tableDescWild:"Una mesa volátil con rangos muy amplios, apuestas mayores y más faroles.",tableDescRandom:"Cada bot recibe una personalidad elegida independientemente al azar.",tableDescCustom:"Elige el número exacto de bots de cada personalidad.",
 profileRock:"Cerrado",profileStation:"Loose",profileShark:"Agresivo",profileManiac:"Salvaje",tableRandomLine:n=>`${n} bot${n!==1?'s':''} · perfiles sorteados al empezar`,tableCustomTotal:(n,t)=>`${n} de ${t} roles de bot asignados`,tableCustomInvalid:t=>`Asigna exactamente ${t} rol${t!==1?'es':''} de bot para empezar.`,
@@ -489,6 +489,26 @@ ord:n=>n+'º'}};
 try{lang=localStorage.getItem('sg_poker_lang')||'en';}catch(e){}
 if(!TR[lang])lang='en';
 function T(k){return (TR[lang]&&TR[lang][k])!==undefined?TR[lang][k]:TR.en[k];}
+const FOUR_COLOR_DECK_KEY='sg_poker_four_color';
+const CARD_SUIT_CLASSES=['suit-s','suit-h','suit-d','suit-c'];
+let fourColorDeck=false;
+try{fourColorDeck=localStorage.getItem(FOUR_COLOR_DECK_KEY)==='1';}catch(e){}
+function syncFourColorDeckUI(){
+  if(!HAS_DOM)return;
+  document.body.classList.toggle('four-color',fourColorDeck);
+  const checkbox=$('fourColorChk');if(checkbox)checkbox.checked=fourColorDeck;
+  const button=$('deckBtn');if(button){
+    button.classList.toggle('on',fourColorDeck);
+    button.setAttribute('aria-pressed',String(fourColorDeck));
+    button.setAttribute('aria-label',T('fourColorDeck'));
+    button.title=T('fourColorDeckHint');
+  }
+}
+function setFourColorDeck(on,persist=true){
+  fourColorDeck=!!on;
+  if(persist)try{localStorage.setItem(FOUR_COLOR_DECK_KEY,fourColorDeck?'1':'0');}catch(e){}
+  syncFourColorDeckUI();
+}
 function recWord(r){return r==='RAISE'?T('raiseW').toUpperCase():r==='ALLIN'?T('recALLIN'):(T('rec'+r)||r);}
 function actWord(a){return (a==='raise'?T('raiseW'):T(a)||a).toUpperCase();}
 const LEAK_ORDER=['pf_open','pf_face_raise','cbet_def','multiway','river_call'];
@@ -882,6 +902,8 @@ function scenarioRefreshCardSlot(slot){
   slot.textContent=code?scenarioCardLabel(code):'+';
   slot.classList.toggle('filled',!!code);
   slot.classList.toggle('red-card',/[hd]$/.test(code));
+  slot.classList.remove(...CARD_SUIT_CLASSES);
+  if(code)slot.classList.add(CARD_SUIT_CLASSES[parseCardCode(code).s]);
   slot.setAttribute('aria-label',code?scenarioCardLabel(code):T('scEmptyCard'));
 }
 let scenarioActiveCardSlot=null;
@@ -895,7 +917,7 @@ function scenarioOpenDeckPicker(slot){
     `<div class="scenario-deck-grid">`+
     [0,1,2,3].flatMap(s=>[14,13,12,11,10,9,8,7,6,5,4,3,2].map(r=>{
       const code=scenarioCode({r,s}),disabled=used.has(code)&&code!==current;
-      return `<button type="button" class="scenario-deck-card${s===1||s===2?' red-card':''}" data-card-code="${code}"${disabled?' disabled':''}>${scenarioCardLabel(code)}</button>`;
+      return `<button type="button" class="scenario-deck-card ${CARD_SUIT_CLASSES[s]}${s===1||s===2?' red-card':''}" data-card-code="${code}"${disabled?' disabled':''}>${scenarioCardLabel(code)}</button>`;
     })).join('')+
     `<button type="button" class="scenario-deck-empty" data-card-code="">${T('scEmptyCard')}</button></div>`;
   picker.classList.remove('hidden');
@@ -1135,7 +1157,7 @@ function cardHTML(c,small,anim){
   const red=c.s===1||c.s===2;
   const cls = anim===true?' deal' : anim?' '+anim : '';
   const ix=`<div class="ix"><span>${RANK_CH[c.r]}</span><span class="si">${SUIT_CH[c.s]}</span></div>`;
-  return `<div class="card${red?' red':''}${small?' small':''}${cls}">${ix}<div class="pip">${SUIT_CH[c.s]}</div><div class="ix flip"><span>${RANK_CH[c.r]}</span><span class="si">${SUIT_CH[c.s]}</span></div></div>`;
+  return `<div class="card ${CARD_SUIT_CLASSES[c.s]}${red?' red':''}${small?' small':''}${cls}">${ix}<div class="pip">${SUIT_CH[c.s]}</div><div class="ix flip"><span>${RANK_CH[c.r]}</span><span class="si">${SUIT_CH[c.s]}</span></div></div>`;
 }
 function backHTML(small,anim){ return `<div class="card back${small?' small':''}${anim?' deal':''}"></div>`; }
 /* set innerHTML only when content actually changed (so CSS animations fire once) */
@@ -3337,7 +3359,7 @@ function applyLang(){
   if(!HAS_DOM)return;
   const set=(id,k)=>{const el=$(id);if(el)el.textContent=T(k);};
   updateSetupMode(setupGameType);
-  const rowKeys=['modeLbl','players','blinds','buyin','ante','speed','koBonusOpt','timerOpt','language','diff','tableStyle'];
+  const rowKeys=['modeLbl','players','blinds','buyin','ante','speed','koBonusOpt','timerOpt','language','fourColorDeck','diff','tableStyle'];
   document.querySelectorAll('#setup .row label.main').forEach((el,i)=>{if(rowKeys[i])el.textContent=T(rowKeys[i]);});
   const buyLbl=document.querySelectorAll('#setup .row label.main')[3];
   if(buyLbl) buyLbl.textContent=T(setupGameType==='cash'?'stackDepth':'buyin');
@@ -3398,6 +3420,7 @@ function applyLang(){
   const ch=$('coach').querySelector('h3'); if(ch)ch.textContent=T('liveCoach');
   const w=$('coachBody').querySelector('.waiting'); if(w)w.textContent=T('waiting');
   $('langSel').value=lang; $('langTop').value=lang;
+  syncFourColorDeckUI();
 }
 function setLang(v){
   lang=TR[v]?v:'en';
@@ -3645,6 +3668,9 @@ function initUI(){
   /* --- language --- */
   $('langSel').onchange=e=>setLang(e.target.value);
   $('langTop').onchange=e=>setLang(e.target.value);
+  $('fourColorChk').onchange=e=>setFourColorDeck(e.target.checked);
+  $('deckBtn').onclick=()=>setFourColorDeck(!fourColorDeck);
+  setFourColorDeck(fourColorDeck,false);
   applyLang();
   applyRewardCosmetics();
   renderRewardTop();

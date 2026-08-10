@@ -18,6 +18,13 @@ for(const file of files)vm.runInContext(fs.readFileSync(path.join(ROOT,'js',file
 
 const result=vm.runInContext(`(()=>{
   const base={gameType:'sng',numPlayers:6,startBB:100,startBlind:20,ante:0,speed:'standard',difficulty:'hard'};
+  const suitMarkup=[0,1,2,3].map(s=>cardHTML({r:14,s}));
+  if(suitMarkup.some((html,s)=>!html.includes(CARD_SUIT_CLASSES[s])))
+    throw new Error('rendered cards are missing suit-specific classes '+JSON.stringify(suitMarkup));
+  setFourColorDeck(true);
+  if(!fourColorDeck||localStorage.getItem(FOUR_COLOR_DECK_KEY)!=='1')
+    throw new Error('four-color deck preference was not persisted');
+  setFourColorDeck(false);
   const countPlayers=()=>{
     const out={rock:0,station:0,shark:0,maniac:0};
     for(const p of state.players.slice(1))out[p.style.id]++;
