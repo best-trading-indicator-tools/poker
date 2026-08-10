@@ -82,9 +82,14 @@ const money=n=>usd(n)+' · '+bbs(n);
 /* ================= GAME STATE ================= */
 let state=null;
 
+function setGameDocumentTitle(gameType){
+  if(HAS_DOM)document.title=gameType==='cash'?"Cash Game Hold'em":"Sit & Go Hold'em";
+}
+
 function newGame(cfg){
   if(Object.prototype.hasOwnProperty.call(cfg,'seed'))setGameSeed(cfg.seed);
   cfg.gameType=cfg.gameType||'sng';
+  setGameDocumentTitle(cfg.gameType);
   cfg.tableScenario=normalizeTableScenario(cfg.tableScenario);
   const startBlind=cfg.startBlind||BASE_BB;
   const mode=getMode(cfg);

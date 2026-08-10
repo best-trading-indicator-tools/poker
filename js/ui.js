@@ -3371,6 +3371,7 @@ function refreshTableScenarioSetup(numPlayers){
 function updateSetupMode(gameType){
   if(!HAS_DOM)return;
   const cash=gameType==='cash';
+  if(typeof setGameDocumentTitle==='function')setGameDocumentTitle(gameType);
   /* Mode visibility must not reuse the disclosure's `hidden` class: doing so used
      to expand the KO explanation whenever Sit & Go controls were revealed. */
   document.querySelectorAll('#setup .sng-only').forEach(el=>el.classList.toggle('setup-mode-hidden',cash));
