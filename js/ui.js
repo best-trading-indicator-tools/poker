@@ -94,7 +94,7 @@ resetData:"Clear saved data",resetInfo:"Deletes lifetime stats, hand history, se
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Quit this tournament?",quitCash:"Leave the table?",
 fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ Your turn",
-log:"Log",lastHand:"Last hand",exportH:"Export history",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",coachScrollMore:"Scroll for more",
+log:"Log",lastHand:"Last hand",exportH:"Export history",exportCoach:"AI review (.txt)",exportCoachTitle:"Download the last 10 hands with AI coach metadata as text",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",coachScrollMore:"Scroll for more",
 waiting:"Advice appears here when it's your turn.",
 outQuality:"Out quality",weightedOuts:"range-adjusted outs",weightedOutsNote:n=>`${n} raw cards, discounted when they can chop, be dominated, improve the board for everyone, or lose more often against the opponent's estimated range.`,overcardOuts:"Overcard pair outs",pairImproveOuts:"Trips / two-pair outs",redrawOuts:"Full-house / quads redraws",
 yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",playersBehind:"Players behind",openingDecision:"Opening decision",raiseOrFold:"Raise or fold · no limp",draws:"Draws",outs:"Outs",unique:"unique",shared:"shared",countedOnce:"counted once",dirtyOuts:"Dirty outs",dirtyOutsInfoLbl:"What is a dirty out?",dirtyOutsInfo:"A dirty (tainted) out completes your draw on paper but often doesn't win the pot — e.g. it pairs the board (helping everyone) or is the 4th card to a board flush that gives an opponent the winning flush. Use clean outs for your odds.",potOdds:"Pot odds",impliedOdds:"Implied odds",realisticNeed:"realistic need",bestCaseNeed:"best case",effectiveNeed:"Effective call threshold",effectiveNeedNote:"Equity needed after position, ranges and tournament pressure.",preflopRank:p=>`Preflop rank: top ~${p}% of starting hands`,lowerStronger:"lower is stronger",yourStack:"Your stack",sugSize:"Suggested size",
@@ -257,7 +257,7 @@ resetData:"Effacer les données sauvegardées",resetInfo:"Supprime les statistiq
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter ce tournoi ?",quitCash:"Quitter la table ?",
 fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",
 actMenu:"◀ Menu",actTurn:"◀ À vous",
-log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",coachScrollMore:"Faites défiler pour voir la suite",
+log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",exportCoach:"Revue IA (.txt)",exportCoachTitle:"Télécharger les 10 dernières mains avec les métadonnées du coach IA",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",coachScrollMore:"Faites défiler pour voir la suite",
 waiting:"Les conseils apparaissent ici quand c'est votre tour.",
 outQuality:"Qualité des outs",weightedOuts:"outs ajustés à la range",weightedOutsNote:n=>`${n} cartes brutes, réduites lorsqu’elles peuvent partager, être dominées, améliorer le board pour tous ou perdre plus souvent face à la range adverse estimée.`,overcardOuts:"Outs d'overcards vers une paire",pairImproveOuts:"Outs vers brelan / deux paires",redrawOuts:"Redraws full / carré",
 yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",playersBehind:"Joueurs derrière",openingDecision:"Décision d'ouverture",raiseOrFold:"Relancer ou se coucher · pas de limp",draws:"Tirages",outs:"Outs",unique:"uniques",shared:"communs",countedOnce:"comptés une fois",dirtyOuts:"Outs sales",dirtyOutsInfoLbl:"Qu'est-ce qu'un out sale ?",dirtyOutsInfo:"Un out sale complète votre tirage sur le papier mais ne gagne souvent pas le pot — ex. il pair le board (aide tout le monde) ou est la 4e carte d'une couleur au board qui donne la couleur gagnante à l'adversaire. Comptez les outs propres pour vos cotes.",potOdds:"Cote du pot",impliedOdds:"Cotes implicites",realisticNeed:"seuil réaliste",bestCaseNeed:"meilleur cas",effectiveNeed:"Seuil effectif du call",effectiveNeedNote:"Équité requise après position, ranges et pression du tournoi.",preflopRank:p=>`Classement préflop : top ~${p}% des mains de départ`,lowerStronger:"plus bas = plus fort",yourStack:"Votre tapis",sugSize:"Taille suggérée",
@@ -420,7 +420,7 @@ resetData:"Borrar datos guardados",resetInfo:"Elimina estadísticas globales, hi
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Salir de este torneo?",quitCash:"¿Dejar la mesa?",
 fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
 actMenu:"◀ Menú",actTurn:"◀ Tu turno",
-log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",coachScrollMore:"Desplázate para ver más",
+log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",exportCoach:"Revisión IA (.txt)",exportCoachTitle:"Descargar las 10 últimas manos con metadatos del coach IA",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",coachScrollMore:"Desplázate para ver más",
 waiting:"Los consejos aparecen aquí cuando es tu turno.",
 outQuality:"Calidad de los outs",weightedOuts:"outs ajustados al rango",weightedOutsNote:n=>`${n} cartas brutas, reducidas cuando pueden empatar, estar dominadas, mejorar la mesa para todos o perder más contra el rango rival estimado.`,overcardOuts:"Outs de overcards a pareja",pairImproveOuts:"Outs a trío / dobles parejas",redrawOuts:"Redraws a full / póquer",
 yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",playersBehind:"Jugadores por hablar",openingDecision:"Decisión de apertura",raiseOrFold:"Subir o retirarse · sin limp",draws:"Proyectos",outs:"Outs",unique:"únicos",shared:"compartidos",countedOnce:"contados una vez",dirtyOuts:"Outs sucios",dirtyOutsInfoLbl:"¿Qué es un out sucio?",dirtyOutsInfo:"Un out sucio completa tu proyecto en papel pero a menudo no gana el bote — p. ej. empareja la mesa (ayuda a todos) o es la 4ª carta a color en la mesa que da el color ganador al rival. Cuenta los outs limpios para tus odds.",potOdds:"Odds del bote",impliedOdds:"Odds implícitas",realisticNeed:"umbral realista",bestCaseNeed:"mejor caso",effectiveNeed:"Umbral efectivo del call",effectiveNeedNote:"Equity necesaria tras posición, rangos y presión del torneo.",preflopRank:p=>`Rango preflop: top ~${p}% de las manos iniciales`,lowerStronger:"más bajo = más fuerte",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
@@ -1132,6 +1132,167 @@ function log(msg){
   const el=$('log');
   el.innerHTML=logLines.slice(-100).map(l=>`<div>${l}</div>`).join('');
   el.scrollTop=el.scrollHeight;
+}
+function aiReviewPlain(value){
+  return String(value??'')
+    .replace(/<br\s*\/?>/gi,' / ').replace(/<\/p>|<\/li>|<\/div>/gi,' ')
+    .replace(/<[^>]*>/g,'').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&')
+    .replace(/&lt;/gi,'<').replace(/&gt;/gi,'>').replace(/&quot;/gi,'"')
+    .replace(/&#39;|&apos;/gi,"'").replace(/\s+/g,' ').trim();
+}
+function aiReviewNum(value){
+  if(value==null||value===''||!Number.isFinite(Number(value)))return'n/a';
+  const n=Number(value);
+  return Number.isInteger(n)?String(n):n.toFixed(3).replace(/\.?0+$/,'');
+}
+function aiReviewPct(value){
+  if(value==null||value===''||!Number.isFinite(Number(value)))return'n/a';
+  return `${(Number(value)*100).toFixed(1).replace(/\.0$/,'')}%`;
+}
+function aiReviewCards(cards){
+  return Array.isArray(cards)&&cards.length?cards.join(' '):'(none)';
+}
+function aiReviewJson(value){
+  if(value==null)return'n/a';
+  try{return JSON.stringify(value);}catch(e){return'[unserializable]';}
+}
+function aiReviewCoachAction(rec,target){
+  const action=String(rec||'UNKNOWN').toUpperCase();
+  return (action==='RAISE'||action==='ALLIN')&&Number(target)>0
+    ?`${action} to ${aiReviewNum(target)} chips`:action;
+}
+function aiReviewPlayerAction(decision){
+  if(decision.action==='raise')return `RAISE to ${aiReviewNum(decision.chosenRaiseTo)} chips`;
+  if(decision.action==='call')return Number(decision.callAmt)>0
+    ?`CALL ${aiReviewNum(decision.callAmt)} chips`:'CHECK';
+  return String(decision.action||'unknown').toUpperCase();
+}
+function aiCoachReviewText(history){
+  const hands=(Array.isArray(history)?history:[]).filter(Boolean).slice(-10);
+  const lines=[
+    'POKER AI - LAST 10 HANDS / AI COACH AUDIT',
+    `Generated: ${new Date().toISOString()}`,
+    'Format version: 2',
+    `Hands included: ${hands.length} (oldest to newest)`,
+    'All numeric bet, pot and stack amounts below are exact engine chips.',
+    'Opponent hole cards are omniscient end-of-hand audit data; the live coach did NOT see hidden cards.',
+    'fallback/display ranges are profile-conditioned coach estimates and are NOT solver inputs.',
+    'solver.rangeSource/rangeNodes identify the independent baseline ranges actually supplied to a solved node.',
+    ''
+  ];
+  if(!hands.length){
+    lines.push('No completed hands are saved yet.');
+    return lines.join('\n');
+  }
+  hands.forEach((hand,handIndex)=>{
+    const players=Array.isArray(hand.players)?hand.players:[];
+    const hero=players.find(p=>p.isHero)||players.find(p=>p.name==='You')||players[0]||{};
+    const decisions=Array.isArray(hand.myDecisions)?hand.myDecisions:[];
+    const actions=Array.isArray(hand.actions)?hand.actions:[];
+    const blinds=Array.isArray(hand.blinds)?hand.blinds:[];
+    lines.push('='.repeat(78));
+    lines.push(`HAND ${handIndex+1}/${hands.length} - saved hand #${hand.hand??'?'}`);
+    lines.push(`Timestamp: ${hand.t||'unknown'} | Game ID: ${hand.gameId||'unknown'}`);
+    lines.push(`Mode: ${hand.gameType||'unknown'} | Difficulty: ${hand.difficulty||'unknown'} | Table size: ${hand.tableSize||players.length||'unknown'}`);
+    lines.push(`Blinds: ${aiReviewNum(blinds[0])}/${aiReviewNum(blinds[1])} chips | Ante: ${aiReviewNum(hand.ante||0)} | Dealer seat: ${hand.dealerSeat??'unknown'}`);
+    lines.push(`Board: ${aiReviewCards(hand.board)} | Result: ${aiReviewPlain(hand.result||'unknown')}`);
+    lines.push(`Hero: ${hero.name||'You'} ${hero.pos?`(${hero.pos})`:''} | Cards: ${aiReviewCards(hero.cards)} | Start: ${aiReviewNum(hand.heroStartChips??hero.startChips)} | End: ${aiReviewNum(hand.heroEndChips??hero.chipsAfter)} | Net: ${aiReviewNum(hand.myNet)} chips`);
+    if(hand.my)lines.push(`Hero stats: VPIP=${!!hand.my.vpip} PFR=${!!hand.my.pfr} aggression bets=${hand.my.aBets||0} calls=${hand.my.aCalls||0} showdown=${!!hand.my.sd} showdown won=${!!hand.my.sdWon}`);
+    lines.push('PLAYERS (cards are audit-only):');
+    players.forEach(player=>lines.push(
+      `  - Seat ${player.seat??'?'} ${player.isHero?'HERO ':''}${player.name||'unknown'} ${player.pos?`[${player.pos}]`:''}`+
+      ` | profile=${player.profile||'unknown'} | cards=${aiReviewCards(player.cards)}`+
+      ` | start=${aiReviewNum(player.startChips)} | end=${aiReviewNum(player.chipsAfter)}`+
+      ` | folded=${!!player.folded} | won=${!!player.won}`
+    ));
+    lines.push('ACTION LOG:');
+    if(actions.length)actions.forEach((action,index)=>lines.push(`  ${String(index+1).padStart(2,'0')}. ${aiReviewPlain(action)}`));
+    else lines.push('  (no action log saved)');
+    lines.push(`AI COACH DECISIONS: ${decisions.length}`);
+    if(!decisions.length)lines.push('  (hero had no recorded coach decision)');
+    decisions.forEach((decision,index)=>{
+      const logIndex=Number.isFinite(Number(decision.logIndex))?Number(decision.logIndex):null;
+      const activePlayers=decision.activePlayers??(Number.isFinite(Number(decision.opps))?Number(decision.opps)+1:'unknown');
+      lines.push(`  --- Decision ${index+1} | ${String(decision.stage||'unknown').toUpperCase()} | position ${decision.pos||'unknown'} ---`);
+      lines.push(`  Cards: ${aiReviewCards(decision.heroCards||hero.cards)} | Board: ${aiReviewCards(decision.board||[])}`);
+      lines.push(`  Prior action-log items: ${logIndex==null?'unknown':logIndex} | Pot type: ${decision.potType||'unknown'} | Active players: ${activePlayers}`);
+      lines.push(`  Pot before: ${aiReviewNum(decision.pot)} | To call: ${aiReviewNum(decision.callAmt)} | Current bet: ${aiReviewNum(decision.currentBet)} | Hero street bet: ${aiReviewNum(decision.heroStreetBet)}`);
+      lines.push(`  Hero chips behind: ${aiReviewNum(decision.heroChipsBehind)} | Stack: ${aiReviewNum(decision.stackBB)} BB | Legal minimum raise-to: ${aiReviewNum(decision.minRaiseTo)} | Last raise size: ${aiReviewNum(decision.lastRaiseSize)}`);
+      lines.push(`  Coach: ${aiReviewCoachAction(decision.rec,decision.raiseTo)} | Hero chose: ${aiReviewPlayerAction(decision)} | Followed accepted mix: ${decision.followed==null?'unknown':decision.followed}`);
+      lines.push(`  Provider: ${decision.strategyProvider||'unknown'} | Strategy mode: ${decision.strategyMode||'unknown'} | Confidence: ${decision.confidenceKind||'unknown'}${decision.solverSupport?` | Solver unavailable reason: ${decision.solverSupport}`:''}`);
+      if(decision.heuristicRec)lines.push(`  Heuristic recommendation before solver override: ${decision.heuristicRec}`);
+      lines.push(`  Hero hand code: ${decision.heroCode||'unknown'} | Intent: ${decision.actionIntent||'unknown'} | Concepts: ${(decision.concepts||[]).join(', ')||'none'}`);
+      lines.push(`  Raw equity: ${aiReviewPct(decision.eq)} | Adjusted equity: ${aiReviewPct(decision.eqAdj)} | Effective threshold: ${aiReviewPct(decision.needEq)}`);
+      if(decision.evs)lines.push(`  Action EV snapshots (chips): FOLD=${aiReviewNum(decision.evs.FOLD)} CALL/CHECK=${aiReviewNum(decision.evs.CALL)} RAISE=${aiReviewNum(decision.evs.RAISE)}`);
+      lines.push(`  Recorded EV loss: ${aiReviewNum(decision.evLoss)} chips | Solver sizing mismatch: ${!!decision.solverSizeMismatch}`);
+      if(Array.isArray(decision.solverMix)&&decision.solverMix.length){
+        lines.push('  Solver mix:');
+        decision.solverMix.forEach(branch=>lines.push(
+          `    - ${branch.label||branch.rec||'branch'}${Number(branch.target)>0?` to ${aiReviewNum(branch.target)}`:''}`+
+          ` | frequency=${aiReviewPct(branch.frequency)} | EV=${aiReviewNum(branch.ev)} chips`
+        ));
+      }
+      if(decision.matchedSolverBranch)lines.push(`  Hero matched solver branch: ${aiReviewJson(decision.matchedSolverBranch)}`);
+      if(decision.solver){
+        const solver=decision.solver;
+        lines.push(`  Solver: ${solver.engine||'unknown'} @ ${solver.engineCommit||'unknown'} | converged=${solver.converged} | iterations=${aiReviewNum(solver.iterations)} | exploitability=${aiReviewNum(solver.exploitability)} chips | compact tree=${!!solver.compactTree}`);
+        lines.push(`  Solver range source: ${solver.rangeSource||'unknown'} | exact frequencies=${solver.rangeExactFrequencies??'unknown'} | selection=${solver.selectionRule||'unknown'}`);
+        lines.push(`  Solver baseline range nodes: ${aiReviewJson(solver.rangeNodes)}`);
+        lines.push(`  Solver tree abstraction: ${aiReviewJson(solver.abstraction)}`);
+      }
+      const opponents=Array.isArray(decision.opponents)?decision.opponents:[];
+      if(opponents.length){
+        lines.push('  Opponent state before decision:');
+        opponents.forEach(opponent=>lines.push(
+          `    - ${opponent.name||'unknown'} ${opponent.pos?`[${opponent.pos}]`:''} profile=${opponent.profile||'unknown'}`+
+          ` chipsBehind=${aiReviewNum(opponent.chipsBehind)} streetBet=${aiReviewNum(opponent.streetBet)}`+
+          ` allIn=${!!opponent.allIn} rangeCap=${aiReviewNum(opponent.rangeCap)} rangeFloor=${aiReviewNum(opponent.rangeFloor)} line=${opponent.lineRead||'none'}`
+        ));
+      }
+      const ranges=Array.isArray(decision.fallbackRangeSummaries)?decision.fallbackRangeSummaries:[];
+      if(ranges.length){
+        lines.push('  Fallback/display ranges (profile-conditioned; NOT solver inputs):');
+        ranges.forEach(range=>lines.push(
+          `    - ${range.pos||'unknown'} cap=${aiReviewNum(range.cap)} floor=${aiReviewNum(range.floor)}`+
+          ` sample=${range.sample||0} confidence=${range.sampleConfidence||'unknown'}`+
+          ` | top hands: ${(range.topHands||[]).join(', ')||'n/a'}`+
+          ` | action history: ${aiReviewJson(range.actionHistory||[])}`
+        ));
+      }
+      if(decision.bluffInfo)lines.push(`  Bluff/value model: ${aiReviewJson(decision.bluffInfo)}`);
+      if(decision.icmInfo)lines.push(`  ICM model: ${aiReviewJson(decision.icmInfo)}`);
+      const reasoning=(decision.reasoning||[]).map(aiReviewPlain).filter(Boolean);
+      if(reasoning.length){
+        lines.push('  Coach reasoning shown at decision time:');
+        reasoning.forEach(reason=>lines.push(`    - ${reason}`));
+      }
+    });
+    lines.push('');
+  });
+  lines.push('END OF AI COACH AUDIT EXPORT');
+  return lines.join('\n');
+}
+function aiReviewSavedHands(){
+  let history=[],audit=[];
+  try{history=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');}catch(e){}
+  try{audit=JSON.parse(localStorage.getItem('sg_poker_ai_review_history_v1')||'[]');}catch(e){}
+  const merged=new Map();
+  [...(Array.isArray(history)?history.slice(-10):[]),...(Array.isArray(audit)?audit:[])].forEach(hand=>{
+    if(!hand)return;
+    const key=`${hand.gameId||''}|${hand.hand??''}|${hand.t||''}`;
+    merged.set(key,hand); // the detailed audit copy is later and replaces the compact replay copy
+  });
+  return [...merged.values()].sort((a,b)=>(Date.parse(a.t)||0)-(Date.parse(b.t)||0)).slice(-10);
+}
+function downloadAiCoachReview(){
+  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+  downloadBrowserFile(aiCoachReviewText(aiReviewSavedHands()),'text/plain;charset=utf-8',`poker-ai-review-last-10-${stamp}.txt`);
+}
+function downloadBrowserFile(content,type,filename){
+  const url=URL.createObjectURL(new Blob([content],{type}));
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),0);
 }
 function showBanner(t){
   if(BENCH)return;
@@ -2595,10 +2756,28 @@ function updateCoach(p){
     const cb=$('chartViewBtn');
     if(cb) cb.onclick=()=>showChartMatrix(activeChart,R.code);
   }
+  const fallbackRangeSummaries=rangeCharts.slice(0,3).map(info=>({
+    pos:info.pos||'',cap:info.cap,floor:info.floor,sample:info.sample||0,
+    sampleConfidence:info.sampleConfidence||'',
+    actionHistory:(info.model?.history||[]).map(h=>({...h})),
+    topHands:typeof rangeMostLikelyCodes==='function'?rangeMostLikelyCodes(info,12):[]
+  }));
+  const solved=R.solver;
+  const solverMeta=solved?{
+    engine:solved.engine,engineCommit:solved.engineCommit,exploitability:solved.exploitability,
+    targetExploitability:solved.targetExploitability,converged:solved.converged,
+    iterations:solved.iterations,compactTree:solved.compactTree,rangeSource:solved.rangeSource,
+    rangeExactFrequencies:solved.rangeExactFrequencies,rangeNodes:solved.rangeNodes,
+    selectionRule:solved.selectionRule,abstraction:solved.abstraction
+  }:null;
   coachRecNow={rec,stage:state.stage,evs,coachT:R.coachT,eq,eqAdj:R.eqAdj??eq,odds,needEq:R.needEq,callAmt,pot,
     airPen:R.airPen||0,opps,pos,confidenceKind:coachConfidence(R).kind,rangeCharts,heroCode:R.code,
-    strategyProvider:R.strategyProvider||'heuristic',solverMix:R.solver?.branches||null,
-    solverBranches:R.solver?.branches||null};
+    strategyProvider:R.strategyProvider||'heuristic',strategyMode:R.strategyMode||'baseline',
+    solverSupport:R.solverSupport||null,heuristicRec:R.heuristicRec||null,
+    actionIntent:R.actionIntent||null,concepts:(R.concepts||[]).slice(),
+    reasoning:[...(R.why||[]),...(R.extra||[])],bluffInfo:R.bluffInfo?{...R.bluffInfo}:null,
+    icmInfo:R.icmInfo?{...R.icmInfo}:null,fallbackRangeSummaries,solverMeta,
+    solverMix:solved?.branches||null,solverBranches:solved?.branches||null};
   if(typeof solverRequestCoachStrategy==='function'){
     const turnToken=state.handNum+'-'+state.stage+'-'+state.turnIdx+'-'+state.currentBet;
     solverRequestCoachStrategy(p,R).then(changed=>{
@@ -3010,6 +3189,22 @@ function humanAct(type,amount){
       solverMix:coachRecNow.solverMix||null,chosenRaiseTo:type==='raise'?(Number(amount)||0):0,
       solverSizeMismatch:solverDecision&&type==='raise'&&!solverBranch,
       stackBB:state.bb>0?Math.round((p.chips+p.bet)/state.bb*10)/10:0,potType,tableSize:alive().length,
+      heroCards:p.hole.map(c=>RANK_CH[c.r]+'shdc'[c.s]),board:state.board.map(c=>RANK_CH[c.r]+'shdc'[c.s]),
+      heroChipsBehind:p.chips,heroStreetBet:p.bet,currentBet:state.currentBet,
+      minRaiseTo:Math.min(state.currentBet+state.lastRaiseSize,p.bet+p.chips),lastRaiseSize:state.lastRaiseSize,
+      activePlayers:inHand().length,dealerSeat:state.dealerIdx,streetRaiseCount:state.streetRaiseCount||0,
+      preflopRaiseCount:state.preflopRaiseCount||0,
+      opponents:inHand().filter(q=>q!==p).map(q=>({seat:q.i,name:q.name,pos:q.pos||'',
+        profile:q.style?.id||(q.remote?'human':'neutral'),chipsBehind:q.chips,streetBet:q.bet,
+        allIn:!!q.allIn,rangeCap:q.rangeCap,rangeFloor:q.rangeFloor,lineRead:q.lineRead||''})),
+      strategyMode:coachRecNow.strategyMode||'baseline',solverSupport:coachRecNow.solverSupport||null,
+      heuristicRec:coachRecNow.heuristicRec||null,actionIntent:coachRecNow.actionIntent||null,
+      concepts:(coachRecNow.concepts||[]).slice(),reasoning:(coachRecNow.reasoning||[]).slice(),
+      bluffInfo:coachRecNow.bluffInfo?{...coachRecNow.bluffInfo}:null,
+      icmInfo:coachRecNow.icmInfo?{...coachRecNow.icmInfo}:null,
+      fallbackRangeSummaries:(coachRecNow.fallbackRangeSummaries||[]).map(x=>({...x,actionHistory:x.actionHistory.map(h=>({...h})),topHands:x.topHands.slice()})),
+      solver:coachRecNow.solverMeta?{...coachRecNow.solverMeta}:null,
+      matchedSolverBranch:solverBranch?{...solverBranch}:null,
       logIndex:(state.handLog||[]).length};
     if(evLoss>0)decisionContext.rangeSnapshots=(coachRecNow.rangeCharts||[]).slice(0,3).map(rangeSnapshot).filter(Boolean);
     state.humanDecisions.push(decisionContext);
@@ -3443,7 +3638,8 @@ function applyLang(){
   const cc=$('coachTopLbl'); if(cc) cc.textContent=T('coachLbl');
   set('quitBtn','quit');
   /* bottom bar + modals */
-  set('logToggle','log'); set('replayBtn','lastHand'); set('exportBtn','exportH'); set('coachToggle','coachBtn'); set('nextHandBtn','nextHand');
+  set('logToggle','log'); set('replayBtn','lastHand'); set('exportBtn','exportH'); set('aiReviewBtn','exportCoach'); set('aiReviewSetupBtn','exportCoach'); set('coachToggle','coachBtn'); set('nextHandBtn','nextHand');
+  ['aiReviewBtn','aiReviewSetupBtn'].forEach(id=>{const button=$(id);if(button)button.title=T('exportCoachTitle');});
   set('coachScrollHintLbl','coachScrollMore');
   set('foldBtn','fold'); set('prMin','min'); set('prHalf','halfPot'); set('prPot','pot'); set('prMax','allin');
   set('rpClose','close'); set('rpTitle','replayTitle'); set('ovBtn','playAgain'); set('chartClose','close');
@@ -3719,10 +3915,12 @@ function initUI(){
     let nHist=0; try{nHist=(JSON.parse(localStorage.getItem('sg_poker_history')||'[]')).length;}catch(e){}
     let nGames=0; try{nGames=loadGames().length;}catch(e){}
     $('reviewBtn').classList.toggle('hidden',!nHist&&!nGames);
+    $('aiReviewSetupBtn').classList.toggle('hidden',!nHist);
     return sv;
   };
   refreshResume();
   $('reviewBtn').onclick=showSessionReview;
+  $('aiReviewSetupBtn').onclick=downloadAiCoachReview;
   $('revClose').onclick=()=>closeDialog($('reviewOv'));
   $('reviewOv').onclick=e=>{if(e.target.id==='reviewOv')closeDialog($('reviewOv'));};
   $('practiceClose').onclick=()=>closeDialog($('practiceOv'));
@@ -3773,6 +3971,7 @@ function initUI(){
     try{
       localStorage.removeItem('sg_poker_stats');
       localStorage.removeItem('sg_poker_history');
+      localStorage.removeItem('sg_poker_ai_review_history_v1');
       localStorage.removeItem('sg_poker_resume');
       localStorage.removeItem('sg_poker_games');
       localStorage.removeItem('sg_poker_scenarios');
@@ -3876,13 +4075,9 @@ function initUI(){
     let hist=[];
     try{hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');}catch(e){}
     const payload={exported:new Date().toISOString(),lifetimeStats:lifeStats,handCount:hist.length,hands:hist};
-    const blob=new Blob([JSON.stringify(payload,null,1)],{type:'application/json'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='poker-history.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
+    downloadBrowserFile(JSON.stringify(payload,null,1),'application/json','poker-history.json');
   };
+  $('aiReviewBtn').onclick=downloadAiCoachReview;
   $('chartClose').onclick=()=>closeDialog($('chartOv'));
   $('chartOv').onclick=e=>{if(e.target.id==='chartOv')closeDialog($('chartOv'));};
   $('rpClose').onclick=()=>closeDialog($('replayOv'));

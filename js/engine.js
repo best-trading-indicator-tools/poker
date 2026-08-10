@@ -236,6 +236,7 @@ function startHand(){
   state.lastAllInSweat=false;
   state.lastRewardSummary=null;
   state.humanStart=state.players[0].chips+state.players[0].totalBet;
+  state.handStartStacks=state.players.map(p=>p.chips+p.totalBet);
   state.humanPlayed=!state.players[0].out;
   prevBoardLen=0; coachRecNow=null;
   sfx('deal');
@@ -624,7 +625,9 @@ function finishHand(pause){
     result:state.resultText,
     log:(state.handLog||[]).slice(),
     players:state.players.filter(q=>q.hole.length>0).map(q=>({
-      name:q.name,avatar:q.avatar,hole:q.hole.slice(),folded:q.folded&&!q.isHuman||q.folded,
+      seat:q.i,name:q.name,avatar:q.avatar,hole:q.hole.slice(),pos:q.pos||'',isHero:q.i===0,
+      profile:q.style?.id||(q.remote?'human':'neutral'),startChips:state.handStartStacks?.[q.i],
+      chipsAfter:q.chips,folded:q.folded&&!q.isHuman||q.folded,
       won:state.resultText.includes(q.name+' win')
     }))
   };
@@ -691,19 +694,43 @@ function finishHand(pause){
     /* hand record: in-memory replayer + persistent history (export & analysis) */
     const cs=c=>RANK_CH[c.r]+'shdc'[c.s];
     const entry={
+      schemaVersion:2,
       gameId:state.gameId, t:new Date().toISOString(), hand:state.handNum, level:state.level+1,
+      gameType:state.cfg?.gameType||'sng',difficulty:state.cfg?.difficulty||'medium',
+      tableSize:state.players.filter(q=>q.hole.length>0).length,dealerSeat:state.dealerIdx,
       blinds:[state.sb,state.bb], ante:state.ante,
       board:state.board.map(cs),
-      players:lastHand.players.map(q=>({name:q.name,avatar:q.avatar,cards:q.hole.map(cs),folded:q.folded,won:q.won})),
+      players:lastHand.players.map(q=>({seat:q.seat,name:q.name,avatar:q.avatar,pos:q.pos,isHero:q.isHero,
+        profile:q.profile,startChips:q.startChips,chipsAfter:q.chipsAfter,
+        cards:q.hole.map(cs),folded:q.folded,won:q.won})),
+      heroStartChips:state.humanStart,heroEndChips:state.players[0].chips,
       myNet:net, my:{vpip:!!hs.vpip,pfr:!!hs.pfr,aBets:hs.aBets||0,aCalls:hs.aCalls||0,sd:!!hs.sd,sdWon:!!hs.sdWon},
       myDecisions:state.humanDecisions.slice(),
       result:state.resultText, actions:lastHand.log.slice()
     };
     (state.gameHands=state.gameHands||[]).push(entry);
     while(state.gameHands.length>300) state.gameHands.shift();
+    /* Detailed coach traces are intentionally kept in a separate 10-hand ring.
+       Putting them in the 3,000-hand replay store would eventually exhaust the
+       browser's localStorage quota. */
+    try{
+      const audit=JSON.parse(localStorage.getItem('sg_poker_ai_review_history_v1')||'[]');
+      audit.push(entry);
+      while(audit.length>10)audit.shift();
+      localStorage.setItem('sg_poker_ai_review_history_v1',JSON.stringify(audit));
+    }catch(e){}
     try{
       const hist=JSON.parse(localStorage.getItem('sg_poker_history')||'[]');
-      hist.push(entry);
+      const auditOnly=['heroCards','board','heroChipsBehind','heroStreetBet','currentBet','minRaiseTo',
+        'lastRaiseSize','activePlayers','dealerSeat','streetRaiseCount','preflopRaiseCount','opponents',
+        'strategyMode','solverSupport','heuristicRec','actionIntent','concepts','reasoning','bluffInfo',
+        'icmInfo','fallbackRangeSummaries','solver','matchedSolverBranch'];
+      const replayEntry={...entry,myDecisions:entry.myDecisions.map(decision=>{
+        const compact={...decision};
+        auditOnly.forEach(key=>delete compact[key]);
+        return compact;
+      })};
+      hist.push(replayEntry);
       while(hist.length>3000) hist.shift();
       localStorage.setItem('sg_poker_history',JSON.stringify(hist));
     }catch(e){}
@@ -902,7 +929,7 @@ function saveResume(){
         level:state.level, bb:state.bb, sb:state.sb, ante:state.ante,
         pfAggIdx:state.pfAggIdx??-1, lastAggIdx:state.lastAggIdx??-1,
         handLog:(state.handLog||[]).slice(), humanDecisions:(state.humanDecisions||[]).slice(),
-        humanStart:state.humanStart, humanPlayed:state.humanPlayed,
+        humanStart:state.humanStart, handStartStacks:(state.handStartStacks||[]).slice(), humanPlayed:state.humanPlayed,
         humanHandStats:state.humanHandStats?{...state.humanHandStats}:null,
         players:state.players.map(q=>({
           hole:q.hole.map(cardToCode), pos:q.pos||'', bet:q.bet, totalBet:q.totalBet,
@@ -934,6 +961,7 @@ function restoreMidHand(mh){
   state.handLog=mh.handLog||[];
   state.humanDecisions=mh.humanDecisions||[];
   state.humanStart=mh.humanStart??state.players[0].chips;
+  state.handStartStacks=(mh.handStartStacks||state.players.map(p=>p.chips+p.totalBet)).slice();
   state.humanPlayed=mh.humanPlayed??true;
   state.humanHandStats=mh.humanHandStats||{vpip:false,pfr:false,aBets:0,aCalls:0,sd:false,sdWon:false};
   state.humanWonAmt=0; state.resultText=''; state.noActionHand=false;
