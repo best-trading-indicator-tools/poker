@@ -11,8 +11,8 @@ const GTO_ENGINE_META = Object.freeze({
   mode: 'heads-up postflop chip-EV',
 });
 
-const GTO_PROVIDER_VERSION = 2;
-const GTO_CACHE_KEY = 'sg_solver_cache_v2';
+const GTO_PROVIDER_VERSION = 3;
+const GTO_CACHE_KEY = 'sg_solver_cache_v3';
 const GTO_CACHE_LIMIT = 48;
 const GTO_MEMORY_LIMIT = 512 * 1024 * 1024;
 const GTO_HAS_BROWSER = typeof window !== 'undefined' && typeof document !== 'undefined';
@@ -51,17 +51,19 @@ function solverText(key) {
       icm: 'Exact chip-EV would ignore meaningful ICM pressure, so the ICM-aware fallback remains authoritative.',
       allin: 'No decision remains to solve because a player is already all-in.',
       state: 'The street began before solver tracking was available. Using the heuristic fallback for this node.',
+      ranges: 'The exact preflop line is not covered by the independent baseline blueprint. Personality estimates were not substituted; using the heuristic fallback.',
+      reach: 'The previous postflop street was not solved through this exact line and runout. Personality estimates were not substituted; using the heuristic fallback.',
       browser: 'The WASM solver is unavailable in this browser. Using the heuristic fallback.',
       memoryFail: 'This tree exceeds the browser memory budget. Using the heuristic fallback.',
       convergence: 'The solver did not reach its exploitability target. Using the heuristic fallback.',
       line: 'The exact action or sizing is not present in this tree. It was not mapped to a nearby node; using the heuristic fallback.',
       error: 'The exact solver could not finish this node. Using the heuristic fallback.',
-      approximate: 'Resolved for inferred ranges and a discrete bet-size tree; this is not a universal GTO chart.',
+      approximate: 'Resolved for personality-free baseline reach ranges and a discrete bet-size tree; the preflop chart policy remains an abstraction, not universal GTO.',
       exploit: 'exploitability',
       iterations: 'iterations',
       cache: 'cached result',
       mix: 'Recommended mix',
-      source: 'Equilibrium for this heads-up chip-EV tree and the supplied inferred ranges',
+      source: 'Equilibrium for this heads-up chip-EV tree and the supplied personality-free baseline reach ranges',
       solverReason: 'For your hand, the resolved CFR strategy mixes {mix}. The primary suggestion is the highest-frequency branch; every displayed positive-frequency branch belongs to the mix.',
     },
     fr: {
@@ -77,17 +79,19 @@ function solverText(key) {
       icm: 'Le chip-EV exact ignorerait une pression ICM importante ; le fallback ICM reste donc prioritaire.',
       allin: 'Aucune décision à résoudre : un joueur est déjà à tapis.',
       state: 'La street a commencé avant le suivi du solveur. Le fallback heuristique est utilisé pour ce nœud.',
+      ranges: 'La ligne préflop exacte n’est pas couverte par le blueprint baseline indépendant. Aucune estimation liée au profil n’a été substituée ; le fallback heuristique est utilisé.',
+      reach: 'La street post-flop précédente n’a pas été résolue jusqu’à cette ligne et ce runout exacts. Aucune estimation liée au profil n’a été substituée ; le fallback heuristique est utilisé.',
       browser: 'Le solveur WASM est indisponible dans ce navigateur. Le fallback heuristique est utilisé.',
       memoryFail: 'Cet arbre dépasse le budget mémoire du navigateur. Le fallback heuristique est utilisé.',
       convergence: 'Le solveur n’a pas atteint sa cible d’exploitabilité. Le fallback heuristique est utilisé.',
       line: 'L’action ou le sizing exact n’existe pas dans cet arbre. Aucun nœud voisin n’a été substitué ; le fallback heuristique est utilisé.',
       error: 'Le solveur exact n’a pas terminé ce nœud. Le fallback heuristique est utilisé.',
-      approximate: 'Résolu pour des ranges estimées et un arbre de sizings discret ; ce n’est pas une charte GTO universelle.',
+      approximate: 'Résolu pour des ranges de reach baseline indépendantes des profils et un arbre de sizings discret ; la politique préflop reste une abstraction, pas du GTO universel.',
       exploit: 'exploitabilité',
       iterations: 'itérations',
       cache: 'résultat en cache',
       mix: 'Mix recommandé',
-      source: 'Équilibre de cet arbre heads-up en chip-EV pour les ranges estimées fournies',
+      source: 'Équilibre de cet arbre heads-up en chip-EV pour les ranges de reach baseline indépendantes des profils',
       solverReason: 'Pour votre main, la stratégie CFR résolue mélange {mix}. La suggestion principale est la branche la plus fréquente ; chaque branche affichée avec une fréquence positive appartient au mix.',
     },
     es: {
@@ -103,17 +107,19 @@ function solverText(key) {
       icm: 'El chip-EV exacto ignoraría una presión ICM importante, así que el fallback con ICM sigue siendo autoritativo.',
       allin: 'No queda una decisión por resolver porque un jugador ya está all-in.',
       state: 'La calle empezó antes del seguimiento del solver. Se usa el fallback heurístico para este nodo.',
+      ranges: 'La línea preflop exacta no está cubierta por el blueprint base independiente. No se sustituyeron estimaciones de personalidad; se usa el fallback heurístico.',
+      reach: 'La calle postflop anterior no se resolvió hasta esta línea y runout exactos. No se sustituyeron estimaciones de personalidad; se usa el fallback heurístico.',
       browser: 'El solver WASM no está disponible en este navegador. Se usa el fallback heurístico.',
       memoryFail: 'Este árbol supera el límite de memoria del navegador. Se usa el fallback heurístico.',
       convergence: 'El solver no alcanzó su objetivo de explotabilidad. Se usa el fallback heurístico.',
       line: 'La acción o el tamaño exacto no existe en este árbol. No se sustituyó por un nodo cercano; se usa el fallback heurístico.',
       error: 'El solver exacto no pudo terminar este nodo. Se usa el fallback heurístico.',
-      approximate: 'Resuelto para rangos inferidos y un árbol discreto de tamaños; no es una tabla GTO universal.',
+      approximate: 'Resuelto para rangos base de alcance independientes de la personalidad y un árbol discreto de tamaños; la política preflop sigue siendo una abstracción, no GTO universal.',
       exploit: 'explotabilidad',
       iterations: 'iteraciones',
       cache: 'resultado en caché',
       mix: 'Mezcla recomendada',
-      source: 'Equilibrio de este árbol heads-up de chip-EV para los rangos inferidos proporcionados',
+      source: 'Equilibrio de este árbol heads-up de chip-EV para rangos base de alcance independientes de la personalidad',
       solverReason: 'Para tu mano, la estrategia CFR resuelta mezcla {mix}. La sugerencia principal es la rama más frecuente; cada rama mostrada con frecuencia positiva pertenece a la mezcla.',
     },
   };
@@ -179,38 +185,6 @@ function solverPairIndex(cardA, cardB) {
   return c1 * (101 - c1) / 2 + c2 - 1;
 }
 
-function solverRangeForPlayer(player) {
-  const raw = new Float32Array(1326);
-  const model = typeof rangeModelEnsure === 'function' ? rangeModelEnsure(player) : null;
-  const source = model && model.weights && model.weights.length === 1326 ? model.weights : null;
-  let sourceIndex = 0;
-  let maximum = 0;
-  for (let suitA = 0; suitA < 4; suitA++) {
-    for (let rankA = 2; rankA <= 14; rankA++) {
-      for (let suitB = suitA; suitB < 4; suitB++) {
-        const startRank = suitB === suitA ? rankA + 1 : 2;
-        for (let rankB = startRank; rankB <= 14; rankB++) {
-          const a = 4 * (rankA - 2) + (3 - suitA);
-          const b = 4 * (rankB - 2) + (3 - suitB);
-          const weight = source ? Math.max(0, Number(source[sourceIndex]) || 0) : 1;
-          raw[solverPairIndex(a, b)] = weight;
-          maximum = Math.max(maximum, weight);
-          sourceIndex++;
-        }
-      }
-    }
-  }
-  if (!(maximum > 0)) raw.fill(1);
-  else if (maximum !== 1) {
-    for (let i = 0; i < raw.length; i++) raw[i] /= maximum;
-  }
-  if (player && player.hole && player.hole.length === 2) {
-    const heroIndex = solverPairIndex(solverCardId(player.hole[0]), solverCardId(player.hole[1]));
-    if (!(raw[heroIndex] > 0)) raw[heroIndex] = 0.001;
-  }
-  return raw;
-}
-
 function solverRangeSignature(raw) {
   const bytes = new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength);
   let first = 2166136261;
@@ -235,7 +209,70 @@ function solverPlayersInPostflopOrder(players) {
   return result;
 }
 
-function solverBeginStreet() {
+function solverReachRange(privateCards, weights) {
+  const raw = new Float32Array(1326);
+  let maximum = 0;
+  for (let index = 0; index < privateCards.length; index++) {
+    const encoded = Number(privateCards[index]);
+    const first = encoded & 255;
+    const second = encoded >>> 8;
+    const weight = Math.max(0, Number(weights[index]) || 0);
+    raw[solverPairIndex(first, second)] = weight;
+    maximum = Math.max(maximum, weight);
+  }
+  if (!(maximum > 0)) return null;
+  if (maximum !== 1) for (let index = 0; index < raw.length; index++) raw[index] /= maximum;
+  return raw;
+}
+
+async function solverCarryReach(previousStreet, nextBoard) {
+  if (!previousStreet || !previousStreet.supported || !Array.isArray(previousStreet.rangeRaw) || previousStreet.rangeRaw.length !== 2 ||
+      !gtoActive || !gtoActive.converged || !gtoActive.handler) {
+    return { ok: false, reason: 'reach' };
+  }
+  if (solverBaseKey(previousStreet, gtoActive.config) !== gtoActive.baseKey) {
+    return { ok: false, reason: 'reach' };
+  }
+  const job = gtoNodeQueue.then(async () => {
+    if (!gtoActive || solverBaseKey(previousStreet, gtoActive.config) !== gtoActive.baseKey) {
+      return { ok: false, reason: 'reach' };
+    }
+    try {
+      const handler = gtoActive.handler;
+      const indices = await solverReplayHistory(handler, previousStreet.actions);
+      if (await handler.currentPlayer() !== 'chance') return { ok: false, reason: 'reach' };
+      const dealtCard = solverCardId(nextBoard[nextBoard.length - 1]);
+      const possibleCards = BigInt(await handler.possibleCards());
+      if (dealtCard < 0 || !(possibleCards & (1n << BigInt(dealtCard)))) return { ok: false, reason: 'reach' };
+      await handler.applyHistory(new Uint32Array([...indices, dealtCard]));
+      const currentPlayer = await handler.currentPlayer();
+      if (!['oop', 'ip'].includes(currentPlayer)) return { ok: false, reason: 'reach' };
+      const cardsOop = new Uint16Array(await handler.privateCards(0));
+      const cardsIp = new Uint16Array(await handler.privateCards(1));
+      const numActions = Number(await handler.numActions());
+      const resultBuffer = await handler.getResults();
+      const parsed = solverParseResults(resultBuffer, cardsOop, cardsIp, currentPlayer === 'oop' ? 0 : 1, numActions);
+      const ranges = [
+        solverReachRange(cardsOop, parsed.weights[0]),
+        solverReachRange(cardsIp, parsed.weights[1]),
+      ];
+      if (!ranges[0] || !ranges[1]) return { ok: false, reason: 'reach' };
+      return {
+        ok: true,
+        ranges,
+        source: 'equilibrium-reach-propagation',
+        nodes: previousStreet.rangeNodes || [],
+        exactFrequencies: previousStreet.rangeExactFrequencies === true,
+      };
+    } catch (_) {
+      return { ok: false, reason: 'reach' };
+    }
+  });
+  gtoNodeQueue = job.catch(() => {});
+  return job;
+}
+
+async function solverBeginStreet() {
   if (typeof state === 'undefined') return;
   if (state.stage === 'preflop' || state.stage === 'showdown') {
     state.solverStreet = null;
@@ -244,7 +281,14 @@ function solverBeginStreet() {
   const live = state.players.filter(player => !player.folded);
   const active = live.filter(player => !player.allIn);
   const ordered = solverPlayersInPostflopOrder(live);
-  const supported = live.length === 2 && active.length === 2;
+  const structurallySupported = live.length === 2 && active.length === 2;
+  const previousStreet = state.solverStreet;
+  let baseline = { ok: false, reason: state.stage === 'flop' ? 'ranges' : 'reach' };
+  if (structurallySupported) {
+    if (state.stage === 'flop' && typeof gtoPreflopRangesFor === 'function') baseline = gtoPreflopRangesFor(ordered);
+    else if (state.stage === 'turn' || state.stage === 'river') baseline = await solverCarryReach(previousStreet, state.board);
+  }
+  const supported = structurallySupported && baseline.ok;
   state.solverStreet = {
     handId: state.handNum || 0,
     stage: state.stage,
@@ -252,14 +296,22 @@ function solverBeginStreet() {
     startingPot: Math.max(1, Math.round(state.players.reduce((sum, player) => sum + (player.totalBet || 0), 0))),
     effectiveStack: supported ? Math.max(1, Math.round(Math.min(ordered[0].chips, ordered[1].chips))) : 0,
     playerSeats: ordered.map(player => player.i),
-    rangeRaw: supported ? ordered.map(solverRangeForPlayer) : [],
+    rangeRaw: supported ? baseline.ranges : [],
+    rangeSource: supported ? baseline.source : null,
+    rangeNodes: supported ? (baseline.nodes || []) : [],
+    rangeExactFrequencies: supported && baseline.exactFrequencies === true,
     actions: [],
     supported,
+    reason: supported ? null : (baseline.reason || (structurallySupported ? 'ranges' : 'state')),
   };
 }
 
 function solverObserveAction(player, action, rangeContext) {
-  if (typeof state === 'undefined' || state.stage === 'preflop' || state.stage === 'showdown') return;
+  if (typeof state === 'undefined' || state.stage === 'showdown') return;
+  if (state.stage === 'preflop') {
+    if (typeof gtoPreflopObserveAction === 'function') gtoPreflopObserveAction(player, action, rangeContext);
+    return;
+  }
   const street = state.solverStreet;
   if (!street || street.stage !== state.stage || !street.playerSeats.includes(player.i)) return;
   const checked = action === 'call' && Number(rangeContext && rangeContext.callAmt || 0) <= 0;
@@ -299,8 +351,15 @@ function solverSupport(player, result) {
   if (solverTournamentIcmActive(result) || (result && Number(result.icmPrem || 0) > 0)) return { ok: false, reason: 'icm' };
   const street = state.solverStreet;
   if (street && street.playerSeats && street.playerSeats.length !== 2) return { ok: false, reason: 'multiway' };
-  if (!street || street.stage !== state.stage || !street.supported) return { ok: false, reason: 'state' };
+  if (!street || street.stage !== state.stage) return { ok: false, reason: 'state' };
+  if (!street.supported) return { ok: false, reason: street.reason || 'state' };
   if (!street.playerSeats.includes(player.i)) return { ok: false, reason: 'state' };
+  if (!street.rangeSource || !Array.isArray(street.rangeRaw) || street.rangeRaw.length !== 2) return { ok: false, reason: 'ranges' };
+  if (player && player.hole && player.hole.length === 2) {
+    const playerIndex = street.playerSeats.indexOf(player.i);
+    const handIndex = solverPairIndex(solverCardId(player.hole[0]), solverCardId(player.hole[1]));
+    if (!(street.rangeRaw[playerIndex][handIndex] > 0)) return { ok: false, reason: 'ranges' };
+  }
   return { ok: true, street };
 }
 
@@ -618,7 +677,9 @@ async function solverExtractNode(active, player, street) {
     converged: active.converged,
     iterations: active.iterations,
     compactTree: active.compact,
-    rangeSource: 'inferred-posterior',
+    rangeSource: street.rangeSource || 'personality-free-baseline',
+    rangeExactFrequencies: street.rangeExactFrequencies === true,
+    rangeNodes: (street.rangeNodes || []).map(nodes => Array.isArray(nodes) ? nodes.slice() : []),
     selectionRule: 'highest-frequency',
     abstraction: active.config,
     branches: branches.map(branch => ({
@@ -696,6 +757,7 @@ async function solverRequestCoachStrategy(player, fallbackResult) {
     board: support.street.board.map(card => ({ ...card })),
     playerSeats: support.street.playerSeats.slice(),
     rangeRaw: support.street.rangeRaw.slice(),
+    rangeNodes: (support.street.rangeNodes || []).map(nodes => Array.isArray(nodes) ? nodes.slice() : []),
     actions: support.street.actions.map(action => ({ ...action })),
   };
   const requestSignature = solverRequestSignature(street, player);

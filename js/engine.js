@@ -219,6 +219,7 @@ function startHand(){
   payBet(state.players[bbIdx],state.bb); state.players[bbIdx].lastAct='BB '+usd(state.bb);
   state.currentBet=state.bb; state.lastRaiseSize=state.bb;
   for(const p of alive()) p.hole=[state.deck.pop(),state.deck.pop()];
+  if(typeof gtoPreflopBeginHand==='function')gtoPreflopBeginHand();
   /* per-hand trackers */
   state.handLog=[]; state.humanDecisions=[]; state.humanWonAmt=0; state.resultText='';
   state.humanHandStats={vpip:false,pfr:false,aBets:0,aCalls:0,sd:false,sdWon:false};
@@ -462,7 +463,7 @@ function endRound(){
   if(hadBets) animateChipsToPot();
   render();   // show the LAST action of the street (e.g. the final check) BEFORE the next card
   const pause=fastFwd()?160:hadBets?700:600;
-  later(()=>{
+  later(async()=>{
     if(!state||state.gameOver||state.handOver)return;
     for(const p of state.players){p.bet=0;p.acted=false;p.checkedStreet=false;}
     state.currentBet=0; state.lastRaiseSize=state.bb; state.streetRaiseCount=0;
@@ -472,7 +473,7 @@ function endRound(){
     const canAct=live.filter(p=>!p.allIn);
     if(canAct.length<=1) return runout();
     dealNext();
-    if(typeof solverBeginStreet==='function')solverBeginStreet();
+    if(typeof solverBeginStreet==='function')await solverBeginStreet();
     render();
     const first=nextSeat(state.dealerIdx,p=>!p.out&&!p.folded&&!p.allIn);
     beginRound(first);

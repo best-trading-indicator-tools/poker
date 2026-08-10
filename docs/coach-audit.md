@@ -52,7 +52,10 @@ This Node audit exercises the chart, range, ICM, and heuristic fallback provider
 does **not** run the browser-only WASM worker. In a supported heads-up postflop chip-EV
 node, a converged b-inary result with an exactly replayed line replaces the audited
 fallback recommendation. The UI identifies the provider and describes solved output as
-an equilibrium for the supplied inferred ranges rather than universal GTO.
+an equilibrium for personality-free baseline reach ranges rather than universal GTO.
+Those ranges enter the exact provider only when the bundled preflop abstraction covers
+the complete public line; later streets also require reach propagated from the preceding
+converged tree. Personality-conditioned estimates remain confined to the fallback coach.
 
 Upstream publishes a same-tree comparison against PioSOLVER and GTO+ with closely
 matching frequencies and EVs. Product-specific validation can still compare an exported
