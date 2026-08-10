@@ -159,12 +159,6 @@ suitedConn:` Hands like this (suited and connected) play better than their raw r
 scFlatMulti:(c,n)=>`${c} is a speculative suited connector, not a hand that wants to build a big pot into ${n} limper${n>1?'s':''}/callers. Take the cheap price and try to flop a strong draw or hidden made hand; if you miss, be ready to let it go.`,
 scFoldEarly:c=>`${c} is a speculative suited connector, but too many players can still wake up behind you. Without late position or dead money to attack, do not force a big raise — fold and wait for a cleaner spot.`,
 drawMwCheck:n=>`This is mostly a draw in a multiway pot (${n} opponents). Semi-bluffing works best heads-up or against capped ranges; with several players still in, take the free card instead of building a pot you may not win.`,
-gtoSolving:'⚖️ Running GTO solve…',gtoUnavail:r=>r==='allin'
-  ?'⚖️ No GTO solve needed: a player is already all-in, so there are no more betting decisions to model. The coach advice and equity estimate still apply.'
-  :'⚖️ GTO mix not shown: the estimated range is too narrow to divide into enough reliable solver groups. The coach still uses range equity and pot math for its recommendation.',
-gtoFail:'⚖️ The optional GTO calculation hit a technical error. The main coach recommendation still works and uses range equity, pot odds and position.',
-gtoMulti:n=>'⚖️ GTO solving applies heads-up only (like commercial solvers). With '+n+' opponents, advice uses range-equity math.',
-gtoNote:'Equilibrium of your range vs theirs on this exact board. Abstractions: current street only, 66%-pot + all-in sizings, 8 strength buckets, check-down rollouts. Directionally GTO — not solver-exact.',
 mixTitle:'🎭 Mix it up (optional)',
 mixCall:'The math says call — but once in a while, raising here instead keeps sharp opponents guessing. If you always play the same hand the same way, they will read you like a book. Slightly worse for this exact hand, but it pays off across the session.',
 mixCheck:'Checking is the solid play — but every now and then, throw in a small bet here. Opponents who learn that your check always means weakness will run you over. A rare surprise bet keeps them honest.',
@@ -329,12 +323,6 @@ suitedConn:` Ce genre de main (assortie et connectée) joue mieux que son classe
 scFlatMulti:(c,n)=>`${c} est une main spéculative assortie/connectée, pas une main qui veut grossir le pot contre ${n} limper${n>1?'s':''}/caller${n>1?'s':''}. Prenez le prix pas cher et cherchez un gros tirage ou une main cachée ; si le flop rate, lâchez facilement.`,
 scFoldEarly:c=>`${c} est une main spéculative assortie/connectée, mais trop de joueurs peuvent encore se réveiller derrière vous. Sans position tardive ni dead money à attaquer, ne forcez pas une grosse relance — couchez et attendez un spot plus propre.`,
 drawMwCheck:n=>`C'est surtout un tirage dans un pot multiway (${n} adversaires). Les semi-bluffs marchent mieux en heads-up ou contre des ranges plafonnées ; avec plusieurs joueurs encore là, prenez la carte gratuite au lieu de grossir un pot que vous ne gagnerez pas toujours.`,
-gtoSolving:'⚖️ Calcul GTO en cours…',gtoUnavail:r=>r==='allin'
-  ?'⚖️ Aucun calcul GTO nécessaire : un joueur est déjà à tapis, donc il ne reste plus de décision de mise à modéliser. Le conseil du coach et l’estimation d’équité restent valides.'
-  :'⚖️ Mix GTO non affiché : la range estimée est trop étroite pour former assez de groupes fiables. Le coach utilise toujours l’équité contre la range et les cotes du pot.',
-gtoFail:'⚖️ Le calcul GTO optionnel a rencontré une erreur technique. Le conseil principal reste disponible et utilise l’équité, les cotes du pot et la position.',
-gtoMulti:n=>'⚖️ Le calcul GTO ne s’applique qu’en tête-à-tête (comme les solveurs commerciaux). Avec '+n+' adversaires, le conseil repose sur l’équité contre les ranges.',
-gtoNote:'Équilibre de votre range contre la sienne sur ce board exact. Abstractions : rue courante seulement, mises 66% pot + tapis, 8 niveaux de force, rollouts en check-down. Directionnellement GTO — pas exact au solveur près.',
 mixTitle:'🎭 Variez votre jeu (optionnel)',
 mixCall:'Les maths disent de payer — mais de temps en temps, relancer ici garde vos adversaires dans le flou. Si vous jouez toujours la même main de la même façon, ils vous liront comme un livre ouvert. Un peu moins bon pour cette main précise, mais rentable sur la durée.',
 mixCheck:'Checker est le jeu solide — mais de temps en temps, glissez une petite mise ici. Les adversaires qui apprennent que votre check signifie toujours faiblesse vous marcheront dessus. Une mise surprise rare les garde honnêtes.',
@@ -499,12 +487,6 @@ suitedConn:` Manos así (del mismo palo y conectadas) juegan mejor que su rankin
 scFlatMulti:(c,n)=>`${c} es una mano especulativa suited/conectada, no una mano que quiera inflar el bote contra ${n} limper${n>1?'s':''}/caller${n>1?'s':''}. Toma el precio barato y busca un proyecto fuerte o una mano escondida; si fallas el flop, suelta fácil.`,
 scFoldEarly:c=>`${c} es una mano especulativa suited/conectada, pero demasiados jugadores aún pueden despertar detrás. Sin posición tardía ni dinero muerto claro que atacar, no fuerces una subida grande — retírate y espera un spot más limpio.`,
 drawMwCheck:n=>`Esto es sobre todo un proyecto en un bote multiway (${n} rivales). El semi-bluff funciona mejor heads-up o contra rangos limitados; con varios jugadores dentro, toma la carta gratis en vez de inflar un bote que quizá no ganes.`,
-gtoSolving:'⚖️ Calculando GTO…',gtoUnavail:r=>r==='allin'
-  ?'⚖️ No hace falta cálculo GTO: un jugador ya está all-in, así que no quedan decisiones de apuesta que modelar. El consejo y la estimación de equity siguen siendo válidos.'
-  :'⚖️ No se muestra mezcla GTO: el rango estimado es demasiado estrecho para crear suficientes grupos fiables. El coach sigue usando equity contra rango y odds del bote.',
-gtoFail:'⚖️ El cálculo GTO opcional encontró un error técnico. La recomendación principal sigue funcionando con equity, odds del bote y posición.',
-gtoMulti:n=>'⚖️ El cálculo GTO solo aplica mano a mano (como los solvers comerciales). Con '+n+' rivales, el consejo usa equidad contra rangos.',
-gtoNote:'Equilibrio de tu rango contra el suyo en esta mesa exacta. Abstracciones: solo la calle actual, apuestas de 66% del bote + all-in, 8 niveles de fuerza, rollouts de check-down. Direccionalmente GTO — no exacto a nivel solver.',
 mixTitle:'🎭 Varía tu juego (opcional)',
 mixCall:'Las matemáticas dicen pagar — pero de vez en cuando, subir aquí mantiene a los rivales atentos adivinando. Si siempre juegas la misma mano igual, te leerán como un libro. Algo peor para esta mano exacta, pero rentable a lo largo de la sesión.',
 mixCheck:'Pasar es la jugada sólida — pero de vez en cuando, mete una apuesta pequeña aquí. Los rivales que aprenden que tu check siempre es debilidad te pasarán por encima. Una apuesta sorpresa ocasional los mantiene honestos.',
@@ -688,158 +670,6 @@ function mcEquityR(hole,board,caps,sims){
     win+=res;
   }
   return win/sims;
-}
-
-/* ====== GTO-LITE SOLVER ======
-   Real CFR (counterfactual regret minimization) on an abstracted tree:
-   heads-up, current street, 66%-pot + all-in sizings, 8 strength buckets,
-   leaf showdowns valued by board-rollout equity. Directionally GTO. */
-function combosInRange(cap,board,exclude,floor){
-  const used=new Set(board.map(c=>c.r*4+c.s));
-  for(const c of exclude||[]) used.add(c.r*4+c.s);
-  const f=Math.min(floor||0,cap*0.5);
-  const out=[];
-  for(let i=0;i<52;i++)for(let j=i+1;j<52;j++){
-    const a=FULL_DECK[i],b=FULL_DECK[j];
-    if(used.has(a.r*4+a.s)||used.has(b.r*4+b.s))continue;
-    const pct=handPct[holeCode([a,b])]||1;
-    if(pct<=cap&&pct>f) out.push([a,b]);
-  }
-  return out;
-}
-function comboStrength(combo,board){
-  const s=evalBest(combo.concat(board));
-  let v=s[0]*1e6+(s[1]||0)*1e4+(s[2]||0)*100+(s[3]||0);
-  if(board.length<5){
-    const d=detectDraws(combo,board);
-    if(d.flush)v+=8e5;
-    if(d.oesd||d.doubleGutshot)v+=6e5;
-    else if(d.gutshot)v+=2.5e5;
-  }
-  return v;
-}
-function gtoSolve(opt){
-  const {board,P0,toCall,eff,heroCap,villCap,heroHand,villFirst}=opt;
-  const NB=8;
-  const villCombos=combosInRange(clamp(villCap,0.03,1),board,heroHand,opt.villFloor||0);
-  const heroCombos=combosInRange(clamp(Math.max(heroCap,0.15),0.03,1),board,[]);
-  if(eff<=0) return {unavailable:'allin'};
-  if(villCombos.length<NB*2||heroCombos.length<NB*2) return {unavailable:'range'};
-  const bucketize=(combos)=>{
-    const scored=combos.map(c=>({c,v:comboStrength(c,board)})).sort((x,y)=>x.v-y.v);
-    const B=Array.from({length:NB},()=>[]);
-    scored.forEach((x,k)=>B[Math.min(NB-1,Math.floor(k*NB/scored.length))].push(x.c));
-    return B;
-  };
-  const hB=bucketize(heroCombos), vB=bucketize(villCombos);
-  /* hero's own bucket by strength percentile within his range */
-  const hv=comboStrength(heroHand,board);
-  const below=heroCombos.reduce((s,c)=>s+(comboStrength(c,board)<=hv?1:0),0);
-  const myB=clamp(Math.floor((below-1)*NB/heroCombos.length),0,NB-1);
-  /* bucket-vs-bucket equity matrix via board rollouts */
-  const E=[];
-  for(let i=0;i<NB;i++){E.push([]);
-    for(let j=0;j<NB;j++){
-      let w=0,n=0;
-      for(let t=0;t<70;t++){
-        let hc=null,vc=null;
-        for(let k=0;k<5;k++){
-          hc=hB[i][Math.floor(Math.random()*hB[i].length)];
-          vc=vB[j][Math.floor(Math.random()*vB[j].length)];
-          if(hc&&vc&&!hc.some(c=>vc.some(d=>d.r===c.r&&d.s===c.s)))break;
-          hc=null;
-        }
-        if(!hc)continue;
-        const used=new Set(hc.concat(vc,board).map(c=>c.r*4+c.s));
-        const pool=FULL_DECK.filter(c=>!used.has(c.r*4+c.s));
-        const need=5-board.length;
-        for(let k=0;k<need;k++){const idx=k+Math.floor(Math.random()*(pool.length-k));const tmp=pool[k];pool[k]=pool[idx];pool[idx]=tmp;}
-        const fb=board.concat(pool.slice(0,need));
-        const c=cmpScore(evalSeven(hc.concat(fb)),evalSeven(vc.concat(fb)));
-        w+=c>0?1:c===0?0.5:0; n++;
-      }
-      E[i][j]=n?w/n:0.5;
-    }
-  }
-  /* build betting tree for the current street */
-  function mk(actor,tc,cH,cV,raises){
-    const node={player:actor,actions:[],children:[],leaf:null,info:[]};
-    const pot=P0+cH+cV, inv=actor===0?cH:cV, remain=eff-inv;
-    if(tc>0){
-      node.actions.push({n:'Fold'});
-      node.children.push({leaf:'fold',folder:actor,cH,cV});
-      const callAdd=Math.min(tc,remain);
-      node.actions.push({n:'Call'});
-      node.children.push({leaf:'sd',cH:actor===0?cH+callAdd:cH,cV:actor===1?cV+callAdd:cV});
-      if(raises>0&&remain>tc*2){
-        const rAdd=Math.min(tc+Math.round((pot+tc)*0.9),remain);
-        node.actions.push({n:rAdd>=remain?'Raise all-in':'Raise'});
-        node.children.push(mk(1-actor,rAdd-tc,actor===0?cH+rAdd:cH,actor===1?cV+rAdd:cV,raises-1));
-      }
-    }else{
-      node.actions.push({n:'Check'});
-      if(actor===0&&villFirst) node.children.push(mk(1,0,cH,cV,raises));
-      else node.children.push({leaf:'sd',cH,cV});
-      if(remain>0){
-        const bAdd=Math.min(Math.max(Math.round(pot*0.66),10),remain);
-        node.actions.push({n:bAdd>=remain?'Bet all-in':'Bet 66% pot'});
-        node.children.push(mk(1-actor,bAdd,actor===0?cH+bAdd:cH,actor===1?cV+bAdd:cV,raises-1));
-        if(remain>bAdd*2.5){
-          node.actions.push({n:'Bet all-in'});
-          node.children.push(mk(1-actor,remain,actor===0?cH+remain:cH,actor===1?cV+remain:cV,0));
-        }
-      }
-    }
-    return node;
-  }
-  const root=mk(0,toCall,0,0,2);
-  const leafEV=(node,hb,vb)=>{
-    if(node.leaf==='fold') return node.folder===0?-node.cH:P0+node.cV;
-    const T=P0+node.cH+node.cV;
-    return E[hb][vb]*T-node.cH;
-  };
-  /* CFR with regret matching */
-  function walk(node,hb,vb,pH,pV){
-    if(node.leaf) return leafEV(node,hb,vb);
-    const actor=node.player,b=actor===0?hb:vb,n=node.actions.length;
-    const I=node.info[b]||(node.info[b]={r:new Float64Array(n),s:new Float64Array(n)});
-    let sum=0; const strat=new Array(n);
-    for(let a=0;a<n;a++){strat[a]=I.r[a]>0?I.r[a]:0;sum+=strat[a];}
-    for(let a=0;a<n;a++) strat[a]=sum>0?strat[a]/sum:1/n;
-    const evs=new Array(n); let ev=0;
-    for(let a=0;a<n;a++){
-      evs[a]=walk(node.children[a],hb,vb,actor===0?pH*strat[a]:pH,actor===1?pV*strat[a]:pV);
-      ev+=strat[a]*evs[a];
-    }
-    const w=actor===0?pV:pH, rp=actor===0?pH:pV;
-    for(let a=0;a<n;a++){
-      I.r[a]+=w*(actor===0?evs[a]-ev:ev-evs[a]);
-      I.s[a]+=rp*strat[a];
-    }
-    return ev;
-  }
-  for(let it=0;it<2000;it++)
-    walk(root,Math.floor(Math.random()*NB),Math.floor(Math.random()*NB),1,1);
-  /* extract average strategy + EVs for hero's bucket */
-  const avg=(node,b)=>{
-    const n=node.actions.length, I=node.info[b];
-    if(!I) return Array(n).fill(1/n);
-    let s=0; for(let a=0;a<n;a++)s+=I.s[a];
-    return s>0?Array.from(I.s,x=>x/s):Array(n).fill(1/n);
-  };
-  function evPair(node,hb,vb){
-    if(node.leaf) return leafEV(node,hb,vb);
-    const strat=avg(node,node.player===0?hb:vb);
-    let ev=0;
-    for(let a=0;a<node.actions.length;a++) ev+=strat[a]*evPair(node.children[a],hb,vb);
-    return ev;
-  }
-  const strat=avg(root,myB), out=[];
-  for(let a=0;a<root.actions.length;a++){
-    let e=0; for(let vb=0;vb<NB;vb++) e+=evPair(root.children[a],myB,vb)/NB;
-    out.push({name:root.actions[a].n,freq:strat[a],ev:e});
-  }
-  return {actions:out};
 }
 
 function straightRankSet(cards){
@@ -2886,11 +2716,12 @@ function coachDecide(p){
     actsLast,concepts,smallStab,bluffBreakEven,baseFoldEquity:FE,code});
   coachSpotBrief(p,extra,{eq,eqAdj,odds,needEq:callAmt>0?decisionNeed:null,
     callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
-  return {rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
+  const result={rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,icmInfo,chartInfo,rangeCharts,code,spr,sprZone,
           preflopCallInfo,drawInfo,impliedInfo,drySidePot,sidePotInfo,needEq:decisionNeed,
           strategyMode,bluffBreakEven,modeledFoldEquity:bluffInfo.estimatedFolds,
           bluffInfo,actionIntent:bluffInfo.intent,concepts,postSizePlan};
+  return typeof solverApplyCoachStrategy==='function'?solverApplyCoachStrategy(p,result):result;
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */

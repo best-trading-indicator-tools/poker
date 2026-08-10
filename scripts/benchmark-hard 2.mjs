@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import {fileURLToPath} from 'node:url';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const files=['eval.js','modes/registry.js','modes/tournament.js','modes/cash.js','engine.js','rewards.js','coach.js','ai.js','mp.js','ui.js'];
+const files=['eval.js','modes/registry.js','modes/tournament.js','modes/cash.js','engine.js','rewards.js','solver.js','coach.js','ai.js','mp.js','ui.js'];
 const games=Math.max(25,Number(process.argv[2])||100);
 const limits={winRate:0.18,itmRate:0.46,avgFinish:4.35};
 const storage=new Map();

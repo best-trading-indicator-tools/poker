@@ -352,6 +352,11 @@ body.fl #chat{right:8px;bottom:64px;height:60%;}
 #gtoBox .grow span:first-child{flex:1;}
 #gtoBox .grow.top{color:var(--gold);font-weight:700;}
 #gtoBox .gnote{margin-top:10px;font-size:12.5px;color:var(--dim);line-height:1.55;}
+.gto-provider-card{border:1px solid rgba(127,182,232,.28);border-radius:10px;padding:11px 12px;background:rgba(76,143,226,.07);line-height:1.5;}
+.gto-provider-card.solved{border-color:rgba(67,190,124,.42);background:rgba(46,125,79,.10);color:var(--text);}
+.gto-provider-card.fallback{border-color:rgba(255,255,255,.10);background:rgba(255,255,255,.025);}
+.gto-provider-title{font-size:11px;font-weight:800;color:#7fb6e8;letter-spacing:.55px;text-transform:uppercase;margin-bottom:5px;}
+.gto-provider-card small{display:block;margin-top:5px;color:var(--dim);}
 @media(max-width:1024px){
   #coach{display:none;position:absolute;left:14px;top:14px;bottom:14px;z-index:40;box-shadow:0 14px 50px rgba(0,0,0,.65);}
   #coach.open{display:block;}
@@ -1546,6 +1551,8 @@ body.fl #chipPreview{display:none!important;}
   <script src="js/modes/cash.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/rewards.js"></script>
+  <script src="vendor/wasm-postflop/comlink.js"></script>
+  <script src="js/solver.js"></script>
   <script src="js/coach.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/mp.js"></script>

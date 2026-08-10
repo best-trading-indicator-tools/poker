@@ -1399,6 +1399,12 @@ function aiHardPostflopVsBet(p,eq,odds,callAmt,pot,d,st,pfAdj){
 }
 
 function aiDecide(p){
+  if(typeof solverSampleCachedDecision==='function'){
+    const solverIcm=typeof aiIcmPressure==='function'?aiIcmPressure(p):null;
+    const solved=solverSampleCachedDecision(p,{icmPrem:solverIcm?.active?(solverIcm.callPremium||0):0});
+    if(solved)return {type:solved.action==='check'?'call':solved.action==='allin'?'raise':solved.action,
+      amount:solved.target,source:'solver',mix:solved.mix};
+  }
   const callAmt=Math.min(state.currentBet-p.bet, p.chips);
   const pot=state.players.reduce((s,q)=>s+q.totalBet,0);
   const live=inHand().length;

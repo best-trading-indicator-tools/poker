@@ -1,8 +1,10 @@
 /* offline support: network-first with full cache fallback */
-const CACHE='sg-poker-v84';
+const CACHE='sg-poker-v85';
 const ASSETS=['/','/poker.html','/charts.js','/manifest.json','/docs/icon.svg',
   '/js/eval.js','/js/modes/registry.js','/js/modes/tournament.js','/js/modes/cash.js',
-  '/js/engine.js','/js/rewards.js','/js/coach.js','/js/ai.js','/js/mp.js','/js/ui.js'];
+  '/js/engine.js','/js/rewards.js','/js/solver.js','/js/coach.js','/js/ai.js','/js/mp.js','/js/ui.js',
+  '/vendor/wasm-postflop/comlink.js','/vendor/wasm-postflop/worker.js',
+  '/vendor/wasm-postflop/7a023623e45ca364f00b.js','/vendor/wasm-postflop/solver-st.wasm'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));
   self.skipWaiting();

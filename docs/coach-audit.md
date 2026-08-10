@@ -48,11 +48,12 @@ The current suite passes **464 / 464 checks**.
 This audit catches contradictions, illegal actions, impossible numbers and strategically
 obvious failures. It is deliberately deterministic and reproducible.
 
-It does **not** prove that every borderline mixed-frequency decision is solver-perfect.
-The Live Coach still combines exact pot math with charts, range simulations, heuristics,
-an abstracted CFR calculation and estimated future action. Those approximations are
-communicated through the confidence label.
+This Node audit exercises the chart, range, ICM, and heuristic fallback providers; it
+does **not** run the browser-only WASM worker. In a supported heads-up postflop chip-EV
+node, the b-inary solver result replaces the audited fallback recommendation. The UI
+identifies which provider is authoritative for every decision.
 
-The remaining high-end validation step would be to compare a large exported benchmark
-set against an external commercial solver for exact frequencies and EV deltas. That is
-separate from internal correctness and requires solver-produced reference data.
+Upstream publishes a same-tree comparison against PioSOLVER and GTO+ with closely
+matching frequencies and EVs. Product-specific validation can still compare an exported
+set of this app's range inputs, abstractions, and solved outputs against an independent
+solver. See `docs/solver-architecture.md` for the exact boundary and fallbacks.

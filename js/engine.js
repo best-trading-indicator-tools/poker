@@ -289,10 +289,24 @@ function promptNext(){
     if(fastFwd()) delay=Math.min(delay,120+Math.random()*120);
     later(()=>{
       if(state.gameOver||state.handOver) return;
-      const dec=(state.cfg.coachBot&&p.i===0)?coachBotDecide(p):aiDecide(p);
-      applyAction(p,dec.type,dec.amount);
-      state.turnIdx=(j+1)%state.players.length;
-      promptNext();
+      const fallback=()=>((state.cfg.coachBot&&p.i===0)?coachBotDecide(p):aiDecide(p));
+      const useDecision=solverDecision=>{
+        if(state.gameOver||state.handOver||state.turnIdx!==p.i)return;
+        const dec=solverDecision||fallback();
+        const type=dec.type==='check'?'call':dec.type==='allin'?'raise':dec.type;
+        applyAction(p,type,dec.amount??dec.target);
+        state.turnIdx=(j+1)%state.players.length;
+        promptNext();
+      };
+      if(typeof solverRequestCoachStrategy==='function'&&state.stage!=='preflop'){
+        const icmRead=typeof aiIcmPressure==='function'?aiIcmPressure(p):null;
+        const solverContext={icmPrem:icmRead?.active?(icmRead.callPremium||0):0};
+        const request=solverRequestCoachStrategy(p,solverContext)
+          .then(()=>typeof solverSampleCachedDecision==='function'?solverSampleCachedDecision(p,solverContext):null)
+          .catch(()=>null);
+        const budget=fastFwd()?80:900;
+        Promise.race([request,new Promise(resolve=>setTimeout(()=>resolve(null),budget))]).then(useDecision);
+      }else useDecision(null);
     },delay);
   }
 }
@@ -406,6 +420,7 @@ function applyAction(p,type,amt){
     state.lastAggIdx=p.i;
   }
   if(typeof rangeModelApplyAction==='function') rangeModelApplyAction(p,type,rangeCtx);
+  if(typeof solverObserveAction==='function') solverObserveAction(p,type,rangeCtx);
   if(type==='raise'){
     state.streetRaiseCount=raisesBefore+1;
     if(state.stage==='preflop')state.preflopRaiseCount=(state.preflopRaiseCount||0)+1;
@@ -457,6 +472,7 @@ function endRound(){
     const canAct=live.filter(p=>!p.allIn);
     if(canAct.length<=1) return runout();
     dealNext();
+    if(typeof solverBeginStreet==='function')solverBeginStreet();
     render();
     const first=nextSeat(state.dealerIdx,p=>!p.out&&!p.folded&&!p.allIn);
     beginRound(first);

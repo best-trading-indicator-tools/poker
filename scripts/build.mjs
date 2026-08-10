@@ -46,7 +46,7 @@ const MODULE_RANGES = {
   'ui.js': [[718, 888], [2347, 2680], [3172, 3624], [4203, 4474]],
 };
 
-const LOAD_ORDER = ['eval.js', 'modes/registry.js', 'modes/tournament.js', 'modes/cash.js', 'engine.js', 'rewards.js', 'coach.js', 'ai.js', 'mp.js', 'ui.js'];
+const LOAD_ORDER = ['eval.js', 'modes/registry.js', 'modes/tournament.js', 'modes/cash.js', 'engine.js', 'rewards.js', 'solver.js', 'coach.js', 'ai.js', 'mp.js', 'ui.js'];
 
 function readLines() {
   const html = fs.readFileSync(HTML, 'utf8');
@@ -68,6 +68,10 @@ function extractFromHtml() {
   const lines = readLines();
   fs.mkdirSync(JS_DIR, { recursive: true });
   for (const name of LOAD_ORDER) {
+    if (!MODULE_RANGES[name]) {
+      console.log('kept js/' + name + ' (hand-maintained module)');
+      continue;
+    }
     const parts = (MODULE_RANGES[name] || []).map(([a, b]) => slice(lines, a, b));
     let body = parts.join('\n\n');
     if (name === 'ui.js') body = body.replace("let lang='en';\n", '');
@@ -86,7 +90,11 @@ function findScriptBlock(html) {
 }
 
 function scriptTags() {
-  return LOAD_ORDER.map((f) => `  <script src="js/${f}"></script>`).join('\n');
+  return LOAD_ORDER.map((f) => (
+    f === 'solver.js'
+      ? `  <script src="vendor/wasm-postflop/comlink.js"></script>\n  <script src="js/${f}"></script>`
+      : `  <script src="js/${f}"></script>`
+  )).join('\n');
 }
 
 function writeMultifileHtml() {
@@ -105,7 +113,7 @@ function bundleSingleFile() {
   let html = fs.readFileSync(HTML, 'utf8');
   const { before, after } = findScriptBlock(html);
   const marker = '<!-- bundled:single-file -->\n';
-  const mid = marker + `<script src="charts.js"></script>\n<script>\n${inline.trim()}\n</script>`;
+  const mid = marker + `<script src="charts.js"></script>\n<script src="vendor/wasm-postflop/comlink.js"></script>\n<script>\n${inline.trim()}\n</script>`;
   fs.writeFileSync(HTML, before + mid + after);
   console.log('poker.html → single-file bundle');
 }

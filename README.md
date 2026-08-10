@@ -10,7 +10,7 @@ Double-click `poker.html`, or serve it from any static host. Set up your table (
 
 ## Code layout
 
-Game logic is split from `poker.html` into six modules (shared global scope, loaded in order):
+Game logic is split from `poker.html` into ordered modules (shared global scope):
 
 | File | Responsibility |
 |------|----------------|
@@ -19,7 +19,8 @@ Game logic is split from `poker.html` into six modules (shared global scope, loa
 | `js/modes/tournament.js` | Sit & Go rules: blind ladder, antes, elimination |
 | `js/modes/cash.js` | Cash game rules: fixed blinds, auto-rebuy, session P&L |
 | `js/engine.js` | Shared NLHE core: game state, hand flow (`startHand`, `applyAction`, showdown/side pots), sound/haptics/chip animations, resume snapshots |
-| `js/coach.js` | Preflop charts, `mcEquityR`, GTO mini-solver (CFR), `coachDecide`, ICM, coach prose (EN/FR/ES) |
+| `js/solver.js` | Strategy-provider layer, b-inary WASM solver bridge, action-tree replay, result cache, and explicit fallback routing |
+| `js/coach.js` | Preflop charts, `mcEquityR`, `coachDecide`, ICM, fallback logic, coach prose (EN/FR/ES) |
 | `js/ai.js` | AI profiles (`STYLES`), `aiDecide`, range/equity reads |
 | `js/mp.js` | PeerJS multiplayer, host migration, public checkpoints, P2P snapshots |
 | `js/ui.js` | i18n UI strings, rendering, coach panel display, replayer, session review, init/wiring |
@@ -31,10 +32,10 @@ Game logic is split from `poker.html` into six modules (shared global scope, loa
 ```bash
 node scripts/build.mjs multifile   # default — refresh js/*.js from git HEAD monolith & wire poker.html
 node scripts/build.mjs extract     # re-split js/*.js only
-node scripts/build.mjs bundle      # inline all modules back into poker.html (true single-file deploy)
+node scripts/build.mjs bundle      # inline app modules; exact solver assets remain in vendor/
 ```
 
-Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel serves the repo root as static files; no build step). Run `bundle` before shipping a one-file drop if you need double-click-without-folder layout.
+Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel serves the repo root as static files; no build step). A bundled HTML opened without its `vendor/` folder still works, but supported solver nodes use the labeled heuristic fallback.
 
 ## Features
 
@@ -53,7 +54,7 @@ Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel s
 - **Situation plans in plain language**: the coach identifies squeeze opportunities over capped callers, warns about dominated top pairs and counterfeit-prone two pair, sizes postflop bets from board texture, labels purposeful flop floats, categorizes the turn plan, and selects river blocker bluffs only against credible folders
 - **Dedicated bluff assessment**: every live recommendation is classified as value, protection, semi-bluff, pure bluff, range aggression, bluff-catch or “do not bluff”; the panel explains fold drivers and risks, compares required with estimated folds, shows equity when called, and gives a response plan. Persistent opponent reads learn who folds or calls under pressure across hands, with small-sample smoothing and difficulty-scaled influence
 - **Draw Engine 2.0**: the coach distinguishes open-ended straights, single gutshots, double gutshots, ace-low edge cases and runner-runner straight/flush backdoors; exact outs are deduplicated across combined draws, filtered for dirty cards and never produce negative usable equity after risk discounts
-- **GTO mini-solver**: real CFR (counterfactual regret minimization) for heads-up postflop spots — shows the equilibrium mixed strategy with EVs
+- **Exact postflop solver**: b-inary's open-source Rust CFR engine solves heads-up postflop spots in a Web Worker, shows the mixed strategy and per-action EVs, and makes that result authoritative for the coach and available to bots
 - **Stats & training**: post-hand feedback, session + lifetime stats (persisted), full hand-history export to JSON
 - **Blunder report**: every decision is scored against the coach's line in chip-EV; deviations show their estimated EV cost live, the coach panel tracks total "EV leaked" this game, and the game-over screen lists your top 5 costliest mistakes ("Hand #14 · turn — coach: FOLD, you: CALL — −$1,800")
 - **Hand replayer**: browse every hand of the current game and step through it street by street — board reveals progressively, hole cards shown, action log per street. After quitting (or any time), "Review past hands" on the start screen replays your full saved history, timestamped per hand
@@ -161,9 +162,20 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 - **Line reading**: continuation bets, double/triple barrels, donk bets and check-raises each narrow opponent ranges differently — and the coach explains each in plain language.
 - **Blockers & playability**: ace blockers vs big bets, nut-flush blockers, suited-connector playability beyond raw rankings.
 - **Postflop exploitation**: bluff-catching decisions adjust to WHO is betting (rocks don't bluff; maniacs do; stations' raises are real).
-- **GTO mini-solver** (heads-up postflop): runs CFR on an abstracted tree — current street, 66%-pot + all-in sizings, 8 strength buckets, rollout-valued leaves — and prints the equilibrium mix with EVs. Directionally GTO, not solver-exact (multiway pots have no computable GTO, as with commercial solvers).
+- **Exact GTO provider** (heads-up postflop): uses [`b-inary/postflop-solver`](https://github.com/b-inary/postflop-solver) through the official [`b-inary/wasm-postflop`](https://github.com/b-inary/wasm-postflop) build. It solves all 1,326 private-card combinations without hand-strength buckets or rollout-valued leaves, replays the actual line into the tree, and returns the mixed strategy and action EVs for the player's exact hand.
+- **Practical action abstraction**: flop uses 33%/67%, turn 50%/75%, river 50%/75%/100%, plus 2.5× raises and all-ins. An observed custom size is added to the next tree when needed. Results are therefore exact for the configured discrete game tree, not for every possible continuous bet size.
+- **One source of strategy truth**: solved output overrides the heuristic coach recommendation, feeds its exact frequencies into the mix panel, is cached by board/ranges/stacks/history/hand, and can be sampled by bots. The old 8-bucket “GTO-lite” CFR implementation has been removed.
+- **Honest fallbacks**: preflop remains chart-backed; multiway pots, meaningful tournament ICM, all-in nodes, oversized browser trees, and unavailable WASM use the range-aware/ICM-aware heuristic provider and are labeled as fallbacks rather than GTO.
+- **Runtime model**: solving happens in a single-thread Web Worker to keep the current static-host/PWA deployment compatible without cross-origin-isolation headers. A 512 MB tree budget and compact-tree retry protect mobile browsers. Exact solving requires HTTP(S); opening the HTML directly still runs the rest of the game with fallbacks.
+- **License**: the solver is AGPL-3.0, so this integrated application is distributed under AGPL-3.0-or-later. Exact upstream commits and vendored checksums are recorded in `vendor/wasm-postflop/README.md` and `THIRD_PARTY_NOTICES.md`.
 
 ## Changelog
+
+### 2026-08-10 — Exact Rust/WASM GTO strategy provider
+- Replaced the 8-bucket display-only CFR mini-solver with b-inary's full-combo postflop solver
+- Solver recommendations now override the coach in supported heads-up chip-EV nodes and expose the real mixed frequencies and action EVs
+- Added a shared solver cache/path for bot decisions, explicit chart/heuristic/ICM fallback labels, worker progress, memory limits, PWA assets, and EN/FR/ES UI copy
+- Added AGPL licensing and pinned third-party provenance
 
 ### 2026-06-12 — Cash coach tier: SPR, BB defense, session stats
 - **SPR row + prose (cash)**: postflop stack-to-pot ratio in coach panel with deep/medium/low zone notes (en/fr/es)

@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const files=['eval.js','modes/registry.js','modes/tournament.js','modes/cash.js',
-  'engine.js','rewards.js','coach.js','ai.js','mp.js','ui.js'];
+  'engine.js','rewards.js','solver.js','coach.js','ai.js','mp.js','ui.js'];
 const storage=new Map();
 const context=vm.createContext({
   console,setTimeout,clearTimeout,queueMicrotask,Date,Math,JSON,Promise,
