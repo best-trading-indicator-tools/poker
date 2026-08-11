@@ -92,7 +92,7 @@ scUnopened:"Unopened",scLimp:"Limp",scRaise:"Raise",scThreeBet:"3-bet",scCbet:"C
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
 resetData:"Clear saved data",resetInfo:"Deletes lifetime stats, hand history, session reviews, saved scenarios and any unfinished game you could resume. Your Rewards level, XP, unlocks, equipped cosmetics and language choice are kept. This can't be undone.",resetConfirm:"Delete all stats, hand history, session reviews, saved scenarios and unfinished games? Rewards level and progress will be kept.",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Quit this tournament?",quitCash:"Leave the table?",
-fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",
+fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",raiseExact:"Exact",raiseExactHelp:"Enter the exact legal raise-to amount in chips",
 actMenu:"◀ Menu",actTurn:"◀ Your turn",
 log:"Log",lastHand:"Last hand",exportH:"Export history",exportCoach:"AI review (.txt)",exportCoachTitle:"Download up to 20 hands from the current game with AI coach metadata as text",adminTitle:"🛠 Admin tools",adminSub:"Internal AI coach diagnostics. Hidden from players.",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",coachScrollMore:"Scroll for more",
 waiting:"Advice appears here when it's your turn.",
@@ -255,7 +255,7 @@ scUnopened:"Non ouvert",scLimp:"Limp",scRaise:"Relance",scThreeBet:"3-bet",scCbe
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
 resetData:"Effacer les données sauvegardées",resetInfo:"Supprime les statistiques globales, l’historique des mains, les bilans, les scénarios sauvegardés et toute partie en cours à reprendre. Votre niveau Rewards, XP, éléments débloqués, cosmétiques équipés et choix de langue sont conservés. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l’historique, les bilans, les scénarios et les parties en cours ? Le niveau et la progression Rewards seront conservés.",resetDone:"✓ Effacé",
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter ce tournoi ?",quitCash:"Quitter la table ?",
-fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",
+fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",raiseExact:"Exact",raiseExactHelp:"Saisissez le montant total exact et légal de la relance en jetons",
 actMenu:"◀ Menu",actTurn:"◀ À vous",
 log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",exportCoach:"Revue IA (.txt)",exportCoachTitle:"Télécharger jusqu'à 20 mains de la partie actuelle avec les métadonnées du coach IA",adminTitle:"🛠 Outils administrateur",adminSub:"Diagnostics internes du coach IA. Masqués pour les joueurs.",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",coachScrollMore:"Faites défiler pour voir la suite",
 waiting:"Les conseils apparaissent ici quand c'est votre tour.",
@@ -418,7 +418,7 @@ scUnopened:"Sin abrir",scLimp:"Limp",scRaise:"Subida",scThreeBet:"3-bet",scCbet:
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
 resetData:"Borrar datos guardados",resetInfo:"Elimina estadísticas globales, historial de manos, resúmenes, situaciones guardadas y cualquier partida sin terminar. Se conservan tu nivel Rewards, XP, desbloqueos, cosméticos equipados e idioma. No se puede deshacer.",resetConfirm:"¿Borrar estadísticas, historial, resúmenes, situaciones y partidas sin terminar? El nivel y progreso Rewards se conservarán.",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Salir de este torneo?",quitCash:"¿Dejar la mesa?",
-fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",
+fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",raiseExact:"Exacto",raiseExactHelp:"Introduce la cantidad total exacta y legal de la subida en fichas",
 actMenu:"◀ Menú",actTurn:"◀ Tu turno",
 log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",exportCoach:"Revisión IA (.txt)",exportCoachTitle:"Descargar hasta 20 manos de la partida actual con metadatos del coach IA",adminTitle:"🛠 Herramientas de administrador",adminSub:"Diagnósticos internos del coach IA. Ocultos para los jugadores.",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",coachScrollMore:"Desplázate para ver más",
 waiting:"Los consejos aparecen aquí cuando es tu turno.",
@@ -3082,6 +3082,25 @@ function setRaiseExact(amt){
   sl.value=Math.min(+sl.max, amt);
   updateRaiseLabel();
 }
+function syncRaiseAmountInput(value){
+  const input=$('raiseAmountInput'),sl=$('raiseSlider');
+  if(!input||!sl)return;
+  input.min=String(displayAmount(sl.min));
+  input.max=String(displayAmount(sl.max));
+  input.value=String(displayAmount(value));
+  input.setCustomValidity('');input.setAttribute('aria-invalid','false');
+}
+function applyRaiseAmountInput(){
+  const input=$('raiseAmountInput'),sl=$('raiseSlider');
+  if(!input||!sl)return false;
+  const shownAmount=Number(input.value);
+  const min=Number(sl.min),max=Number(sl.max);
+  const valid=Number.isInteger(shownAmount)&&shownAmount>=displayAmount(min)&&shownAmount<=displayAmount(max);
+  input.setCustomValidity(valid?'':`${T('raiseExactHelp')}: ${usd(min)}–${usd(max)}`);
+  input.setAttribute('aria-invalid',String(!valid));
+  if(valid)setRaiseExact(clamp(engineAmount(shownAmount),min,max));
+  return valid;
+}
 function setActionAmountButton(btn,label,amount){
   if(!btn)return;
   const text=(label.trim()+' '+amount).trim();
@@ -3146,6 +3165,7 @@ function updateRaiseLabel(){
     v>=allin ? T('allin') : (state.currentBet>0?T('raiseTo'):T('betW')),
     `${usd(v)} (${bbs(v)})`
   );
+  syncRaiseAmountInput(v);
   $('chipPreview').innerHTML=chipStackHTML(v,true);
 }
 function solverBranchForHumanAction(branches,type,amount,callAmount){
@@ -3670,6 +3690,9 @@ function applyLang(){
   ['aiReviewBtn','aiReviewSetupBtn'].forEach(id=>{const button=$(id);if(button)button.title=T('exportCoachTitle');});
   set('coachScrollHintLbl','coachScrollMore');
   set('foldBtn','fold'); set('prMin','min'); set('prHalf','halfPot'); set('prPot','pot'); set('prMax','allin');
+  set('raiseAmountLbl','raiseExact');
+  const raiseAmountInput=$('raiseAmountInput');
+  if(raiseAmountInput){raiseAmountInput.title=T('raiseExactHelp');raiseAmountInput.setAttribute('aria-label',T('raiseExactHelp'));}
   set('rpClose','close'); set('rpTitle','replayTitle'); set('ovBtn','playAgain'); set('chartClose','close');
   set('rpPrevH','handNavP'); set('rpNextH','handNavN'); set('rpPrevS','streetNavP'); set('rpNextS','streetNavN');
   set('rpJumpLbl','jumpHand'); set('rpGoH','jumpGo');
@@ -3906,6 +3929,16 @@ function initUI(){
   $('callBtn').onclick=()=>humanAct('call');
   $('raiseBtn').onclick=()=>humanAct('raise',getRaiseSliderAmt());
   $('raiseSlider').oninput=()=>{clearRaiseExact();updateRaiseLabel();};
+  $('raiseAmountInput').oninput=applyRaiseAmountInput;
+  $('raiseAmountInput').onblur=()=>{
+    if(!applyRaiseAmountInput())syncRaiseAmountInput(getRaiseSliderAmt());
+  };
+  $('raiseAmountInput').onkeydown=e=>{
+    if(e.key!=='Enter')return;
+    e.preventDefault();
+    if(applyRaiseAmountInput())e.currentTarget.blur();
+    else e.currentTarget.reportValidity();
+  };
   $('prMin').onclick=()=>{clearRaiseExact();const sl=$('raiseSlider');sl.value=sl.min;updateRaiseLabel();};
   $('prMax').onclick=()=>setRaiseExact(raiseAllInAmt());
   $('prHalf').onclick=()=>{

@@ -15,7 +15,7 @@
   --text:#e8ebf0; --dim:#8d99ab; --gold:#e8b64c; --red:#e2574c; --blue:#4c8fe2; --green:#2e7d4f;
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
-.btn:focus-visible,.preset:focus-visible,#actionbar button:focus-visible,.seg button:focus-visible,.rp-nav button:focus-visible,.rp-jump input:focus-visible,.rp-jump button:focus-visible,#revClose:focus-visible,#revAllHands:focus-visible,#rewardClose:focus-visible,#rewardCloseTop:focus-visible,.reward-equip:focus-visible,#tRewards:focus-visible,#deckBtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.btn:focus-visible,.preset:focus-visible,#raiseAmountInput:focus-visible,#actionbar button:focus-visible,.seg button:focus-visible,.rp-nav button:focus-visible,.rp-jump input:focus-visible,.rp-jump button:focus-visible,#revClose:focus-visible,#revAllHands:focus-visible,#rewardClose:focus-visible,#rewardCloseTop:focus-visible,.reward-equip:focus-visible,#tRewards:focus-visible,#deckBtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
 .tb-touch{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:44px;padding:4px 8px;margin:-4px -8px;}
 .tb-touch input{width:22px;height:22px;accent-color:var(--gold);cursor:pointer;}
 .setup-touch{display:flex;align-items:center;gap:10px;cursor:pointer;min-height:44px;}
@@ -472,6 +472,9 @@ body.frame-crown .seat.human .plate{border-color:#f7d779;box-shadow:0 0 22px rgb
 #actionbar .btn:disabled{opacity:.35;cursor:default;}
 #raiseCtl{display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap;}
 #raiseSlider{flex:1;min-width:90px;accent-color:var(--gold);}
+#raiseAmountWrap{display:flex;align-items:center;gap:6px;flex:0 0 auto;color:var(--dim);font-size:10px;font-weight:750;white-space:nowrap;}
+#raiseAmountInput{box-sizing:border-box;width:86px;height:32px;border:1px solid var(--line);border-radius:7px;background:#10141b;color:var(--text);padding:5px 7px;font-size:13px;font-weight:750;font-variant-numeric:tabular-nums;text-align:right;}
+#raiseAmountInput[aria-invalid="true"]{border-color:#e2574c;color:#ffaaa3;}
 #raiseBtn{font-variant-numeric:tabular-nums;}
 #raiseBtn .act-label,#raiseBtn .act-amount{display:inline;}
 #raiseBtn .act-label{margin-right:.25em;}
@@ -948,6 +951,7 @@ body.lls #raiseBtn .act-label{font-size:12px;margin-right:0;}
 body.lls #raiseBtn .act-amount{font-size:13px;}
 body.lls #raiseCtl{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;flex-basis:100%;}
 body.lls #raiseCtl .preset{flex:none;padding:8px 11px;font-size:12px;}
+body.lls #raiseAmountWrap{flex:none;}
 body.lls #raiseSlider{flex:1 1 140px;min-width:120px;height:26px;}
 body.lls #chipPreview{display:none!important;}
 
@@ -1028,6 +1032,8 @@ body.act-panel-mode #humanCtls #coachToggle{width:100%;}
 body.act-panel-mode #humanCtls #foldBtn,body.act-panel-mode #humanCtls #callBtn,body.act-panel-mode #raiseBtn{width:100%;flex:none;padding:12px 8px;font-size:14px;}
 body.act-panel-mode #raiseCtl{flex-direction:column;width:100%;gap:6px;flex-basis:auto;}
 body.act-panel-mode #raiseCtl .preset{width:100%;flex:none;padding:9px 6px;font-size:11.5px;}
+body.act-panel-mode #raiseAmountWrap{width:100%;}
+body.act-panel-mode #raiseAmountInput{flex:1;width:auto;}
 body.act-panel-mode #raiseSlider{width:100%;min-width:0;height:26px;}
 body.act-panel-mode #waitMsg{font-size:11px;width:100%;text-align:center;}
 body.act-panel-mode #chipPreview{display:none!important;}
@@ -1059,6 +1065,9 @@ body.fl #humanCtls.hidden{display:none;}
 body.fl #humanCtls #foldBtn,body.fl #humanCtls #callBtn,body.fl #humanCtls #raiseBtn{flex:0 1 auto;min-width:56px;padding:8px 7px;font-size:13px;white-space:normal;line-height:1.08;}
 body.fl #raiseCtl{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;flex:1 1 auto;min-width:0;}
 body.fl #raiseCtl .preset{flex:0 0 auto;padding:6px 6px;font-size:10.5px;}
+body.fl #raiseAmountWrap{flex:0 0 64px;}
+body.fl #raiseAmountLbl{display:none;}
+body.fl #raiseAmountInput{width:64px;height:30px;padding:4px 5px;font-size:11.5px;}
 body.fl #raiseSlider{flex:1 1 64px;min-width:54px;height:24px;}
 body.fl #raiseBtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:92px;max-width:112px;overflow-wrap:anywhere;}
 body.fl #raiseBtn .act-label{font-size:11.5px;margin-right:0;}
@@ -1154,6 +1163,8 @@ body.fl #chipPreview{display:none!important;}
   body:not(.act-panel-mode):not(.fl):not(.lls) #humanCtls #callBtn{flex:1;padding:15px 8px;font-size:15px;}
   body:not(.act-panel-mode):not(.fl):not(.lls) #raiseCtl{flex-basis:100%;gap:7px;}
   body:not(.act-panel-mode):not(.fl):not(.lls) #raiseCtl .preset{flex:1;padding:9px 4px;font-size:11.5px;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #raiseAmountWrap{flex:1 1 110px;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #raiseAmountInput{flex:1;width:auto;}
   body:not(.act-panel-mode):not(.fl):not(.lls) #raiseSlider{flex-basis:100%;min-width:0;height:30px;}
   body:not(.act-panel-mode):not(.fl):not(.lls) #raiseBtn{flex:1;padding:14px 8px;}
   body:not(.act-panel-mode):not(.fl):not(.lls) #waitMsg{font-size:12px;flex-basis:100%;}
@@ -1412,6 +1423,7 @@ body.fl #chipPreview{display:none!important;}
         <button class="preset" id="prHalf">&frac12; Pot</button>
         <button class="preset" id="prPot">Pot</button>
         <button class="preset" id="prMax">All-in</button>
+        <label id="raiseAmountWrap"><span id="raiseAmountLbl">Exact</span><input type="number" id="raiseAmountInput" min="0" step="1" inputmode="numeric" autocomplete="off" aria-label="Exact raise-to amount in chips"></label>
         <input type="range" id="raiseSlider">
         <div id="chipPreview" style="display:flex;align-items:flex-end;min-width:54px;max-height:46px;"></div>
         <button class="btn" id="raiseBtn">Raise</button>

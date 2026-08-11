@@ -74,7 +74,10 @@ function later(fn,ms){ if(BENCH){queueMicrotask(fn);} else setTimeout(fn,ms); }
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const fmt=n=>n.toLocaleString('en-US');
 /* money display: 100 BB = $2,000 -> 1 BB (100 chips) = $20 -> 1 chip = $0.20 */
-const usd=n=>'$'+fmt(Math.round(n/5));
+const DISPLAY_AMOUNT_DIVISOR=5;
+const displayAmount=n=>Math.round(Number(n)/DISPLAY_AMOUNT_DIVISOR);
+const engineAmount=n=>Math.round(Number(n)*DISPLAY_AMOUNT_DIVISOR);
+const usd=n=>'$'+fmt(displayAmount(n));
 /* Table amounts are always expressed in the current live big blind. */
 function bbs(n){const v=n/state.bb;return (v>=20?Math.round(v):Math.round(v*10)/10)+' BB';}
 const money=n=>usd(n)+' · '+bbs(n);
