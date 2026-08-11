@@ -3097,6 +3097,14 @@ function setActionAmountButton(btn,label,amount){
   btn.append(lab,amt);
   btn.setAttribute('aria-label',text);
 }
+function defaultRaiseTarget(p,minTarget,maxTarget){
+  if(state.stage!=='preflop'||typeof coachPreflopRaiseSizing!=='function')return minTarget;
+  const order=typeof postflopOrder==='function'?postflopOrder().filter(q=>q===p||!q.allIn):[];
+  const actsLast=order.length>1&&order.indexOf(p)===order.length-1;
+  const target=coachPreflopRaiseSizing(p,actsLast).target;
+  const rounded=Math.round(target/Math.max(state.sb,1))*Math.max(state.sb,1);
+  return clamp(rounded,minTarget,maxTarget);
+}
 
 /* ---------- human actions ---------- */
 function showActions(p){
@@ -3114,7 +3122,8 @@ function showActions(p){
   if(canRaise){
     const sl=$('raiseSlider');
     clearRaiseExact();
-    sl.min=minTarget; sl.max=maxTarget; sl.step=state.sb; sl.value=minTarget;
+    sl.min=minTarget; sl.max=maxTarget; sl.step=state.sb;
+    sl.value=defaultRaiseTarget(p,minTarget,maxTarget);
     updateRaiseLabel();
   }
   try{ updateCoach(p); }catch(err){ $('coachBody').innerHTML=`<div class="waiting">${C('coachErr')}</div>`; }

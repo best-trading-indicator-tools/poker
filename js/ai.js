@@ -329,8 +329,8 @@ function rangeExpectedPreflopTarget(p,ctx,raiseOrdinal){
   const callers=Math.max(0,ctx.callersAtLevel||0),limpers=Math.max(0,ctx.limpersBefore||0);
   let target;
   if(raiseOrdinal<=1){
-    const early=/^(UTG|UTG\+1|MP)/.test(p.pos||'');
-    target=bb*(early?2.5:2.25)+limpers*bb;
+    const openBB=typeof defaultPreflopOpenBB==='function'?defaultPreflopOpenBB(limpers):4+limpers;
+    target=bb*openBB;
   }else if(raiseOrdinal===2){
     target=current*(oop?3.8:3.25)+callers*current*0.65;
   }else if(raiseOrdinal===3){
