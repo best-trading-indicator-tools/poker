@@ -1,9 +1,9 @@
 /* offline support: network-first with full cache fallback */
-const CACHE='sg-poker-v86';
-const ASSETS=['/','/poker.html','/charts.js','/manifest.json','/docs/icon.svg',
-  '/js/eval.js','/js/preflop-blueprint.js','/js/modes/registry.js','/js/modes/tournament.js','/js/modes/cash.js',
-  '/js/engine.js','/js/rewards.js','/js/solver.js','/js/coach.js','/js/ai.js','/js/mp.js','/js/ui.js',
-  '/vendor/wasm-postflop/comlink.js','/vendor/wasm-postflop/worker.js',
+const CACHE='sg-poker-v87';
+const ASSETS=['/','/poker.html','/charts.js?v=87','/manifest.json','/docs/icon.svg',
+  '/js/eval.js?v=87','/js/preflop-blueprint.js?v=87','/js/modes/registry.js?v=87','/js/modes/tournament.js?v=87','/js/modes/cash.js?v=87',
+  '/js/engine.js?v=87','/js/rewards.js?v=87','/js/solver.js?v=87','/js/coach.js?v=87','/js/ai.js?v=87','/js/mp.js?v=87','/js/ui.js?v=87',
+  '/vendor/wasm-postflop/comlink.js?v=87','/vendor/wasm-postflop/worker.js',
   '/vendor/wasm-postflop/7a023623e45ca364f00b.js','/vendor/wasm-postflop/solver-st.wasm'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));

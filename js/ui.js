@@ -3985,9 +3985,12 @@ function initUI(){
   applyRewardCosmetics();
   renderRewardTop();
   /* --- resume saved tournament --- */
-  const refreshResume=()=>{
-    let sv=null; try{sv=JSON.parse(localStorage.getItem('sg_poker_resume'));}catch(e){}
-    const valid=!!(sv&&sv.cfg&&Array.isArray(sv.players)&&sv.players.length>=2);
+  const refreshResume=(provided=null,checkBackup=true)=>{
+    let sv=provided;
+    if(!sv&&typeof localResumeSnapshot==='function')sv=localResumeSnapshot();
+    else if(!sv)try{sv=JSON.parse(localStorage.getItem('sg_poker_resume'));}catch(e){}
+    const valid=typeof validResumeSnapshot==='function'?validResumeSnapshot(sv)
+      :!!(sv&&sv.cfg&&Array.isArray(sv.players)&&sv.players.length>=2);
     /* A saved cash game must remain resumable even when the setup screen opens
        on its default Sit & Go tab (and vice versa). The resume handler already
        restores the saved mode and settings before rebuilding the table. */
@@ -3997,6 +4000,11 @@ function initUI(){
     let nGames=0; try{nGames=loadGames().length;}catch(e){}
     $('reviewBtn').classList.toggle('hidden',!nHist&&!nGames);
     $('aiReviewSetupBtn').classList.toggle('hidden',!aiReviewSavedHands().length);
+    if(checkBackup&&typeof loadResumeSnapshot==='function'){
+      loadResumeSnapshot().then(backup=>{
+        if(backup&&(!valid||(backup.t||0)>(sv?.t||0)))refreshResume(backup,false);
+      }).catch(()=>{});
+    }
     return valid?sv:null;
   };
   refreshResume();
@@ -4059,6 +4067,7 @@ function initUI(){
       localStorage.removeItem(IMPROVEMENT_STORE);
       localStorage.removeItem('sg_poker_human_model_v1');
     }catch(e){}
+    clearResume();
     Object.assign(lifeStats,{hands:0,won:0,net:0,biggest:0,decisions:0,followed:0});
     if(state&&typeof aiHumanModelDefault==='function')state.humanModel=aiHumanModelDefault();
     applyRewardCosmetics();
@@ -4069,8 +4078,9 @@ function initUI(){
     lbl.textContent=T('resetDone');
     setTimeout(()=>{lbl.textContent=T('resetData');},1600);
   };
-  $('resumeBtn').onclick=()=>{
-    const sv=refreshResume(); if(!sv)return;
+  $('resumeBtn').onclick=async()=>{
+    let sv=typeof loadResumeSnapshot==='function'?await loadResumeSnapshot():refreshResume();
+    if(!sv)return;
     setupGameType=sv.cfg?.gameType||'sng';
     updateSetupMode(setupGameType);
     applyResumeSnapshot(sv);

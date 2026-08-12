@@ -1595,24 +1595,27 @@ body.fl #chipPreview{display:none!important;}
   </div>
 </div>
 
-<script src="charts.js"></script>
-  <script src="js/eval.js"></script>
-  <script src="js/preflop-blueprint.js"></script>
-  <script src="js/modes/registry.js"></script>
-  <script src="js/modes/tournament.js"></script>
-  <script src="js/modes/cash.js"></script>
-  <script src="js/engine.js"></script>
-  <script src="js/rewards.js"></script>
-  <script src="vendor/wasm-postflop/comlink.js"></script>
-  <script src="js/solver.js"></script>
-  <script src="js/coach.js"></script>
-  <script src="js/ai.js"></script>
-  <script src="js/mp.js"></script>
-  <script src="js/ui.js"></script>
+<script src="charts.js?v=87"></script>
+  <script src="js/eval.js?v=87"></script>
+  <script src="js/preflop-blueprint.js?v=87"></script>
+  <script src="js/modes/registry.js?v=87"></script>
+  <script src="js/modes/tournament.js?v=87"></script>
+  <script src="js/modes/cash.js?v=87"></script>
+  <script src="js/engine.js?v=87"></script>
+  <script src="js/rewards.js?v=87"></script>
+  <script src="vendor/wasm-postflop/comlink.js?v=87"></script>
+  <script src="js/solver.js?v=87"></script>
+  <script src="js/coach.js?v=87"></script>
+  <script src="js/ai.js?v=87"></script>
+  <script src="js/mp.js?v=87"></script>
+  <script src="js/ui.js?v=87"></script>
 <script>
 /* ---------- offline mode (PWA): cache the game so it runs with no internet ---------- */
 if(HAS_DOM && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
-  try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
+  try{
+    navigator.serviceWorker.register('sw.js',{updateViaCache:'none'})
+      .then(registration=>registration.update()).catch(()=>{});
+  }catch(e){}
 }
 
 /* ---------- exports for node testing ---------- */

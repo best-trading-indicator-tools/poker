@@ -948,12 +948,95 @@ function compactResumeDecision(decision){
   delete compact.rangeSnapshots;
   return compact;
 }
+const RESUME_STORAGE_KEY='sg_poker_resume';
+const RESUME_DB_NAME='sg-poker-resume';
+const RESUME_DB_STORE='snapshots';
+let resumeSnapshotMemory=null;
+function validResumeSnapshot(sv){
+  return !!(sv&&sv.cfg&&Array.isArray(sv.players)&&sv.players.length>=2);
+}
+function localResumeSnapshot(){
+  try{
+    const sv=JSON.parse(localStorage.getItem(RESUME_STORAGE_KEY)||'null');
+    if(validResumeSnapshot(sv)){resumeSnapshotMemory=sv;return sv;}
+  }catch(e){}
+  return validResumeSnapshot(resumeSnapshotMemory)?resumeSnapshotMemory:null;
+}
+function openResumeDb(){
+  if(!HAS_DOM||typeof indexedDB==='undefined')return Promise.resolve(null);
+  return new Promise(resolve=>{
+    let request;
+    try{request=indexedDB.open(RESUME_DB_NAME,1);}catch(e){resolve(null);return;}
+    request.onupgradeneeded=()=>{
+      const db=request.result;
+      if(!db.objectStoreNames.contains(RESUME_DB_STORE))db.createObjectStore(RESUME_DB_STORE);
+    };
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>resolve(null);
+    request.onblocked=()=>resolve(null);
+  });
+}
+async function backupResumeSnapshot(serialized){
+  const db=await openResumeDb();
+  if(!db)return false;
+  return new Promise(resolve=>{
+    let tx;
+    try{
+      tx=db.transaction(RESUME_DB_STORE,'readwrite');
+      tx.objectStore(RESUME_DB_STORE).put(serialized,'current');
+    }catch(e){db.close();resolve(false);return;}
+    tx.oncomplete=()=>{db.close();resolve(true);};
+    tx.onerror=tx.onabort=()=>{db.close();resolve(false);};
+  });
+}
+async function backupResumeSnapshotRead(){
+  const db=await openResumeDb();
+  if(!db)return null;
+  return new Promise(resolve=>{
+    let request;
+    try{request=db.transaction(RESUME_DB_STORE,'readonly').objectStore(RESUME_DB_STORE).get('current');}
+    catch(e){db.close();resolve(null);return;}
+    request.onsuccess=()=>{
+      db.close();
+      try{
+        const sv=JSON.parse(request.result||'null');
+        if(validResumeSnapshot(sv))resumeSnapshotMemory=sv;
+        resolve(validResumeSnapshot(sv)?sv:null);
+      }catch(e){resolve(null);}
+    };
+    request.onerror=()=>{db.close();resolve(null);};
+  });
+}
+async function backupResumeSnapshotClear(){
+  const db=await openResumeDb();
+  if(!db)return;
+  try{
+    const tx=db.transaction(RESUME_DB_STORE,'readwrite');
+    tx.objectStore(RESUME_DB_STORE).delete('current');
+    tx.oncomplete=tx.onerror=tx.onabort=()=>db.close();
+  }catch(e){db.close();}
+}
+async function loadResumeSnapshot(){
+  const local=localResumeSnapshot();
+  const backup=await backupResumeSnapshotRead();
+  const best=backup&&(!local||(backup.t||0)>(local.t||0))?backup:local;
+  if(best===backup&&backup)writeResumeSnapshot(backup);
+  return best||null;
+}
 function writeResumeSnapshot(snap){
+  if(validResumeSnapshot(snap))resumeSnapshotMemory=snap;
   const serialized=JSON.stringify(snap);
-  try{localStorage.setItem('sg_poker_resume',serialized);return true;}catch(e){}
+  try{localStorage.setItem(RESUME_STORAGE_KEY,serialized);return true;}catch(e){}
+  /* Solver results are a rebuildable cache and may occupy most of the browser's
+     small localStorage quota. Resume state takes priority over that cache. */
+  try{
+    localStorage.removeItem('sg_solver_cache_v3');
+    localStorage.setItem(RESUME_STORAGE_KEY,serialized);
+    return true;
+  }catch(e){}
   /* Resume is more valuable than an unlimited replay archive. If this origin is
      at quota, discard only the oldest archive entries and retry after each cut. */
-  const stores=[['sg_poker_history',300],['sg_poker_ai_review_history_v1',10]];
+  const stores=[['sg_poker_history',100],['sg_poker_ai_review_history_v1',5],['sg_poker_games',50]];
   for(const [key,minimum] of stores){
     try{
       let entries=JSON.parse(localStorage.getItem(key)||'[]');
@@ -961,7 +1044,7 @@ function writeResumeSnapshot(snap){
       while(entries.length>minimum){
         entries=entries.slice(-Math.max(minimum,Math.floor(entries.length*.7)));
         localStorage.setItem(key,JSON.stringify(entries));
-        try{localStorage.setItem('sg_poker_resume',serialized);return true;}catch(e){}
+        try{localStorage.setItem(RESUME_STORAGE_KEY,serialized);return true;}catch(e){}
       }
     }catch(e){}
   }
@@ -1009,7 +1092,11 @@ function saveResume(){
         }))
       };
     }
+    const serialized=JSON.stringify(snap);
     writeResumeSnapshot(snap);
+    /* IndexedDB has a separate, much larger quota. Keep a second copy so a
+       full localStorage cannot silently remove the resume button. */
+    backupResumeSnapshot(serialized);
   }catch(e){}
 }
 function restoreMidHand(mh){
@@ -1094,5 +1181,9 @@ function applyResumeSnapshot(sv){
   if(sv.midHand) restoreMidHand(sv.midHand);
   else setTimeout(startHand,400);
 }
-function clearResume(){try{localStorage.removeItem('sg_poker_resume');}catch(e){}}
+function clearResume(){
+  resumeSnapshotMemory=null;
+  try{localStorage.removeItem(RESUME_STORAGE_KEY);}catch(e){}
+  backupResumeSnapshotClear();
+}
 let coachRecNow=null,lastHand=null,gameSeries=[];
