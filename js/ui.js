@@ -50,8 +50,9 @@ practicePot:"Pot",practiceToCall:"To call",practiceOpponents:"Opponents",
 practiceCorrect:"Correct — this matches the coach's recommendation.",practiceWrong:r=>`Not this time. The coach recommends ${r}.`,
 practiceDone:(s,t)=>`Practice complete: ${s}/${t} decisions matched the coach. These are real saved spots from your sessions.`,
 confidenceTitle:(source,level)=>`${source} · ${level} confidence`,confidenceHigh:"High",confidenceMedium:"Medium",confidenceLimited:"Limited",
-confidenceChart:"Preflop chart",confidenceMath:"Exact pot math + equity simulation",confidenceHeuristic:"Range heuristic",confidenceSolver:"Postflop range solver",
+confidenceChart:"Preflop chart",confidenceAdjustedChart:"Adjusted preflop chart",confidenceMath:"Exact pot math + equity simulation",confidenceHeuristic:"Range heuristic",confidenceSolver:"Postflop range solver",
 confidenceChartNote:"Uses the position and stack-depth chart for this preflop spot.",
+confidenceAdjustedChartNote:"The open size is outside the bundled chart tree, so the chart is adjusted with pot price, position and equity-realization estimates.",
 confidenceMathNote:"Pot odds are exact; equity and future action use simulations and estimated opponent ranges.",
 confidenceHeuristicNote:"Multiway ranges and future actions require broader assumptions, so treat the recommendation as directional.",
 confidenceSolverNote:"Uses a converged CFR equilibrium with personality-free preflop baseline ranges propagated through the exact covered line and runout. The preflop policy and discrete sizes remain abstractions, not universal GTO.",
@@ -91,7 +92,7 @@ scReasonCheck:e=>`Checking keeps the pot controlled with about ${e}% equity and 
 scUnopened:"Unopened",scLimp:"Limp",scRaise:"Raise",scThreeBet:"3-bet",scCbet:"C-bet",scCheckRaise:"Check-raise",scAllin:"All-in",
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
 resetData:"Clear saved data",resetInfo:"Deletes lifetime stats, hand history, session reviews, saved scenarios and any unfinished game you could resume. Your Rewards level, XP, unlocks, equipped cosmetics and language choice are kept. This can't be undone.",resetConfirm:"Delete all stats, hand history, session reviews, saved scenarios and unfinished games? Rewards level and progress will be kept.",resetDone:"✓ Cleared",
-level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Quit this tournament?",quitCash:"Leave the table?",
+level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Leave the table? Your tournament will be saved so you can resume it.",quitCash:"Leave the table?",
 fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",raiseExact:"Exact",raiseExactHelp:"Enter the exact legal raise-to amount in chips",
 actMenu:"◀ Menu",actTurn:"◀ Your turn",
 log:"Log",lastHand:"Last hand",exportH:"Export history",exportCoach:"AI review (.txt)",exportCoachTitle:"Download up to 20 hands from the current game with AI coach metadata as text",adminTitle:"🛠 Admin tools",adminSub:"Internal AI coach diagnostics. Hidden from players.",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",coachScrollMore:"Scroll for more",
@@ -213,8 +214,9 @@ practicePot:"Pot",practiceToCall:"À payer",practiceOpponents:"Adversaires",
 practiceCorrect:"Correct — votre décision correspond à celle du coach.",practiceWrong:r=>`Pas cette fois. Le coach recommande ${r}.`,
 practiceDone:(s,t)=>`Entraînement terminé : ${s}/${t} décisions correspondent au coach. Ce sont de vrais spots sauvegardés de vos sessions.`,
 confidenceTitle:(source,level)=>`${source} · confiance ${level}`,confidenceHigh:"élevée",confidenceMedium:"moyenne",confidenceLimited:"limitée",
-confidenceChart:"Charte préflop",confidenceMath:"Calcul du pot exact + simulation d'équité",confidenceHeuristic:"Heuristique de ranges",confidenceSolver:"Solveur de ranges post-flop",
+confidenceChart:"Charte préflop",confidenceAdjustedChart:"Charte préflop ajustée",confidenceMath:"Calcul du pot exact + simulation d'équité",confidenceHeuristic:"Heuristique de ranges",confidenceSolver:"Solveur de ranges post-flop",
 confidenceChartNote:"Utilise la charte de position et de profondeur pour ce spot préflop.",
+confidenceAdjustedChartNote:"La taille d'ouverture sort de l'arbre de la charte embarquée ; celle-ci est donc ajustée avec le prix du pot, la position et une estimation de réalisation d'équité.",
 confidenceMathNote:"Les cotes du pot sont exactes ; l'équité et l'action future utilisent des simulations et des ranges adverses estimées.",
 confidenceHeuristicNote:"Les ranges multiway et les actions futures demandent plus d'hypothèses : considérez ce conseil comme directionnel.",
 confidenceSolverNote:"Utilise un équilibre CFR convergé avec des ranges préflop baseline indépendantes des profils, propagées dans la ligne et le runout exacts couverts. La politique préflop et les sizings discrets restent des abstractions, pas du GTO universel.",
@@ -254,7 +256,7 @@ scReasonCheck:e=>`Checker contrôle le pot avec environ ${e} % d'équité et ne 
 scUnopened:"Non ouvert",scLimp:"Limp",scRaise:"Relance",scThreeBet:"3-bet",scCbet:"C-bet",scCheckRaise:"Check-raise",scAllin:"Tapis",
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
 resetData:"Effacer les données sauvegardées",resetInfo:"Supprime les statistiques globales, l’historique des mains, les bilans, les scénarios sauvegardés et toute partie en cours à reprendre. Votre niveau Rewards, XP, éléments débloqués, cosmétiques équipés et choix de langue sont conservés. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l’historique, les bilans, les scénarios et les parties en cours ? Le niveau et la progression Rewards seront conservés.",resetDone:"✓ Effacé",
-level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter ce tournoi ?",quitCash:"Quitter la table ?",
+level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter la table ? Le tournoi sera sauvegardé pour pouvoir le reprendre.",quitCash:"Quitter la table ?",
 fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",raiseExact:"Exact",raiseExactHelp:"Saisissez le montant total exact et légal de la relance en jetons",
 actMenu:"◀ Menu",actTurn:"◀ À vous",
 log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",exportCoach:"Revue IA (.txt)",exportCoachTitle:"Télécharger jusqu'à 20 mains de la partie actuelle avec les métadonnées du coach IA",adminTitle:"🛠 Outils administrateur",adminSub:"Diagnostics internes du coach IA. Masqués pour les joueurs.",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",coachScrollMore:"Faites défiler pour voir la suite",
@@ -376,8 +378,9 @@ practicePot:"Bote",practiceToCall:"A pagar",practiceOpponents:"Rivales",
 practiceCorrect:"Correcto: coincide con la recomendación del coach.",practiceWrong:r=>`Esta vez no. El coach recomienda ${r}.`,
 practiceDone:(s,t)=>`Práctica terminada: ${s}/${t} decisiones coincidieron con el coach. Son situaciones reales guardadas de tus sesiones.`,
 confidenceTitle:(source,level)=>`${source} · confianza ${level}`,confidenceHigh:"alta",confidenceMedium:"media",confidenceLimited:"limitada",
-confidenceChart:"Tabla preflop",confidenceMath:"Cálculo exacto del bote + simulación de equity",confidenceHeuristic:"Heurística de rangos",confidenceSolver:"Solver de rangos postflop",
+confidenceChart:"Tabla preflop",confidenceAdjustedChart:"Tabla preflop ajustada",confidenceMath:"Cálculo exacto del bote + simulación de equity",confidenceHeuristic:"Heurística de rangos",confidenceSolver:"Solver de rangos postflop",
 confidenceChartNote:"Usa la tabla de posición y profundidad para esta situación preflop.",
+confidenceAdjustedChartNote:"El tamaño de apertura queda fuera del árbol de la tabla incluida, así que se ajusta con el precio del bote, la posición y estimaciones de realización de equity.",
 confidenceMathNote:"Las odds del bote son exactas; la equity y la acción futura usan simulaciones y rangos rivales estimados.",
 confidenceHeuristicNote:"Los rangos multiway y las acciones futuras requieren más supuestos; interpreta el consejo como direccional.",
 confidenceSolverNote:"Usa un equilibrio CFR convergido con rangos preflop base independientes de la personalidad, propagados por la línea y el runout exactos cubiertos. La política preflop y los tamaños discretos siguen siendo abstracciones, no GTO universal.",
@@ -417,7 +420,7 @@ scReasonCheck:e=>`Pasar controla el bote con cerca del ${e} % de equity y no cue
 scUnopened:"Sin abrir",scLimp:"Limp",scRaise:"Subida",scThreeBet:"3-bet",scCbet:"C-bet",scCheckRaise:"Check-raise",scAllin:"All-in",
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
 resetData:"Borrar datos guardados",resetInfo:"Elimina estadísticas globales, historial de manos, resúmenes, situaciones guardadas y cualquier partida sin terminar. Se conservan tu nivel Rewards, XP, desbloqueos, cosméticos equipados e idioma. No se puede deshacer.",resetConfirm:"¿Borrar estadísticas, historial, resúmenes, situaciones y partidas sin terminar? El nivel y progreso Rewards se conservarán.",resetDone:"✓ Borrado",
-level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Salir de este torneo?",quitCash:"¿Dejar la mesa?",
+level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Dejar la mesa? El torneo se guardará para que puedas reanudarlo.",quitCash:"¿Dejar la mesa?",
 fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",raiseExact:"Exacto",raiseExactHelp:"Introduce la cantidad total exacta y legal de la subida en fichas",
 actMenu:"◀ Menú",actTurn:"◀ Tu turno",
 log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",exportCoach:"Revisión IA (.txt)",exportCoachTitle:"Descargar hasta 20 manos de la partida actual con metadatos del coach IA",adminTitle:"🛠 Herramientas de administrador",adminSub:"Diagnósticos internos del coach IA. Ocultos para los jugadores.",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",coachScrollMore:"Desplázate para ver más",
@@ -2601,6 +2604,13 @@ function coachConfidence(R){
     kind:'solver',source:T('confidenceSolver'),level:T('confidenceMedium'),note:T('confidenceSolverNote'),icon:'⚖'
   };
   const preflop=state.stage==='preflop';
+  const chartOpenBB=R.preflopCallInfo?.openBB;
+  const adjustedChart=preflop&&R.chartInfo&&R.chartInfo.kind!=='range'&&
+    R.strategyMode!=='exploit'&&Number.isFinite(chartOpenBB)&&(chartOpenBB<2||chartOpenBB>3);
+  if(adjustedChart)return{
+    kind:'chart-adjusted',source:T('confidenceAdjustedChart'),level:T('confidenceMedium'),
+    note:T('confidenceAdjustedChartNote'),icon:'≈'
+  };
   const chart=preflop&&R.chartInfo&&R.chartInfo.kind!=='range'&&R.strategyMode!=='exploit';
   if(chart)return{
     kind:'chart',source:T('confidenceChart'),level:T('confidenceHigh'),note:T('confidenceChartNote'),icon:'▦'
@@ -4188,7 +4198,12 @@ function initUI(){
         refreshResume(); updateOrient();
         return;
       }
-      state.gameOver=true; clearResume(); hideNextBtn(); hideActions();
+      /* Leaving the solo tournament is a pause, not an abandonment. Save the
+         exact current hand first, then use gameOver only to stop pending bot
+         timers while the setup screen is visible. Applying the snapshot builds
+         a fresh active state, so the player can resume normally. */
+      saveResume();
+      state.gameOver=true; hideNextBtn(); hideActions();
       restoreSetupFromGame();
       $('game').classList.add('hidden'); $('setup').classList.remove('hidden');
       refreshResume(); updateOrient();

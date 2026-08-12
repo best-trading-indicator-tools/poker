@@ -1562,17 +1562,23 @@ function shoveChartKey(stackBB){
   if(stackBB<=22) return '20';
   return '10';
 }
-/* per-raiser-position 3-bet/call matrix, falling back to EP/LP buckets */
-function facingChartFor(raiser){
-  const rp=raiser&&raiser.pos;
+/* per-raiser-position 3-bet/call matrix, falling back to EP/LP buckets.
+   A compressed early-seat label must be resolved exactly as it is for RFI:
+   at a 7-handed table, for example, UTG+1 has five players behind and is the
+   strategic equivalent of 9-max MP+1, not full-ring UTG+1. */
+function facingChartFor(raiser,tableSize){
+  const rawPos=raiser&&raiser.pos;
+  const rp=fullRingChartPosition(rawPos,tableSize);
   if(rp){
     const direct=chartFor('facing',rp);
-    if(direct&&direct.raise&&direct.call) return {fc:direct,label:rp,perPos:true};
+    if(direct&&direct.raise&&direct.call) return {
+      fc:direct,label:rp,rawLabel:rawPos,perPos:true,shifted:rp!==rawPos,tableSize
+    };
   }
-  const vsEarlyR=raiser?/^(UTG|MP)/.test(raiser.pos||''):false;
+  const vsEarlyR=/^(UTG|MP)/.test(rp||rawPos||'');
   const key=vsEarlyR?'vsEarly':'vsLate';
   const fc=chartFor('facing',key);
-  return fc&&fc.raise&&fc.call?{fc,label:key,perPos:false}:null;
+  return fc&&fc.raise&&fc.call?{fc,label:key,rawLabel:rawPos,perPos:false,shifted:false,tableSize}:null;
 }
 /* BB defense vs CO/BTN/SB steals — wider than generic facing charts */
 function bbDefendChartFor(raiser,heroPos){
@@ -1642,7 +1648,7 @@ function coachPreflopSqueezeRisk(q,raiser,openBB,callers,difficulty){
     aggression=clamp(learned?.raise||1,.72,1.45);
   }
   let risk=base*aggression;
-  const openerPos=raiser?.pos||'';
+  const openerPos=fullRingChartPosition(raiser?.pos||'',alive().length);
   if(/^(CO|BTN|SB|SB\/BTN)$/.test(openerPos))risk*=1.18;
   else if(/^(UTG|UTG\+1|MP|MP\+1)$/.test(openerPos))risk*=.76;
   if(/^(SB|BB)$/.test(q.pos||''))risk+=.012;
@@ -1663,6 +1669,7 @@ function coachShortAllInValueRange(shoveBB,icmPrem){
 }
 function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,icmPrem,diffCallPad,difficulty){
   const bb=Math.max(state.bb,1),shape=coachPreflopHandShape(p.hole);
+  const strategicRaiserPos=fullRingChartPosition(raiser?.pos||'',alive().length);
   const heroTotal=p.chips+p.bet,villainTotal=raiser?raiser.chips+raiser.bet:heroTotal;
   const effBB=Math.min(heroTotal,villainTotal)/bb;
   const openBB=state.currentBet/bb;
@@ -1735,7 +1742,7 @@ function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,i
     policy=rangePreflopActionPolicy(p,{
       stage:'preflop',callAmt,cbBefore:state.currentBet,playerBetBefore:p.bet,potBefore:pot,
       raisesBefore:1,preflopRaisesBefore:1,facedRaiseSize:state.lastRaiseSize||state.bb,
-      lastAggPos:raiser?.pos||'',lastAggStyle:raiser?.style?.id||'',bb:state.bb,sb:state.sb,
+      lastAggPos:strategicRaiserPos,lastAggStyle:raiser?.style?.id||'',bb:state.bb,sb:state.sb,
       stackTotalBefore:heroTotal,effectiveStackBB:effBB,position:p.pos||'',
       icmPressure:clamp(icmPrem/.11,0,1),callersAtLevel:callers,limpersBefore:0,
       activePlayers:inHand().length
@@ -2321,7 +2328,7 @@ function coachDecide(p){
       const shortCt=clamp(shortCtBase*tableSizeFacingFactor(aliveN,pos),0.06,aliveN<=2?0.45:aliveN===3?0.36:aliveN===4?0.30:0.25);
       if(aliveN<=4&&shortCt>shortCtBase*1.08) extra.push(C('tableSizeNote',aliveN,Math.round(shortCtBase*100),Math.round(shortCt*100)));
       let facing=pos==='BB'?bbDefendChartFor(raiser,pos):null;
-      if(!facing) facing=facingChartFor(raiser);
+      if(!facing) facing=facingChartFor(raiser,aliveN);
       const domCall=stackDominance(p);
       const diffCallPad=difficultyApplies?coachDifficultyCallPad(difficulty):0;
       if(!facingReraise&&callAmt>0){
@@ -2408,8 +2415,9 @@ function coachDecide(p){
           why.push(C('fourBetFold',code,usd(state.currentBet),bbs(state.currentBet),Math.round(four.effectiveBB),four.tight||four.large));
         }
       }else if(facing){
-        const {fc,label,perPos,bbDefend}=facing;
-        chartInfo={kind:bbDefend?'bbDefend':'facing',pos:bbDefend?`BB vs ${label}`:(perPos?`vs ${label}`:label),list:fc.raise,list2:fc.call};
+        const {fc,label,rawLabel,perPos,bbDefend,shifted,tableSize}=facing;
+        const mappedLabel=shifted?`${rawLabel} · ${tableSize}-handed → ${label}`:label;
+        chartInfo={kind:bbDefend?'bbDefend':'facing',pos:bbDefend?`BB vs ${mappedLabel}`:(perPos?`vs ${mappedLabel}`:mappedLabel),list:fc.raise,list2:fc.call};
         if(bbDefend){
           if(fc.raise.includes(code)){
             rec='RAISE';
@@ -2437,7 +2445,8 @@ function coachDecide(p){
             why.push(C('chartBbFold',code,label));
           }
         }else{
-        const vsEarlyR=raiser?/^(UTG|MP)/.test(raiser.pos||''):false;
+        const strategicRaiserPos=fullRingChartPosition(raiser?.pos||'',aliveN);
+        const vsEarlyR=/^(UTG|MP)/.test(strategicRaiserPos);
         if(fc.raise.includes(code)){
           rec='RAISE';
           why.push(squeezeEligible?C('squeezePlay',code,squeezeCallers):C('chart3bet',code,vsEarlyR));
