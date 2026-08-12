@@ -2711,6 +2711,8 @@ function updateCoach(p){
     ?T('beginnerDrySidePot')
     :openingDecision
     ?(rec==='FOLD'?T('beginnerOpenFold'):T('beginnerAgg'))
+    :(rec==='RAISE'||rec==='ALLIN')
+    ?T('beginnerAgg')
     :chartExcludedFold
     ?T('beginnerChartFold')(Math.round(eq*100),Math.round(usableEq*100),Math.round(decisionNeed*100))
     :R.concepts?.includes('broadwayFlat')

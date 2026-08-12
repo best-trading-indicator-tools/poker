@@ -69,6 +69,9 @@ callOk:(amt,pt,o,e,disc,ea,need)=>`The call costs ${amt} to win a ${pt} pot, so 
 foldAdv:(o,amt,pt,ea,resp,need)=>`The immediate price needs ${o} equity to call (${amt} into ${pt}). After position, prize pressure and realistic implied odds, the effective requirement is ~${need}, but your usable equity is only ~${ea}${resp?' once this bet size is respected':''}. Fold and wait for a better spot.`,
 impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Implied odds: the immediate price needs ${now}. With about ${hit} to hit a clean out and up to ${max} still available behind, the coach conservatively credits about ${future} of future payment; that lowers the realistic break-even price to ~${real}. The absolute best case is ${best} if every remaining chip is paid${reverse?' — but the non-nut draw also carries reverse-implied-odds risk, so that best case is not used':''}.`,
 chart3bet:(c,e)=>`${c} is in the re-raise (3-bet) chart against ${e?'an early-position raiser':'a late-position raiser'} — solver ranges re-raise these hands instead of just calling: the big pairs for value, and hands like A5s as "blocker bluffs" (your ace makes his monster hands less likely). Flat-calling would let players behind you in cheaply.`,
+shortAllInValue:(c,b,n)=>`${c} is strong enough to isolate this ${b} BB all-in for value. The all-in player cannot fold, so this is not a chart bluff: the raise charges the ${n} live player${n!==1?'s':''} behind for entering the main pot.`,
+shortAllInCall:(c,b,r,u,n,x)=>`${c} has enough equity to call this ${b} BB all-in at the offered price. Raw equity is ${r} and remains about ${u} because the main pot is guaranteed to reach showdown${n?`; the adjusted ${x} requirement still includes the risk from ${n} live player${n!==1?'s':''} behind`:''}. Call — do not turn a hand with adequate price into a 3-bet bluff against someone who cannot fold.`,
+shortAllInFold:(c,b,r,u,n,x)=>`${c} cannot profitably call this ${b} BB all-in. The all-in player cannot fold or offer future implied odds: raw equity is ${r}, about ${u} after the remaining risk, below the adjusted ${x} requirement${n?` with ${n} live player${n!==1?'s':''} still involved`:''}. Fold; the ordinary 3-bet bluff chart does not apply to an all-in.`,
 squeezePlay:(c,n)=>`${c} is a squeeze: one player raised and ${n} caller${n>1?'s have':' has'} put dead money in with a usually capped hand. Re-raise large enough to pressure both; you can win now, and this hand still has value when called.`,
 dominatedTopPair:(k,n)=>` Top pair is useful, but the ${k} kicker is vulnerable: ${n} higher kicker${n>1?'s are':' is'} still possible. Avoid turning one pair into a huge pot against strong action.`,
 madeCounterfeit:(r,n)=>` Your two pair is vulnerable to counterfeiting: ${n} remaining ${r}${n>1?'s':''} pair the high board card and can make your smaller pair stop playing. Bet for value/protection, but reassess if that card arrives.`,
@@ -233,6 +236,9 @@ callOk:(amt,pt,o,e,disc,ea,need)=>`Le call coûte ${amt} pour gagner un pot de $
 foldAdv:(o,amt,pt,ea,resp,need)=>`Le prix immédiat demande ${o} d'équité pour payer (${amt} dans ${pt}). Après la position, la pression des prix et les cotes implicites réalistes, le seuil effectif monte à ~${need}, mais votre équité utilisable n'est que de ~${ea}${resp?' une fois cette taille de mise respectée':''}. Couchez-vous et attendez un meilleur spot.`,
 impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Cotes implicites : le prix immédiat demande ${now}. Avec environ ${hit} de chances de toucher un out propre et jusqu'à ${max} encore disponible derrière, le coach crédite prudemment environ ${future} de paiement futur ; le seuil réaliste descend ainsi à ~${real}. Le meilleur cas absolu serait ${best} si tous les jetons restants étaient payés${reverse?' — mais le tirage non max comporte aussi des cotes implicites inverses, donc ce meilleur cas n\'est pas utilisé':''}.`,
 chart3bet:(c,e)=>`${c} figure dans la charte de sur-relance (3-bet) contre ${e?'un relanceur en début de parole':'un relanceur en fin de parole'} — les ranges solveur sur-relancent ces mains au lieu de suivre : les grosses paires pour la valeur, et des mains comme A5s en « bluff à blocker » (votre as rend ses monstres moins probables). Suivre laisserait entrer les joueurs derrière à bas prix.`,
+shortAllInValue:(c,b,n)=>`${c} est assez forte pour isoler ce tapis de ${b} BB pour la valeur. Le joueur à tapis ne peut pas se coucher : ce n’est donc pas un bluff de charte ; la relance fait payer cher aux ${n} joueur${n!==1?'s':''} encore actif${n!==1?'s':''} derrière l’entrée dans le pot principal.`,
+shortAllInCall:(c,b,r,u,n,x)=>`${c} a assez d’équité pour payer ce tapis de ${b} BB au prix proposé. L’équité brute est de ${r} et reste proche de ${u}, car le pot principal ira forcément à l’abattage${n?` ; le seuil ajusté de ${x} conserve le risque créé par ${n} joueur${n!==1?'s':''} encore actif${n!==1?'s':''} derrière`:''}. Payez sans transformer une main correctement cotée en bluff 3-bet contre quelqu’un qui ne peut pas folder.`,
+shortAllInFold:(c,b,r,u,n,x)=>`${c} ne peut pas payer rentablement ce tapis de ${b} BB. Le joueur à tapis ne peut ni folder ni offrir de cotes implicites futures : l’équité brute est de ${r}, environ ${u} après le risque restant, sous le seuil ajusté de ${x}${n?` avec ${n} joueur${n!==1?'s':''} encore actif${n!==1?'s':''}`:''}. Couchez-vous : la charte ordinaire de bluff 3-bet ne s’applique pas à un tapis.`,
 squeezePlay:(c,n)=>`${c} est un squeeze : un joueur a relancé et ${n} autre${n>1?'s ont':' a'} mis de l'argent mort avec une main souvent capée. Sur-relancez assez pour mettre les deux sous pression ; vous pouvez gagner tout de suite et gardez de la valeur si vous êtes payé.`,
 dominatedTopPair:(k,n)=>` La top paire est utile, mais le kicker ${k} reste vulnérable : ${n} kicker${n>1?'s supérieurs restent':' supérieur reste'} possible${n>1?'s':''}. Évitez de transformer une paire en pot énorme face à une forte action.`,
 madeCounterfeit:(r,n)=>` Vos deux paires peuvent être contrefaites : les ${n} ${r} restant${n>1?'s':''} doublent la plus haute carte du board et peuvent faire disparaître votre petite paire. Misez pour valeur/protection, puis réévaluez si cette carte tombe.`,
@@ -397,6 +403,9 @@ callOk:(amt,pt,o,e,disc,ea,need)=>`La llamada cuesta ${amt} para ganar un bote d
 foldAdv:(o,amt,pt,ea,resp,need)=>`El precio inmediato exige ${o} de equity para igualar (${amt} en ${pt}). Tras posición, presión de premios y odds implícitas realistas, el requisito efectivo es ~${need}, pero tu equity utilizable es solo ~${ea}${resp?' una vez respetado este tamaño de apuesta':''}. Retírate y espera un mejor momento.`,
 impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Odds implícitas: el precio inmediato exige ${now}. Con cerca de ${hit} de ligar un out limpio y hasta ${max} aún disponibles detrás, el coach acredita prudentemente unos ${future} de pago futuro; así, el umbral realista baja a ~${real}. El mejor caso absoluto sería ${best} si se pagaran todas las fichas restantes${reverse?' — pero el proyecto no máximo también tiene riesgo de odds implícitas inversas, así que no se usa ese mejor caso':''}.`,
 chart3bet:(c,e)=>`${c} está en la tabla de resubida (3-bet) contra ${e?'quien sube desde posición temprana':'quien sube desde posición tardía'} — los rangos de solver resuben estas manos en vez de solo igualar: las parejas grandes por valor, y manos como A5s como "farol con blocker" (tu as hace menos probables sus monstruos). Solo igualar dejaría entrar barato a los de detrás.`,
+shortAllInValue:(c,b,n)=>`${c} es lo bastante fuerte para aislar por valor este all-in de ${b} BB. El jugador all-in no puede retirarse, así que no es un farol de tabla: la subida cobra a los ${n} jugador${n!==1?'es':''} activo${n!==1?'s':''} detrás por entrar en el bote principal.`,
+shortAllInCall:(c,b,r,u,n,x)=>`${c} tiene equity suficiente para pagar este all-in de ${b} BB al precio ofrecido. La equity bruta es ${r} y se mantiene cerca de ${u} porque el bote principal llegará necesariamente al showdown${n?`; el requisito ajustado de ${x} aún incluye el riesgo de ${n} jugador${n!==1?'es':''} activo${n!==1?'s':''} detrás`:''}. Paga; no conviertas una mano con precio suficiente en un farol 3-bet contra alguien que no puede retirarse.`,
+shortAllInFold:(c,b,r,u,n,x)=>`${c} no puede pagar rentablemente este all-in de ${b} BB. El jugador all-in no puede retirarse ni ofrecer odds implícitas futuras: la equity bruta es ${r}, cerca de ${u} tras el riesgo restante, por debajo del requisito ajustado de ${x}${n?` con ${n} jugador${n!==1?'es':''} aún activo${n!==1?'s':''}`:''}. Retírate: la tabla normal de faroles 3-bet no se aplica contra un all-in.`,
 squeezePlay:(c,n)=>`${c} es un squeeze: un jugador subió y ${n} caller${n>1?'s pusieron':' puso'} dinero muerto con una mano normalmente limitada. Resube lo suficiente para presionar a ambos; puedes ganar ya y conservar valor si pagan.`,
 dominatedTopPair:(k,n)=>` La pareja máxima sirve, pero el kicker ${k} es vulnerable: todavía ${n===1?'queda':'quedan'} ${n} kicker${n>1?'s':''} superior${n>1?'es':''}. Evita convertir una pareja en un bote enorme ante acción fuerte.`,
 madeCounterfeit:(r,n)=>` Tus dobles parejas pueden quedar falsificadas: los ${n} ${r} restantes emparejan la carta alta de la mesa y pueden hacer que tu pareja pequeña deje de jugar. Apuesta por valor/protección y reevalúa si llega esa carta.`,
@@ -1645,6 +1654,13 @@ function coachPreflopSqueezeRisk(q,raiser,openBB,callers,difficulty){
   else if(difficulty==='easy')risk*=.88;
   return clamp(risk,.008,.22);
 }
+function coachShortAllInValueRange(shoveBB,icmPrem){
+  /* Bluff 3-bets have no fold equity against the all-in player. Keep isolation
+     raises value-heavy, and tighten again as the shove or tournament premium grows. */
+  if(shoveBB<=4&&icmPrem<.04)return ['AA','KK','QQ','JJ','TT','AKs','AQs','AKo'];
+  if(shoveBB<=8&&icmPrem<.04)return ['AA','KK','QQ','JJ','AKs','AQs','AKo'];
+  return ['AA','KK','QQ','AKs','AKo'];
+}
 function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,icmPrem,diffCallPad,difficulty){
   const bb=Math.max(state.bb,1),shape=coachPreflopHandShape(p.hole);
   const heroTotal=p.chips+p.bet,villainTotal=raiser?raiser.chips+raiser.bet:heroTotal;
@@ -1661,13 +1677,14 @@ function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,i
   }
   let squeezeRisk=clamp(1-noSqueeze,0,.55);
   const allInCall=callAmt>=p.chips;
-  const lockedShowdown=!!(raiser?.allIn&&!behind.length&&
+  const mainPotLocked=!!raiser?.allIn;
+  const lockedShowdown=!!(mainPotLocked&&!behind.length&&
     inHand().filter(q=>q!==p).every(q=>q.allIn));
   if(allInCall||lockedShowdown)squeezeRisk=0;
   const multiway=coachPreflopMultiwayProfile(shape,callers,effBB,openBB,odds,position);
 
   let realization=1;
-  if(!allInCall&&!lockedShowdown){
+  if(!allInCall&&!mainPotLocked){
     realization+=position>0 ? .03 : position<0 ? -.10 : -.045;
     if(shape.speculative){
       if(effBB<=22)realization-=.15;
@@ -1691,19 +1708,19 @@ function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,i
   realization=clamp(realization,.62,1.06);
 
   let impliedCredit=0;
-  if(!allInCall&&!lockedShowdown&&effBB>=45&&(shape.speculative||shape.nutPotential>=.78)){
+  if(!allInCall&&!mainPotLocked&&effBB>=45&&(shape.speculative||shape.nutPotential>=.78)){
     const deep=clamp((effBB-40)/80,0,1);
     impliedCredit=(.004+.014*deep)*(position>0 ? 1.25 : position<0 ? .55 : .82);
     if(raiser?.style?.id==='station')impliedCredit+=.003;
     if(openBB>3.5)impliedCredit*=.55;
   }
-  impliedCredit+=multiway.impliedCredit;
+  if(!mainPotLocked)impliedCredit+=multiway.impliedCredit;
   let reversePenalty=multiway.reverseImpliedPenalty;
   if(shape.suited&&shape.hi<14)
     reversePenalty+=.0035+(1-shape.nutPotential)*.006;
   else if(!shape.suited&&shape.broadway&&shape.hi<14)
     reversePenalty+=.004;
-  if(allInCall||lockedShowdown){impliedCredit=0;reversePenalty=0;realization=1;}
+  if(allInCall||mainPotLocked){impliedCredit=0;reversePenalty=0;realization=1;}
 
   const rawContinue=handPct[holeCode(p.hole)]||1;
   const continueVsSqueeze=rawContinue<=.055 ? .55 : rawContinue<=.10 ? .22 : rawContinue<=.16 ? .08 : .025;
@@ -1714,7 +1731,7 @@ function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,i
   /* A tougher opponent may change the posterior, but cannot make the mathematical
      break-even price disappear. Only positive caution pads survive here. */
   let policy=null,strategyPremium=0;
-  if(typeof rangePreflopActionPolicy==='function'){
+  if(!mainPotLocked&&typeof rangePreflopActionPolicy==='function'){
     policy=rangePreflopActionPolicy(p,{
       stage:'preflop',callAmt,cbBefore:state.currentBet,playerBetBefore:p.bet,potBefore:pot,
       raisesBefore:1,preflopRaisesBefore:1,facedRaiseSize:state.lastRaiseSize||state.bb,
@@ -1733,7 +1750,8 @@ function coachPreflopCallModel(p,raiser,callAmt,pot,eq,odds,actsFirst,actsLast,i
     squeezeRisk,realization,impliedCredit,reversePenalty,squeezePremium,realizedEq,
     multiwayRetention:multiway.retention,callerRealizationCost:multiway.callerRealizationCost,
     multiwayImpliedCredit:multiway.impliedCredit,multiwayReversePenalty:multiway.reverseImpliedPenalty,
-    strategyPremium,policy,requiredEq,callEv,profitable:callEv>=0,allInCall,lockedShowdown};
+    strategyPremium,policy,requiredEq,callEv,profitable:callEv>=0,
+    allInCall,mainPotLocked,lockedShowdown};
 }
 function coachSpr(p,callAmt,pot){
   const villains=inHand().filter(q=>q!==p);
@@ -2291,6 +2309,7 @@ function coachDecide(p){
     }else{
       /* facing a raise: BB defense vs steals, then per-raiser-position chart, then EP/LP bucket */
       const raiser=state.lastAggIdx>=0&&state.lastAggIdx!==p.i?state.players[state.lastAggIdx]:null;
+      const facingAllIn=!!raiser?.allIn;
       /* Use the action level, not the hero's contribution. In a cold 3-bet
          spot the hero may have posted only the BB, but this is still a
          4-bet/call/fold decision rather than an ordinary BB steal defense. */
@@ -2344,6 +2363,31 @@ function coachDecide(p){
           rec=callAmt>0?'FOLD':'CHECK';
           if(callAmt>0)
             why.push(contextProse('pfContextFold')||C('chartIcmFold',code,pct(eq),pct(odds)));
+        }
+      }else if(facingAllIn){
+        /* A normal facing-open chart contains bluff 3-bets whose profit comes
+           from making the opener fold. That logic is impossible once the
+           opener is all-in. Continue by price, or isolate only with real value. */
+        const shoveBB=Math.round(state.currentBet/Math.max(state.bb,1)*10)/10;
+        const liveBehind=liveOpponents.filter(q=>q!==raiser&&!q.allIn).length;
+        const valueRange=coachShortAllInValueRange(shoveBB,icmPrem);
+        const canRaise=p.bet+p.chips>state.currentBet;
+        const valueIsolation=canRaise&&liveBehind>0&&valueRange.includes(code);
+        const usable=pct(preflopCallInfo?.realizedEq??eq);
+        strategyMode='short-allin';
+        concepts.push('shortAllIn');
+        chartInfo=null;
+        if(valueIsolation){
+          rec='RAISE';
+          concepts.push('valueIsolation');
+          why.push(C('shortAllInValue',code,shoveBB,liveBehind));
+        }else if(callAmt>0&&contextCallOk()){
+          rec='CALL';
+          why.push(C('shortAllInCall',code,shoveBB,pct(eq),usable,liveBehind,pct(decisionNeed)));
+        }else{
+          rec=callAmt>0?'FOLD':'CHECK';
+          if(callAmt>0)
+            why.push(C('shortAllInFold',code,shoveBB,pct(eq),usable,liveBehind,pct(decisionNeed)));
         }
       }else if(facingReraise){
         /* Hero already opened (or 3-bet): this is a 4-bet-or-fold decision, never the 3-bet chart. */
@@ -2713,7 +2757,9 @@ function coachDecide(p){
     RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
   };
   const raiseInvestment=Math.max(0,(rec==='ALLIN'?p.bet+p.chips:coachT)-p.bet);
-  const bluffBreakEven=(rec==='RAISE'||rec==='ALLIN')&&raiseInvestment>0
+  const aggressorAllIn=state.stage==='preflop'&&state.lastAggIdx>=0&&
+    state.players[state.lastAggIdx]?.allIn;
+  const bluffBreakEven=!aggressorAllIn&&(rec==='RAISE'||rec==='ALLIN')&&raiseInvestment>0
     ?raiseInvestment/Math.max(pot+raiseInvestment,1):null;
   const bluffInfo=coachBluffAssessment(p,{rec,madeScore,drawInfo,eqAdj,callAmt,pot,opps,
     actsLast,concepts,smallStab,bluffBreakEven,baseFoldEquity:FE,code});
