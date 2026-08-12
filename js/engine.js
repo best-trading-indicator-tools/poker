@@ -906,6 +906,67 @@ function saveStats(){try{localStorage.setItem('sg_poker_stats',JSON.stringify(li
 /* tournament resume: snapshot at each hand boundary or mid-hand after every action */
 function cardToCode(c){ return RANK_CH[c.r]+'shdc'[c.s]; }
 function codesToCards(codes){ return (codes||[]).map(parseCardCode); }
+function resumeBytesToBase64(bytes){
+  let binary='';
+  for(let i=0;i<bytes.length;i+=0x8000)
+    binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x8000,bytes.length)));
+  return btoa(binary);
+}
+function resumeBase64ToBytes(encoded){
+  const binary=atob(encoded),bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  return bytes;
+}
+function packResumeRangeModel(model){
+  if(!model)return null;
+  const packed={...model};
+  if(Array.isArray(model.weights)&&model.weights.length){
+    const values=Float32Array.from(model.weights);
+    packed.weightsF32=resumeBytesToBase64(new Uint8Array(values.buffer));
+    packed.weightsLength=values.length;
+    delete packed.weights;
+  }
+  return packed;
+}
+function unpackResumeRangeModel(model){
+  if(!model)return null;
+  const unpacked={...model};
+  if(model.weightsF32){
+    try{
+      const bytes=resumeBase64ToBytes(model.weightsF32);
+      const copy=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);
+      unpacked.weights=Array.from(new Float32Array(copy)).slice(0,model.weightsLength||1326);
+    }catch(e){}
+    delete unpacked.weightsF32;delete unpacked.weightsLength;
+  }
+  return unpacked;
+}
+function compactResumeDecision(decision){
+  const compact={...decision};
+  /* Range matrices can be reconstructed from the retained action/range metadata;
+     keeping their full 1,326-combo snapshots here can exhaust localStorage. */
+  delete compact.rangeSnapshots;
+  return compact;
+}
+function writeResumeSnapshot(snap){
+  const serialized=JSON.stringify(snap);
+  try{localStorage.setItem('sg_poker_resume',serialized);return true;}catch(e){}
+  /* Resume is more valuable than an unlimited replay archive. If this origin is
+     at quota, discard only the oldest archive entries and retry after each cut. */
+  const stores=[['sg_poker_history',300],['sg_poker_ai_review_history_v1',10]];
+  for(const [key,minimum] of stores){
+    try{
+      let entries=JSON.parse(localStorage.getItem(key)||'[]');
+      if(!Array.isArray(entries))continue;
+      while(entries.length>minimum){
+        entries=entries.slice(-Math.max(minimum,Math.floor(entries.length*.7)));
+        localStorage.setItem(key,JSON.stringify(entries));
+        try{localStorage.setItem('sg_poker_resume',serialized);return true;}catch(e){}
+      }
+    }catch(e){}
+  }
+  return false;
+}
 function saveResume(){
   if(!HAS_DOM||!state||state.cfg.allAI||state.cfg.mpRemotes||state.cfg.mpClient)return;
   try{
@@ -916,7 +977,8 @@ function saveResume(){
       v:2, t:Date.now(), cfg:state.cfg, gameId:state.gameId,
       humanModel:state.humanModel?{...state.humanModel}:null,
       handNum:state.handNum, dealerIdx:state.dealerIdx,
-      sessStats:state.sessStats, gameDecisions:state.gameDecisions||[],
+      sessStats:state.sessStats,
+      gameDecisions:(state.gameDecisions||[]).map(compactResumeDecision),
       rewardStartStack:state.rewardStartStack, rewardMinHeroChips:state.rewardMinHeroChips,
       rewardKos:state.rewardKos||0, rewardWasHeadsUp:!!state.rewardWasHeadsUp,
       rewardHeadsUpTrailed:!!state.rewardHeadsUpTrailed,
@@ -932,21 +994,22 @@ function saveResume(){
         streetRaiseCount:state.streetRaiseCount||0, preflopRaiseCount:state.preflopRaiseCount||0, turnIdx:state.turnIdx,
         level:state.level, bb:state.bb, sb:state.sb, ante:state.ante,
         pfAggIdx:state.pfAggIdx??-1, lastAggIdx:state.lastAggIdx??-1,
-        handLog:(state.handLog||[]).slice(), humanDecisions:(state.humanDecisions||[]).slice(),
+        handLog:(state.handLog||[]).slice(),
+        humanDecisions:(state.humanDecisions||[]).map(compactResumeDecision),
         humanStart:state.humanStart, handStartStacks:(state.handStartStacks||[]).slice(), humanPlayed:state.humanPlayed,
         humanHandStats:state.humanHandStats?{...state.humanHandStats}:null,
         players:state.players.map(q=>({
           hole:q.hole.map(cardToCode), pos:q.pos||'', bet:q.bet, totalBet:q.totalBet,
           folded:q.folded, allIn:q.allIn, acted:q.acted, lastAct:q.lastAct||'',
           revealed:q.revealed, rangeCap:q.rangeCap, rangeFloor:q.rangeFloor,
-          rangeModel:q.rangeModel?{...q.rangeModel}:null,
+          rangeModel:packResumeRangeModel(q.rangeModel),
           rangeTendencies:q.rangeTendencies?{...q.rangeTendencies}:null,
           checkedStreet:!!q.checkedStreet, aggStreets:(q.aggStreets||[]).slice(),
           checkStreets:(q.checkStreets||[]).slice(), lineRead:q.lineRead||'', bank:q.bank??TT_BANK
         }))
       };
     }
-    localStorage.setItem('sg_poker_resume',JSON.stringify(snap));
+    writeResumeSnapshot(snap);
   }catch(e){}
 }
 function restoreMidHand(mh){
@@ -981,7 +1044,7 @@ function restoreMidHand(mh){
     p.pos=q.pos||'';
     p.rangeCap=q.rangeCap??1; p.rangeFloor=q.rangeFloor??0;
     p.rangeTendencies=q.rangeTendencies?{...q.rangeTendencies}:p.rangeTendencies;
-    p.rangeModel=q.rangeModel?{...q.rangeModel}:null;
+    p.rangeModel=unpackResumeRangeModel(q.rangeModel);
     if(!p.rangeModel&&typeof rangeModelInit==='function')rangeModelInit(p);
     p.checkedStreet=!!q.checkedStreet;
     p.aggStreets=(q.aggStreets||[]).slice();

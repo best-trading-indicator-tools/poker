@@ -3630,6 +3630,12 @@ function updateSetupMode(gameType){
     b.classList.toggle('on',b.dataset.m===gameType);
   });
 }
+function resumeLabelKey(snapshot){
+  let sv=snapshot;
+  if(!sv)try{sv=JSON.parse(localStorage.getItem('sg_poker_resume'));}catch(e){}
+  if(sv?.midHand)return'resumeMid';
+  return (sv?.cfg?.gameType||'sng')==='cash'?'resumeCash':'resume';
+}
 
 /* apply the chosen language to all static UI chrome */
 function applyLang(){
@@ -3655,7 +3661,7 @@ function applyLang(){
   if($('tableRoleShark'))$('tableRoleShark').textContent='🦈 '+T('profileShark');
   if($('tableRoleManiac'))$('tableRoleManiac').textContent='🔥 '+T('profileManiac');
   refreshTableScenarioSetup(+$('pCount').textContent||2);
-  set('startBtn',setupGameType==='cash'?'startCash':'deal'); set('resumeBtn','resume'); set('reviewBtnTitle','review'); set('reviewBtnSub','reviewBtnSub');
+  set('startBtn',setupGameType==='cash'?'startCash':'deal'); set('resumeBtn',resumeLabelKey()); set('reviewBtnTitle','review'); set('reviewBtnSub','reviewBtnSub');
   set('scenarioBtnTitle','scenarioBtn');set('scenarioBtnSub','scenarioBtnSub');set('scenarioTitle','scenarioTitle');set('scenarioSub','scenarioSub');
   set('scCardsLbl','scCards');set('scBoardLbl','scBoard');set('scPosLbl','scPos');set('scOppLbl','scOpps');
   set('scCardsHelp','scCardsHelp');set('scBoardHelp','scBoardHelp');
@@ -3971,17 +3977,17 @@ function initUI(){
   /* --- resume saved tournament --- */
   const refreshResume=()=>{
     let sv=null; try{sv=JSON.parse(localStorage.getItem('sg_poker_resume'));}catch(e){}
-    const match=sv&&(sv.cfg?.gameType||'sng')===setupGameType;
-    $('resumeBtn').classList.toggle('hidden',!sv||!match);
-    if(sv&&match){
-      const cash=(sv.cfg?.gameType||'sng')==='cash';
-      $('resumeBtn').textContent=sv.midHand?T('resumeMid'):(cash?T('resumeCash'):T('resume'));
-    }
+    const valid=!!(sv&&sv.cfg&&Array.isArray(sv.players)&&sv.players.length>=2);
+    /* A saved cash game must remain resumable even when the setup screen opens
+       on its default Sit & Go tab (and vice versa). The resume handler already
+       restores the saved mode and settings before rebuilding the table. */
+    $('resumeBtn').classList.toggle('hidden',!valid);
+    if(valid)$('resumeBtn').textContent=T(resumeLabelKey(sv));
     let nHist=0; try{nHist=(JSON.parse(localStorage.getItem('sg_poker_history')||'[]')).length;}catch(e){}
     let nGames=0; try{nGames=loadGames().length;}catch(e){}
     $('reviewBtn').classList.toggle('hidden',!nHist&&!nGames);
     $('aiReviewSetupBtn').classList.toggle('hidden',!aiReviewSavedHands().length);
-    return sv;
+    return valid?sv:null;
   };
   refreshResume();
   $('reviewBtn').onclick=showSessionReview;
@@ -4202,6 +4208,16 @@ function initUI(){
   window.addEventListener('resize',updateOrient);
   window.addEventListener('orientationchange',()=>setTimeout(updateOrient,250));
   if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>setTimeout(updateOrient,80));
+  /* Browsers can freeze a background tab without firing another game action.
+     Persist once more while the page is still alive so even the first hand or
+     an idle decision point can be resumed after closing/reopening the tab. */
+  const persistActiveGame=()=>{
+    if(state&&!state.gameOver&&!$('game').classList.contains('hidden'))saveResume();
+  };
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden')persistActiveGame();
+  });
+  window.addEventListener('pagehide',persistActiveGame);
 }
 
 if(HAS_DOM) initUI();
