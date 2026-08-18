@@ -1,17 +1,17 @@
 // Personality-free preflop reach tracker for the postflop equilibrium provider.
 //
 // The bundled charts are action abstractions rather than a complete solved
-// preflop tree.  This adapter deliberately supports only the public nodes the
-// data actually describes: raise-first-in followed by one call/defence.  A
-// limp, squeeze, 3-bet pot, unsupported blind defence, all-in, or non-cash
-// configuration invalidates the baseline instead of silently substituting a
+// preflop tree. This adapter supports only public nodes described by that
+// personality-free data: single-raised pots and heads-up RFI/3-bet/call pots.
+// Limps, squeezes, 4-bets, unsupported blind defences, all-ins, and non-cash
+// configurations invalidate the baseline instead of silently substituting a
 // personality-conditioned range.
 
 const GTO_PREFLOP_META = Object.freeze({
   name: 'Independent preflop chart blueprint',
-  version: 1,
+  version: 2,
   source: 'GTO_CHARTS',
-  model: '100bb cash, raise-first-in and single-raised-pot abstraction',
+  model: '100bb cash, single-raised and heads-up 3-bet-pot abstraction',
   personalityConditioned: false,
   exactFrequencies: false,
 });
@@ -103,13 +103,24 @@ function gtoPreflopFacingPolicy(player, opener, observedAction, tracker) {
       chart = gtoPreflopChart('bbDefend', key);
       node = `BB:${key}`;
     }
-  } else {
+  }
+  if (!chart) {
     chart = gtoPreflopChart('facing', openerPosition);
     node = `facing:${openerPosition}`;
   }
   if (!chart || !Array.isArray(chart.raise) || !Array.isArray(chart.call)) return null;
   return {
     node,
+    weight: gtoPreflopPolicyFromLists(chart.raise, chart.call, observedAction),
+  };
+}
+
+function gtoPreflopVsThreeBetPolicy(opener, observedAction, tracker) {
+  const openerPosition = gtoPreflopPosition(opener.pos || '', tracker.tableSize);
+  const chart = gtoPreflopChart('vs3bet', openerPosition);
+  if (!chart || !Array.isArray(chart.raise) || !Array.isArray(chart.call)) return null;
+  return {
+    node: `vs3bet:${openerPosition}`,
     weight: gtoPreflopPolicyFromLists(chart.raise, chart.call, observedAction),
   };
 }
@@ -129,9 +140,13 @@ function gtoPreflopBeginHand() {
     tableSize: players.length,
     valid: cash && Number(state.ante || 0) === 0,
     reason: cash ? (Number(state.ante || 0) === 0 ? '' : 'preflop-ante-uncovered') : 'preflop-model-uncovered',
+    line: 'unopened',
     openerSeat: -1,
     openTargetBB: 0,
     voluntaryCalls: 0,
+    threeBettorSeat: -1,
+    threeBetTargetBB: 0,
+    threeBetCalls: 0,
     actions: [],
     players: Object.fromEntries(players.map(player => [player.i, {
       rangeRaw: gtoPreflopBlankRange(),
@@ -189,8 +204,8 @@ function gtoPreflopObserveAction(player, action, context) {
       gtoPreflopInvalidate(tracker, 'preflop-limp-uncovered');
       return;
     }
-    policy = gtoPreflopRfiPolicy(player, observed, tracker);
     if (observed === 'raise') {
+      policy = gtoPreflopRfiPolicy(player, observed, tracker);
       const targetBB = Number(contextData.targetBB || 0);
       if (tracker.openerSeat !== -1 || targetBB < 2 || targetBB > 4) {
         gtoPreflopInvalidate(tracker, 'preflop-open-size-uncovered');
@@ -198,6 +213,7 @@ function gtoPreflopObserveAction(player, action, context) {
       }
       tracker.openerSeat = player.i;
       tracker.openTargetBB = targetBB;
+      tracker.line = 'single-raised';
     }
   } else if (raisesBefore === 1 && tracker.openerSeat >= 0 && tracker.voluntaryCalls === 0) {
     const opener = state.players[tracker.openerSeat];
@@ -208,9 +224,29 @@ function gtoPreflopObserveAction(player, action, context) {
     policy = gtoPreflopFacingPolicy(player, opener, observed, tracker);
     if (observed === 'call') tracker.voluntaryCalls++;
     if (observed === 'raise') {
-      gtoPreflopInvalidate(tracker, 'preflop-threebet-uncovered');
+      const targetBB = Number(contextData.targetBB || 0);
+      const raiseRatio = targetBB / Math.max(tracker.openTargetBB, 0.01);
+      if (tracker.threeBettorSeat >= 0 || targetBB < 5 || targetBB > 18 || raiseRatio < 2 || raiseRatio > 5) {
+        gtoPreflopInvalidate(tracker, 'preflop-threebet-size-uncovered');
+        return;
+      }
+      tracker.threeBettorSeat = player.i;
+      tracker.threeBetTargetBB = targetBB;
+      tracker.line = 'three-bet';
+    }
+  } else if (raisesBefore === 2 && tracker.openerSeat >= 0 && tracker.threeBettorSeat >= 0 &&
+      tracker.voluntaryCalls === 0 && tracker.threeBetCalls === 0) {
+    if (player.i !== tracker.openerSeat || !['call', 'raise'].includes(observed)) {
+      gtoPreflopInvalidate(tracker, 'preflop-threebet-line-uncovered');
       return;
     }
+    if (observed === 'raise') {
+      gtoPreflopInvalidate(tracker, 'preflop-fourbet-uncovered');
+      return;
+    }
+    policy = gtoPreflopVsThreeBetPolicy(player, observed, tracker);
+    tracker.threeBetCalls++;
+    tracker.line = 'three-bet-called';
   } else {
     gtoPreflopInvalidate(tracker, 'preflop-line-uncovered');
     return;
@@ -235,7 +271,25 @@ function gtoPreflopRangesFor(players) {
   const tracker = state.gtoPreflop;
   if (!tracker || tracker.handId !== (state.handNum || 0)) return { ok: false, reason: 'preflop-state-missing' };
   if (!tracker.valid) return { ok: false, reason: tracker.reason || 'preflop-line-uncovered' };
-  if (!Array.isArray(players) || players.length !== 2 || tracker.openerSeat < 0 || tracker.voluntaryCalls !== 1) {
+  if (!Array.isArray(players) || players.length !== 2) {
+    return { ok: false, reason: 'preflop-line-uncovered' };
+  }
+  let line = null;
+  let expectedSeats = [];
+  if (tracker.line === 'single-raised' && tracker.openerSeat >= 0 && tracker.voluntaryCalls === 1 &&
+      tracker.threeBettorSeat < 0) {
+    line = 'single-raised';
+    expectedSeats = [tracker.openerSeat, players.find(player => player.i !== tracker.openerSeat)?.i];
+  } else if (tracker.line === 'three-bet-called' && tracker.openerSeat >= 0 && tracker.threeBettorSeat >= 0 &&
+      tracker.threeBetCalls === 1) {
+    line = 'three-bet';
+    expectedSeats = [tracker.openerSeat, tracker.threeBettorSeat];
+  } else {
+    return { ok: false, reason: 'preflop-line-uncovered' };
+  }
+  const actualSeats = players.map(player => player.i).sort((a, b) => a - b);
+  const requiredSeats = expectedSeats.filter(Number.isFinite).sort((a, b) => a - b);
+  if (requiredSeats.length !== 2 || actualSeats.some((seat, index) => seat !== requiredSeats[index])) {
     return { ok: false, reason: 'preflop-line-uncovered' };
   }
   const ranges = [];
@@ -252,7 +306,8 @@ function gtoPreflopRangesFor(players) {
   return {
     ok: true,
     ranges,
-    source: 'independent-preflop-chart-blueprint',
+    source: `independent-preflop-chart-blueprint:${line}`,
+    line,
     exactFrequencies: false,
     nodes: players.map(player => tracker.players[player.i].nodes.slice()),
     meta: tracker.meta,

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Regenerate charts.js: facing matrices, shove ladders, iso-over-limp ranges. */
+/** Regenerate charts.js: facing matrices, shove ladders, iso and 3-bet ranges. */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -111,6 +111,24 @@ for (const pos of POS) {
   iso[pos] = uniq([...(G.rfi[pos] || []), ...(ISO_EXTRA[pos] || [])]);
 }
 
+/* Continue ranges after an RFI is 3-bet.  These are deliberately
+   personality-free and are intersected with the opener's original RFI range.
+   The postflop engine still resolves the resulting full-combo ranges exactly
+   for its discrete tree; these lists remain a preflop abstraction. */
+const VS3BET_VALUE = ['AA','KK','QQ','AKs','AKo','A5s','A4s'];
+const VS3BET_CALL_EARLY = ['JJ','TT','99','AQs','AJs','ATs','KQs','KJs','QJs','JTs','AQo'];
+const VS3BET_CALL_LATE = uniq([
+  ...VS3BET_CALL_EARLY,'88','77','A9s','KTs','QTs','T9s','98s','87s','AJo','KQo',
+]);
+const vs3bet = {};
+POS.forEach((pos, index) => {
+  const late = index >= POS.indexOf('HJ');
+  vs3bet[pos] = {
+    raise: [...VS3BET_VALUE],
+    call: [...(late ? VS3BET_CALL_LATE : VS3BET_CALL_EARLY)],
+  };
+});
+
 /* BB defense vs steals — wider call ranges than facing; 3-bet value + blockers */
 const BB_CALL_CO = uniq([
   ...vsE.call,
@@ -137,10 +155,11 @@ const bbDefend = {
 };
 
 G._source =
-  'Approximations of published 9-max solver/Nash ranges. rfi = raise-first-in; iso = isolate limpers; bbDefend = BB 3-bet/call vs steals; shove = all-in by BB depth; facing = 3-bet/call vs a raise.';
+  'Personality-free abstractions of published solver/Nash ranges. rfi = raise-first-in; facing = 3-bet/call vs a raise; vs3bet = opener response to a 3-bet; iso = isolate limpers; bbDefend = BB 3-bet/call vs steals; shove = all-in by BB depth. Lists are not a complete mixed-frequency preflop equilibrium.';
 G.facing = { ...facingPos, vsEarly: vsE, vsLate: vsL };
 G.iso = iso;
 G.bbDefend = bbDefend;
+G.vs3bet = vs3bet;
 G.shove = { ...G.shove, 8: shove8, 12: shove12, 15: shove15, 20: shove20 };
 
 const out =
@@ -155,6 +174,6 @@ console.log(
   Object.keys(iso).length,
   'iso positions,',
   Object.keys(bbDefend).length,
-  'BB defend, shove depths',
+  'BB defend and 3-bet continuations, shove depths',
   Object.keys(G.shove).sort((a, b) => +a - +b).join(','),
 );

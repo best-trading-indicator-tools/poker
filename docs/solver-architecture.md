@@ -36,7 +36,7 @@ uniform 1,326-combo priors + public preflop actions
 ## Inputs and tree abstraction
 
 - Every seat begins with the same unconditioned 1,326-combination prior. Public preflop actions multiply that range by the independent baseline policy; player personalities, observed tendencies, and `rangeModel` are never read by the solver provider.
-- The bundled preflop policy covers only 80–120 BB, ante-free cash RFI plus one call/BB-defence nodes represented by `charts.js`. Because those charts are pure/overlap action abstractions rather than a complete mixed-frequency blueprint, the UI does not call them universal GTO. An unsupported node invalidates solver eligibility for the hand.
+- The bundled preflop policy covers only 80–120 BB, ante-free cash single-raised pots and ordinary heads-up RFI/3-bet/call pots represented by `charts.js`. Because those charts are pure/overlap action abstractions rather than a complete mixed-frequency blueprint, the UI does not call them universal GTO. An unsupported node invalidates solver eligibility for the hand.
 - The board, starting pot, effective stack, and exact ordered action history are captured at the beginning of every street.
 - At a street transition, the exact previous action history and actual turn/river card are replayed into the converged tree. The worker's full-combo reach weights become the next street's input ranges. If the previous tree was unavailable, nonconverged, off-tree, or lacked the actual runout, no turn/river solve is promoted.
 - OOP and IP receive the same baseline action set: 33%/67% flop bets, 50%/75% turn bets, 50%/75%/100% river bets, 2.5× raises, and solver-managed all-ins.
@@ -66,11 +66,14 @@ Changing any material game input naturally invalidates the hit. Cached data cont
 |---|---|---|
 | Covered heads-up postflop cash/chip-EV | Range-resolved WASM solver | Independent preflop baseline and exact reach chain are available |
 | Preflop | Existing position/stack chart provider | Vendored engine is postflop-only |
-| Limp, 3-bet/squeeze, unsupported defence, non-cash or off-policy hero range | Range-aware heuristic | Bundled preflop baseline has no exact node/frequency data |
+| Covered RFI/3-bet/call postflop | Range-resolved WASM solver | Both personality-free ranges and the ordinary 3-bet size are covered |
+| Limped pot | Range-aware heuristic | Deep limped trees exceed the browser budget even with an impractically narrow no-raise action abstraction |
+| Squeeze, 4-bet, unsupported defence, non-cash or off-policy hero range | Range-aware heuristic | Bundled preflop baseline has no trustworthy node/frequency data |
 | Turn/river without a preceding converged tree and exact runout replay | Range-aware heuristic | Equilibrium reach cannot be reconstructed honestly |
 | Multiway postflop | Range-aware heuristic | Standard postflop solver models are heads-up |
 | Payout-sensitive tournament with more than two players alive | ICM-aware heuristic | A chip-EV solution would optimize the wrong objective, including checked-to betting nodes |
-| Player already all-in | Equity/runout logic | No betting decision remains |
+| Facing an all-in | Range/equity or ICM-aware provider | Shove/call decisions need range equity and, in tournaments, prize utility—not a postflop chip-EV tree |
+| Player already all-in with no remaining betting decision | Equity/runout logic | No strategic action remains |
 | Resume began mid-street without solver history | Range-aware heuristic | Cannot reconstruct a trustworthy root pot/range snapshot |
 | Worker, browser, or memory failure | Range-aware heuristic | Game remains responsive and the UI names the fallback |
 | Nonconverged tree or exact line/sizing unavailable | Range-aware heuristic | Approximate output is never promoted to a solved recommendation |

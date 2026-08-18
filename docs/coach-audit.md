@@ -54,8 +54,9 @@ node, a converged b-inary result with an exactly replayed line replaces the audi
 fallback recommendation. The UI identifies the provider and describes solved output as
 an equilibrium for personality-free baseline reach ranges rather than universal GTO.
 Those ranges enter the exact provider only when the bundled preflop abstraction covers
-the complete public line; later streets also require reach propagated from the preceding
-converged tree. Personality-conditioned estimates remain confined to the fallback coach.
+the complete public line: a single-raised pot or an ordinary heads-up RFI/3-bet/call
+pot. Later streets also require reach propagated from the preceding converged tree.
+Personality-conditioned estimates remain confined to the fallback coach.
 
 Upstream publishes a same-tree comparison against PioSOLVER and GTO+ with closely
 matching frequencies and EVs. Product-specific validation can still compare an exported

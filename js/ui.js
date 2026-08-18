@@ -56,7 +56,7 @@ confidenceAdjustedChartNote:"The open size is outside the bundled chart tree, so
 confidenceMathNote:"Pot odds are exact; equity and future action use simulations and estimated opponent ranges.",
 confidenceHeuristicNote:"Multiway ranges and future actions require broader assumptions, so treat the recommendation as directional.",
 confidenceSolverNote:"Uses a converged CFR equilibrium with personality-free preflop baseline ranges propagated through the exact covered line and runout. The preflop policy and discrete sizes remain abstractions, not universal GTO.",
-strategyLabel:"Strategy",strategyBaseline:"Heuristic fallback",strategyExploit:"Exploitative adjustment",strategySolver:"Resolved equilibrium strategy",
+strategyLabel:"Strategy",strategyBaseline:"Custom heuristic fallback",strategyChart:"Preflop chart baseline",strategyAllIn:"All-in range + equity model",strategyIcm:"ICM-adjusted tournament model",strategyExploit:"Exploitative adjustment",strategySolver:"Resolved equilibrium strategy",
 bluffBreakEven:"Pure-bluff break-even",bluffBreakEvenNote:(f,fe)=>`Needs about ${f}% folds at this size; the model estimates about ${fe}%. Showdown equity adds value when called.`,
 bluffTitle:"Bluff assessment",bluffVerdict:"Verdict",bluffWhy:"Why",bluffPlan:"If called or raised",
 intentBluff:"BLUFF",intentSemiBluff:"SEMI-BLUFF",intentValue:"VALUE",intentProtection:"PROTECTION",intentRangeBluff:"RANGE BLUFF",intentRangeRaise:"RANGE RAISE",intentBluffCatch:"BLUFF-CATCH",intentCall:"CALL",intentCheck:"CHECK",intentFold:"FOLD",
@@ -220,7 +220,7 @@ confidenceAdjustedChartNote:"La taille d'ouverture sort de l'arbre de la charte 
 confidenceMathNote:"Les cotes du pot sont exactes ; l'équité et l'action future utilisent des simulations et des ranges adverses estimées.",
 confidenceHeuristicNote:"Les ranges multiway et les actions futures demandent plus d'hypothèses : considérez ce conseil comme directionnel.",
 confidenceSolverNote:"Utilise un équilibre CFR convergé avec des ranges préflop baseline indépendantes des profils, propagées dans la ligne et le runout exacts couverts. La politique préflop et les sizings discrets restent des abstractions, pas du GTO universel.",
-strategyLabel:"Stratégie",strategyBaseline:"Fallback heuristique",strategyExploit:"Ajustement exploitant",strategySolver:"Stratégie d’équilibre résolue",
+strategyLabel:"Stratégie",strategyBaseline:"Fallback heuristique personnalisé",strategyChart:"Baseline de charte préflop",strategyAllIn:"Modèle all-in : range + équité",strategyIcm:"Modèle de tournoi ajusté ICM",strategyExploit:"Ajustement exploitant",strategySolver:"Stratégie d’équilibre résolue",
 bluffBreakEven:"Seuil d'un bluff pur",bluffBreakEvenNote:(f,fe)=>`Cette taille exige environ ${f} % de folds ; le modèle en estime environ ${fe} %. L'équité à l'abattage ajoute de la valeur si vous êtes payé.`,
 bluffTitle:"Évaluation du bluff",bluffVerdict:"Verdict",bluffWhy:"Pourquoi",bluffPlan:"Si vous êtes payé ou relancé",
 intentBluff:"BLUFF",intentSemiBluff:"SEMI-BLUFF",intentValue:"VALUE",intentProtection:"PROTECTION",intentRangeBluff:"BLUFF DE RANGE",intentRangeRaise:"RELANCE DE RANGE",intentBluffCatch:"BLUFF-CATCH",intentCall:"CALL",intentCheck:"CHECK",intentFold:"FOLD",
@@ -384,7 +384,7 @@ confidenceAdjustedChartNote:"El tamaño de apertura queda fuera del árbol de la
 confidenceMathNote:"Las odds del bote son exactas; la equity y la acción futura usan simulaciones y rangos rivales estimados.",
 confidenceHeuristicNote:"Los rangos multiway y las acciones futuras requieren más supuestos; interpreta el consejo como direccional.",
 confidenceSolverNote:"Usa un equilibrio CFR convergido con rangos preflop base independientes de la personalidad, propagados por la línea y el runout exactos cubiertos. La política preflop y los tamaños discretos siguen siendo abstracciones, no GTO universal.",
-strategyLabel:"Estrategia",strategyBaseline:"Fallback heurístico",strategyExploit:"Ajuste explotador",strategySolver:"Estrategia de equilibrio resuelta",
+strategyLabel:"Estrategia",strategyBaseline:"Fallback heurístico personalizado",strategyChart:"Base de tabla preflop",strategyAllIn:"Modelo all-in de rango + equity",strategyIcm:"Modelo de torneo ajustado por ICM",strategyExploit:"Ajuste explotador",strategySolver:"Estrategia de equilibrio resuelta",
 bluffBreakEven:"Umbral de farol puro",bluffBreakEvenNote:(f,fe)=>`Este tamaño necesita cerca del ${f}% de folds; el modelo estima cerca del ${fe}%. La equity al showdown añade valor cuando pagan.`,
 bluffTitle:"Evaluación del farol",bluffVerdict:"Veredicto",bluffWhy:"Por qué",bluffPlan:"Si pagan o resuben",
 intentBluff:"FAROL",intentSemiBluff:"SEMIFAROL",intentValue:"VALOR",intentProtection:"PROTECCIÓN",intentRangeBluff:"FAROL DE RANGO",intentRangeRaise:"SUBIDA DE RANGO",intentBluffCatch:"CAZAFAROLES",intentCall:"IGUALAR",intentCheck:"PASAR",intentFold:"RETIRARSE",
@@ -1239,7 +1239,7 @@ function aiCoachReviewText(history){
       if(decision.solver){
         const solver=decision.solver;
         lines.push(`  Solver: ${solver.engine||'unknown'} @ ${solver.engineCommit||'unknown'} | converged=${solver.converged} | iterations=${aiReviewNum(solver.iterations)} | exploitability=${aiReviewNum(solver.exploitability)} chips | compact tree=${!!solver.compactTree}`);
-        lines.push(`  Solver range source: ${solver.rangeSource||'unknown'} | exact frequencies=${solver.rangeExactFrequencies??'unknown'} | selection=${solver.selectionRule||'unknown'}`);
+        lines.push(`  Solver range source: ${solver.rangeSource||'unknown'} | preflop line=${solver.rangeLine||'unknown'} | exact frequencies=${solver.rangeExactFrequencies??'unknown'} | selection=${solver.selectionRule||'unknown'}`);
         lines.push(`  Solver baseline range nodes: ${aiReviewJson(solver.rangeNodes)}`);
         lines.push(`  Solver tree abstraction: ${aiReviewJson(solver.abstraction)}`);
       }
@@ -2603,6 +2603,9 @@ function coachConfidence(R){
   if(R.solver)return{
     kind:'solver',source:T('confidenceSolver'),level:T('confidenceMedium'),note:T('confidenceSolverNote'),icon:'⚖'
   };
+  if(['allin','icm','icm-allin'].includes(R.strategyMode))return{
+    kind:R.strategyMode,source:T('confidenceMath'),level:T('confidenceMedium'),note:T('confidenceMathNote'),icon:'≈'
+  };
   const preflop=state.stage==='preflop';
   const chartOpenBB=R.preflopCallInfo?.openBB;
   const adjustedChart=preflop&&R.chartInfo&&R.chartInfo.kind!=='range'&&
@@ -2621,6 +2624,15 @@ function coachConfidence(R){
   return{
     kind:'heuristic',source:T('confidenceHeuristic'),level:T('confidenceLimited'),note:T('confidenceHeuristicNote'),icon:'◇'
   };
+}
+function coachStrategyLabel(R){
+  const mode=R.strategyMode||'baseline';
+  if(mode==='solver')return T('strategySolver');
+  if(mode==='exploit')return T('strategyExploit');
+  if(mode==='chart')return T('strategyChart');
+  if(mode==='allin')return T('strategyAllIn');
+  if(mode==='icm'||mode==='icm-allin')return T('strategyIcm');
+  return T('strategyBaseline');
 }
 function coachConfidenceHtml(R){
   const c=coachConfidence(R);
@@ -2731,7 +2743,7 @@ function updateCoach(p){
     ?T('beginnerMath')(Math.round(eq*100),Math.round(usableEq*100),Math.round(decisionNeed*100),usableEq>=decisionNeed)
     :(rec==='CHECK'?T('beginnerFree'):rec==='FOLD'?T('beginnerOpenFold'):T('beginnerAgg'));
   const detailRows=
-    `<div class="coach-row"><span>${T('strategyLabel')}</span><b>${T(R.strategyMode==='solver'?'strategySolver':R.strategyMode==='exploit'?'strategyExploit':'strategyBaseline')}</b></div>`+
+    `<div class="coach-row"><span>${T('strategyLabel')}</span><b>${coachStrategyLabel(R)}</b></div>`+
     (pos?`<div class="coach-row"><span>${T('position')}</span><b>${pos}${early?' (early)':late?' (late)':''}</b></div>`:'')+
     (opps>0?`<div class="coach-row"><span>${state.stage==='preflop'?T('postflopOrder'):T('actingOrder')}</span><b>${actsFirst?T('firstToAct'):actsLast?T('lastToAct'):(ordIdx+1)+' '+T('ofN')+' '+ordLen}</b></div>`:'')+
     `<div class="coach-row"><span>${T('yourStack')}</span><b>${bbs(p.chips+p.bet)}</b></div>`+
@@ -2796,7 +2808,7 @@ function updateCoach(p){
   const solverMeta=solved?{
     engine:solved.engine,engineCommit:solved.engineCommit,exploitability:solved.exploitability,
     targetExploitability:solved.targetExploitability,converged:solved.converged,
-    iterations:solved.iterations,compactTree:solved.compactTree,rangeSource:solved.rangeSource,
+    iterations:solved.iterations,compactTree:solved.compactTree,rangeSource:solved.rangeSource,rangeLine:solved.rangeLine,
     rangeExactFrequencies:solved.rangeExactFrequencies,rangeNodes:solved.rangeNodes,
     selectionRule:solved.selectionRule,abstraction:solved.abstraction
   }:null;

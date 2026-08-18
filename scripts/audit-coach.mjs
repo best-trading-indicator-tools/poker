@@ -94,9 +94,9 @@ const audit=vm.runInContext(`(()=>{
   record('Preflop anchors','two all-in opponents cannot trigger a range raise',
     !['RAISE','ALLIN'].includes(lockedR.rec)&&
       lockedR.rec===(lockedR.eqAdj>=lockedR.needEq?'CALL':'FOLD')&&
-      lockedR.preflopCallInfo?.lockedShowdown===true,
+      lockedR.preflopCallInfo?.lockedShowdown===true&&lockedR.strategyMode==='allin',
     {rec:lockedR.rec,eq:lockedR.eq,usable:lockedR.eqAdj,need:lockedR.needEq,
-      locked:lockedR.preflopCallInfo?.lockedShowdown});
+      locked:lockedR.preflopCallInfo?.lockedShowdown,strategy:lockedR.strategyMode});
 
   /* Obvious postflop anchors: free actions, nuts, air, draws and river finality. */
   const anchors=[

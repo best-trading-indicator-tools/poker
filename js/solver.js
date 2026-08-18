@@ -11,8 +11,8 @@ const GTO_ENGINE_META = Object.freeze({
   mode: 'heads-up postflop chip-EV',
 });
 
-const GTO_PROVIDER_VERSION = 3;
-const GTO_CACHE_KEY = 'sg_solver_cache_v3';
+const GTO_PROVIDER_VERSION = 4;
+const GTO_CACHE_KEY = 'sg_solver_cache_v4';
 const GTO_CACHE_LIMIT = 48;
 const GTO_MEMORY_LIMIT = 512 * 1024 * 1024;
 const GTO_HAS_BROWSER = typeof window !== 'undefined' && typeof document !== 'undefined';
@@ -289,6 +289,7 @@ async function solverBeginStreet() {
     else if (state.stage === 'turn' || state.stage === 'river') baseline = await solverCarryReach(previousStreet, state.board);
   }
   const supported = structurallySupported && baseline.ok;
+  const baselineReason = baseline.reason || (structurallySupported ? 'ranges' : 'state');
   state.solverStreet = {
     handId: state.handNum || 0,
     stage: state.stage,
@@ -298,11 +299,13 @@ async function solverBeginStreet() {
     playerSeats: ordered.map(player => player.i),
     rangeRaw: supported ? baseline.ranges : [],
     rangeSource: supported ? baseline.source : null,
+    rangeLine: supported ? (baseline.line || null) : null,
     rangeNodes: supported ? (baseline.nodes || []) : [],
     rangeExactFrequencies: supported && baseline.exactFrequencies === true,
     actions: [],
     supported,
-    reason: supported ? null : (baseline.reason || (structurallySupported ? 'ranges' : 'state')),
+    reason: supported ? null : (String(baselineReason).startsWith('preflop-') ? 'ranges' : baselineReason),
+    rangeReason: supported ? null : baseline.reason || null,
   };
 }
 
@@ -678,6 +681,7 @@ async function solverExtractNode(active, player, street) {
     iterations: active.iterations,
     compactTree: active.compact,
     rangeSource: street.rangeSource || 'personality-free-baseline',
+    rangeLine: street.rangeLine || null,
     rangeExactFrequencies: street.rangeExactFrequencies === true,
     rangeNodes: (street.rangeNodes || []).map(nodes => Array.isArray(nodes) ? nodes.slice() : []),
     selectionRule: 'highest-frequency',

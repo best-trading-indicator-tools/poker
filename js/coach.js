@@ -2768,6 +2768,12 @@ function coachDecide(p){
   const raiseInvestment=Math.max(0,(rec==='ALLIN'?p.bet+p.chips:coachT)-p.bet);
   const aggressorAllIn=state.stage==='preflop'&&state.lastAggIdx>=0&&
     state.players[state.lastAggIdx]?.allIn;
+  if(strategyMode==='short-allin'||bettingLocked||(state.stage==='preflop'&&aggressorAllIn))
+    strategyMode='allin';
+  else if(strategyMode==='baseline'&&state.stage==='preflop'&&chartInfo&&chartInfo.kind!=='range')
+    strategyMode='chart';
+  if(strategyMode!=='exploit'&&icmPrem>=.005&&callAmt>0)
+    strategyMode=strategyMode==='allin'?'icm-allin':'icm';
   const bluffBreakEven=!aggressorAllIn&&(rec==='RAISE'||rec==='ALLIN')&&raiseInvestment>0
     ?raiseInvestment/Math.max(pot+raiseInvestment,1):null;
   const bluffInfo=coachBluffAssessment(p,{rec,madeScore,drawInfo,eqAdj,callAmt,pot,opps,
