@@ -149,6 +149,7 @@ bucketMWPaired:n=>` Multiway (${n} opponents) on a paired board — trips/full h
 bucketMWFlushDraw:n=>` Multiway (${n} opponents) with a flush draw possible — a caller may be drawing to a flush.`,
 bucketMWBigPot:p=>` Large multiway pot (~${p} BB) — mistakes are costly; continue only with clear equity or strong draws.`,
 bucketMWSqueeze:n=>` Multiway (${n} opponents) facing a squeeze/raise — ranges are strong; fold marginal continues unless odds are excellent.`,
+pairedBoardBetCall:(callers,opps,pair,kicker,over)=>`One opponent bet and ${callers===1?'another opponent':`${callers} opponents`} called in this ${opps+1}-way pot. Your displayed two pair is only ${pair} plus the paired board, with a ${kicker} kicker${over?` and ${over===1?'a':over} higher board rank${over>1?'s':''}`:''}; the apparent redraws can still make a losing full house. This marginal bluff-catcher must be folded.`,
 briefSpot:(eq,need,call,pot,pos,ip,opps)=>` 📋 Spot: ~${eq} equity${need!=='—'?` vs ${need} needed`:''}${call!=='—'?` · price ${call} → ${pot}`:''} · ${pos} (${ip}) · ${opps} opp${opps>1?'s':''}.`,
 briefAir:` No real made hand — equity heavily discounted vs bets.`,
 briefVillain:(name,style,line)=>` vs ${name} (${style}) on a ${line} line.`,
@@ -317,6 +318,7 @@ bucketMWPaired:n=>` Multiway (${n} adversaires) sur board apparié — brelans/f
 bucketMWFlushDraw:n=>` Multiway (${n} adversaires) avec tirage couleur possible — un joueur peut être en train de tirer la couleur.`,
 bucketMWBigPot:p=>` Gros pot multiway (~${p} BB) — les erreurs coûtent cher ; continuez seulement avec équité claire.`,
 bucketMWSqueeze:n=>` Multiway (${n} adversaires) face à une squeeze — ranges fortes ; couchez les marginales sauf excellentes cotes.`,
+pairedBoardBetCall:(callers,opps,pair,kicker,over)=>`Un adversaire a misé et ${callers} adversaire${callers>1?'s ont':' a'} payé dans ce pot à ${opps+1} joueurs. Vos deux paires affichées ne sont que ${pair} avec la paire du board et un kicker ${kicker}${over?`, avec ${over} rang${over>1?'s':''} supérieur${over>1?'s':''} au board`:''} ; les redraws apparents peuvent encore faire un full perdant. Ce bluff-catcher marginal doit être couché.`,
 briefSpot:(eq,need,call,pot,pos,ip,opps)=>` 📋 Spot : ~${eq} d'équité${need!=='—'?` vs ${need} requis`:''}${call!=='—'?` · prix ${call} → ${pot}`:''} · ${pos} (${ip}) · ${opps} adv.`,
 briefAir:` Pas de vraie main faite — équité fortement décotée face aux mises.`,
 briefVillain:(name,style,line)=>` vs ${name} (${style}) sur une ligne ${line}.`,
@@ -485,6 +487,7 @@ bucketMWPaired:n=>` Multiway (${n} rivales) en board emparejado — tríos/full 
 bucketMWFlushDraw:n=>` Multiway (${n} rivales) con posible proyecto de color — un jugador puede estar buscando completar el color.`,
 bucketMWBigPot:p=>` Bote multiway grande (~${p} BB) — los errores cuestan; continúa solo con equity clara.`,
 bucketMWSqueeze:n=>` Multiway (${n} rivales) frente a squeeze — rangos fuertes; retira marginales salvo odds excelentes.`,
+pairedBoardBetCall:(callers,opps,pair,kicker,over)=>`Un rival apostó y ${callers} rival${callers>1?'es':''} pagó${callers>1?'ron':''} en este bote de ${opps+1} jugadores. Tus dobles parejas mostradas son solo ${pair} junto con la pareja de la mesa y kicker ${kicker}${over?`, con ${over} rango${over>1?'s':''} superior${over>1?'es':''} en la mesa`:''}; los redraws aparentes todavía pueden completar un full perdedor. Este bluff-catcher marginal debe retirarse.`,
 briefSpot:(eq,need,call,pot,pos,ip,opps)=>` 📋 Spot: ~${eq} equity${need!=='—'?` vs ${need} necesario`:''}${call!=='—'?` · precio ${call} → ${pot}`:''} · ${pos} (${ip}) · ${opps} rival${opps>1?'es':''}.`,
 briefAir:` Sin mano hecha real — equity muy descontada vs apuestas.`,
 briefVillain:(name,style,line)=>` vs ${name} (${style}) en línea ${line}.`,
@@ -865,7 +868,24 @@ function advancedOutAnalysis(hole,board,drawInfo){
     nutFlushDraw:!!(drawInfo?.draw.flush&&!nonNutFlush),weightedOuts,
     rawOuts:classifications.size,classifications:[...classifications.values()]};
 }
-function applyRangeOutWeights(a,oppCaps){
+function rangeOutShowdownWeight(hole,board,card,oppCaps){
+  if(!hole||!board||!card||!oppCaps?.length)return 1;
+  const nextBoard=board.concat(card),heroScore=evalBest(hole.concat(nextBoard));
+  let winAll=1,measured=0;
+  for(const range of oppCaps){
+    const dist=rangeDistribution(range,hole,nextBoard);
+    let total=0,share=0;
+    for(const combo of dist){
+      const cmp=compareScores(heroScore,evalBest([combo.a,combo.b].concat(nextBoard)));
+      total+=combo.w;
+      if(cmp>0)share+=combo.w;
+      else if(cmp===0)share+=combo.w*.5;
+    }
+    if(total>0){winAll*=clamp(share/total,0,1);measured++;}
+  }
+  return measured?clamp(winAll,0,1):1;
+}
+function applyRangeOutWeights(a,oppCaps,hole,board){
   if(!a||!a.classifications.length)return a;
   const strongest=oppCaps?.length?Math.min(...oppCaps.map(o=>o.cap||1)):1;
   const pressure=clamp((.45-strongest)/.42,0,1);
@@ -873,10 +893,14 @@ function applyRangeOutWeights(a,oppCaps){
   for(const x of a.classifications){
     let w=x.weight;
     /* Pairing an overcard is far less likely to win against a tight, strength-
-       showing range; full-house/quads redraws remain almost fully clean. */
+       showing range. Then test every apparent out against each opponent's
+       actual range so a losing full house is not presented as a clean out. */
     if(x.kind==='overcard')w*=1-.42*pressure;
     else if(x.kind==='pairImprove')w*=1-.20*pressure;
     else if(x.kind==='dominated'||x.kind==='nonNut')w*=1-.18*pressure;
+    const showdownWeight=rangeOutShowdownWeight(hole,board,x.card,oppCaps);
+    w*=showdownWeight;
+    x.showdownWeight=showdownWeight;
     x.rangeWeight=clamp(w,0,1);total+=x.rangeWeight;
   }
   a.weightedOuts=total;
@@ -1547,7 +1571,30 @@ function coachFlushRelativeStrength(p,board,opponentRanges,pot,betRatio=0.66){
 function realTwoPairOrBetter(score,hole){
   if(!score)return false;
   if(score[0]>=3)return true;
-  return score[0]===2&&hole.some(c=>c.r===score[1]||c.r===score[2]);
+  if(score[0]!==2)return false;
+  const ranks=new Set(hole.map(c=>c.r));
+  return (ranks.has(score[1])&&ranks.has(score[2]))||
+    (hole[0].r===hole[1].r&&hole[0].r===score[1]);
+}
+function coachPairedBoardBetCallRisk(p,score,drawInfo,callAmt,opps){
+  if(state.stage==='preflop'||callAmt<=0||opps<2||!score||score[0]!==2)return null;
+  if(realTwoPairOrBetter(score,p.hole))return null;
+  const boardCounts={};for(const card of state.board)boardCounts[card.r]=(boardCounts[card.r]||0)+1;
+  const boardPairRank=[score[1],score[2]].find(rank=>(boardCounts[rank]||0)>=2);
+  const privatePairRank=[score[1],score[2]].find(rank=>rank!==boardPairRank&&p.hole.some(card=>card.r===rank));
+  if(!boardPairRank||!privatePairRank)return null;
+  const strongDraw=!!(drawInfo?.draw&&(drawInfo.draw.flush||drawInfo.draw.oesd||drawInfo.draw.doubleGutshot));
+  if(strongDraw)return null;
+  const callers=inHand().filter(q=>q!==p&&q.i!==state.lastAggIdx&&q.acted&&
+    q.bet>=state.currentBet).length;
+  if(!callers)return null;
+  const kicker=p.hole.find(card=>card.r!==privatePairRank)?.r||privatePairRank;
+  const overcards=[...new Set(state.board.map(card=>card.r).filter(rank=>rank>privatePairRank))].length;
+  let penalty=.045+.015*Math.max(0,opps-2)+.015*Math.max(0,callers-1);
+  if(overcards)penalty+=.02;
+  if(kicker<=9)penalty+=.01;
+  if(state.stage==='turn')penalty+=.01;
+  return {penalty:clamp(penalty,.04,.12),callers,opps,boardPairRank,privatePairRank,kicker,overcards};
 }
 function hasTopPairOrBetter(score,hole,board){
   if(!score||!board.length)return false;
@@ -2047,6 +2094,7 @@ function coachDecide(p){
   let eq,handDesc,drawRow='',extra=[],concepts=[];
   let eqAdj,airPen=0,underpairPen=0,underpairInfo=null;
   let madeScore=null,flushInfo=null,drawInfo=null,impliedInfo=null,drySidePot=false,sidePotInfo=null;
+  let multiwayContinueInfo=null;
   const tightOpps=oppCaps.filter(o=>o.cap<1).length;
   const weakOpps=oppCaps.filter(o=>o.floor>0).length;
   if(tightOpps>0) extra.push(C('rangesNote',tightOpps,Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)));
@@ -2076,7 +2124,7 @@ function coachDecide(p){
       const dr=[];
       const backdoorFlush=coachBackdoorFlushInfo(p.hole,state.board);
       drawInfo=coachDrawOutInfo(p.hole,state.board,d);
-      applyRangeOutWeights(drawInfo.advanced,oppCaps);
+      applyRangeOutWeights(drawInfo.advanced,oppCaps,p.hole,state.board);
       drawInfo.rangeWeightedHitChance=drawHitChance(
         drawInfo.advanced.weightedOuts,drawInfo.unknown,drawInfo.streets);
       if(d.flush) dr.push(C('drawFlush',drawInfo.flush.length,pct(drawInfo.flushChance)));
@@ -2166,6 +2214,11 @@ function coachDecide(p){
     }
   }
 
+  if(state.stage!=='preflop'){
+    multiwayContinueInfo=coachPairedBoardBetCallRisk(p,madeScore,drawInfo,callAmt,opps);
+    if(multiwayContinueInfo)concepts.push('pairedBoardBetCall');
+  }
+
   /* M-ratio (Harrington): stack vs the cost of one orbit's blinds+antes */
   const aliveN=alive().length;
   const orbitCost=state.sb+state.bb+state.ante*aliveN;
@@ -2185,7 +2238,8 @@ function coachDecide(p){
 
   let decisionNeed=state.stage==='preflop'
     ?clamp(odds+icmPrem,0,.95)
-    :clamp(odds+posAdj+icmPrem-(impliedInfo?.equityCredit||0),0,.95);
+    :clamp(odds+(multiwayContinueInfo?Math.max(0,posAdj):posAdj)+icmPrem-
+      (impliedInfo?.equityCredit||0),0,.95);
   let rec,why=[],chartInfo=null,rangeCharts=[],smallStab=false,preflopCallInfo=null;
   let strategyMode='baseline';
   if(state.stage==='preflop'){
@@ -2681,7 +2735,9 @@ function coachDecide(p){
       callAmt,pot,stackBefore:p.chips
     });
     underpairPen=underpairInfo?underpairInfo.penalty:0;
-    eqAdj=clamp(eq-bigBetPen-airPen-underpairPen+exploitAdj+blockAdj+diffAggAdj,0,1);
+    const multiwayContinuePen=multiwayContinueInfo?.penalty||0;
+    eqAdj=clamp(eq-bigBetPen-airPen-underpairPen-multiwayContinuePen+
+      exploitAdj+blockAdj+diffAggAdj,0,1);
     const edge=eqAdj-decisionNeed;
     if(bigBetPen>=0.05) extra.push(C('bigBet',Math.round(betRatio*100)));
     if(d&&d.gutshot&&!d.doubleGutshot&&!d.oesd&&!d.flush&&betRatio>=0.5) extra.push(C('gutWarn'));
@@ -2706,7 +2762,10 @@ function coachDecide(p){
         {extra.push(C('floatPlan'));concepts.push('floatPlan');}
     }else{
       rec='FOLD';
-      why.push(C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),!!bigBetPen,pct(decisionNeed)));
+      why.push(multiwayContinueInfo
+        ?C('pairedBoardBetCall',multiwayContinueInfo.callers,multiwayContinueInfo.opps,
+          rankPl(multiwayContinueInfo.privatePairRank),rankNm(multiwayContinueInfo.kicker),multiwayContinueInfo.overcards)
+        :C('foldAdv',pct(odds),usd(callAmt),usd(pot),pct(eqAdj),!!bigBetPen,pct(decisionNeed)));
     }
   }
   /* Normally the engine runs the board automatically when action is locked, but
@@ -2815,7 +2874,7 @@ function coachDecide(p){
     callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   const result={rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,icmActive,icmInfo,chartInfo,rangeCharts,code,spr,sprZone,
-          preflopCallInfo,drawInfo,impliedInfo,drySidePot,sidePotInfo,needEq:decisionNeed,
+          preflopCallInfo,drawInfo,impliedInfo,drySidePot,sidePotInfo,multiwayContinueInfo,needEq:decisionNeed,
           strategyMode,bluffBreakEven,modeledFoldEquity:bluffInfo?bluffInfo.estimatedFolds:0,
           bluffInfo,actionIntent:bluffInfo?bluffInfo.intent:rec.toLowerCase(),concepts,postSizePlan};
   return typeof solverApplyCoachStrategy==='function'?solverApplyCoachStrategy(p,result):result;

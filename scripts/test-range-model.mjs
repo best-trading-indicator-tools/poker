@@ -369,6 +369,53 @@ const result=vm.runInContext(`(()=>{
       heroBet:lockedTurnHero.bet,allIn:lockedTurnHero.allIn,currentBet:state.currentBet,
       lastAggIdx:state.lastAggIdx,raiseCount:state.streetRaiseCount,lastAct:lockedTurnHero.lastAct}));
 
+  /* Screenshot regression: J9 on J-Q-4-4 is not genuine two pair. Four-way,
+     after a turn bet and a call, position cannot lower the threshold below the
+     direct price and the apparent J/4 redraws must be range-discounted. */
+  newGame({...cfg,gameType:'cash',numPlayers:6,difficulty:'hard'});
+  const pairedHero=state.players[0],pairedAgg=state.players[1];
+  const pairedCaller=state.players[2],pairedChecker=state.players[3];
+  for(const x of state.players){
+    x.out=false;x.folded=![pairedHero,pairedAgg,pairedCaller,pairedChecker].includes(x);
+    x.allIn=false;x.bet=0;x.totalBet=0;x.acted=x.folded;x.checkedStreet=false;
+    x.aggStreets=[];x.checkStreets=[];x.rangeCap=1;x.rangeFloor=0;x.lineRead='';
+  }
+  state.stage='turn';state.board=['Jc','Qs','4c','4s'].map(parseCardCode);
+  state._rangeComboInfoCache=Object.create(null);state._rangeBoardTextureCache=Object.create(null);
+  state.bb=20;state.sb=10;state.ante=0;state.dealerIdx=pairedHero.i;
+  state.currentBet=340;state.lastRaiseSize=340;state.streetRaiseCount=1;
+  state.lastAggIdx=pairedAgg.i;state.pfAggIdx=pairedAgg.i;
+  pairedHero.pos='BTN';pairedHero.hole=['9c','Js'].map(parseCardCode);
+  pairedHero.chips=2120;pairedHero.totalBet=100;pairedHero.acted=false;
+  pairedAgg.pos='BB';pairedAgg.style=STYLES.find(x=>x.id==='shark');pairedAgg.chips=510;
+  pairedAgg.bet=340;pairedAgg.totalBet=340;pairedAgg.acted=true;
+  pairedAgg.lineRead='barrel2';pairedAgg.rangeCap=.18;pairedAgg.aggStreets=['turn'];rangeModelInit(pairedAgg);
+  pairedCaller.pos='UTG';pairedCaller.style=STYLES.find(x=>x.id==='rock');pairedCaller.chips=3490;
+  pairedCaller.bet=340;pairedCaller.totalBet=340;pairedCaller.acted=true;
+  pairedCaller.rangeCap=.28;rangeModelInit(pairedCaller);
+  pairedChecker.pos='SB';pairedChecker.style=STYLES.find(x=>x.id==='station');pairedChecker.chips=3260;
+  pairedChecker.totalBet=300;pairedChecker.acted=true;pairedChecker.checkedStreet=true;
+  pairedChecker.checkStreets=['turn'];pairedChecker.rangeFloor=.10;rangeModelInit(pairedChecker);
+  const pairedScore=evalBest(pairedHero.hole.concat(state.board));
+  if(realTwoPairOrBetter(pairedScore,pairedHero.hole))
+    throw new Error('one private pair plus the paired board must not count as genuine two pair');
+  const pocketNines=['9h','9d'].map(parseCardCode);
+  if(!realTwoPairOrBetter(evalBest(pocketNines.concat(state.board)),pocketNines))
+    throw new Error('a pocket pair plus the paired board must retain genuine two-pair status');
+  const savedPairedEquity=mcEquityR;mcEquityR=()=>.28;
+  const pairedBoardDecision=coachDecide(pairedHero);
+  mcEquityR=savedPairedEquity;
+  if(pairedBoardDecision.rec!=='FOLD'||pairedBoardDecision.multiwayContinueInfo?.callers!==1||
+      pairedBoardDecision.needEq<pairedBoardDecision.odds||pairedBoardDecision.eqAdj>=pairedBoardDecision.needEq||
+      pairedBoardDecision.drawInfo?.advanced.rawOuts!==4||
+      !(pairedBoardDecision.drawInfo.advanced.weightedOuts<pairedBoardDecision.drawInfo.advanced.rawOuts)||
+      !pairedBoardDecision.concepts.includes('pairedBoardBetCall')||
+      !pairedBoardDecision.why[0]?.includes('must be folded'))
+    throw new Error('J9/JQ44 facing a four-way bet and call must be an explained fold '+JSON.stringify({
+      rec:pairedBoardDecision.rec,eqAdj:pairedBoardDecision.eqAdj,need:pairedBoardDecision.needEq,
+      odds:pairedBoardDecision.odds,risk:pairedBoardDecision.multiwayContinueInfo,
+      outs:pairedBoardDecision.drawInfo?.advanced,why:pairedBoardDecision.why}));
+
   /* Four-flush turn: category-level "Ace-high flush" is misleading when the fifth
      card is a three. Exact opponent combos and their continue policies must block
      the automatic protection bet. */
@@ -924,6 +971,9 @@ const result=vm.runInContext(`(()=>{
     cashThreeBet:{open:usd(200),target:usd(cashThreeBetDefault),targetBB:cashThreeBetDefault/100},
     lockedAllIn:{rec:lockedTurnDecision.rec,bluffInfo:lockedTurnDecision.bluffInfo,
       foldEquity:lockedTurnDecision.modeledFoldEquity,attemptedRaise:lockedTurnHero.lastAct},
+    pairedBoardBetCall:{rec:pairedBoardDecision.rec,eqAdj:pairedBoardDecision.eqAdj,
+      need:pairedBoardDecision.needEq,weightedOuts:pairedBoardDecision.drawInfo.advanced.weightedOuts,
+      why:pairedBoardDecision.why[0]},
     ordinals};
 })()`,context);
 
