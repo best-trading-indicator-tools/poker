@@ -15,7 +15,7 @@ const GTO_PROVIDER_VERSION = 4;
 const GTO_CACHE_KEY = 'sg_solver_cache_v4';
 const GTO_CACHE_LIMIT = 48;
 const GTO_MEMORY_LIMIT = 512 * 1024 * 1024;
-const GTO_ASSET_VERSION = 91;
+const GTO_ASSET_VERSION = 92;
 const GTO_WORKER_INIT_TIMEOUT = 15000;
 const GTO_HAS_BROWSER = typeof window !== 'undefined' && typeof document !== 'undefined';
 

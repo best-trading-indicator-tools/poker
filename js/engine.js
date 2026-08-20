@@ -321,12 +321,19 @@ function promptNext(){
   }
 }
 
+function opponentsCanRespond(p){
+  return inHand().some(q=>q!==p&&!q.allIn&&q.chips>0);
+}
+
 function applyAction(p,type,amt){
   if(p.bankInUse){p.bank=Math.max(0,(p.bank||0)-(Date.now()-p.bankInUse));p.bankInUse=0;state.turnBank=false;}
   /* Visible-action sample used by the coach's opponent-read confidence label. */
   if(!p.isHuman)p.observedActions=(p.observedActions||0)+1;
   const callAmt=Math.max(0,Math.min(state.currentBet-p.bet,p.chips));
   if(type==='fold'&&callAmt<=0) type='call'; // checking is the only legal zero-price fold alternative
+  /* Chips cannot be raised into an opponent who is already all-in: with no
+     live stack able to respond, a raise is only a call written incorrectly. */
+  if(type==='raise'&&!opponentsCanRespond(p))type='call';
   /* A short all-in increases the price but does not reopen raising for players
      who already acted. A full raise resets their acted flag below. */
   if(type==='raise'&&p.acted)type='call';

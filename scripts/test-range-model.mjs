@@ -329,6 +329,46 @@ const result=vm.runInContext(`(()=>{
       rec:sideOverDecision.rec,target:sideOverDecision.coachT,dry:sideOverDecision.drySidePot,
       side:sideOverDecision.sidePotInfo,why:sideOverDecision.why,concepts:sideOverDecision.concepts}));
 
+  /* Screenshot regression: once the sole opponent has moved all-in, there is
+     no fold equity, no bluff assessment, and no legal raise action. */
+  newGame({...cfg,gameType:'cash'});
+  const lockedTurnHero=state.players[0],lockedTurnVillain=state.players[1];
+  for(const x of state.players){
+    x.out=false;x.folded=x!==lockedTurnHero&&x!==lockedTurnVillain;x.allIn=false;
+    x.bet=0;x.totalBet=0;x.acted=x.folded;x.checkedStreet=false;
+    x.aggStreets=[];x.checkStreets=[];x.rangeCap=1;x.rangeFloor=0;x.lineRead='';
+  }
+  state.stage='turn';state.board=['5h','2h','2c','9h'].map(parseCardCode);
+  state._rangeComboInfoCache=Object.create(null);state._rangeBoardTextureCache=Object.create(null);
+  state.bb=20;state.sb=10;state.ante=0;state.dealerIdx=lockedTurnHero.i;
+  state.currentBet=3200;state.lastRaiseSize=2660;state.streetRaiseCount=1;
+  state.lastAggIdx=lockedTurnVillain.i;state.pfAggIdx=lockedTurnVillain.i;
+  lockedTurnHero.pos='BTN';lockedTurnHero.hole=['6d','6h'].map(parseCardCode);
+  lockedTurnHero.chips=3200;lockedTurnHero.bet=0;lockedTurnHero.totalBet=2580;lockedTurnHero.acted=false;
+  lockedTurnVillain.pos='HJ';lockedTurnVillain.chips=0;lockedTurnVillain.bet=3200;
+  lockedTurnVillain.totalBet=5780;lockedTurnVillain.allIn=true;lockedTurnVillain.acted=true;
+  lockedTurnVillain.lineRead='barrel2';lockedTurnVillain.rangeCap=.14;rangeModelInit(lockedTurnVillain);
+  state.players[2].totalBet=620;
+  const savedLockedTurnEquity=mcEquityR;mcEquityR=()=>.31;
+  const lockedTurnDecision=coachDecide(lockedTurnHero);
+  mcEquityR=savedLockedTurnEquity;
+  if(!['CALL','FOLD'].includes(lockedTurnDecision.rec)||lockedTurnDecision.bluffInfo!==null||
+      lockedTurnDecision.bluffBreakEven!==null||lockedTurnDecision.modeledFoldEquity!==0||
+      lockedTurnDecision.actionIntent!==lockedTurnDecision.rec.toLowerCase()||
+      lockedTurnDecision.evs.RAISE!==lockedTurnDecision.evs.CALL||coachBluffHtml(lockedTurnDecision.bluffInfo)!==''||
+      opponentsCanRespond(lockedTurnHero))
+    throw new Error('heads-up versus an all-in must be pure call/fold with no bluff model '+JSON.stringify({
+      rec:lockedTurnDecision.rec,intent:lockedTurnDecision.actionIntent,bluff:lockedTurnDecision.bluffInfo,
+      folds:lockedTurnDecision.modeledFoldEquity,evs:lockedTurnDecision.evs}));
+  const lockedAggressor=state.lastAggIdx,lockedRaiseCount=state.streetRaiseCount;
+  applyAction(lockedTurnHero,'raise',lockedTurnHero.chips);
+  if(lockedTurnHero.bet!==3200||!lockedTurnHero.allIn||state.currentBet!==3200||
+      state.lastAggIdx!==lockedAggressor||state.streetRaiseCount!==lockedRaiseCount||
+      !lockedTurnHero.lastAct.startsWith('All-in'))
+    throw new Error('engine must normalize an attempted raise against an all-in to a call '+JSON.stringify({
+      heroBet:lockedTurnHero.bet,allIn:lockedTurnHero.allIn,currentBet:state.currentBet,
+      lastAggIdx:state.lastAggIdx,raiseCount:state.streetRaiseCount,lastAct:lockedTurnHero.lastAct}));
+
   /* Four-flush turn: category-level "Ace-high flush" is misleading when the fifth
      card is a three. Exact opponent combos and their continue policies must block
      the automatic protection bet. */
@@ -882,6 +922,8 @@ const result=vm.runInContext(`(()=>{
     tableSizeStrategy,bbIsoKQo:{rec:bbIsoKQo.rec,targetBB:bbIsoKQo.coachT/100,chart:bbIsoKQo.chartInfo.kind},
     cashBtnIso:{rec:cashBtnIso.rec,targetBB:cashBtnIso.coachT/100,effectiveBB:cashBtnIsoPlan.effectiveBB},
     cashThreeBet:{open:usd(200),target:usd(cashThreeBetDefault),targetBB:cashThreeBetDefault/100},
+    lockedAllIn:{rec:lockedTurnDecision.rec,bluffInfo:lockedTurnDecision.bluffInfo,
+      foldEquity:lockedTurnDecision.modeledFoldEquity,attemptedRaise:lockedTurnHero.lastAct},
     ordinals};
 })()`,context);
 

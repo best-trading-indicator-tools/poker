@@ -3200,7 +3200,8 @@ function showActions(p){
   $('foldBtn').disabled=false;
   const minTarget=Math.min(state.currentBet+state.lastRaiseSize, p.bet+p.chips);
   const maxTarget=p.bet+p.chips;
-  const canRaise=maxTarget>state.currentBet;
+  const canRaise=maxTarget>state.currentBet&&
+    (typeof opponentsCanRespond!=='function'||opponentsCanRespond(p));
   $('raiseCtl').style.visibility=canRaise?'visible':'hidden';
   if(canRaise){
     const sl=$('raiseSlider');
@@ -3256,6 +3257,9 @@ function humanAct(type,amount){
   }
   const p=state.players[state.turnIdx];
   if(!p||!p.isHuman)return;
+  if(type==='raise'&&typeof opponentsCanRespond==='function'&&!opponentsCanRespond(p)){
+    type='call';amount=undefined;
+  }
   const callNow=Math.min(state.currentBet-p.bet,p.chips);
   /* per-hand stat tracking (VPIP / PFR / aggression) */
   const hs=state.humanHandStats;

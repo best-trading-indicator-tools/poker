@@ -1246,7 +1246,10 @@ function coachRiverNutBlockerBluff(p,score,opps){
 }
 function coachBluffAssessment(p,ctx){
   const {rec,madeScore,drawInfo,eqAdj,callAmt,pot,opps,actsLast,concepts,
-    smallStab,bluffBreakEven,baseFoldEquity,code}=ctx;
+    smallStab,bluffBreakEven,baseFoldEquity,code,bettingLocked}=ctx;
+  /* No opponent with chips means no fold equity and therefore no bluff
+     decision. The main coach explanation already handles the call/fold math. */
+  if(bettingLocked)return null;
   const aggressive=rec==='RAISE'||rec==='ALLIN';
   const postflop=state.stage!=='preflop';
   const made=madeScore?.[0]||0;
@@ -2784,7 +2787,7 @@ function coachDecide(p){
           coachPostflopOpenSizing(pot,smallStab,madeScore,drawInfo).target));
   const tEv=clamp(Math.round(evRaiseTarget/state.sb)*state.sb,
     state.currentBet+state.lastRaiseSize, p.bet+p.chips);
-  const FE=clamp(0.42-0.09*(opps-1),0.08,0.45);            // fold equity vs # of opponents
+  const FE=bettingLocked?0:clamp(0.42-0.09*(opps-1),0.08,0.45); // all-in-only response has zero fold equity
   const evR=A=>FE*pot+(1-FE)*(eq*(pot+2*A)-A);             // raise A more chips
   const evs={
     FOLD:0,
@@ -2794,6 +2797,7 @@ function coachDecide(p){
       :eq*pot),
     RAISE:Math.round(evR(rec==='ALLIN' ? p.chips : tEv-p.bet))
   };
+  if(bettingLocked)evs.RAISE=evs.CALL;
   const raiseInvestment=Math.max(0,(rec==='ALLIN'?p.bet+p.chips:coachT)-p.bet);
   const aggressorAllIn=state.stage==='preflop'&&state.lastAggIdx>=0&&
     state.players[state.lastAggIdx]?.allIn;
@@ -2803,17 +2807,17 @@ function coachDecide(p){
     strategyMode='chart';
   if(strategyMode!=='exploit'&&icmPrem>=.005&&callAmt>0)
     strategyMode=strategyMode==='allin'?'icm-allin':'icm';
-  const bluffBreakEven=!aggressorAllIn&&(rec==='RAISE'||rec==='ALLIN')&&raiseInvestment>0
+  const bluffBreakEven=!bettingLocked&&!aggressorAllIn&&(rec==='RAISE'||rec==='ALLIN')&&raiseInvestment>0
     ?raiseInvestment/Math.max(pot+raiseInvestment,1):null;
   const bluffInfo=coachBluffAssessment(p,{rec,madeScore,drawInfo,eqAdj,callAmt,pot,opps,
-    actsLast,concepts,smallStab,bluffBreakEven,baseFoldEquity:FE,code});
+    actsLast,concepts,smallStab,bluffBreakEven,baseFoldEquity:FE,code,bettingLocked});
   coachSpotBrief(p,extra,{eq,eqAdj,odds,needEq:callAmt>0?decisionNeed:null,
     callAmt,pot,opps,pos,actsFirst,actsLast,airPen});
   const result={rec,coachT,evs,why,extra,handDesc,drawRow,eq,eqAdj,airPen,underpairPen,underpairInfo,flushInfo,odds,callAmt,pot,opps,pos,early,late,
           actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem,icmActive,icmInfo,chartInfo,rangeCharts,code,spr,sprZone,
           preflopCallInfo,drawInfo,impliedInfo,drySidePot,sidePotInfo,needEq:decisionNeed,
-          strategyMode,bluffBreakEven,modeledFoldEquity:bluffInfo.estimatedFolds,
-          bluffInfo,actionIntent:bluffInfo.intent,concepts,postSizePlan};
+          strategyMode,bluffBreakEven,modeledFoldEquity:bluffInfo?bluffInfo.estimatedFolds:0,
+          bluffInfo,actionIntent:bluffInfo?bluffInfo.intent:rec.toLowerCase(),concepts,postSizePlan};
   return typeof solverApplyCoachStrategy==='function'?solverApplyCoachStrategy(p,result):result;
 }
 

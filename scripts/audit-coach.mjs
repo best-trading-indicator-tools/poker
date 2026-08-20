@@ -348,7 +348,9 @@ const audit=vm.runInContext(`(()=>{
       invariantScenarios++;
       record('Invariant fuzz','all-in lock has no raise or bluff '+stage+' '+players+'p '+
         difficulty+' '+hole.join(''),
-        !['RAISE','ALLIN'].includes(R.rec)&&!R.bluffInfo?.bluffing,invariantDetail(R));
+        !['RAISE','ALLIN'].includes(R.rec)&&R.bluffInfo===null&&
+          R.bluffBreakEven===null&&R.modeledFoldEquity===0&&
+          ['call','check','fold'].includes(R.actionIntent),invariantDetail(R));
     }
 
   /* ICM must never lower the required equity for the same tournament call. */
