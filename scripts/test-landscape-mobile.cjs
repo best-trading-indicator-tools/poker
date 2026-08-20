@@ -58,6 +58,29 @@ const VIEWPORT = { width: 844, height: 390 };
   await page.evaluate(() => { if (typeof updateOrient === 'function') updateOrient(); });
   await page.click('#startBtn');
   await page.waitForSelector('.seat.human .hole .card', { timeout: 10000 });
+  const raiseStepMetrics = await page.evaluate(() => {
+    const sl=document.getElementById('raiseSlider');
+    const input=document.getElementById('raiseAmountInput');
+    const down=document.getElementById('raiseStepDown');
+    const up=document.getElementById('raiseStepUp');
+    const bb=state.bb,min=bb*2,max=bb*10,start=bb*4;
+    sl.min=min;sl.max=max;sl.step=state.sb;
+    setRaiseExact(start);
+    const before={engine:getRaiseSliderAmt(),display:Number(input.value)};
+    up.click();
+    const afterUp={engine:getRaiseSliderAmt(),display:Number(input.value)};
+    down.click();
+    const afterDown={engine:getRaiseSliderAmt(),display:Number(input.value)};
+    setRaiseExact(min);const downDisabled=down.disabled;
+    setRaiseExact(max);const upDisabled=up.disabled;
+    setRaiseExact(start);
+    return {
+      before,afterUp,afterDown,downDisabled,upDisabled,
+      pass:afterUp.engine-before.engine===bb&&afterUp.display-before.display===displayAmount(bb)&&
+        afterDown.engine===before.engine&&afterDown.display===before.display&&
+        downDisabled&&upDisabled
+    };
+  });
   await page.evaluate(() => {
     /* Keep the table-height assertion independent of who randomly acts first. */
     document.getElementById('humanCtls')?.classList.add('hidden');
@@ -139,10 +162,10 @@ const VIEWPORT = { width: 844, height: 390 };
       pass:ellipse<=1.01&&betDistance<seatDistance&&getComputedStyle(bet).visibility!=='hidden'};
   });
 
-  console.log(JSON.stringify({blindSelection,fourColorDeck:deckMetrics,landscape:metrics,halfScreenPortrait:portraitMetrics}, null, 2));
+  console.log(JSON.stringify({blindSelection,raiseStep:raiseStepMetrics,fourColorDeck:deckMetrics,landscape:metrics,halfScreenPortrait:portraitMetrics}, null, 2));
   await page.screenshot({ path: '/tmp/poker-landscape-mobile.png' });
   await portraitPage.close();
   await browser.close();
   if(server)await new Promise(resolve=>server.close(resolve));
-  process.exit(deckMetrics.pass&&metrics.pass&&portraitMetrics.pass ? 0 : 1);
+  process.exit(raiseStepMetrics.pass&&deckMetrics.pass&&metrics.pass&&portraitMetrics.pass ? 0 : 1);
 })();

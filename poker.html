@@ -15,7 +15,7 @@
   --text:#e8ebf0; --dim:#8d99ab; --gold:#e8b64c; --red:#e2574c; --blue:#4c8fe2; --green:#2e7d4f;
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
-.btn:focus-visible,.preset:focus-visible,#raiseAmountInput:focus-visible,#actionbar button:focus-visible,.seg button:focus-visible,.rp-nav button:focus-visible,.rp-jump input:focus-visible,.rp-jump button:focus-visible,#revClose:focus-visible,#revAllHands:focus-visible,#rewardClose:focus-visible,#rewardCloseTop:focus-visible,.reward-equip:focus-visible,#tRewards:focus-visible,#deckBtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.btn:focus-visible,.preset:focus-visible,.raise-step:focus-visible,#raiseAmountInput:focus-visible,#actionbar button:focus-visible,.seg button:focus-visible,.rp-nav button:focus-visible,.rp-jump input:focus-visible,.rp-jump button:focus-visible,#revClose:focus-visible,#revAllHands:focus-visible,#rewardClose:focus-visible,#rewardCloseTop:focus-visible,.reward-equip:focus-visible,#tRewards:focus-visible,#deckBtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
 .tb-touch{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:44px;padding:4px 8px;margin:-4px -8px;}
 .tb-touch input{width:22px;height:22px;accent-color:var(--gold);cursor:pointer;}
 .setup-touch{display:flex;align-items:center;gap:10px;cursor:pointer;min-height:44px;}
@@ -471,7 +471,14 @@ body.frame-crown .seat.human .plate{border-color:#f7d779;box-shadow:0 0 22px rgb
 #raiseBtn{background:var(--gold);color:#1a1408;}
 #actionbar .btn:disabled{opacity:.35;cursor:default;}
 #raiseCtl{display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap;}
-#raiseSlider{flex:1;min-width:90px;accent-color:var(--gold);}
+#raiseAdjust{display:flex;align-items:center;gap:6px;flex:1 1 220px;min-width:180px;}
+#raiseSlider{flex:1;min-width:70px;accent-color:var(--gold);}
+.raise-step{box-sizing:border-box;height:34px;min-width:50px;padding:4px 7px;display:inline-flex;align-items:center;justify-content:center;gap:3px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.raise-step:hover:not(:disabled){border-color:var(--gold);color:var(--gold);}
+.raise-step:active:not(:disabled){transform:translateY(1px);}
+.raise-step:disabled{opacity:.35;cursor:default;}
+.raise-step-sign{font-size:18px;font-weight:900;line-height:1;}
+.raise-step-size{font-size:10px;font-weight:800;line-height:1;}
 #raiseAmountWrap{display:flex;align-items:center;gap:6px;flex:0 0 auto;color:var(--dim);font-size:10px;font-weight:750;white-space:nowrap;}
 #raiseAmountInput{box-sizing:border-box;width:86px;min-width:0;max-width:100%;height:32px;border:1px solid var(--line);border-radius:7px;background:#10141b;color:var(--text);padding:5px 7px;font-size:13px;font-weight:750;font-variant-numeric:tabular-nums;text-align:right;}
 #raiseAmountInput[aria-invalid="true"]{border-color:#e2574c;color:#ffaaa3;}
@@ -954,8 +961,9 @@ body.lls #raiseCtl .preset{flex:none;padding:8px 11px;font-size:12px;}
 body.lls #raiseAmountWrap{flex:0 0 72px;}
 body.lls #raiseAmountLbl{display:none;}
 body.lls #raiseAmountInput{width:72px;height:34px;}
-body.lls #raiseSlider{flex:1 1 140px;min-width:120px;height:26px;}
-body.lls #chipPreview{display:none!important;}
+body.lls #raiseAdjust{flex:1 1 230px;min-width:180px;gap:5px;}
+body.lls #raiseSlider{min-width:80px;height:26px;}
+body.lls .raise-step{height:34px;min-width:48px;padding:4px 6px;}
 
 /* very small phone landscapes: keep every raise control on one compact row */
 @media(max-width:600px) and (orientation:landscape){
@@ -965,7 +973,10 @@ body.lls #chipPreview{display:none!important;}
   body.lls #raiseCtl .preset{padding:7px 7px;font-size:11px;}
   body.lls #raiseAmountWrap{flex-basis:66px;}
   body.lls #raiseAmountInput{width:66px;height:32px;padding:4px 5px;font-size:12px;}
-  body.lls #raiseSlider{flex:1 1 88px;min-width:72px;}
+  body.lls #raiseAdjust{flex:1 1 150px;min-width:125px;gap:3px;}
+  body.lls #raiseSlider{min-width:55px;}
+  body.lls .raise-step{min-width:34px;width:34px;padding:3px;}
+  body.lls .raise-step-size{display:none;}
   body.lls #humanCtls #raiseBtn{min-width:84px;padding:10px 7px;font-size:13px;}
 }
 
@@ -1048,9 +1059,9 @@ body.act-panel-mode #raiseCtl{flex-direction:column;width:100%;gap:6px;flex-basi
 body.act-panel-mode #raiseCtl .preset{width:100%;flex:none;padding:9px 6px;font-size:11.5px;}
 body.act-panel-mode #raiseAmountWrap{width:100%;}
 body.act-panel-mode #raiseAmountInput{flex:1;width:auto;}
+body.act-panel-mode #raiseAdjust{width:100%;min-width:0;flex:none;}
 body.act-panel-mode #raiseSlider{width:100%;min-width:0;height:26px;}
 body.act-panel-mode #waitMsg{font-size:11px;width:100%;text-align:center;}
-body.act-panel-mode #chipPreview{display:none!important;}
 
 /* rotated-portrait (fl): action controls live in an always-visible, readable bar
    pinned to the screen bottom — OUTSIDE the rotated #game so the text stays upright.
@@ -1082,11 +1093,13 @@ body.fl #raiseCtl .preset{flex:0 0 auto;padding:6px 6px;font-size:10.5px;}
 body.fl #raiseAmountWrap{flex:0 0 64px;}
 body.fl #raiseAmountLbl{display:none;}
 body.fl #raiseAmountInput{width:64px;height:30px;padding:4px 5px;font-size:11.5px;}
-body.fl #raiseSlider{flex:1 1 64px;min-width:54px;height:24px;}
+body.fl #raiseAdjust{flex:1 1 130px;min-width:105px;gap:3px;}
+body.fl #raiseSlider{min-width:40px;height:24px;}
+body.fl .raise-step{min-width:30px;width:30px;height:30px;padding:3px;}
+body.fl .raise-step-size{display:none;}
 body.fl #raiseBtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:92px;max-width:112px;overflow-wrap:anywhere;}
 body.fl #raiseBtn .act-label{font-size:11.5px;margin-right:0;}
 body.fl #raiseBtn .act-amount{font-size:12.5px;}
-body.fl #chipPreview{display:none!important;}
 
 /* short portrait phones are rotated by the app; compress the resulting landscape dock */
 @media(max-height:600px) and (orientation:portrait){
@@ -1096,7 +1109,9 @@ body.fl #chipPreview{display:none!important;}
   body.fl #raiseCtl .preset{padding:6px 4px;font-size:10px;}
   body.fl #raiseAmountWrap{flex-basis:56px;}
   body.fl #raiseAmountInput{width:56px;height:28px;padding:3px 4px;font-size:11px;}
-  body.fl #raiseSlider{min-width:40px;}
+  body.fl #raiseAdjust{min-width:86px;}
+  body.fl #raiseSlider{min-width:28px;}
+  body.fl .raise-step{min-width:27px;width:27px;}
   body.fl #humanCtls #raiseBtn{min-width:82px;max-width:96px;padding:8px 5px;}
 }
 
@@ -1191,10 +1206,10 @@ body.fl #chipPreview{display:none!important;}
   body:not(.act-panel-mode):not(.fl):not(.lls) #raiseCtl .preset{flex:1;padding:9px 4px;font-size:11.5px;}
   body:not(.act-panel-mode):not(.fl):not(.lls) #raiseAmountWrap{flex:1 1 110px;max-width:160px;min-width:0;}
   body:not(.act-panel-mode):not(.fl):not(.lls) #raiseAmountInput{flex:1;width:auto;}
-  body:not(.act-panel-mode):not(.fl):not(.lls) #raiseSlider{flex-basis:100%;min-width:0;height:30px;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #raiseAdjust{flex-basis:100%;min-width:0;}
+  body:not(.act-panel-mode):not(.fl):not(.lls) #raiseSlider{min-width:0;height:30px;}
   body:not(.act-panel-mode):not(.fl):not(.lls) #raiseBtn{flex:1;padding:14px 8px;}
   body:not(.act-panel-mode):not(.fl):not(.lls) #waitMsg{font-size:12px;flex-basis:100%;}
-  #chipPreview{display:none!important;}
   #log{left:6px;right:6px;width:auto;bottom:6px;max-height:40vh;}
 }
 @media(max-width:1024px) and (orientation:landscape) and (max-height:500px){
@@ -1445,13 +1460,16 @@ body.fl #chipPreview{display:none!important;}
       <button class="btn" id="foldBtn">Fold</button>
       <button class="btn" id="callBtn">Call</button>
       <div id="raiseCtl">
-        <button class="preset" id="prMin">Min</button>
+        <button class="preset" id="prThird">&frac13; Pot</button>
         <button class="preset" id="prHalf">&frac12; Pot</button>
         <button class="preset" id="prPot">Pot</button>
         <button class="preset" id="prMax">All-in</button>
         <label id="raiseAmountWrap"><span id="raiseAmountLbl">Exact</span><input type="number" id="raiseAmountInput" min="0" step="1" inputmode="numeric" autocomplete="off" aria-label="Exact raise-to amount in chips"></label>
-        <input type="range" id="raiseSlider">
-        <div id="chipPreview" style="display:flex;align-items:flex-end;min-width:54px;max-height:46px;"></div>
+        <div id="raiseAdjust">
+          <button type="button" class="raise-step" id="raiseStepDown" aria-label="Decrease bet size by 1 big blind"><span class="raise-step-sign" aria-hidden="true">&minus;</span><span class="raise-step-size" aria-hidden="true">1 BB</span></button>
+          <input type="range" id="raiseSlider" aria-label="Bet size; mouse wheel changes 1 big blind">
+          <button type="button" class="raise-step" id="raiseStepUp" aria-label="Increase bet size by 1 big blind"><span class="raise-step-sign" aria-hidden="true">+</span><span class="raise-step-size" aria-hidden="true">1 BB</span></button>
+        </div>
         <button class="btn" id="raiseBtn">Raise</button>
       </div>
     </div>
@@ -1595,20 +1613,20 @@ body.fl #chipPreview{display:none!important;}
   </div>
 </div>
 
-<script src="charts.js?v=89"></script>
-  <script src="js/eval.js?v=89"></script>
-  <script src="js/preflop-blueprint.js?v=89"></script>
-  <script src="js/modes/registry.js?v=89"></script>
-  <script src="js/modes/tournament.js?v=89"></script>
-  <script src="js/modes/cash.js?v=89"></script>
-  <script src="js/engine.js?v=89"></script>
-  <script src="js/rewards.js?v=89"></script>
-  <script src="vendor/wasm-postflop/comlink.js?v=89"></script>
-  <script src="js/solver.js?v=89"></script>
-  <script src="js/coach.js?v=89"></script>
-  <script src="js/ai.js?v=89"></script>
-  <script src="js/mp.js?v=89"></script>
-  <script src="js/ui.js?v=89"></script>
+<script src="charts.js?v=90"></script>
+  <script src="js/eval.js?v=90"></script>
+  <script src="js/preflop-blueprint.js?v=90"></script>
+  <script src="js/modes/registry.js?v=90"></script>
+  <script src="js/modes/tournament.js?v=90"></script>
+  <script src="js/modes/cash.js?v=90"></script>
+  <script src="js/engine.js?v=90"></script>
+  <script src="js/rewards.js?v=90"></script>
+  <script src="vendor/wasm-postflop/comlink.js?v=90"></script>
+  <script src="js/solver.js?v=90"></script>
+  <script src="js/coach.js?v=90"></script>
+  <script src="js/ai.js?v=90"></script>
+  <script src="js/mp.js?v=90"></script>
+  <script src="js/ui.js?v=90"></script>
 <script>
 /* ---------- offline mode (PWA): cache the game so it runs with no internet ---------- */
 if(HAS_DOM && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)){

@@ -184,12 +184,33 @@ for(const option of blindOptions){
 }
 assert.equal(vm.runInContext('usd(engineAmount(100))',context),'$100',
   'a $100 setup big blind must display as $100 at the table');
-for(const id of ['tableScenarioSel','tableScenarioPreview','tableCustom','tableRoleRock','tableRoleStation','tableRoleShark','tableRoleManiac'])
+assert.equal(vm.runInContext('raiseTargetByBigBlind(400,1,100,300,1000)',context),500,
+  'increase control must add exactly one big blind');
+assert.equal(vm.runInContext('raiseTargetByBigBlind(400,-1,100,300,1000)',context),300,
+  'decrease control must subtract exactly one big blind');
+assert.equal(vm.runInContext('raiseTargetByBigBlind(950,1,100,300,1000)',context),1000,
+  'increase control must clamp at all-in');
+assert.equal(vm.runInContext('raiseTargetByBigBlind(350,-1,100,300,1000)',context),300,
+  'decrease control must clamp at the legal minimum');
+assert.equal(vm.runInContext('raiseWheelDirection(-100)',context),1,
+  'wheel up must increase the bet size');
+assert.equal(vm.runInContext('raiseWheelDirection(100)',context),-1,
+  'wheel down must decrease the bet size');
+assert.equal(vm.runInContext('raiseWheelDirection(0)',context),0,
+  'a stationary wheel event must not change the bet size');
+assert.equal(vm.runInContext('raiseTargetForPotFraction(0,900,1/3,50,100,1000)',context),300,
+  'one-third-pot preset must calculate and round the target');
+assert.equal(vm.runInContext('raiseTargetForPotFraction(100,300,1/3,50,300,1000)',context),300,
+  'one-third-pot preset must respect the legal minimum');
+for(const id of ['tableScenarioSel','tableScenarioPreview','tableCustom','tableRoleRock','tableRoleStation','tableRoleShark','tableRoleManiac','raiseStepDown','raiseStepUp'])
   assert.match(html,new RegExp(`id=["']${id}["']`),`missing setup control ${id}`);
 for(const scenario of ['balanced','tight','loose','aggressive','wild','random','custom'])
   assert.match(html,new RegExp(`<option value=["']${scenario}["']`),`missing scenario option ${scenario}`);
 assert.match(html,/id="koBonusInfoBtn"[^>]*aria-expanded="false"/,'KO info button must start collapsed');
 assert.match(html,/id="koBonusInfo" class="hidden sng-only"/,'KO info content must start hidden');
+assert.match(html,/id="prThird"[^>]*>[^<]*&frac13; Pot<\/button>/,
+  'raise presets must include one-third pot');
+assert.doesNotMatch(html,/id="prMin"/,'minimum raise preset should be replaced by one-third pot');
 for(const id of ['rpJump','rpJumpLbl','rpHandInput','rpGoH'])
   assert.match(html,new RegExp(`id=["']${id}["']`),`missing replay jump control ${id}`);
 assert.match(html,/id="rpHandInput"[^>]*type="number"[^>]*required/,

@@ -93,7 +93,7 @@ scUnopened:"Unopened",scLimp:"Limp",scRaise:"Raise",scThreeBet:"3-bet",scCbet:"C
 revAllHands:"All saved hands",revReplay:"Tap a game to replay its hands",revMidBanner:"Hand in progress — resumed",
 resetData:"Clear saved data",resetInfo:"Deletes lifetime stats, hand history, session reviews, saved scenarios and any unfinished game you could resume. Your Rewards level, XP, unlocks, equipped cosmetics and language choice are kept. This can't be undone.",resetConfirm:"Delete all stats, hand history, session reviews, saved scenarios and unfinished games? Rewards level and progress will be kept.",resetDone:"✓ Cleared",
 level:"Level ",hand:"Hand ",blindsUpA:"Blinds up in ",blindsUpB:" hands",autoNext:"Auto next hand",coachLbl:"🧭 Live coach",coachBtn:"Coach",quit:"Quit",quitSng:"Leave the table? Your tournament will be saved so you can resume it.",quitCash:"Leave the table?",
-fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",min:"Min",halfPot:"½ Pot",pot:"Pot",raiseExact:"Exact",raiseExactHelp:"Enter the exact legal raise-to amount in chips",
+fold:"Fold",check:"Check",call:"Call",allin:"All-in",raiseTo:"Raise to ",betW:"Bet ",raiseW:"Raise",thirdPot:"⅓ Pot",halfPot:"½ Pot",pot:"Pot",raiseExact:"Exact",raiseExactHelp:"Enter the exact legal raise-to amount in chips",raiseStepDown:"Decrease bet size by 1 big blind",raiseStepUp:"Increase bet size by 1 big blind",raiseSliderHelp:"Drag or scroll to adjust; mouse wheel changes 1 big blind",
 actMenu:"◀ Menu",actTurn:"◀ Your turn",
 log:"Log",lastHand:"Last hand",exportH:"Export history",exportCoach:"AI review (.txt)",exportCoachTitle:"Download up to 20 hands from the current game with AI coach metadata as text",adminTitle:"🛠 Admin tools",adminSub:"Internal AI coach diagnostics. Hidden from players.",nextHand:"Next hand ▶",liveCoach:"🧭 LIVE COACH",coachScrollMore:"Scroll for more",
 waiting:"Advice appears here when it's your turn.",
@@ -257,7 +257,7 @@ scUnopened:"Non ouvert",scLimp:"Limp",scRaise:"Relance",scThreeBet:"3-bet",scCbe
 revAllHands:"Toutes les mains sauvegardées",revReplay:"Touchez une partie pour revoir ses mains",revMidBanner:"Main en cours — reprise",
 resetData:"Effacer les données sauvegardées",resetInfo:"Supprime les statistiques globales, l’historique des mains, les bilans, les scénarios sauvegardés et toute partie en cours à reprendre. Votre niveau Rewards, XP, éléments débloqués, cosmétiques équipés et choix de langue sont conservés. Irréversible.",resetConfirm:"Supprimer toutes les statistiques, l’historique, les bilans, les scénarios et les parties en cours ? Le niveau et la progression Rewards seront conservés.",resetDone:"✓ Effacé",
 level:"Niveau ",hand:"Main ",blindsUpA:"Blinds montent dans ",blindsUpB:" mains",autoNext:"Main suivante auto",coachLbl:"🧭 Coach en direct",coachBtn:"Coach",quit:"Quitter",quitSng:"Quitter la table ? Le tournoi sera sauvegardé pour pouvoir le reprendre.",quitCash:"Quitter la table ?",
-fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",min:"Min",halfPot:"½ Pot",pot:"Pot",raiseExact:"Exact",raiseExactHelp:"Saisissez le montant total exact et légal de la relance en jetons",
+fold:"Se coucher",check:"Parole",call:"Suivre",allin:"Tapis",raiseTo:"Relancer à ",betW:"Miser ",raiseW:"Relancer",thirdPot:"⅓ Pot",halfPot:"½ Pot",pot:"Pot",raiseExact:"Exact",raiseExactHelp:"Saisissez le montant total exact et légal de la relance en jetons",raiseStepDown:"Diminuer la mise de 1 grosse blinde",raiseStepUp:"Augmenter la mise de 1 grosse blinde",raiseSliderHelp:"Faites glisser ou défiler pour ajuster ; la molette change 1 grosse blinde",
 actMenu:"◀ Menu",actTurn:"◀ À vous",
 log:"Journal",lastHand:"Dernière main",exportH:"Exporter l'historique",exportCoach:"Revue IA (.txt)",exportCoachTitle:"Télécharger jusqu'à 20 mains de la partie actuelle avec les métadonnées du coach IA",adminTitle:"🛠 Outils administrateur",adminSub:"Diagnostics internes du coach IA. Masqués pour les joueurs.",nextHand:"Main suivante ▶",liveCoach:"🧭 COACH EN DIRECT",coachScrollMore:"Faites défiler pour voir la suite",
 waiting:"Les conseils apparaissent ici quand c'est votre tour.",
@@ -421,7 +421,7 @@ scUnopened:"Sin abrir",scLimp:"Limp",scRaise:"Subida",scThreeBet:"3-bet",scCbet:
 revAllHands:"Todas las manos guardadas",revReplay:"Toca una partida para repetir sus manos",revMidBanner:"Mano en curso — reanudada",
 resetData:"Borrar datos guardados",resetInfo:"Elimina estadísticas globales, historial de manos, resúmenes, situaciones guardadas y cualquier partida sin terminar. Se conservan tu nivel Rewards, XP, desbloqueos, cosméticos equipados e idioma. No se puede deshacer.",resetConfirm:"¿Borrar estadísticas, historial, resúmenes, situaciones y partidas sin terminar? El nivel y progreso Rewards se conservarán.",resetDone:"✓ Borrado",
 level:"Nivel ",hand:"Mano ",blindsUpA:"Ciegas suben en ",blindsUpB:" manos",autoNext:"Mano siguiente auto",coachLbl:"🧭 Coach en vivo",coachBtn:"Coach",quit:"Salir",quitSng:"¿Dejar la mesa? El torneo se guardará para que puedas reanudarlo.",quitCash:"¿Dejar la mesa?",
-fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",min:"Mín",halfPot:"½ Bote",pot:"Bote",raiseExact:"Exacto",raiseExactHelp:"Introduce la cantidad total exacta y legal de la subida en fichas",
+fold:"Retirarse",check:"Pasar",call:"Igualar",allin:"All-in",raiseTo:"Subir a ",betW:"Apostar ",raiseW:"Subir",thirdPot:"⅓ Bote",halfPot:"½ Bote",pot:"Bote",raiseExact:"Exacto",raiseExactHelp:"Introduce la cantidad total exacta y legal de la subida en fichas",raiseStepDown:"Reducir la apuesta en 1 ciega grande",raiseStepUp:"Aumentar la apuesta en 1 ciega grande",raiseSliderHelp:"Arrastra o desplaza para ajustar; la rueda cambia 1 ciega grande",
 actMenu:"◀ Menú",actTurn:"◀ Tu turno",
 log:"Registro",lastHand:"Última mano",exportH:"Exportar historial",exportCoach:"Revisión IA (.txt)",exportCoachTitle:"Descargar hasta 20 manos de la partida actual con metadatos del coach IA",adminTitle:"🛠 Herramientas de administrador",adminSub:"Diagnósticos internos del coach IA. Ocultos para los jugadores.",nextHand:"Siguiente mano ▶",liveCoach:"🧭 COACH EN VIVO",coachScrollMore:"Desplázate para ver más",
 waiting:"Los consejos aparecen aquí cuando es tu turno.",
@@ -3125,6 +3125,46 @@ function applyRaiseAmountInput(){
   if(valid)setRaiseExact(clamp(engineAmount(shownAmount),min,max));
   return valid;
 }
+function updateRaiseStepButtons(value=getRaiseSliderAmt()){
+  const sl=$('raiseSlider'),down=$('raiseStepDown'),up=$('raiseStepUp');
+  if(!sl)return;
+  if(down)down.disabled=Number(value)<=Number(sl.min);
+  if(up)up.disabled=Number(value)>=Number(sl.max);
+}
+function raiseTargetByBigBlind(value,direction,bb,min,max){
+  const delta=Math.max(1,Number(bb)||1)*Math.sign(Number(direction)||0);
+  return clamp(Number(value)+delta,Number(min),Number(max));
+}
+function adjustRaiseByBigBlind(direction){
+  const sl=$('raiseSlider');
+  if(!sl||!state)return false;
+  const current=getRaiseSliderAmt();
+  const next=raiseTargetByBigBlind(current,direction,state.bb,sl.min,sl.max);
+  if(next===current)return false;
+  setRaiseExact(next);
+  haptic(6);
+  return true;
+}
+function raiseWheelDirection(deltaY){
+  return deltaY<0?1:deltaY>0?-1:0;
+}
+function handleRaiseSliderWheel(event){
+  const direction=raiseWheelDirection(event.deltaY);
+  if(direction&&adjustRaiseByBigBlind(direction))event.preventDefault();
+}
+function raiseTargetForPotFraction(currentBet,pot,fraction,step,min,max){
+  const unit=Math.max(1,Number(step)||1);
+  const target=Math.round((Number(currentBet)+Number(pot)*Number(fraction))/unit)*unit;
+  return clamp(target,Number(min),Number(max));
+}
+function setRaisePotFraction(fraction){
+  const sl=$('raiseSlider');
+  if(!sl||!state)return;
+  clearRaiseExact();
+  const pot=state.players.reduce((sum,p)=>sum+p.totalBet,0);
+  sl.value=raiseTargetForPotFraction(state.currentBet,pot,fraction,state.sb,sl.min,sl.max);
+  updateRaiseLabel();
+}
 function setActionAmountButton(btn,label,amount){
   if(!btn)return;
   const text=(label.trim()+' '+amount).trim();
@@ -3190,7 +3230,7 @@ function updateRaiseLabel(){
     `${usd(v)} (${bbs(v)})`
   );
   syncRaiseAmountInput(v);
-  $('chipPreview').innerHTML=chipStackHTML(v,true);
+  updateRaiseStepButtons(v);
 }
 function solverBranchForHumanAction(branches,type,amount,callAmount){
   if(!Array.isArray(branches)||!branches.length)return null;
@@ -3719,10 +3759,15 @@ function applyLang(){
   set('logToggle','log'); set('replayBtn','lastHand'); set('exportBtn','exportH'); set('aiReviewBtn','exportCoach'); set('aiReviewSetupBtn','exportCoach'); set('coachToggle','coachBtn'); set('nextHandBtn','nextHand');
   ['aiReviewBtn','aiReviewSetupBtn'].forEach(id=>{const button=$(id);if(button)button.title=T('exportCoachTitle');});
   set('coachScrollHintLbl','coachScrollMore');
-  set('foldBtn','fold'); set('prMin','min'); set('prHalf','halfPot'); set('prPot','pot'); set('prMax','allin');
+  set('foldBtn','fold'); set('prThird','thirdPot'); set('prHalf','halfPot'); set('prPot','pot'); set('prMax','allin');
   set('raiseAmountLbl','raiseExact');
   const raiseAmountInput=$('raiseAmountInput');
   if(raiseAmountInput){raiseAmountInput.title=T('raiseExactHelp');raiseAmountInput.setAttribute('aria-label',T('raiseExactHelp'));}
+  const raiseStepDown=$('raiseStepDown'),raiseStepUp=$('raiseStepUp');
+  if(raiseStepDown){raiseStepDown.title=T('raiseStepDown');raiseStepDown.setAttribute('aria-label',T('raiseStepDown'));}
+  if(raiseStepUp){raiseStepUp.title=T('raiseStepUp');raiseStepUp.setAttribute('aria-label',T('raiseStepUp'));}
+  const raiseSlider=$('raiseSlider');
+  if(raiseSlider){raiseSlider.title=T('raiseSliderHelp');raiseSlider.setAttribute('aria-label',T('raiseSliderHelp'));}
   set('rpClose','close'); set('rpTitle','replayTitle'); set('ovBtn','playAgain'); set('chartClose','close');
   set('rpPrevH','handNavP'); set('rpNextH','handNavN'); set('rpPrevS','streetNavP'); set('rpNextS','streetNavN');
   set('rpJumpLbl','jumpHand'); set('rpGoH','jumpGo');
@@ -3959,6 +4004,9 @@ function initUI(){
   $('callBtn').onclick=()=>humanAct('call');
   $('raiseBtn').onclick=()=>humanAct('raise',getRaiseSliderAmt());
   $('raiseSlider').oninput=()=>{clearRaiseExact();updateRaiseLabel();};
+  $('raiseSlider').addEventListener('wheel',handleRaiseSliderWheel,{passive:false});
+  $('raiseStepDown').onclick=()=>adjustRaiseByBigBlind(-1);
+  $('raiseStepUp').onclick=()=>adjustRaiseByBigBlind(1);
   $('raiseAmountInput').oninput=applyRaiseAmountInput;
   $('raiseAmountInput').onblur=()=>{
     if(!applyRaiseAmountInput())syncRaiseAmountInput(getRaiseSliderAmt());
@@ -3969,22 +4017,10 @@ function initUI(){
     if(applyRaiseAmountInput())e.currentTarget.blur();
     else e.currentTarget.reportValidity();
   };
-  $('prMin').onclick=()=>{clearRaiseExact();const sl=$('raiseSlider');sl.value=sl.min;updateRaiseLabel();};
+  $('prThird').onclick=()=>setRaisePotFraction(1/3);
   $('prMax').onclick=()=>setRaiseExact(raiseAllInAmt());
-  $('prHalf').onclick=()=>{
-    clearRaiseExact();
-    const pot=state.players.reduce((s,p)=>s+p.totalBet,0);
-    const sl=$('raiseSlider');
-    sl.value=clamp(Math.round((state.currentBet+pot*0.5)/state.sb)*state.sb,+sl.min,+sl.max);
-    updateRaiseLabel();
-  };
-  $('prPot').onclick=()=>{
-    clearRaiseExact();
-    const pot=state.players.reduce((s,p)=>s+p.totalBet,0);
-    const sl=$('raiseSlider');
-    sl.value=clamp(Math.round((state.currentBet+pot)/state.sb)*state.sb,+sl.min,+sl.max);
-    updateRaiseLabel();
-  };
+  $('prHalf').onclick=()=>setRaisePotFraction(0.5);
+  $('prPot').onclick=()=>setRaisePotFraction(1);
   $('nextHandBtn').onclick=doNextHand;
   /* --- language --- */
   $('langSel').onchange=e=>setLang(e.target.value);
@@ -4101,7 +4137,7 @@ function initUI(){
   };
   /* --- keyboard shortcuts: F fold · C check/call · R raise · 1-4 sizes · N next hand --- */
   $('foldBtn').title='Fold (F)'; $('callBtn').title='Check / Call (C)'; $('raiseBtn').title='Raise (R)';
-  $('prMin').title='Min raise (1)'; $('prHalf').title='½ pot (2)'; $('prPot').title='Pot (3)'; $('prMax').title='All-in (4)';
+  $('prThird').title='⅓ pot (1)'; $('prHalf').title='½ pot (2)'; $('prPot').title='Pot (3)'; $('prMax').title='All-in (4)';
   window.addEventListener('keydown',e=>{
     if(e.metaKey||e.ctrlKey||e.altKey)return;
     const tag=((e.target&&e.target.tagName)||'').toLowerCase();
@@ -4113,7 +4149,7 @@ function initUI(){
       if(k==='f'&&!$('foldBtn').disabled){e.preventDefault();humanAct('fold');}
       else if(k==='c'){e.preventDefault();humanAct('call');}
       else if(k==='r'){if($('raiseCtl').style.visibility!=='hidden'){e.preventDefault();humanAct('raise',getRaiseSliderAmt());}}
-      else if(k>='1'&&k<='4'){e.preventDefault();$(['prMin','prHalf','prPot','prMax'][+k-1]).click();}
+      else if(k>='1'&&k<='4'){e.preventDefault();$(['prThird','prHalf','prPot','prMax'][+k-1]).click();}
     }else if(k==='n'&&!$('nextHandBtn').classList.contains('hidden')){e.preventDefault();doNextHand();}
   });
   /* --- replayer navigation --- */

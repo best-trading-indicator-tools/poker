@@ -753,10 +753,10 @@ const result=vm.runInContext(`(()=>{
   state.players[5].bet=10;state.players[5].totalBet=10;state.players[5].chips=1990;
   state.players[6].bet=20;state.players[6].totalBet=20;state.players[6].chips=1980;
   const sevenUtgFives=coachDecide(sevenUtg);
-  if(sevenUtgFives.rec!=='RAISE'||sevenUtgFives.coachT!==80||sevenUtgFives.strategyMode!=='chart'||
+  if(sevenUtgFives.rec!=='RAISE'||sevenUtgFives.coachT!==60||sevenUtgFives.strategyMode!=='chart'||
       sevenUtgFives.chartInfo?.kind!=='rfi'||
       !sevenUtgFives.chartInfo?.list?.includes('55')||!sevenUtgFives.chartInfo?.pos?.includes('→ MP'))
-    throw new Error('7-handed 100 BB UTG 55 must use the equivalent MP chart and four-big-blind open '+JSON.stringify({
+    throw new Error('7-handed 100 BB UTG 55 must use the equivalent MP chart and no-ante three-big-blind open '+JSON.stringify({
       rec:sevenUtgFives.rec,coachT:sevenUtgFives.coachT,strategy:sevenUtgFives.strategyMode,
       why:sevenUtgFives.why,chartInfo:sevenUtgFives.chartInfo}));
   newGame({...cfg,numPlayers:5,difficulty:'hard'});
@@ -774,6 +774,30 @@ const result=vm.runInContext(`(()=>{
   if(fiveUtgQJo.rec!=='RAISE')
     throw new Error('5-handed 14 BB UTG QJo must open-raise, not fold '+JSON.stringify({
       rec:fiveUtgQJo.rec,why:fiveUtgQJo.why,stack:fiveUtg.chips/state.bb}));
+  newGame({...cfg,gameType:'cash',numPlayers:6,difficulty:'hard'});
+  const cashHj=state.players[0];
+  const openPositions=['HJ','CO','BTN','SB','BB','UTG'];
+  for(const [i,x] of state.players.entries()){
+    x.pos=openPositions[i];x.out=false;x.folded=false;x.allIn=false;
+    x.bet=0;x.totalBet=0;x.acted=i!==0;x.rangeCap=1;x.rangeFloor=0;
+  }
+  state.stage='preflop';state.board=[];state.handOver=false;state.bb=100;state.sb=50;state.ante=0;
+  state.dealerIdx=2;state.currentBet=100;state.lastRaiseSize=100;state.lastAggIdx=-1;state.preflopRaiseCount=0;
+  cashHj.hole=H(C(14,1),C(14,0));cashHj.chips=10000;
+  state.players[3].bet=50;state.players[3].totalBet=50;state.players[3].chips=9950;
+  state.players[4].bet=100;state.players[4].totalBet=100;state.players[4].chips=9900;
+  const noAnteOpenPlan=coachPreflopRaiseSizing(cashHj,false);
+  const noAnteOpenDecision=coachDecide(cashHj);
+  const oopOpenPlan=coachPreflopRaiseSizing(state.players[3],false);
+  state.ante=10;
+  const anteOpenPlan=coachPreflopRaiseSizing(cashHj,false);
+  state.ante=0;
+  if(noAnteOpenPlan.target!==300||noAnteOpenPlan.mult!==3||noAnteOpenPlan.posKey!=='IP'||
+      noAnteOpenDecision.rec!=='RAISE'||noAnteOpenDecision.coachT!==300||
+      oopOpenPlan.target!==400||oopOpenPlan.posKey!=='OOP'||anteOpenPlan.target!==400)
+    throw new Error('open sizes must be 3 BB IP without antes and retain 4 BB OOP or with antes '+JSON.stringify({
+      noAnteOpenPlan,noAnteOpenDecision:{rec:noAnteOpenDecision.rec,target:noAnteOpenDecision.coachT},
+      oopOpenPlan,anteOpenPlan}));
   newGame({...cfg,numPlayers:6,difficulty:'hard'});
   const bbHero=state.players[0];
   const isoPositions=['BB','UTG','HJ','CO','BTN','SB'];
@@ -789,6 +813,41 @@ const result=vm.runInContext(`(()=>{
   if(bbIsoKQo.rec!=='RAISE'||bbIsoKQo.coachT<700||bbIsoKQo.chartInfo?.kind!=='iso')
     throw new Error('BB KQo over three limpers must recommend a large isolation raise '+JSON.stringify({
       rec:bbIsoKQo.rec,target:bbIsoKQo.coachT,chart:bbIsoKQo.chartInfo}));
+  newGame({...cfg,gameType:'cash',numPlayers:6,difficulty:'hard'});
+  const cashBtn=state.players[0];
+  const cashPositions=['BTN','SB','BB','UTG','HJ','CO'];
+  for(const [i,x] of state.players.entries()){
+    x.pos=cashPositions[i];x.out=false;x.folded=i===4||i===5;x.allIn=false;
+    x.bet=0;x.totalBet=0;x.acted=i!==0;x.rangeCap=1;x.rangeFloor=0;
+  }
+  state.stage='preflop';state.board=[];state.handOver=false;state.bb=100;state.sb=50;
+  state.dealerIdx=0;state.currentBet=100;state.lastRaiseSize=100;state.lastAggIdx=-1;state.preflopRaiseCount=0;
+  cashBtn.hole=H(C(13,0),C(10,1));cashBtn.chips=9700;
+  state.players[1].bet=50;state.players[1].totalBet=50;state.players[1].chips=9950;
+  state.players[2].bet=100;state.players[2].totalBet=100;state.players[2].chips=9900;
+  state.players[3].bet=100;state.players[3].totalBet=100;state.players[3].chips=2700;
+  const cashBtnIsoPlan=coachPreflopRaiseSizing(cashBtn,true);
+  const cashBtnIso=coachDecide(cashBtn);
+  if(cashBtnIsoPlan.target!==400||cashBtnIsoPlan.mult!==4||Math.round(cashBtnIsoPlan.effectiveBB)!==28||
+      cashBtnIso.rec!=='RAISE'||cashBtnIso.coachT!==400)
+    throw new Error('cash BTN over one 28 BB limper must use a compact 4 BB isolation raise '+JSON.stringify({
+      plan:cashBtnIsoPlan,rec:cashBtnIso.rec,target:cashBtnIso.coachT,why:cashBtnIso.why}));
+  for(const x of state.players){x.bet=0;x.totalBet=0;x.folded=false;x.out=false;x.allIn=false;}
+  state.players[4].folded=true;state.players[5].folded=true;
+  cashBtn.chips=10800;cashBtn.bet=0;cashBtn.totalBet=0;
+  state.players[1].bet=50;state.players[1].totalBet=50;
+  state.players[2].bet=100;state.players[2].totalBet=100;
+  state.players[3].bet=200;state.players[3].totalBet=200;state.players[3].chips=2600;
+  state.currentBet=200;state.lastRaiseSize=100;state.lastAggIdx=3;state.preflopRaiseCount=1;
+  const cashThreeBetIp=coachPreflopRaiseSizing(cashBtn,true);
+  const cashThreeBetDefault=defaultRaiseTarget(cashBtn,300,cashBtn.chips);
+  state.dealerIdx=3;
+  const cashThreeBetOop=coachPreflopRaiseSizing(cashBtn,false);
+  state.dealerIdx=0;
+  if(cashThreeBetIp.kind!=='threeBet'||cashThreeBetIp.target!==600||cashThreeBetIp.mult!==3||
+      cashThreeBetOop.target!==800||cashThreeBetOop.mult!==4||cashThreeBetDefault!==600)
+    throw new Error('$40 open must produce a $120 IP default 3-bet and retain $160 OOP '+JSON.stringify({
+      ip:cashThreeBetIp,oop:cashThreeBetOop,slider:cashThreeBetDefault}));
   newGame({...cfg,numPlayers:3,difficulty:'easy'});
   const easyThree=aiTableSizeDynamics(state.players[1],'easy');
   newGame({...cfg,numPlayers:3,difficulty:'hard'});
@@ -821,6 +880,8 @@ const result=vm.runInContext(`(()=>{
       doubleGut:doubleGut.info.straight.length,wheel:wheelGut.info.straight.length,
       babyOpen:babyOpen.info.straight.length,backdoor:backdoorStraight.draw.backdoorStraightChance},
     tableSizeStrategy,bbIsoKQo:{rec:bbIsoKQo.rec,targetBB:bbIsoKQo.coachT/100,chart:bbIsoKQo.chartInfo.kind},
+    cashBtnIso:{rec:cashBtnIso.rec,targetBB:cashBtnIso.coachT/100,effectiveBB:cashBtnIsoPlan.effectiveBB},
+    cashThreeBet:{open:usd(200),target:usd(cashThreeBetDefault),targetBB:cashThreeBetDefault/100},
     ordinals};
 })()`,context);
 
