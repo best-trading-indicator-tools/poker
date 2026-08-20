@@ -86,4 +86,35 @@ const result = vm.runInContext(`(() => {
   };
 })()`, context);
 
-console.log(JSON.stringify(result, null, 2));
+const browserContext = vm.createContext({
+  console, Float32Array, Float64Array, Uint8Array, Uint16Array, Uint32Array, ArrayBuffer,
+  Math, Number, Object, Array, Set, Map, Promise, Date, BigInt, URL, WebAssembly,
+  setTimeout, clearTimeout, window: { dispatchEvent() {} }, document: {},
+  Worker: function Worker() {}, location: { protocol: 'https:' },
+});
+vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/solver.js'), 'utf8'), browserContext, { filename: 'js/solver.js' });
+const runtimeRouting = vm.runInContext(`(() => {
+  const player = { i: 0, folded: false, out: false, allIn: false };
+  const opponent = { i: 1, folded: false, out: false, allIn: false };
+  state = {
+    cfg: { gameType: 'cash' }, stage: 'flop', players: [player, opponent],
+    solverStreet: {
+      stage: 'flop', supported: true, playerSeats: [0, 1], rangeSource: 'test',
+      rangeRaw: [new Float32Array(1326), new Float32Array(1326)], actions: [],
+    },
+  };
+  const withoutStaticComlink = solverSupport(player, {});
+  const preflop = (() => { state.stage = 'preflop'; return solverSupport(player, {}); })();
+  return {
+    withoutStaticComlink: withoutStaticComlink.ok,
+    preflop: preflop.reason,
+    missingWorker: solverRuntimeUnavailableReason({ browser: true, worker: false, webAssembly: true, protocol: 'https:' }),
+    localFile: solverRuntimeUnavailableReason({ browser: true, worker: true, webAssembly: true, protocol: 'file:' }),
+  };
+})()`, browserContext);
+assert.equal(runtimeRouting.withoutStaticComlink, true, 'a missing static Comlink global must be recoverable by the dynamic loader');
+assert.equal(runtimeRouting.preflop, 'preflop', 'preflop must report its chart provider before browser capability checks');
+assert.equal(runtimeRouting.missingWorker, 'browser');
+assert.equal(runtimeRouting.localFile, 'protocol');
+
+console.log(JSON.stringify({ ...result, runtimeRouting }, null, 2));

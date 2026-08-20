@@ -15,11 +15,15 @@ const GTO_PROVIDER_VERSION = 4;
 const GTO_CACHE_KEY = 'sg_solver_cache_v4';
 const GTO_CACHE_LIMIT = 48;
 const GTO_MEMORY_LIMIT = 512 * 1024 * 1024;
+const GTO_ASSET_VERSION = 91;
+const GTO_WORKER_INIT_TIMEOUT = 15000;
 const GTO_HAS_BROWSER = typeof window !== 'undefined' && typeof document !== 'undefined';
 
 let gtoWorker = null;
 let gtoProxy = null;
 let gtoHandler = null;
+let gtoHandlerPromise = null;
+let gtoComlinkPromise = null;
 let gtoActive = null;
 let gtoPending = null;
 let gtoGeneration = 0;
@@ -54,6 +58,7 @@ function solverText(key) {
       ranges: 'The exact preflop line is not covered by the independent baseline blueprint. Personality estimates were not substituted; using the heuristic fallback.',
       reach: 'The previous postflop street was not solved through this exact line and runout. Personality estimates were not substituted; using the heuristic fallback.',
       browser: 'The WASM solver is unavailable in this browser. Using the heuristic fallback.',
+      protocol: 'The WASM solver requires the game to be served over HTTP or HTTPS; it cannot run from a local file URL.',
       memoryFail: 'This tree exceeds the browser memory budget. Using the heuristic fallback.',
       convergence: 'The solver did not reach its exploitability target. Using the heuristic fallback.',
       line: 'The exact action or sizing is not present in this tree. It was not mapped to a nearby node; using the heuristic fallback.',
@@ -82,6 +87,7 @@ function solverText(key) {
       ranges: 'La ligne préflop exacte n’est pas couverte par le blueprint baseline indépendant. Aucune estimation liée au profil n’a été substituée ; le fallback heuristique est utilisé.',
       reach: 'La street post-flop précédente n’a pas été résolue jusqu’à cette ligne et ce runout exacts. Aucune estimation liée au profil n’a été substituée ; le fallback heuristique est utilisé.',
       browser: 'Le solveur WASM est indisponible dans ce navigateur. Le fallback heuristique est utilisé.',
+      protocol: 'Le solveur WASM exige que le jeu soit servi en HTTP ou HTTPS ; il ne peut pas fonctionner depuis une URL de fichier local.',
       memoryFail: 'Cet arbre dépasse le budget mémoire du navigateur. Le fallback heuristique est utilisé.',
       convergence: 'Le solveur n’a pas atteint sa cible d’exploitabilité. Le fallback heuristique est utilisé.',
       line: 'L’action ou le sizing exact n’existe pas dans cet arbre. Aucun nœud voisin n’a été substitué ; le fallback heuristique est utilisé.',
@@ -110,6 +116,7 @@ function solverText(key) {
       ranges: 'La línea preflop exacta no está cubierta por el blueprint base independiente. No se sustituyeron estimaciones de personalidad; se usa el fallback heurístico.',
       reach: 'La calle postflop anterior no se resolvió hasta esta línea y runout exactos. No se sustituyeron estimaciones de personalidad; se usa el fallback heurístico.',
       browser: 'El solver WASM no está disponible en este navegador. Se usa el fallback heurístico.',
+      protocol: 'El solver WASM necesita que el juego se sirva por HTTP o HTTPS; no puede ejecutarse desde una URL de archivo local.',
       memoryFail: 'Este árbol supera el límite de memoria del navegador. Se usa el fallback heurístico.',
       convergence: 'El solver no alcanzó su objetivo de explotabilidad. Se usa el fallback heurístico.',
       line: 'La acción o el tamaño exacto no existe en este árbol. No se sustituyó por un nodo cercano; se usa el fallback heurístico.',
@@ -345,9 +352,21 @@ function solverTournamentIcmActive(result) {
   } catch (_) { return false; }
 }
 
+function solverRuntimeUnavailableReason(environment = {}) {
+  if (!environment.browser || !environment.worker || !environment.webAssembly) return 'browser';
+  if (environment.protocol === 'file:') return 'protocol';
+  return null;
+}
+
 function solverSupport(player, result) {
   if (typeof state === 'undefined' || state.stage === 'preflop') return { ok: false, reason: 'preflop' };
-  if (!GTO_HAS_BROWSER || typeof Worker === 'undefined' || typeof Comlink === 'undefined') return { ok: false, reason: 'browser' };
+  const runtimeReason = solverRuntimeUnavailableReason({
+    browser: GTO_HAS_BROWSER,
+    worker: typeof Worker !== 'undefined',
+    webAssembly: typeof WebAssembly !== 'undefined',
+    protocol: GTO_HAS_BROWSER && typeof location !== 'undefined' ? location.protocol : '',
+  });
+  if (runtimeReason) return { ok: false, reason: runtimeReason };
   const live = state.players.filter(candidate => !candidate.folded);
   if (live.length !== 2) return { ok: false, reason: 'multiway' };
   if (live.some(candidate => candidate.allIn)) return { ok: false, reason: 'allin' };
@@ -447,17 +466,99 @@ function solverTerminate() {
   gtoWorker = null;
   gtoProxy = null;
   gtoHandler = null;
+  gtoHandlerPromise = null;
   gtoActive = null;
+}
+
+function solverComlinkApi() {
+  const api = typeof globalThis !== 'undefined' ? globalThis.Comlink : null;
+  return api && typeof api.wrap === 'function' ? api : null;
+}
+
+function solverLoadScript(url) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = String(url);
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`solver-script-load:${url.pathname}`));
+    (document.head || document.documentElement).appendChild(script);
+  });
+}
+
+async function solverEnsureComlink() {
+  const existing = solverComlinkApi();
+  if (existing) return existing;
+  if (!gtoComlinkPromise) {
+    const url = new URL('vendor/wasm-postflop/comlink.js', document.baseURI);
+    url.searchParams.set('v', String(GTO_ASSET_VERSION));
+    url.searchParams.set('retry', String(Date.now()));
+    gtoComlinkPromise = solverLoadScript(url).then(() => {
+      const loaded = solverComlinkApi();
+      if (!loaded) throw new Error('solver-comlink-missing');
+      return loaded;
+    }).catch(error => {
+      gtoComlinkPromise = null;
+      throw error;
+    });
+  }
+  return gtoComlinkPromise;
+}
+
+function solverWithTimeout(promise, timeoutMs, message) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+    Promise.resolve(promise).then(
+      value => { clearTimeout(timer); resolve(value); },
+      error => { clearTimeout(timer); reject(error); },
+    );
+  });
+}
+
+async function solverCreateHandlerAttempt(retry = false) {
+  const comlink = await solverEnsureComlink();
+  const workerUrl = new URL('vendor/wasm-postflop/worker.js', document.baseURI);
+  workerUrl.searchParams.set('v', String(GTO_ASSET_VERSION));
+  if (retry) workerUrl.searchParams.set('retry', String(Date.now()));
+  const worker = new Worker(workerUrl);
+  gtoWorker = worker;
+  const workerFailure = new Promise((_, reject) => {
+    worker.addEventListener('error', event => reject(new Error(`solver-worker-load:${event.message || 'unknown'}`)), { once: true });
+    worker.addEventListener('messageerror', () => reject(new Error('solver-worker-message')), { once: true });
+  });
+  const proxy = comlink.wrap(worker);
+  gtoProxy = proxy;
+  const handler = await solverWithTimeout(
+    Promise.race([proxy.initHandler(1), workerFailure]),
+    GTO_WORKER_INIT_TIMEOUT,
+    'solver-worker-timeout',
+  );
+  if (gtoWorker !== worker) throw new Error('solver-superseded');
+  gtoHandler = handler;
+  return handler;
 }
 
 async function solverCreateHandler() {
   if (gtoHandler) return gtoHandler;
+  if (gtoHandlerPromise) return gtoHandlerPromise;
   solverSetRuntime({ phase: 'loading', message: solverText('loading') });
-  const workerUrl = new URL('vendor/wasm-postflop/worker.js', document.baseURI);
-  gtoWorker = new Worker(workerUrl);
-  gtoProxy = Comlink.wrap(gtoWorker);
-  gtoHandler = await gtoProxy.initHandler(1);
-  return gtoHandler;
+  gtoHandlerPromise = (async () => {
+    try {
+      return await solverCreateHandlerAttempt(false);
+    } catch (firstError) {
+      if (gtoWorker) gtoWorker.terminate();
+      gtoWorker = null;
+      gtoProxy = null;
+      gtoHandler = null;
+      if (firstError && firstError.message === 'solver-superseded') throw firstError;
+      return solverCreateHandlerAttempt(true);
+    }
+  })();
+  try {
+    return await gtoHandlerPromise;
+  } finally {
+    gtoHandlerPromise = null;
+  }
 }
 
 async function solverInitTree(street, config) {

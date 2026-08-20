@@ -1,9 +1,9 @@
 /* offline support: network-first with full cache fallback */
-const CACHE='sg-poker-v90';
-const ASSETS=['/','/poker.html','/charts.js?v=90','/manifest.json','/docs/icon.svg',
-  '/js/eval.js?v=90','/js/preflop-blueprint.js?v=90','/js/modes/registry.js?v=90','/js/modes/tournament.js?v=90','/js/modes/cash.js?v=90',
-  '/js/engine.js?v=90','/js/rewards.js?v=90','/js/solver.js?v=90','/js/coach.js?v=90','/js/ai.js?v=90','/js/mp.js?v=90','/js/ui.js?v=90',
-  '/vendor/wasm-postflop/comlink.js?v=90','/vendor/wasm-postflop/worker.js',
+const CACHE='sg-poker-v91';
+const ASSETS=['/','/poker.html','/charts.js?v=91','/manifest.json','/docs/icon.svg',
+  '/js/eval.js?v=91','/js/preflop-blueprint.js?v=91','/js/modes/registry.js?v=91','/js/modes/tournament.js?v=91','/js/modes/cash.js?v=91',
+  '/js/engine.js?v=91','/js/rewards.js?v=91','/js/solver.js?v=91','/js/coach.js?v=91','/js/ai.js?v=91','/js/mp.js?v=91','/js/ui.js?v=91',
+  '/vendor/wasm-postflop/comlink.js?v=91','/vendor/wasm-postflop/worker.js?v=91',
   '/vendor/wasm-postflop/7a023623e45ca364f00b.js','/vendor/wasm-postflop/solver-st.wasm'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));
@@ -20,6 +20,7 @@ self.addEventListener('fetch',e=>{
       const copy=r.clone();
       caches.open(CACHE).then(c=>c.put(e.request,copy));
       return r;
-    }).catch(()=>caches.match(e.request).then(m=>m||caches.match('/poker.html')))
+    }).catch(()=>caches.match(e.request,{ignoreSearch:true}).then(m=>m||
+      (e.request.mode==='navigate'?caches.match('/poker.html'):Response.error())))
   );
 });
