@@ -16,7 +16,7 @@ const GTO_CACHE_KEY = 'sg_solver_cache_v5';
 const GTO_CACHE_LIMIT = 48;
 const GTO_CACHE_DISK_CHAR_LIMIT = 800000;
 const GTO_MEMORY_LIMIT = 512 * 1024 * 1024;
-const GTO_ASSET_VERSION = 95;
+const GTO_ASSET_VERSION = 96;
 const GTO_WORKER_INIT_TIMEOUT = 15000;
 const GTO_HAS_BROWSER = typeof window !== 'undefined' && typeof document !== 'undefined';
 
@@ -35,6 +35,7 @@ let gtoCacheLoaded = false;
 let gtoPanelResult = null;
 let gtoNodeQueue = Promise.resolve();
 const gtoRequestJobs = new Map();
+const gtoTerminalNodeFailures = new Map();
 const gtoMemoryCache = new Map();
 const gtoRuntime = {
   phase: 'idle',
@@ -57,24 +58,28 @@ function solverText(key) {
       memory: 'Allocating solver memory…',
       iterating: 'Running CFR iterations…',
       multiway: 'Exact solver unavailable: this hand is multiway. Using the range-aware heuristic fallback.',
-      preflop: 'Preflop uses the chart provider; the exact engine is postflop only.',
+      preflop: 'Preflop is handled by its policy provider; this WASM engine is postflop only.',
       icm: 'Exact chip-EV would ignore meaningful ICM pressure, so the ICM-aware fallback remains authoritative.',
-      allin: 'No decision remains to solve because a player is already all-in.',
+      allin: 'This postflop betting-tree solver does not cover an all-in node. The range/equity fallback handles the remaining call-or-fold decision.',
       state: 'The street began before solver tracking was available. Using the heuristic fallback for this node.',
-      ranges: 'The exact preflop line is not covered by the independent baseline blueprint. Personality estimates were not substituted; using the heuristic fallback.',
+      ranges: 'No trustworthy preflop reach is available for this exact line and configuration. It was not replaced with personality estimates; using the heuristic fallback.',
       reach: 'The previous postflop street was not solved through this exact line and runout. Personality estimates were not substituted; using the heuristic fallback.',
       browser: 'The WASM solver is unavailable in this browser. Using the heuristic fallback.',
       protocol: 'The WASM solver requires the game to be served over HTTP or HTTPS; it cannot run from a local file URL.',
       memoryFail: 'This tree exceeds the browser memory budget. Using the heuristic fallback.',
       convergence: 'The solver did not reach its exploitability target. Using the heuristic fallback.',
       line: 'The exact action or sizing is not present in this tree. It was not mapped to a nearby node; using the heuristic fallback.',
+      lineUnavailable: 'The exact action or sizing could not be replayed in this tree. No recommendation is shown for this covered node.',
+      rangesUnavailable: 'The solver returned no trustworthy reach or hand strategy for this node. No recommendation is shown.',
       error: 'The exact solver could not finish this node. Using the heuristic fallback.',
-      approximate: 'Resolved for personality-free baseline reach ranges and a discrete bet-size tree; the preflop chart policy remains an abstraction, not universal GTO.',
+      approximateExact: 'Both providers solve declared discrete abstractions; this is a validated approximate equilibrium, not unrestricted poker.',
+      approximateConditional: 'This postflop node converged, but its preflop prior is heuristic; it is not an end-to-end GTO solution.',
       exploit: 'exploitability',
       iterations: 'iterations',
       cache: 'cached result',
       mix: 'Recommended mix',
-      source: 'Equilibrium for this heads-up chip-EV tree and the supplied personality-free baseline reach ranges',
+      sourceExact: 'Equilibrium for this heads-up chip-EV tree, conditioned on the audited preflop policy-pack reach',
+      sourceConditional: 'Postflop equilibrium for this heads-up chip-EV tree, conditioned on heuristic personality-free chart reach',
       solverReason: 'For your hand, the resolved CFR strategy mixes {mix}. The primary suggestion is the highest-frequency branch; every displayed positive-frequency branch belongs to the mix.',
     },
     fr: {
@@ -87,24 +92,28 @@ function solverText(key) {
       memory: 'Allocation de la mémoire…',
       iterating: 'Itérations CFR en cours…',
       multiway: 'Solveur exact indisponible : le coup est multiway. Le fallback heuristique sensible aux ranges est utilisé.',
-      preflop: 'Le préflop utilise le fournisseur de charts ; le moteur exact est postflop uniquement.',
+      preflop: 'Le préflop est géré par son fournisseur de politique ; ce moteur WASM est uniquement post-flop.',
       icm: 'Le chip-EV exact ignorerait une pression ICM importante ; le fallback ICM reste donc prioritaire.',
-      allin: 'Aucune décision à résoudre : un joueur est déjà à tapis.',
+      allin: 'Ce solveur d’arbre de mises post-flop ne couvre pas les nœuds à tapis. Le fallback range/équité traite la décision restante de payer ou se coucher.',
       state: 'La street a commencé avant le suivi du solveur. Le fallback heuristique est utilisé pour ce nœud.',
-      ranges: 'La ligne préflop exacte n’est pas couverte par le blueprint baseline indépendant. Aucune estimation liée au profil n’a été substituée ; le fallback heuristique est utilisé.',
+      ranges: 'Aucun reach préflop fiable n’est disponible pour cette ligne et cette configuration exactes. Aucune estimation liée au profil n’a été substituée ; le fallback heuristique est utilisé.',
       reach: 'La street post-flop précédente n’a pas été résolue jusqu’à cette ligne et ce runout exacts. Aucune estimation liée au profil n’a été substituée ; le fallback heuristique est utilisé.',
       browser: 'Le solveur WASM est indisponible dans ce navigateur. Le fallback heuristique est utilisé.',
       protocol: 'Le solveur WASM exige que le jeu soit servi en HTTP ou HTTPS ; il ne peut pas fonctionner depuis une URL de fichier local.',
       memoryFail: 'Cet arbre dépasse le budget mémoire du navigateur. Le fallback heuristique est utilisé.',
       convergence: 'Le solveur n’a pas atteint sa cible d’exploitabilité. Le fallback heuristique est utilisé.',
       line: 'L’action ou le sizing exact n’existe pas dans cet arbre. Aucun nœud voisin n’a été substitué ; le fallback heuristique est utilisé.',
+      lineUnavailable: 'L’action ou le sizing exact n’a pas pu être rejoué dans cet arbre. Aucune recommandation n’est affichée pour ce nœud couvert.',
+      rangesUnavailable: 'Le solveur n’a renvoyé aucun reach ni stratégie de main fiable pour ce nœud. Aucune recommandation n’est affichée.',
       error: 'Le solveur exact n’a pas terminé ce nœud. Le fallback heuristique est utilisé.',
-      approximate: 'Résolu pour des ranges de reach baseline indépendantes des profils et un arbre de sizings discret ; la politique préflop reste une abstraction, pas du GTO universel.',
+      approximateExact: 'Les deux fournisseurs résolvent des abstractions discrètes déclarées ; il s’agit d’un équilibre approximatif validé, pas du poker sans restriction.',
+      approximateConditional: 'Ce nœud post-flop a convergé, mais son prior préflop est heuristique ; ce n’est pas une solution GTO de bout en bout.',
       exploit: 'exploitabilité',
       iterations: 'itérations',
       cache: 'résultat en cache',
       mix: 'Mix recommandé',
-      source: 'Équilibre de cet arbre heads-up en chip-EV pour les ranges de reach baseline indépendantes des profils',
+      sourceExact: 'Équilibre de cet arbre heads-up en chip-EV, conditionné par le reach du pack de politique préflop audité',
+      sourceConditional: 'Équilibre post-flop de cet arbre heads-up en chip-EV, conditionné par le reach heuristique de chartes indépendantes des profils',
       solverReason: 'Pour votre main, la stratégie CFR résolue mélange {mix}. La suggestion principale est la branche la plus fréquente ; chaque branche affichée avec une fréquence positive appartient au mix.',
     },
     es: {
@@ -117,24 +126,28 @@ function solverText(key) {
       memory: 'Reservando memoria del solver…',
       iterating: 'Ejecutando iteraciones CFR…',
       multiway: 'Solver exacto no disponible: la mano es multiway. Se usa el fallback heurístico sensible a rangos.',
-      preflop: 'El preflop usa el proveedor de tablas; el motor exacto solo resuelve postflop.',
+      preflop: 'El preflop lo gestiona su proveedor de políticas; este motor WASM solo resuelve postflop.',
       icm: 'El chip-EV exacto ignoraría una presión ICM importante, así que el fallback con ICM sigue siendo autoritativo.',
-      allin: 'No queda una decisión por resolver porque un jugador ya está all-in.',
+      allin: 'Este solver del árbol de apuestas postflop no cubre nodos all-in. El fallback de rango/equity gestiona la decisión restante de igualar o retirarse.',
       state: 'La calle empezó antes del seguimiento del solver. Se usa el fallback heurístico para este nodo.',
-      ranges: 'La línea preflop exacta no está cubierta por el blueprint base independiente. No se sustituyeron estimaciones de personalidad; se usa el fallback heurístico.',
+      ranges: 'No hay un alcance preflop fiable para esta línea y configuración exactas. No se sustituyó por estimaciones de personalidad; se usa el fallback heurístico.',
       reach: 'La calle postflop anterior no se resolvió hasta esta línea y runout exactos. No se sustituyeron estimaciones de personalidad; se usa el fallback heurístico.',
       browser: 'El solver WASM no está disponible en este navegador. Se usa el fallback heurístico.',
       protocol: 'El solver WASM necesita que el juego se sirva por HTTP o HTTPS; no puede ejecutarse desde una URL de archivo local.',
       memoryFail: 'Este árbol supera el límite de memoria del navegador. Se usa el fallback heurístico.',
       convergence: 'El solver no alcanzó su objetivo de explotabilidad. Se usa el fallback heurístico.',
       line: 'La acción o el tamaño exacto no existe en este árbol. No se sustituyó por un nodo cercano; se usa el fallback heurístico.',
+      lineUnavailable: 'La acción o el tamaño exacto no pudo reproducirse en este árbol. No se muestra ninguna recomendación para este nodo cubierto.',
+      rangesUnavailable: 'El solver no devolvió un alcance ni una estrategia de mano fiables para este nodo. No se muestra ninguna recomendación.',
       error: 'El solver exacto no pudo terminar este nodo. Se usa el fallback heurístico.',
-      approximate: 'Resuelto para rangos base de alcance independientes de la personalidad y un árbol discreto de tamaños; la política preflop sigue siendo una abstracción, no GTO universal.',
+      approximateExact: 'Ambos proveedores resuelven abstracciones discretas declaradas; es un equilibrio aproximado validado, no póker sin restricciones.',
+      approximateConditional: 'Este nodo postflop convergió, pero su prior preflop es heurístico; no es una solución GTO de principio a fin.',
       exploit: 'explotabilidad',
       iterations: 'iteraciones',
       cache: 'resultado en caché',
       mix: 'Mezcla recomendada',
-      source: 'Equilibrio de este árbol heads-up de chip-EV para rangos base de alcance independientes de la personalidad',
+      sourceExact: 'Equilibrio de este árbol heads-up de chip-EV, condicionado por el alcance del pack de política preflop auditado',
+      sourceConditional: 'Equilibrio postflop de este árbol heads-up de chip-EV, condicionado por el alcance heurístico de tablas independientes de perfiles',
       solverReason: 'Para tu mano, la estrategia CFR resuelta mezcla {mix}. La sugerencia principal es la rama más frecuente; cada rama mostrada con frecuencia positiva pertenece a la mezcla.',
     },
   };
@@ -396,7 +409,10 @@ async function solverCarryReach(previousStreet, nextBoard) {
       return {
         ok: true,
         ranges,
-        source: 'equilibrium-reach-propagation',
+        /* Preserve the original preflop pack/chart identity across streets;
+           the exactness label and cache must not lose provenance on the turn. */
+        source: previousStreet.rangeSource || 'equilibrium-reach-propagation',
+        line: previousStreet.rangeLine || null,
         nodes: previousStreet.rangeNodes || [],
         exactFrequencies: previousStreet.rangeExactFrequencies === true,
       };
@@ -455,7 +471,8 @@ async function solverBeginStreet() {
     actionHistory: solverCompletedRangeHistory(previousStreet, ordered.map(player => player.i)),
     actions: [],
     supported,
-    reason: supported ? null : (String(baselineReason).startsWith('preflop-') ? 'ranges' : baselineReason),
+    reason: supported ? null : ((String(baselineReason).startsWith('preflop-') ||
+      String(baselineReason).startsWith('gto-unavailable:')) ? 'ranges' : baselineReason),
     rangeReason: supported ? null : baseline.reason || null,
   };
   /* Finish the range-resolved base tree before action resumes. Besides ensuring
@@ -589,8 +606,27 @@ function solverBaseKey(street, config) {
     GTO_PROVIDER_VERSION, GTO_ENGINE_META.engineCommit.slice(0, 12), GTO_ENGINE_META.wasmCommit.slice(0, 12), street.stage,
     street.board.map(solverCardId).join('.'), street.startingPot, street.effectiveStack,
     solverRangeSignature(street.rangeRaw[0]), solverRangeSignature(street.rangeRaw[1]),
+    solverHash(solverRangeProvenance(street)),
     solverHash(config),
   ].join('|');
+}
+
+function solverRangeProvenance(street) {
+  return {
+    rangeExactFrequencies: street && street.rangeExactFrequencies === true,
+    rangeSource: street && street.rangeSource || null,
+    rangeLine: street && street.rangeLine || null,
+    rangeNodes: street && Array.isArray(street.rangeNodes) ? street.rangeNodes : [],
+  };
+}
+
+function solverRangeProvenanceMatches(result, street) {
+  if (!result || !street) return false;
+  const expected = solverRangeProvenance(street);
+  const actual = solverRangeProvenance(result);
+  return expected.rangeExactFrequencies === actual.rangeExactFrequencies &&
+    expected.rangeSource === actual.rangeSource && expected.rangeLine === actual.rangeLine &&
+    solverHash(expected.rangeNodes) === solverHash(actual.rangeNodes);
 }
 
 function solverSpotKey(street, player, baseKey) {
@@ -611,7 +647,7 @@ function solverTerminalNodeFailureReason(error) {
   const message = String(error && error.message || error || '');
   if (/^(unmapped-action|solver-player-mismatch|solver-action-state-mismatch|solver-no-legal-action)/.test(message))
     return 'line';
-  if (/^(solver-hand-not-in-range|solver-empty-strategy|solver-invalid-strategy|solver-empty-reach)/.test(message))
+  if (/^(solver-hand-not-in-range|solver-empty-strategy|solver-invalid-strategy|solver-invalid-equity|solver-empty-reach)/.test(message))
     return 'ranges';
   return null;
 }
@@ -620,7 +656,8 @@ function solverSetRuntime(patch) {
   Object.assign(gtoRuntime, patch);
   if (!GTO_HAS_BROWSER) return;
   const panel = document.getElementById('gtoBox');
-  if (panel && typeof solverPanelHtml === 'function') panel.innerHTML = solverPanelHtml(gtoPanelResult);
+  if (panel && panel.dataset.provider !== 'preflop-equilibrium' && typeof solverPanelHtml === 'function')
+    panel.innerHTML = solverPanelHtml(gtoPanelResult);
   try { window.dispatchEvent(new CustomEvent('gto-solver-status', { detail: { ...gtoRuntime } })); } catch (_) {}
 }
 
@@ -1046,6 +1083,8 @@ async function solverExtractNode(active, player, street) {
   const privateCards = currentIndex === 0 ? cardsOop : cardsIp;
   const handIndex = privateCards.indexOf(encoded);
   if (handIndex < 0 || !parsed.strategy || !parsed.actionEv) throw new Error('solver-hand-not-in-range');
+  const equity = Number(parsed.equity[currentIndex] && parsed.equity[currentIndex][handIndex]);
+  if (!Number.isFinite(equity) || equity < 0 || equity > 1) throw new Error('solver-invalid-equity');
   const handCount = privateCards.length;
   const allBranches = actions.map((action, index) => {
     const mapped = solverAppAction(action, player);
@@ -1075,11 +1114,14 @@ async function solverExtractNode(active, player, street) {
     providerVersion: GTO_PROVIDER_VERSION,
     engine: GTO_ENGINE_META.name,
     engineCommit: GTO_ENGINE_META.engineCommit,
+    wasmCommit: GTO_ENGINE_META.wasmCommit,
     source: 'solver',
     decisionSeat: player.i,
     rec: chosen.rec,
     target: Math.round(chosen.target || 0),
     ev: chosen.ev,
+    equity,
+    equitySource: 'solver-equilibrium-node',
     exploitability: active.exploitability,
     targetExploitability: active.targetExploitability,
     converged: active.converged,
@@ -1128,14 +1170,19 @@ function solverCachedResult(player) {
 function solverCachedResultValid(result, street, player) {
   if (!result || result.providerVersion !== GTO_PROVIDER_VERSION || result.source !== 'solver' ||
       result.engine !== GTO_ENGINE_META.name || result.engineCommit !== GTO_ENGINE_META.engineCommit ||
+      result.wasmCommit !== GTO_ENGINE_META.wasmCommit ||
       result.converged !== true || result.decisionSeat !== (player && player.i) ||
       !Number.isFinite(result.ev) || !Number.isFinite(result.exploitability) ||
       !Number.isFinite(result.targetExploitability) || !Number.isFinite(result.iterations) || result.iterations < 0 ||
       !['fold', 'check', 'call', 'raise', 'allin'].includes(result.rec) ||
       !Number.isFinite(result.target) || result.target < 0 || !Array.isArray(result.branches) || !result.branches.length ||
-      !street || !Array.isArray(street.playerSeats) || !Array.isArray(result.reachSeats) ||
+      !street || !solverRangeProvenanceMatches(result, street) ||
+      !Array.isArray(street.playerSeats) || !Array.isArray(result.reachSeats) ||
       result.reachSeats.length !== 2 || result.reachSeats[0] !== street.playerSeats[0] ||
       result.reachSeats[1] !== street.playerSeats[1] || result.reachSeats[0] === result.reachSeats[1]) return false;
+  if (result.equity !== undefined &&
+      (typeof result.equity !== 'number' || !Number.isFinite(result.equity) || result.equity < 0 || result.equity > 1))
+    return false;
   let frequencyTotal = 0;
   for (const branch of result.branches) {
     if (!branch || !['fold', 'check', 'call', 'raise', 'allin'].includes(branch.rec) ||
@@ -1221,6 +1268,10 @@ function solverMixText(result) {
     .join(' · ');
 }
 
+function solverPriorTextKey(result, stem) {
+  return `${stem}${result && result.rangeExactFrequencies === true ? 'Exact' : 'Conditional'}`;
+}
+
 function solverApplyCoachStrategy(player, fallbackResult) {
   const result = fallbackResult || {};
   const support = solverSupport(player, result);
@@ -1256,10 +1307,32 @@ function solverApplyCoachStrategy(player, fallbackResult) {
   result.solver = solved;
   result.strategyProvider = 'solver';
   result.strategyMode = 'solver';
+  const solverEquity = solved.equity;
+  result.eq = typeof solverEquity === 'number' && Number.isFinite(solverEquity) &&
+    solverEquity >= 0 && solverEquity <= 1 ? solverEquity : null;
+  result.eqAdj = result.eq;
+  result.equitySource = result.eq == null ? 'solver-policy-only' : 'solver-equilibrium-node';
+  /* The fallback computed these fields from Bayesian/profile-conditioned
+     ranges. They must not survive beside an equilibrium solver decision. */
+  result.drawRow = '';
+  result.drawInfo = null;
+  result.impliedInfo = null;
+  result.needEq = null;
+  result.airPen = 0;
+  result.underpairPen = 0;
+  result.underpairInfo = null;
+  result.flushInfo = null;
+  result.multiwayContinueInfo = null;
+  result.bluffBreakEven = null;
+  result.modeledFoldEquity = 0;
   result.actionIntent = solved.rec === 'fold' ? 'fold' : solved.rec === 'check' ? 'check' : 'rangeRaise';
+  result.concepts = [];
   result.bluffInfo = null;
   result.why = [solverText('solverReason').replace('{mix}', solverMixText(solved))];
-  result.extra = [`${solverText('source')}. ${solverText('approximate')}`];
+  result.extra = [
+    `${solverText(solverPriorTextKey(solved, 'source'))}. ` +
+    solverText(solverPriorTextKey(solved, 'approximate')),
+  ];
   return result;
 }
 
@@ -1279,6 +1352,14 @@ async function solverRequestCoachStrategy(player, fallbackResult) {
     actions: support.street.actions.map(action => ({ ...action })),
   };
   const requestSignature = solverRequestSignature(street, player);
+  const priorTerminalFailure = gtoTerminalNodeFailures.get(requestSignature);
+  if (priorTerminalFailure) {
+    solverSetRuntime({
+      phase: 'unavailable', message: solverText(`${priorTerminalFailure.reason}Unavailable`),
+      error: priorTerminalFailure.error, retryAttempt: 0,
+    });
+    return false;
+  }
   const existing = gtoRequestJobs.get(requestSignature);
   if (existing) return existing;
   const isCurrent = () => typeof state === 'undefined' ||
@@ -1293,14 +1374,20 @@ async function solverRequestCoachStrategy(player, fallbackResult) {
         const result = await solverQueueNode(active, player, street);
         const key = solverSpotKey(street, player, active.baseKey);
         solverSaveCache(key, result);
+        gtoTerminalNodeFailures.delete(requestSignature);
         solverSetRuntime({ phase: 'ready', message: solverText('ready'), retryAttempt: 0, error: '' });
         return isCurrent();
       } catch (error) {
         if (error && error.message === 'solver-superseded' && !isCurrent()) return false;
         const terminalReason = solverTerminalNodeFailureReason(error);
         if (terminalReason) {
+          if (gtoTerminalNodeFailures.size >= GTO_CACHE_LIMIT)
+            gtoTerminalNodeFailures.delete(gtoTerminalNodeFailures.keys().next().value);
+          gtoTerminalNodeFailures.set(requestSignature, {
+            reason: terminalReason, error: String(error && error.message || error),
+          });
           solverSetRuntime({
-            phase: 'unavailable', message: solverText(terminalReason),
+            phase: 'unavailable', message: solverText(`${terminalReason}Unavailable`),
             error: String(error && error.message || error), retryAttempt: nodeAttempt,
           });
           return false;
@@ -1328,8 +1415,9 @@ function solverSampleCachedDecision(player, strategicContext) {
   if (!solverSupport(player, strategicContext || null).ok) return null;
   const solved = solverCachedResult(player);
   if (!solved) return null;
-  let random = Math.random();
-  let selected = solved.branches[solved.branches.length - 1];
+  const total = solved.branches.reduce((sum, branch) => sum + Math.max(0, branch.frequency), 0);
+  let random = Math.random() * total;
+  let selected = [...solved.branches].reverse().find(branch => branch.frequency > 0) || solved.branches[0];
   for (const branch of solved.branches) {
     random -= branch.frequency;
     if (random <= 0) { selected = branch; break; }
@@ -1349,7 +1437,9 @@ function solverPanelHtml(result) {
   if (result && result.solver) {
     const solved = result.solver;
     const exploitability = Number.isFinite(solved.exploitability) ? `${solved.exploitability.toFixed(3)} chips` : '—';
-    body = `<strong>${escapeHtml(solverText('ready'))}</strong><div>${escapeHtml(solverText('mix'))}: ${escapeHtml(solverMixText(solved))}</div><small>${escapeHtml(solverText('exploit'))}: ${escapeHtml(exploitability)} · ${solved.iterations} ${escapeHtml(solverText('iterations'))} · ${escapeHtml(solverText('approximate'))}</small>`;
+    const source = solverText(solverPriorTextKey(solved, 'source'));
+    const approximate = solverText(solverPriorTextKey(solved, 'approximate'));
+    body = `<strong>${escapeHtml(solverText('ready'))}</strong><div>${escapeHtml(solverText('mix'))}: ${escapeHtml(solverMixText(solved))}</div><div>${escapeHtml(source)}</div><small>${escapeHtml(solverText('exploit'))}: ${escapeHtml(exploitability)} · ${solved.iterations} ${escapeHtml(solverText('iterations'))} · ${escapeHtml(approximate)}</small>`;
     className += ' solved';
   } else if (!support.ok) {
     body = escapeHtml(solverText(support.reason || 'error'));

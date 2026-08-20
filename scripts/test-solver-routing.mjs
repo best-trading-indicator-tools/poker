@@ -163,6 +163,7 @@ const reliability = await vm.runInContext(`(async () => {
 
   assert.equal(solverTerminalNodeFailureReason(new Error('solver-player-mismatch')), 'line');
   assert.equal(solverTerminalNodeFailureReason(new Error('solver-empty-reach')), 'ranges');
+  assert.equal(solverTerminalNodeFailureReason(new Error('solver-invalid-equity')), 'ranges');
   assert.equal(solverTerminalNodeFailureReason(new Error('transient-test-failure')), null,
     'transient failures must remain eligible for automatic retry');
 
@@ -186,8 +187,13 @@ const reliability = await vm.runInContext(`(async () => {
       'a deterministic node mapping failure must stop after one extraction attempt');
     assert.equal(gtoRuntime.phase, 'unavailable');
     assert.equal(gtoRuntime.error, 'solver-player-mismatch');
+    assert.match(gtoRuntime.message, /No recommendation is shown/,
+      'a fail-closed covered node must not claim that a heuristic recommendation is active');
     assert.equal(gtoRuntime.retryAttempt, 0,
       'a deterministic node failure must not enter the retry loop');
+    await solverRequestCoachStrategy(requestPlayer, {});
+    assert.equal(terminalNodeAttempts, 1,
+      'a deterministic failure must remain terminal for this exact node');
   } finally {
     solverEnsureBaseReliable = savedEnsureBaseReliable;
     solverQueueNode = savedQueueNode;
@@ -230,7 +236,7 @@ const reliability = await vm.runInContext(`(async () => {
     0, 0, 0,
     .25, 1, 1, .5,
     1, 1, 1, 1,
-    0, 0, 0, 0,
+    .61, .62, .39, .40,
     0, 0, 0, 0,
     0, 0, 0, 0,
     1, 1,
@@ -258,11 +264,32 @@ const reliability = await vm.runInContext(`(async () => {
   assert.equal(nodeRanges[1][at(ipHoles[1])], .5);
   assert.equal(node.reachSeats.join(','), '0,1');
   assert.equal(node.reachSource, 'solver-equilibrium-node');
+  assert.equal(node.equity, .61, 'the displayed solver equity must come from this exact node/hand');
+  assert.equal(node.equitySource, 'solver-equilibrium-node');
+  assert.equal(node.providerVersion, GTO_PROVIDER_VERSION);
+  assert.equal(node.engineCommit, GTO_ENGINE_META.engineCommit);
+  assert.equal(node.wasmCommit, GTO_ENGINE_META.wasmCommit,
+    'the cached/audited result must identify the exact WASM artifact');
   assert.equal(solverCachedResultValid(persistedNode, nodeStreet, nodePlayer), true);
+  assert.equal(solverCachedResultValid({ ...persistedNode, wasmCommit: 'different' }, nodeStreet, nodePlayer), false,
+    'a result from a different WASM artifact must be rejected');
   assert.equal(solverCachedResultValid({ ...persistedNode, branches: null }, nodeStreet, nodePlayer), false,
     'a cache entry with reaches but no strategy must be rejected');
+  assert.equal(solverCachedResultValid({ ...persistedNode, equity: null }, nodeStreet, nodePlayer), false,
+    'a null cached equity must never become a displayed solver 0%');
   assert.equal(solverCachedResultValid({ ...persistedNode, reachSeats: [1, 0] }, nodeStreet, nodePlayer), false,
     'cached reach seats must match the current solver street order');
+  assert.equal(solverCachedResultValid(persistedNode, { ...nodeStreet, rangeExactFrequencies: true }, nodePlayer), false,
+    'cached audited-vs-heuristic prior provenance must match the current street');
+  assert.equal(solverCachedResultValid(persistedNode, { ...nodeStreet, rangeSource: 'different' }, nodePlayer), false,
+    'cached range source must match the current street');
+  assert.equal(solverCachedResultValid(persistedNode, { ...nodeStreet, rangeLine: 'different' }, nodePlayer), false,
+    'cached preflop line must match the current street');
+  assert.equal(solverCachedResultValid(persistedNode, { ...nodeStreet, rangeNodes: [['other'], []] }, nodePlayer), false,
+    'cached policy-node provenance must match the current street');
+  assert.notEqual(solverBaseKey(nodeStreet, {}),
+    solverBaseKey({ ...nodeStreet, rangeExactFrequencies: true }, {}),
+    'cache keys must bind the prior exactness label even when numeric ranges are identical');
   return {
     iterations, initCalls, recoveryAttempts: attempts,
     terminalNodeAttempts,

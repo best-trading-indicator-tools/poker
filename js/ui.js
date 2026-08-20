@@ -50,13 +50,18 @@ practicePot:"Pot",practiceToCall:"To call",practiceOpponents:"Opponents",
 practiceCorrect:"Correct — this matches the coach's recommendation.",practiceWrong:r=>`Not this time. The coach recommends ${r}.`,
 practiceDone:(s,t)=>`Practice complete: ${s}/${t} decisions matched the coach. These are real saved spots from your sessions.`,
 confidenceTitle:(source,level)=>`${source} · ${level} confidence`,confidenceHigh:"High",confidenceMedium:"Medium",confidenceLimited:"Limited",
-confidenceChart:"Preflop chart",confidenceAdjustedChart:"Adjusted preflop chart",confidenceMath:"Exact pot math + equity simulation",confidenceHeuristic:"Range heuristic",confidenceSolver:"Postflop range solver",
+confidenceChart:"Preflop chart",confidenceAdjustedChart:"Adjusted preflop chart",confidenceMath:"Exact pot math + equity simulation",confidenceHeuristic:"Range heuristic",confidenceSolver:"Postflop range solver",confidencePreflopGto:"Local preflop equilibrium",
 confidenceChartNote:"Uses the position and stack-depth chart for this preflop spot.",
 confidenceAdjustedChartNote:"The open size is outside the bundled chart tree, so the chart is adjusted with pot price, position and equity-realization estimates.",
 confidenceMathNote:"Pot odds are exact; equity and future action use simulations and estimated opponent ranges.",
 confidenceHeuristicNote:"Multiway ranges and future actions require broader assumptions, so treat the recommendation as directional.",
-confidenceSolverNote:"Uses a converged CFR equilibrium with personality-free preflop baseline ranges propagated through the exact covered line and runout. The preflop policy and discrete sizes remain abstractions, not universal GTO.",
-strategyLabel:"Strategy",strategyBaseline:"Custom heuristic fallback",strategyChart:"Preflop chart baseline",strategyAllIn:"All-in range + equity model",strategyIcm:"ICM-adjusted tournament model",strategyExploit:"Exploitative adjustment",strategySolver:"Resolved equilibrium strategy",
+confidenceSolverNote:"Uses a converged postflop CFR solution conditioned on heuristic, personality-free preflop chart ranges. This is not an end-to-end GTO solution.",
+confidenceSolverExactNote:"Uses a converged postflop CFR solution conditioned on a validated local preflop equilibrium pack for the exact covered line and runout. Both solvers use declared abstractions.",
+confidencePreflopGtoNote:"Uses a validated approximate-equilibrium policy for this exact configuration and action node in the declared discrete game abstraction.",
+strategyLabel:"Strategy",strategyBaseline:"Custom heuristic fallback",strategyChart:"Preflop chart baseline",strategyAllIn:"All-in range + equity model",strategyIcm:"ICM-adjusted tournament model",strategyExploit:"Exploitative adjustment",strategySolver:"Resolved equilibrium strategy",strategyGtoBaseline:"Verified approximate-equilibrium baseline",
+preflopGtoTitle:"Preflop equilibrium policy",preflopGtoReady:"Validated local policy",preflopGtoMix:"Action mix",preflopGtoPack:"Pack",preflopGtoNode:"Node",preflopGtoAbstract:"Approximate equilibrium of the declared discrete game; no player profile or Bayesian range model is used.",
+preflopGtoWhy:mix=>`Validated approximate preflop equilibrium at this action node: ${mix}.`,preflopGtoExtra:digest=>`The mixed policy comes from the audited pack${digest?` (${digest})`:''}; player profiles and exploit reads do not modify this equilibrium baseline.`,
+preflopEquilibriumRead:"Follow the validated mixed policy for this exact node; the displayed recommendation is its highest-frequency branch.",
 bluffBreakEven:"Pure-bluff break-even",bluffBreakEvenNote:(f,fe)=>`Needs about ${f}% folds at this size; the model estimates about ${fe}%. Showdown equity adds value when called.`,
 bluffTitle:"Bluff assessment",bluffVerdict:"Verdict",bluffWhy:"Why",bluffPlan:"If called or raised",
 intentBluff:"BLUFF",intentSemiBluff:"SEMI-BLUFF",intentValue:"VALUE",intentProtection:"PROTECTION",intentRangeBluff:"RANGE BLUFF",intentRangeRaise:"RANGE RAISE",intentBluffCatch:"BLUFF-CATCH",intentCall:"CALL",intentCheck:"CHECK",intentFold:"FOLD",
@@ -101,8 +106,9 @@ outQuality:"Out quality",weightedOuts:"range-adjusted outs",weightedOutsNote:n=>
 yourHand:"Your hand",position:"Position",actingOrder:"Acting order",postflopOrder:"Postflop order",winChance:"Win chance",playersBehind:"Players behind",openingDecision:"Opening decision",raiseOrFold:"Raise or fold · no limp",draws:"Draws",outs:"Outs",unique:"unique",shared:"shared",countedOnce:"counted once",dirtyOuts:"Dirty outs",dirtyOutsInfoLbl:"What is a dirty out?",dirtyOutsInfo:"A dirty (tainted) out completes your draw on paper but often doesn't win the pot — e.g. it pairs the board (helping everyone) or is the 4th card to a board flush that gives an opponent the winning flush. Use clean outs for your odds.",potOdds:"Pot odds",impliedOdds:"Implied odds",realisticNeed:"realistic need",bestCaseNeed:"best case",effectiveNeed:"Effective call threshold",effectiveNeedNote:"Equity needed after position, ranges and tournament pressure.",preflopRank:p=>`Preflop rank: top ~${p}% of starting hands`,lowerStronger:"lower is stronger",yourStack:"Your stack",sugSize:"Suggested size",
 firstToAct:"first to act (OOP)",lastToAct:"last to act (IP)",ofN:"of",need:"need ",vs:"vs",opp:"opponent",opps:"opponents",
 beginnerMath:(raw,usable,need,enough)=>`Raw equity: ${raw}%. Usable after position and risk: ~${usable}%. A call needs ${need}% — ${enough?'enough to continue':'not enough, so fold'}.`,
+beginnerSolver:"Follow the solver's mixed strategy at this node. Pot-odds shortcuts do not replace its full-tree EV comparison.",
 beginnerChartFold:(raw,usable,need)=>`Raw equity is ${raw}% and the contextual estimate is close (~${usable}% vs ${need}% needed), but this hand is outside the position-specific continue range. The chart takes priority because it accounts for domination, difficult future streets and players still behind — fold.`,
-beginnerBroadwayFlat:(raw,usable,need)=>`This is a deliberate loose call with connected high cards against a small raise. The strict model has ~${usable}% usable equity versus ${need}% needed, so this is a multiway-building style adjustment—not a standard solver call. Fold it when the raise or stack risk is larger.`,
+beginnerBroadwayFlat:(raw,usable,need)=>`This is a deliberate loose call with connected high cards against a small raise. The strict model has ~${usable}% usable equity versus ${need}% needed, so this is a multiway-building style adjustment—not a bundled baseline-chart call. Fold it when the raise or stack risk is larger.`,
 beginnerFree:"In plain English: checking costs no chips. You keep your hand alive and see what develops without making the pot bigger.",
 beginnerDrySidePot:"In plain English: you do have top pair. The check is recommended because one player is already all-in and there is no side pot yet. On this dry board, betting mainly makes worse hands fold and creates a new pot against stronger hands.",
 beginnerAgg:"In plain English: your win chance is only part of a bet or raise. Opponents may fold immediately (fold equity), and weaker hands may still call.",
@@ -142,16 +148,16 @@ mpConnFail:"Could not connect to the room. Phone networks sometimes block direct
 mpJoined:n=>`${n} joined the room`,mpGone:n=>`${n} disconnected — their hand is folded`,
 mpYou:"(you · host)",mpYouG:"(you)",chatPh:"Message…",
 viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleIso:"iso vs limpers chart",chartTitleShove:"all-in chart",chartTitleFacing:"chart vs this raise",chartTitleBbDefend:"BB defense chart",chartTitleFourBet:"response vs 3-bet",
-showRange:"📊 Show opponent range",hideRange:"▴ Hide opponent range",viewRange:"🔎 Open interactive Range Explorer",chartTitleRange:"estimated range right now",chartTitleSolverRange:"GTO solver range at this node",legendRange:"hands he could still have",rangeFringe:"Fringe",rangePossible:"Possible",rangeLikely:"Likely",rangeVeryLikely:"Very likely",
+showRange:"📊 Show opponent range",hideRange:"▴ Hide opponent range",viewRange:"🔎 Open interactive Range Explorer",chartTitleRange:"estimated range right now",chartTitleSolverRange:"postflop solver reach at this node",chartTitleSolverConditionalRange:"postflop solver reach (heuristic preflop prior)",legendRange:"hands he could still have",rangeFringe:"Fringe",rangePossible:"Possible",rangeLikely:"Likely",rangeVeryLikely:"Very likely",
 rangeExplore:"Explore range",rangeFilter:"Show",rangeFilterAll:"All hands",rangeFilterMade:"Made hands",rangeFilterDraws:"Draws",rangeFilterNut:"Nut draws",rangeFilterNonNut:"Non-nut draws",rangeFilterBackdoor:"Backdoors",rangeFilterAir:"Air / bluffs",rangePick:"Select a hand class in the grid to understand why it remains possible.",rangeCellShare:(h,p,a,c)=>`${h} represents about ${p}% of this opponent range. ${a} exact combo${a!==1?'s':''} remain weighted out of ${c} unblocked suit combination${c!==1?'s':''}.`,rangeCellDensity:n=>`Each available ${n} combo is weighted relative to an average legal combo.`,rangeCellMix:"What these combos currently make",rangeUnavailable:"This hand class has no remaining weighted combinations after blockers and the action line.",revExploreRange:"Explore range",
-rangeDensity:"Per-combo likelihood",rangeClassProb:"Class probability",rangeEffective:"effective combos",rangeLine:"Action line",rangeSource:"Range source",rangeSolverNode:"Current-node reach weights extracted from the converged CFR equilibrium for this configured tree",rangeSolverStreet:"Street-root reach supplied to this configured CFR tree; no current-street action has occurred yet",rangeTopCard:"Top-card hands now",rangeTopHands:"Top candidates",rangeOpen:"Open",rangeOfRange:"of range",rangeCombos:"available combos",rangeAvgCombo:"average combo likelihood",
+rangeDensity:"Per-combo likelihood",rangeClassProb:"Class probability",rangeEffective:"effective combos",rangeLine:"Action line",rangeSource:"Range source",rangeSolverNode:"Current-node reach weights extracted from the converged CFR solution for this configured tree",rangeSolverStreet:"Street-root equilibrium reach supplied to this configured CFR tree; no current-street action has occurred yet",rangeSolverConditionalNode:"Current-node CFR reach for this postflop tree, conditioned on heuristic preflop chart ranges",rangeSolverConditionalStreet:"Street-root reach supplied to this postflop tree from heuristic preflop chart ranges",rangeTopCard:"Top-card hands now",rangeTopHands:"Top candidates",rangeOpen:"Open",rangeOfRange:"of range",rangeCombos:"available combos",rangeAvgCombo:"average combo likelihood",
 rangeComposition:"Exact hand mix",rangeFullHousePlus:"Full house or better",rangeMadeFlushes:"Made flushes",rangeStraights:"Straights",rangeTrips:"Trips",rangeTwoPair:"Two pair",rangeOnePair:"One pair",rangeDrawOnly:"Draw only",rangeAir:"Air / bluff candidates",rangeBoardOnly:"Playing the board",
 rangeDrawBreakdown:"Exact draw texture",rangeComboDraw:"Combo draws",rangeNutFlushDraw:"Nut flush draws",rangeNonNutFlushDraw:"Non-nut flush draws",rangeStraightDraw:"Straight draws",rangePairPlusDraw:"Pair + draw",rangeBackdoorDraw:"Backdoor-only draws",
 rangeWeightRaise:(d,x,h)=>d==='up'?`${h} gained weight (${x}× average): the latest aggressive action is more consistent with its value or semi-bluff potential.`:d==='down'?`${h} lost weight (${x}× average): the latest aggressive action is less consistent with this class than with stronger value hands or credible draws.`:`${h} stayed near its prior weight (${x}× average) after the latest aggressive action.`,
 rangeWeightCall:(d,x,h)=>d==='up'?`${h} gained weight (${x}× average): calling fits this class's showdown value or draw realization.`:d==='down'?`${h} lost weight (${x}× average): this class continues less often than the opponent's stronger calls and draws.`:`${h} stayed near its prior weight (${x}× average) after the call.`,
 rangeWeightCheck:(d,x,h)=>d==='up'?`${h} gained weight (${x}× average): checking is consistent with its medium-strength or give-up profile.`:d==='down'?`${h} lost weight (${x}× average): checking makes strong value versions of this class less likely.`:`${h} stayed near its prior weight (${x}× average) after the check.`,
 rangeWeightPrior:(d,x,h)=>`${h} is weighted at ${x}× an average legal combo from the current position, profile and prior range.`,
-rangeWeightSolver:(x,h)=>`${h} has ${x}× the average legal-combo reach in the solver equilibrium.`,
+rangeWeightSolver:(x,h)=>`${h} has ${x}× the average legal-combo reach in the configured solver equilibrium.`,rangeWeightSolverConditional:(x,h)=>`${h} has ${x}× the average legal-combo reach in the postflop solution conditioned on heuristic preflop chart ranges.`,
 rangeBlockerImpact:n=>`Known cards remove ${n} exact combo${n!==1?'s':''}.`,rangeActionRemoved:n=>`The action line reduces ${n} other unblocked combo${n!==1?'s':''} to zero weight.`,
 rangeIso:"Iso-raise",rangeSqueeze:"Squeeze",rangeLimp:"Limp",rangeOption:"Check option",rangeEntering:s=>`Range entering ${s} — opponent has not acted yet`,
 legendOpen:"raise first-in",legendShove:"go all-in",legendFold:"fold",legendYou:"your hand",legend3bet:"re-raise (3-bet)",legendFourBet:"4-bet",legendCall:"call",
@@ -215,13 +221,18 @@ practicePot:"Pot",practiceToCall:"À payer",practiceOpponents:"Adversaires",
 practiceCorrect:"Correct — votre décision correspond à celle du coach.",practiceWrong:r=>`Pas cette fois. Le coach recommande ${r}.`,
 practiceDone:(s,t)=>`Entraînement terminé : ${s}/${t} décisions correspondent au coach. Ce sont de vrais spots sauvegardés de vos sessions.`,
 confidenceTitle:(source,level)=>`${source} · confiance ${level}`,confidenceHigh:"élevée",confidenceMedium:"moyenne",confidenceLimited:"limitée",
-confidenceChart:"Charte préflop",confidenceAdjustedChart:"Charte préflop ajustée",confidenceMath:"Calcul du pot exact + simulation d'équité",confidenceHeuristic:"Heuristique de ranges",confidenceSolver:"Solveur de ranges post-flop",
+confidenceChart:"Charte préflop",confidenceAdjustedChart:"Charte préflop ajustée",confidenceMath:"Calcul du pot exact + simulation d'équité",confidenceHeuristic:"Heuristique de ranges",confidenceSolver:"Solveur de ranges post-flop",confidencePreflopGto:"Équilibre préflop local",
 confidenceChartNote:"Utilise la charte de position et de profondeur pour ce spot préflop.",
 confidenceAdjustedChartNote:"La taille d'ouverture sort de l'arbre de la charte embarquée ; celle-ci est donc ajustée avec le prix du pot, la position et une estimation de réalisation d'équité.",
 confidenceMathNote:"Les cotes du pot sont exactes ; l'équité et l'action future utilisent des simulations et des ranges adverses estimées.",
 confidenceHeuristicNote:"Les ranges multiway et les actions futures demandent plus d'hypothèses : considérez ce conseil comme directionnel.",
-confidenceSolverNote:"Utilise un équilibre CFR convergé avec des ranges préflop baseline indépendantes des profils, propagées dans la ligne et le runout exacts couverts. La politique préflop et les sizings discrets restent des abstractions, pas du GTO universel.",
-strategyLabel:"Stratégie",strategyBaseline:"Fallback heuristique personnalisé",strategyChart:"Baseline de charte préflop",strategyAllIn:"Modèle all-in : range + équité",strategyIcm:"Modèle de tournoi ajusté ICM",strategyExploit:"Ajustement exploitant",strategySolver:"Stratégie d’équilibre résolue",
+confidenceSolverNote:"Utilise une solution CFR post-flop convergée conditionnée par des ranges de chartes préflop heuristiques et indépendantes des profils. Ce n’est pas une solution GTO de bout en bout.",
+confidenceSolverExactNote:"Utilise une solution CFR post-flop convergée conditionnée par un pack d’équilibre préflop local validé pour la ligne et le runout exacts couverts. Les deux solveurs utilisent des abstractions déclarées.",
+confidencePreflopGtoNote:"Utilise une politique d’équilibre approximatif validée pour cette configuration et ce nœud exacts dans l’abstraction discrète déclarée.",
+strategyLabel:"Stratégie",strategyBaseline:"Fallback heuristique personnalisé",strategyChart:"Baseline de charte préflop",strategyAllIn:"Modèle all-in : range + équité",strategyIcm:"Modèle de tournoi ajusté ICM",strategyExploit:"Ajustement exploitant",strategySolver:"Stratégie d’équilibre résolue",strategyGtoBaseline:"Baseline d’équilibre approximatif validée",
+preflopGtoTitle:"Politique d’équilibre préflop",preflopGtoReady:"Politique locale validée",preflopGtoMix:"Mix d’actions",preflopGtoPack:"Pack",preflopGtoNode:"Nœud",preflopGtoAbstract:"Équilibre approximatif du jeu discret déclaré ; aucun profil joueur ni modèle de range bayésien n’est utilisé.",
+preflopGtoWhy:mix=>`Équilibre préflop approximatif validé à ce nœud d’action : ${mix}.`,preflopGtoExtra:digest=>`Le mix provient du pack audité${digest?` (${digest})`:''} ; les profils joueurs et les reads exploitants ne modifient pas cette baseline d’équilibre.`,
+preflopEquilibriumRead:"Suivez la politique mixte validée pour ce nœud exact ; l’action affichée est sa branche la plus fréquente.",
 bluffBreakEven:"Seuil d'un bluff pur",bluffBreakEvenNote:(f,fe)=>`Cette taille exige environ ${f} % de folds ; le modèle en estime environ ${fe} %. L'équité à l'abattage ajoute de la valeur si vous êtes payé.`,
 bluffTitle:"Évaluation du bluff",bluffVerdict:"Verdict",bluffWhy:"Pourquoi",bluffPlan:"Si vous êtes payé ou relancé",
 intentBluff:"BLUFF",intentSemiBluff:"SEMI-BLUFF",intentValue:"VALUE",intentProtection:"PROTECTION",intentRangeBluff:"BLUFF DE RANGE",intentRangeRaise:"RELANCE DE RANGE",intentBluffCatch:"BLUFF-CATCH",intentCall:"CALL",intentCheck:"CHECK",intentFold:"FOLD",
@@ -266,8 +277,9 @@ outQuality:"Qualité des outs",weightedOuts:"outs ajustés à la range",weighted
 yourHand:"Votre main",position:"Position",actingOrder:"Ordre de parole",postflopOrder:"Ordre post-flop",winChance:"Chance de gain",playersBehind:"Joueurs derrière",openingDecision:"Décision d'ouverture",raiseOrFold:"Relancer ou se coucher · pas de limp",draws:"Tirages",outs:"Outs",unique:"uniques",shared:"communs",countedOnce:"comptés une fois",dirtyOuts:"Outs sales",dirtyOutsInfoLbl:"Qu'est-ce qu'un out sale ?",dirtyOutsInfo:"Un out sale complète votre tirage sur le papier mais ne gagne souvent pas le pot — ex. il pair le board (aide tout le monde) ou est la 4e carte d'une couleur au board qui donne la couleur gagnante à l'adversaire. Comptez les outs propres pour vos cotes.",potOdds:"Cote du pot",impliedOdds:"Cotes implicites",realisticNeed:"seuil réaliste",bestCaseNeed:"meilleur cas",effectiveNeed:"Seuil effectif du call",effectiveNeedNote:"Équité requise après position, ranges et pression du tournoi.",preflopRank:p=>`Classement préflop : top ~${p}% des mains de départ`,lowerStronger:"plus bas = plus fort",yourStack:"Votre tapis",sugSize:"Taille suggérée",
 firstToAct:"premier à parler (OOP)",lastToAct:"dernier à parler (IP)",ofN:"sur",need:"requis ",vs:"vs",opp:"adversaire",opps:"adversaires",
 beginnerMath:(raw,usable,need,enough)=>`Équité brute : ${raw} %. Utilisable après position et risque : ~${usable} %. Un call exige ${need} % — ${enough?'assez pour continuer':'pas assez, couchez-vous'}.`,
+beginnerSolver:"Suivez la stratégie mixte du solveur à ce nœud. Un raccourci fondé sur la cote du pot ne remplace pas sa comparaison d’EV sur l’arbre complet.",
 beginnerChartFold:(raw,usable,need)=>`L’équité brute est de ${raw} % et l’estimation contextuelle est proche (~${usable} % pour ${need} % requis), mais cette main est hors de la range de continuation propre à la position. La charte prime car elle tient compte de la domination, des streets futures difficiles et des joueurs derrière — couchez-vous.`,
-beginnerBroadwayFlat:(raw,usable,need)=>`C’est un call volontairement loose avec des cartes hautes connectées face à une petite relance. Le modèle strict donne ~${usable} % d’équité utilisable pour ${need} % requis : c’est donc un ajustement de style pour construire un pot multiway, pas un call solveur standard. Couchez face à une relance ou un risque de tapis plus important.`,
+beginnerBroadwayFlat:(raw,usable,need)=>`C’est un call volontairement loose avec des cartes hautes connectées face à une petite relance. Le modèle strict donne ~${usable} % d’équité utilisable pour ${need} % requis : c’est donc un ajustement de style pour construire un pot multiway, pas un call de la charte baseline embarquée. Couchez face à une relance ou un risque de tapis plus important.`,
 beginnerFree:"En clair : checker ne coûte aucun jeton. Vous gardez votre main en vie et voyez la suite sans grossir le pot.",
 beginnerDrySidePot:"En clair : vous avez bien top paire. Le check est recommandé parce qu'un joueur est déjà à tapis et qu'il n'existe encore aucun side pot. Sur ce board sec, miser ferait surtout coucher les mains moins bonnes et créerait un nouveau pot contre les mains plus fortes.",
 beginnerAgg:"En clair : votre chance de gagner n’est qu’une partie d’un bet ou d’une relance. Les adversaires peuvent se coucher immédiatement (fold equity), et des mains moins bonnes peuvent payer.",
@@ -307,16 +319,16 @@ mpConnFail:"Connexion au salon impossible. Les réseaux mobiles bloquent parfois
 mpJoined:n=>`${n} a rejoint le salon`,mpGone:n=>`${n} s'est déconnecté — sa main est couchée`,
 mpYou:"(vous · hôte)",mpYouG:"(vous)",chatPh:"Message…",
 viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleIso:"charte iso vs limps",chartTitleShove:"charte de tapis",chartTitleFacing:"charte face à cette relance",chartTitleBbDefend:"charte défense BB",chartTitleFourBet:"réponse face au 3-bet",
-showRange:"📊 Afficher la range adverse",hideRange:"▴ Masquer la range adverse",viewRange:"🔎 Ouvrir le Range Explorer interactif",chartTitleRange:"range estimée en ce moment",chartTitleSolverRange:"range du solveur GTO à ce nœud",legendRange:"mains qu'il peut encore avoir",rangeFringe:"Marginal",rangePossible:"Possible",rangeLikely:"Probable",rangeVeryLikely:"Très probable",
+showRange:"📊 Afficher la range adverse",hideRange:"▴ Masquer la range adverse",viewRange:"🔎 Ouvrir le Range Explorer interactif",chartTitleRange:"range estimée en ce moment",chartTitleSolverRange:"reach du solveur post-flop à ce nœud",chartTitleSolverConditionalRange:"reach post-flop (prior préflop heuristique)",legendRange:"mains qu'il peut encore avoir",rangeFringe:"Marginal",rangePossible:"Possible",rangeLikely:"Probable",rangeVeryLikely:"Très probable",
 rangeExplore:"Explorer la range",rangeFilter:"Afficher",rangeFilterAll:"Toutes les mains",rangeFilterMade:"Mains faites",rangeFilterDraws:"Tirages",rangeFilterNut:"Tirages max",rangeFilterNonNut:"Tirages non max",rangeFilterBackdoor:"Backdoors",rangeFilterAir:"Air / bluffs",rangePick:"Sélectionnez une classe de mains dans la grille pour comprendre pourquoi elle reste possible.",rangeCellShare:(h,p,a,c)=>`${h} représente environ ${p} % de cette range adverse. ${a} combo${a!==1?'s':''} exact${a!==1?'s':''} reste${a!==1?'nt':''} pondéré${a!==1?'s':''} parmi ${c} combinaison${c!==1?'s':''} de couleurs non bloquée${c!==1?'s':''}.`,rangeCellDensity:n=>`Chaque combo disponible de ${n} est pondéré par rapport à un combo légal moyen.`,rangeCellMix:"Ce que ces combos ont actuellement",rangeUnavailable:"Cette classe de mains n’a plus aucune combinaison pondérée après les bloqueurs et la ligne d’action.",revExploreRange:"Explorer la range",
-rangeDensity:"Probabilité par combo",rangeClassProb:"Probabilité de la classe",rangeEffective:"combos effectifs",rangeLine:"Ligne d'actions",rangeSource:"Source de la range",rangeSolverNode:"Poids de reach du nœud courant extraits de l’équilibre CFR convergé de cet arbre configuré",rangeSolverStreet:"Reach à la racine de la street fourni à cet arbre CFR configuré ; aucune action n’a encore eu lieu sur cette street",rangeTopCard:"Mains avec la top card",rangeTopHands:"Candidats principaux",rangeOpen:"Open",rangeOfRange:"de la range",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilité moyenne d'un combo",
+rangeDensity:"Probabilité par combo",rangeClassProb:"Probabilité de la classe",rangeEffective:"combos effectifs",rangeLine:"Ligne d'actions",rangeSource:"Source de la range",rangeSolverNode:"Poids de reach du nœud courant extraits de la solution CFR convergée de cet arbre configuré",rangeSolverStreet:"Reach d’équilibre à la racine de la street fourni à cet arbre CFR configuré ; aucune action n’a encore eu lieu sur cette street",rangeSolverConditionalNode:"Reach CFR du nœud courant pour cet arbre post-flop, conditionné par des chartes préflop heuristiques",rangeSolverConditionalStreet:"Reach à la racine de la street fourni à cet arbre post-flop par des chartes préflop heuristiques",rangeTopCard:"Mains avec la top card",rangeTopHands:"Candidats principaux",rangeOpen:"Open",rangeOfRange:"de la range",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilité moyenne d'un combo",
 rangeComposition:"Répartition exacte",rangeFullHousePlus:"Full ou mieux",rangeMadeFlushes:"Couleurs faites",rangeStraights:"Quintes",rangeTrips:"Brelans",rangeTwoPair:"Deux paires",rangeOnePair:"Une paire",rangeDrawOnly:"Tirage seul",rangeAir:"Air / bluffs possibles",rangeBoardOnly:"Board joué",
 rangeDrawBreakdown:"Texture exacte des tirages",rangeComboDraw:"Combo draws",rangeNutFlushDraw:"Tirages couleur max",rangeNonNutFlushDraw:"Tirages couleur non max",rangeStraightDraw:"Tirages quinte",rangePairPlusDraw:"Paire + tirage",rangeBackdoorDraw:"Tirages backdoor uniquement",
 rangeWeightRaise:(d,x,h)=>d==='up'?`${h} gagne du poids (${x}× la moyenne) : la dernière action agressive correspond mieux à sa valeur ou à son potentiel de semi-bluff.`:d==='down'?`${h} perd du poids (${x}× la moyenne) : cette action agressive correspond moins à cette classe qu'aux mains fortes et tirages crédibles.`:`${h} reste proche de son poids initial (${x}× la moyenne) après la dernière action agressive.`,
 rangeWeightCall:(d,x,h)=>d==='up'?`${h} gagne du poids (${x}× la moyenne) : payer correspond à sa valeur à l'abattage ou à la réalisation de son tirage.`:d==='down'?`${h} perd du poids (${x}× la moyenne) : cette classe continue moins souvent que les calls forts et les tirages adverses.`:`${h} reste proche de son poids initial (${x}× la moyenne) après le call.`,
 rangeWeightCheck:(d,x,h)=>d==='up'?`${h} gagne du poids (${x}× la moyenne) : checker correspond à son profil de force moyenne ou d'abandon.`:d==='down'?`${h} perd du poids (${x}× la moyenne) : le check rend les versions fortes de cette classe moins probables.`:`${h} reste proche de son poids initial (${x}× la moyenne) après le check.`,
 rangeWeightPrior:(d,x,h)=>`${h} pèse ${x}× un combo légal moyen selon la position, le profil et la range initiale.`,
-rangeWeightSolver:(x,h)=>`${h} a un reach de ${x}× celui d’un combo légal moyen dans l’équilibre du solveur.`,
+rangeWeightSolver:(x,h)=>`${h} a un reach de ${x}× celui d’un combo légal moyen dans l’équilibre configuré du solveur.`,rangeWeightSolverConditional:(x,h)=>`${h} a un reach de ${x}× celui d’un combo légal moyen dans la solution post-flop conditionnée par des chartes préflop heuristiques.`,
 rangeBlockerImpact:n=>`Les cartes connues retirent ${n} combo${n!==1?'s':''} exact${n!==1?'s':''}.`,rangeActionRemoved:n=>`La ligne d'action réduit ${n} autre${n!==1?'s':''} combo${n!==1?'s':''} non bloqué${n!==1?'s':''} à un poids nul.`,
 rangeIso:"Relance d'isolation",rangeSqueeze:"Squeeze",rangeLimp:"Limp",rangeOption:"Check gratuit",rangeEntering:s=>`Range à l'entrée du ${s} — l'adversaire n'a pas encore agi`,
 legendOpen:"relancer en premier",legendShove:"partir à tapis",legendFold:"se coucher",legendYou:"votre main",legend3bet:"sur-relancer (3-bet)",legendFourBet:"4-bet",legendCall:"suivre",
@@ -380,13 +392,18 @@ practicePot:"Bote",practiceToCall:"A pagar",practiceOpponents:"Rivales",
 practiceCorrect:"Correcto: coincide con la recomendación del coach.",practiceWrong:r=>`Esta vez no. El coach recomienda ${r}.`,
 practiceDone:(s,t)=>`Práctica terminada: ${s}/${t} decisiones coincidieron con el coach. Son situaciones reales guardadas de tus sesiones.`,
 confidenceTitle:(source,level)=>`${source} · confianza ${level}`,confidenceHigh:"alta",confidenceMedium:"media",confidenceLimited:"limitada",
-confidenceChart:"Tabla preflop",confidenceAdjustedChart:"Tabla preflop ajustada",confidenceMath:"Cálculo exacto del bote + simulación de equity",confidenceHeuristic:"Heurística de rangos",confidenceSolver:"Solver de rangos postflop",
+confidenceChart:"Tabla preflop",confidenceAdjustedChart:"Tabla preflop ajustada",confidenceMath:"Cálculo exacto del bote + simulación de equity",confidenceHeuristic:"Heurística de rangos",confidenceSolver:"Solver de rangos postflop",confidencePreflopGto:"Equilibrio preflop local",
 confidenceChartNote:"Usa la tabla de posición y profundidad para esta situación preflop.",
 confidenceAdjustedChartNote:"El tamaño de apertura queda fuera del árbol de la tabla incluida, así que se ajusta con el precio del bote, la posición y estimaciones de realización de equity.",
 confidenceMathNote:"Las odds del bote son exactas; la equity y la acción futura usan simulaciones y rangos rivales estimados.",
 confidenceHeuristicNote:"Los rangos multiway y las acciones futuras requieren más supuestos; interpreta el consejo como direccional.",
-confidenceSolverNote:"Usa un equilibrio CFR convergido con rangos preflop base independientes de la personalidad, propagados por la línea y el runout exactos cubiertos. La política preflop y los tamaños discretos siguen siendo abstracciones, no GTO universal.",
-strategyLabel:"Estrategia",strategyBaseline:"Fallback heurístico personalizado",strategyChart:"Base de tabla preflop",strategyAllIn:"Modelo all-in de rango + equity",strategyIcm:"Modelo de torneo ajustado por ICM",strategyExploit:"Ajuste explotador",strategySolver:"Estrategia de equilibrio resuelta",
+confidenceSolverNote:"Usa una solución CFR postflop convergida condicionada por rangos de tablas preflop heurísticos e independientes de los perfiles. No es una solución GTO de principio a fin.",
+confidenceSolverExactNote:"Usa una solución CFR postflop convergida condicionada por un pack de equilibrio preflop local validado para la línea y el runout exactos cubiertos. Ambos solvers usan abstracciones declaradas.",
+confidencePreflopGtoNote:"Usa una política de equilibrio aproximado validada para esta configuración y este nodo exactos dentro de la abstracción discreta declarada.",
+strategyLabel:"Estrategia",strategyBaseline:"Fallback heurístico personalizado",strategyChart:"Base de tabla preflop",strategyAllIn:"Modelo all-in de rango + equity",strategyIcm:"Modelo de torneo ajustado por ICM",strategyExploit:"Ajuste explotador",strategySolver:"Estrategia de equilibrio resuelta",strategyGtoBaseline:"Base de equilibrio aproximado validada",
+preflopGtoTitle:"Política de equilibrio preflop",preflopGtoReady:"Política local validada",preflopGtoMix:"Mezcla de acciones",preflopGtoPack:"Pack",preflopGtoNode:"Nodo",preflopGtoAbstract:"Equilibrio aproximado del juego discreto declarado; no usa perfiles de jugador ni modelos bayesianos de rangos.",
+preflopGtoWhy:mix=>`Equilibrio preflop aproximado validado en este nodo de acción: ${mix}.`,preflopGtoExtra:digest=>`La mezcla procede del pack auditado${digest?` (${digest})`:''}; los perfiles y las lecturas explotadoras no modifican esta base de equilibrio.`,
+preflopEquilibriumRead:"Sigue la política mixta validada para este nodo exacto; la recomendación mostrada es su rama más frecuente.",
 bluffBreakEven:"Umbral de farol puro",bluffBreakEvenNote:(f,fe)=>`Este tamaño necesita cerca del ${f}% de folds; el modelo estima cerca del ${fe}%. La equity al showdown añade valor cuando pagan.`,
 bluffTitle:"Evaluación del farol",bluffVerdict:"Veredicto",bluffWhy:"Por qué",bluffPlan:"Si pagan o resuben",
 intentBluff:"FAROL",intentSemiBluff:"SEMIFAROL",intentValue:"VALOR",intentProtection:"PROTECCIÓN",intentRangeBluff:"FAROL DE RANGO",intentRangeRaise:"SUBIDA DE RANGO",intentBluffCatch:"CAZAFAROLES",intentCall:"IGUALAR",intentCheck:"PASAR",intentFold:"RETIRARSE",
@@ -431,8 +448,9 @@ outQuality:"Calidad de los outs",weightedOuts:"outs ajustados al rango",weighted
 yourHand:"Tu mano",position:"Posición",actingOrder:"Orden de palabra",postflopOrder:"Orden post-flop",winChance:"Prob. de ganar",playersBehind:"Jugadores por hablar",openingDecision:"Decisión de apertura",raiseOrFold:"Subir o retirarse · sin limp",draws:"Proyectos",outs:"Outs",unique:"únicos",shared:"compartidos",countedOnce:"contados una vez",dirtyOuts:"Outs sucios",dirtyOutsInfoLbl:"¿Qué es un out sucio?",dirtyOutsInfo:"Un out sucio completa tu proyecto en papel pero a menudo no gana el bote — p. ej. empareja la mesa (ayuda a todos) o es la 4ª carta a color en la mesa que da el color ganador al rival. Cuenta los outs limpios para tus odds.",potOdds:"Odds del bote",impliedOdds:"Odds implícitas",realisticNeed:"umbral realista",bestCaseNeed:"mejor caso",effectiveNeed:"Umbral efectivo del call",effectiveNeedNote:"Equity necesaria tras posición, rangos y presión del torneo.",preflopRank:p=>`Rango preflop: top ~${p}% de las manos iniciales`,lowerStronger:"más bajo = más fuerte",yourStack:"Tu stack",sugSize:"Tamaño sugerido",
 firstToAct:"primero en hablar (OOP)",lastToAct:"último en hablar (IP)",ofN:"de",need:"necesitas ",vs:"vs",opp:"rival",opps:"rivales",
 beginnerMath:(raw,usable,need,enough)=>`Equity bruta: ${raw} %. Utilizable tras posición y riesgo: ~${usable} %. Igualar exige ${need} % — ${enough?'suficiente para continuar':'insuficiente, retírate'}.`,
+beginnerSolver:"Sigue la estrategia mixta del solver en este nodo. Un atajo basado en las odds del bote no sustituye su comparación de EV del árbol completo.",
 beginnerChartFold:(raw,usable,need)=>`La equity bruta es ${raw}% y la estimación contextual está cerca (~${usable}% frente al ${need}% requerido), pero esta mano queda fuera del rango de continuación específico por posición. La tabla tiene prioridad porque incluye dominación, calles futuras difíciles y jugadores detrás — retírate.`,
-beginnerBroadwayFlat:(raw,usable,need)=>`Es un call deliberadamente loose con cartas altas conectadas ante una subida pequeña. El modelo estricto da ~${usable}% de equity utilizable frente al ${need}% requerido, así que es un ajuste de estilo para construir un bote multiway, no un call solver estándar. Tírala cuando la subida o el riesgo del stack sea mayor.`,
+beginnerBroadwayFlat:(raw,usable,need)=>`Es un call deliberadamente loose con cartas altas conectadas ante una subida pequeña. El modelo estricto da ~${usable}% de equity utilizable frente al ${need}% requerido, así que es un ajuste de estilo para construir un bote multiway, no una acción de la tabla base incluida. Tírala cuando la subida o el riesgo del stack sea mayor.`,
 beginnerFree:"En claro: pasar no cuesta fichas. Mantienes viva la mano y ves qué ocurre sin agrandar el bote.",
 beginnerDrySidePot:"En claro: sí tienes top pair. Se recomienda pasar porque un jugador ya está all-in y todavía no hay bote lateral. En esta mesa seca, apostar haría retirarse sobre todo a manos peores y crearía un bote nuevo contra manos más fuertes.",
 beginnerAgg:"En claro: tu probabilidad de ganar es solo una parte de apostar o subir. Los rivales pueden retirarse de inmediato (fold equity), y manos peores aún pueden pagar.",
@@ -472,16 +490,16 @@ mpConnFail:"No se pudo conectar a la sala. Las redes móviles a veces bloquean c
 mpJoined:n=>`${n} entró en la sala`,mpGone:n=>`${n} se desconectó — su mano se retira`,
 mpYou:"(tú · anfitrión)",mpYouG:"(tú)",chatPh:"Mensaje…",
 viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleIso:"tabla iso vs limps",chartTitleShove:"tabla de all-in",chartTitleFacing:"tabla contra esta subida",chartTitleBbDefend:"tabla defensa BB",chartTitleFourBet:"respuesta frente al 3-bet",
-showRange:"📊 Mostrar rango rival",hideRange:"▴ Ocultar rango rival",viewRange:"🔎 Abrir el explorador de rangos interactivo",chartTitleRange:"rango estimado ahora mismo",chartTitleSolverRange:"rango del solver GTO en este nodo",legendRange:"manos que aún puede tener",rangeFringe:"Marginal",rangePossible:"Posible",rangeLikely:"Probable",rangeVeryLikely:"Muy probable",
+showRange:"📊 Mostrar rango rival",hideRange:"▴ Ocultar rango rival",viewRange:"🔎 Abrir el explorador de rangos interactivo",chartTitleRange:"rango estimado ahora mismo",chartTitleSolverRange:"alcance del solver postflop en este nodo",chartTitleSolverConditionalRange:"alcance postflop (prior preflop heurístico)",legendRange:"manos que aún puede tener",rangeFringe:"Marginal",rangePossible:"Posible",rangeLikely:"Probable",rangeVeryLikely:"Muy probable",
 rangeExplore:"Explorar rango",rangeFilter:"Mostrar",rangeFilterAll:"Todas las manos",rangeFilterMade:"Manos hechas",rangeFilterDraws:"Proyectos",rangeFilterNut:"Proyectos máximos",rangeFilterNonNut:"Proyectos no máximos",rangeFilterBackdoor:"Backdoors",rangeFilterAir:"Aire / faroles",rangePick:"Selecciona una clase de manos en la cuadrícula para entender por qué sigue siendo posible.",rangeCellShare:(h,p,a,c)=>`${h} representa aproximadamente el ${p}% de este rango rival. Quedan ponderados ${a} combo${a!==1?'s':''} exacto${a!==1?'s':''} de ${c} combinaciones de palos no bloqueadas.`,rangeCellDensity:n=>`Cada combo disponible de ${n} se pondera frente a un combo legal medio.`,rangeCellMix:"Qué forman actualmente estos combos",rangeUnavailable:"Esta clase de manos ya no tiene combinaciones ponderadas tras los bloqueadores y la línea de acción.",revExploreRange:"Explorar rango",
-rangeDensity:"Probabilidad por combo",rangeClassProb:"Probabilidad de la clase",rangeEffective:"combos efectivos",rangeLine:"Línea de acciones",rangeSource:"Fuente del rango",rangeSolverNode:"Pesos de alcance del nodo actual extraídos del equilibrio CFR convergido de este árbol configurado",rangeSolverStreet:"Alcance de la raíz de la calle suministrado a este árbol CFR configurado; aún no hubo acción en esta calle",rangeTopCard:"Manos con la carta más alta",rangeTopHands:"Candidatos principales",rangeOpen:"Open",rangeOfRange:"del rango",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilidad media de un combo",
+rangeDensity:"Probabilidad por combo",rangeClassProb:"Probabilidad de la clase",rangeEffective:"combos efectivos",rangeLine:"Línea de acciones",rangeSource:"Fuente del rango",rangeSolverNode:"Pesos de alcance del nodo actual extraídos de la solución CFR convergida de este árbol configurado",rangeSolverStreet:"Alcance de equilibrio de la raíz de la calle suministrado a este árbol CFR configurado; aún no hubo acción en esta calle",rangeSolverConditionalNode:"Alcance CFR del nodo actual para este árbol postflop, condicionado por tablas preflop heurísticas",rangeSolverConditionalStreet:"Alcance de la raíz de la calle suministrado a este árbol postflop por tablas preflop heurísticas",rangeTopCard:"Manos con la carta más alta",rangeTopHands:"Candidatos principales",rangeOpen:"Open",rangeOfRange:"del rango",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilidad media de un combo",
 rangeComposition:"Distribución exacta",rangeFullHousePlus:"Full o mejor",rangeMadeFlushes:"Colores hechos",rangeStraights:"Escaleras",rangeTrips:"Tríos",rangeTwoPair:"Doble pareja",rangeOnePair:"Una pareja",rangeDrawOnly:"Solo proyecto",rangeAir:"Aire / posibles faroles",rangeBoardOnly:"Juega la mesa",
 rangeDrawBreakdown:"Textura exacta de proyectos",rangeComboDraw:"Proyectos combinados",rangeNutFlushDraw:"Proyectos de color máximo",rangeNonNutFlushDraw:"Proyectos de color no máximo",rangeStraightDraw:"Proyectos de escalera",rangePairPlusDraw:"Pareja + proyecto",rangeBackdoorDraw:"Solo proyectos backdoor",
 rangeWeightRaise:(d,x,h)=>d==='up'?`${h} gana peso (${x}× la media): la última acción agresiva encaja mejor con su valor o potencial de semifarol.`:d==='down'?`${h} pierde peso (${x}× la media): la acción agresiva encaja menos con esta clase que con manos fuertes y proyectos creíbles.`:`${h} queda cerca de su peso previo (${x}× la media) tras la última acción agresiva.`,
 rangeWeightCall:(d,x,h)=>d==='up'?`${h} gana peso (${x}× la media): pagar encaja con su valor al showdown o la realización de su proyecto.`:d==='down'?`${h} pierde peso (${x}× la media): esta clase continúa menos que las igualadas fuertes y los proyectos rivales.`:`${h} queda cerca de su peso previo (${x}× la media) tras pagar.`,
 rangeWeightCheck:(d,x,h)=>d==='up'?`${h} gana peso (${x}× la media): pasar encaja con su fuerza media o perfil de abandono.`:d==='down'?`${h} pierde peso (${x}× la media): pasar hace menos probables las versiones fuertes de esta clase.`:`${h} queda cerca de su peso previo (${x}× la media) tras pasar.`,
 rangeWeightPrior:(d,x,h)=>`${h} pesa ${x}× un combo legal medio según posición, perfil y rango previo.`,
-rangeWeightSolver:(x,h)=>`${h} tiene ${x}× el alcance de un combo legal medio en el equilibrio del solver.`,
+rangeWeightSolver:(x,h)=>`${h} tiene ${x}× el alcance de un combo legal medio en el equilibrio configurado del solver.`,rangeWeightSolverConditional:(x,h)=>`${h} tiene ${x}× el alcance de un combo legal medio en la solución postflop condicionada por tablas preflop heurísticas.`,
 rangeBlockerImpact:n=>`Las cartas conocidas eliminan ${n} combo${n!==1?'s':''} exacto${n!==1?'s':''}.`,rangeActionRemoved:n=>`La línea de acción reduce ${n} combo${n!==1?'s':''} no bloqueado${n!==1?'s':''} adicional${n!==1?'es':''} a peso cero.`,
 rangeIso:"Subida de aislamiento",rangeSqueeze:"Squeeze",rangeLimp:"Limp",rangeOption:"Check gratis",rangeEntering:s=>`Rango al entrar en ${s} — el rival aún no ha actuado`,
 legendOpen:"subir de primeras",legendShove:"ir all-in",legendFold:"retirarse",legendYou:"tu mano",legend3bet:"resubir (3-bet)",legendFourBet:"4-bet",legendCall:"igualar",
@@ -1182,7 +1200,8 @@ function aiCoachReviewText(history){
     `Hands included: ${hands.length} (oldest to newest)`,
     'All numeric bet, pot and stack amounts below are exact engine chips.',
     'Opponent hole cards are omniscient end-of-hand audit data; the live coach did NOT see hidden cards.',
-    'Displayed ranges marked sourceKind=solver are equilibrium reach weights from the solved node (or its action-free street root).',
+    'Displayed ranges marked sourceKind=solver use supplied input reach at an action-free street root and CFR-extracted reach after an action.',
+    'rangeExactFrequencies=true means the postflop tree was seeded by an audited preflop equilibrium pack; false means it is conditional on heuristic chart priors.',
     'Only ranges marked sourceKind=estimated are profile-conditioned coach estimates; they are never solver inputs.',
     'solver.rangeSource/rangeNodes identify the independent baseline ranges supplied to the tree; solver.reachSource identifies current-node extraction.',
     ''
@@ -1229,20 +1248,38 @@ function aiCoachReviewText(history){
       lines.push(`  Provider: ${decision.strategyProvider||'unknown'} | Strategy mode: ${decision.strategyMode||'unknown'} | Confidence: ${decision.confidenceKind||'unknown'}${decision.solverSupport?` | Solver unavailable reason: ${decision.solverSupport}`:''}`);
       if(decision.heuristicRec)lines.push(`  Heuristic recommendation before solver override: ${decision.heuristicRec}`);
       lines.push(`  Hero hand code: ${decision.heroCode||'unknown'} | Intent: ${decision.actionIntent||'unknown'} | Concepts: ${(decision.concepts||[]).join(', ')||'none'}`);
-      lines.push(`  Raw equity: ${aiReviewPct(decision.eq)} | Adjusted equity: ${aiReviewPct(decision.eqAdj)} | Effective threshold: ${aiReviewPct(decision.needEq)}`);
+      if(decision.equitySource==='heuristic-display-only')
+        lines.push(`  Equity model: heuristic display-only estimate (not an input to the recorded preflop equilibrium policy); raw=${aiReviewPct(decision.eq)}`);
+      else if(decision.equitySource==='solver-equilibrium-node')
+        lines.push(`  Solver node equity: ${aiReviewPct(decision.eq)} (computed against equilibrium reach at this node; no Bayesian/profile range)`);
+      else if(decision.equitySource==='solver-policy-only')
+        lines.push('  Equity display: omitted; the recorded recommendation comes from the resolved strategy and action EVs.');
+      else lines.push(`  Raw equity: ${aiReviewPct(decision.eq)} | Adjusted equity: ${aiReviewPct(decision.eqAdj)} | Effective threshold: ${aiReviewPct(decision.needEq)}`);
       if(decision.evs)lines.push(`  Action EV snapshots (chips): FOLD=${aiReviewNum(decision.evs.FOLD)} CALL/CHECK=${aiReviewNum(decision.evs.CALL)} RAISE=${aiReviewNum(decision.evs.RAISE)}`);
       lines.push(`  Recorded EV loss: ${aiReviewNum(decision.evLoss)} chips | Solver sizing mismatch: ${!!decision.solverSizeMismatch}`);
       if(Array.isArray(decision.solverMix)&&decision.solverMix.length){
-        lines.push('  Solver mix:');
+        lines.push(decision.preflopGto?'  Audited preflop policy mix:':'  Solver mix:');
         decision.solverMix.forEach(branch=>lines.push(
           `    - ${branch.label||branch.rec||'branch'}${Number(branch.target)>0?` to ${aiReviewNum(branch.target)}`:''}`+
           ` | frequency=${aiReviewPct(branch.frequency)} | EV=${aiReviewNum(branch.ev)} chips`
         ));
       }
+      if(decision.preflopGto){
+        const policy=decision.preflopGto;
+        lines.push(`  Preflop policy pack: ${policy.packId||'unknown'} | manifest SHA-256=${policy.manifestSha256||'unknown'} | payload SHA-256=${policy.payloadSha256||'unknown'} | tree=${policy.treeId||'unknown'}`);
+        lines.push(`  Pack game/config: ${aiReviewJson(policy.game)} | tree config SHA-256=${policy.treeConfigSha256||'unknown'}`);
+        lines.push(`  Preflop policy node: ${policy.nodeId||'unknown'} | history=${policy.historyKey||'unknown'} | combo=${policy.comboIndex??'unknown'} | actor seat=${policy.actorSeat??'unknown'}`);
+        lines.push(`  Verification: ${policy.verificationStatus||'unknown'} | productionReady=${!!policy.productionReady} | engine=${policy.engine||'unknown'} @ ${policy.commit||'unknown'} | repository=${policy.repository||'unknown'}`);
+        lines.push(`  Solve work: iterations=${aiReviewNum(policy.iterations)} | traversals=${aiReviewNum(policy.traversals)} | seed=${aiReviewNum(policy.seed)} | independent seeds=${aiReviewNum(policy.independentSeeds)} | max seed L1=${aiReviewNum(policy.seedStrategyL1Max)}`);
+        lines.push(`  Equilibrium evidence (mbb/hand): NashConv=${aiReviewNum(policy.nashConvMbbPerHand)} | CI95 upper=${aiReviewNum(policy.nashConvCi95UpperMbbPerHand)} | method=${policy.nashConvMethod||'unknown'} | average external regret=${aiReviewNum(policy.averageExternalRegretMbbPerHand)} | max deviation=${aiReviewNum(policy.maxDeviationGainMbbPerHand)} | deviation CI95 upper=${aiReviewNum(policy.deviationGainCi95UpperMbbPerHand)}`);
+        lines.push(`  Coverage: expected nodes=${aiReviewNum(policy.expectedDecisionNodes)} | exported nodes=${aiReviewNum(policy.exportedDecisionNodes)} | validation report SHA-256=${policy.validationReportSha256||'unknown'}`);
+        lines.push(`  Continuation: ${policy.continuationModel||'unknown'} | SHA-256=${policy.continuationModelSha256||'unknown'}`);
+        lines.push(`  Raw policy artifact: source=${policy.sourceType||'unknown'} | generated=${policy.generatedAt||'unknown'} | license=${policy.licenseSpdx||'unknown'} | redistribution=${!!policy.redistributionGranted} | SHA-256=${policy.rawArtifactSha256||'unknown'}`);
+      }
       if(decision.matchedSolverBranch)lines.push(`  Hero matched solver branch: ${aiReviewJson(decision.matchedSolverBranch)}`);
       if(decision.solver){
         const solver=decision.solver;
-        lines.push(`  Solver: ${solver.engine||'unknown'} @ ${solver.engineCommit||'unknown'} | converged=${solver.converged} | iterations=${aiReviewNum(solver.iterations)} | exploitability=${aiReviewNum(solver.exploitability)} chips | compact tree=${!!solver.compactTree}`);
+        lines.push(`  Solver: ${solver.engine||'unknown'} @ ${solver.engineCommit||'unknown'} | WASM=${solver.wasmCommit||'unknown'} | provider schema v${solver.providerVersion??'unknown'} | converged=${solver.converged} | iterations=${aiReviewNum(solver.iterations)} | exploitability=${aiReviewNum(solver.exploitability)} chips | target=${aiReviewNum(solver.targetExploitability)} chips | compact tree=${!!solver.compactTree}`);
         lines.push(`  Solver range source: ${solver.rangeSource||'unknown'} | node reach=${solver.reachSource||'unknown'} | preflop line=${solver.rangeLine||'unknown'} | exact frequencies=${solver.rangeExactFrequencies??'unknown'} | selection=${solver.selectionRule||'unknown'}`);
         lines.push(`  Solver baseline range nodes: ${aiReviewJson(solver.rangeNodes)}`);
         lines.push(`  Solver tree abstraction: ${aiReviewJson(solver.abstraction)}`);
@@ -1261,7 +1298,7 @@ function aiCoachReviewText(history){
         lines.push('  Displayed opponent range matrices:');
         ranges.forEach(range=>lines.push(
           `    - ${range.pos||'unknown'} sourceKind=${range.sourceKind||'estimated'} nodeReach=${!!range.nodeReach}`+
-          ` reachSource=${range.reachSource||'n/a'} rootSource=${range.rangeSource||'n/a'}`+
+          ` reachSource=${range.reachSource||'n/a'} rootSource=${range.rangeSource||'n/a'} exactPreflopFrequencies=${!!range.rangeExactFrequencies}`+
           ` cap=${aiReviewNum(range.cap)} floor=${aiReviewNum(range.floor)}`+
           ` sample=${range.sample||0} confidence=${range.sampleConfidence||'unknown'}`+
           ` | top hands: ${(range.topHands||[]).join(', ')||'n/a'}`+
@@ -2570,6 +2607,9 @@ function mixTip(rec,R){
   if(R.solver){
     return `<div class="mixtip"><b>${solverText('mix')}</b><br>${solverMixText(R.solver)}</div>`;
   }
+  /* Exact preflop packs already provide the complete mixed policy. Never add
+     an equity-driven heuristic action that could contradict that policy. */
+  if(R.preflopGto)return'';
   if(rec==='FOLD'||rec==='ALLIN')return'';
   if(R.icmPrem>=0.01||R.M<8)return'';                       // never mix under tournament pressure
   let key=null;
@@ -2606,8 +2646,12 @@ function coachMetric(label,value,cls=''){
   return `<div class="coach-metric ${cls}"><span>${label}</span><b>${value}</b></div>`;
 }
 function coachConfidence(R){
+  if(R.preflopGto)return{
+    kind:'preflop-equilibrium',source:T('confidencePreflopGto'),level:T('confidenceMedium'),note:T('confidencePreflopGtoNote'),icon:'⚖'
+  };
   if(R.solver)return{
-    kind:'solver',source:T('confidenceSolver'),level:T('confidenceMedium'),note:T('confidenceSolverNote'),icon:'⚖'
+    kind:'solver',source:T('confidenceSolver'),level:T('confidenceMedium'),
+    note:T(R.solver.rangeExactFrequencies===true?'confidenceSolverExactNote':'confidenceSolverNote'),icon:'⚖'
   };
   if(['allin','icm','icm-allin'].includes(R.strategyMode))return{
     kind:R.strategyMode,source:T('confidenceMath'),level:T('confidenceMedium'),note:T('confidenceMathNote'),icon:'≈'
@@ -2633,6 +2677,7 @@ function coachConfidence(R){
 }
 function coachStrategyLabel(R){
   const mode=R.strategyMode||'baseline';
+  if(mode==='equilibrium-baseline'||mode==='gto-baseline')return T('strategyGtoBaseline');
   if(mode==='solver')return T('strategySolver');
   if(mode==='exploit')return T('strategyExploit');
   if(mode==='chart')return T('strategyChart');
@@ -2644,6 +2689,67 @@ function coachConfidenceHtml(R){
   const c=coachConfidence(R);
   return `<div class="coach-confidence"><span class="coach-confidence-icon">${c.icon}</span><div>`+
     `<b>${T('confidenceTitle')(c.source,c.level)}</b><span>${c.note}</span></div></div>`;
+}
+function preflopGtoPanelHtml(R){
+  const policy=R&&R.preflopGto;
+  if(!policy)return'';
+  const escapeHtml=value=>String(value==null?'':value).replace(/[&<>"']/g,character=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[character]);
+  const branches=(policy.policyBranches||policy.branches||[]).filter(branch=>branch.frequency>=0.0005);
+  const mix=branches.map(branch=>{
+    const target=Number.isFinite(branch.targetBB)&&branch.targetBB>0?` ${branch.targetBB} BB`:'';
+    return `${branch.label||String(branch.rec||branch.type||'').toUpperCase()}${target} ${Math.round(branch.frequency*1000)/10}%`;
+  }).join(' · ');
+  const digest=String(policy.packSha256||'').slice(0,12);
+  const provenance=[digest?`${T('preflopGtoPack')} ${digest}`:'',policy.nodeId?`${T('preflopGtoNode')} ${policy.nodeId}`:'']
+    .filter(Boolean).join(' · ');
+  return `<div class="gto-provider-card solved"><div class="gto-provider-title">${escapeHtml(T('preflopGtoTitle'))}</div>`+
+    `<strong>${escapeHtml(T('preflopGtoReady'))}</strong>`+
+    (mix?`<div>${escapeHtml(T('preflopGtoMix'))}: ${escapeHtml(mix)}</div>`:'')+
+    `<small>${escapeHtml([provenance,T('preflopGtoAbstract')].filter(Boolean).join(' · '))}</small></div>`;
+}
+function preflopPolicyAuditRecord(policy,branches){
+  if(!policy)return null;
+  const solve=policy.solve||{},provenance=policy.provenance||{};
+  const finiteOrNull=value=>value===null||value===undefined||value===''?null:
+    (Number.isFinite(Number(value))?Number(value):null);
+  return {
+    packId:policy.packId||null,manifestSha256:policy.packSha256||null,
+    payloadSha256:policy.payloadSha256||null,treeId:policy.treeId||null,
+    treeConfigSha256:policy.treeConfigSha256||null,
+    game:policy.game?JSON.parse(JSON.stringify(policy.game)):null,
+    nodeId:policy.nodeId||null,historyKey:policy.historyKey||null,
+    actorSeat:Number.isInteger(policy.actorSeat)?policy.actorSeat:null,
+    comboIndex:Number.isInteger(policy.comboIndex)?policy.comboIndex:null,
+    verificationStatus:solve.verificationStatus||null,productionReady:solve.productionReady===true,
+    engine:solve.engine||null,repository:solve.repository||null,commit:solve.commit||null,
+    iterations:finiteOrNull(solve.iterations),traversals:finiteOrNull(solve.traversals),
+    seed:finiteOrNull(solve.seed),nashConvMbbPerHand:finiteOrNull(solve.nashConvMbbPerHand),
+    nashConvCi95UpperMbbPerHand:finiteOrNull(solve.nashConvCi95UpperMbbPerHand),
+    nashConvMethod:solve.nashConvMethod||null,
+    averageExternalRegretMbbPerHand:finiteOrNull(solve.averageExternalRegretMbbPerHand),
+    maxDeviationGainMbbPerHand:finiteOrNull(solve.maxDeviationGainMbbPerHand),
+    deviationGainCi95UpperMbbPerHand:finiteOrNull(solve.deviationGainCi95UpperMbbPerHand),
+    independentSeeds:finiteOrNull(solve.independentSeeds),
+    seedStrategyL1Max:finiteOrNull(solve.seedStrategyL1Max),
+    expectedDecisionNodes:finiteOrNull(solve.expectedDecisionNodes),
+    exportedDecisionNodes:finiteOrNull(solve.exportedDecisionNodes),
+    validationReportSha256:solve.validationReportSha256||null,
+    continuationModel:solve.continuationModel||null,
+    continuationModelSha256:solve.continuationModelSha256||null,
+    sourceType:provenance.sourceType||null,generatedAt:provenance.generatedAt||null,
+    licenseSpdx:provenance.licenseSpdx||null,
+    redistributionGranted:provenance.redistributionGranted===true,
+    rawArtifactSha256:provenance.rawArtifactSha256||null,
+    policyBranches:(branches||policy.policyBranches||policy.branches||[]).map(branch=>({
+      actionId:branch.actionId||null,type:branch.type||null,rec:branch.rec||null,
+      label:branch.label||null,target:Number(branch.target)||0,
+      targetBB:branch.targetBB==null?null:Number(branch.targetBB),
+      frequency:Number(branch.frequency)||0,childNodeId:branch.childNodeId||null,
+      terminal:branch.terminal===true,
+    })),
+  };
 }
 function coachIcmHtml(info){
   if(!info)return '';
@@ -2690,6 +2796,22 @@ function coachBluffHtml(info){
 function updateCoach(p){
   if(!HAS_DOM)return;
   const R=coachDecide(p);
+  if(state.stage!=='preflop'&&R.strategyProvider==='solver-pending'&&!R.solver){
+    coachRecNow=null;
+    $('coachBody').innerHTML=typeof solverPanelHtml==='function'
+      ?`<div id="gtoBox">${solverPanelHtml(R)}</div>`
+      :`<div class="waiting">${T('waiting')}</div>`;
+    if(typeof solverRequestCoachStrategy==='function'&&
+        (typeof gtoRuntime==='undefined'||gtoRuntime.phase!=='unavailable')){
+      const turnToken=state.handNum+'-'+state.stage+'-'+state.turnIdx+'-'+state.currentBet;
+      solverRequestCoachStrategy(p,R).then(changed=>{
+        if(!changed||state.gameOver||state.handOver)return;
+        if(state.handNum+'-'+state.stage+'-'+state.turnIdx+'-'+state.currentBet!==turnToken)return;
+        if(currentPlayer()===p)updateCoach(p);
+      }).catch(()=>{});
+    }
+    return;
+  }
   const {rec,coachT,evs,why,extra,handDesc,drawRow,eq,odds,callAmt,pot,opps,pos,early,late,
          actsFirst,actsLast,ordIdx,ordLen,M,mZone,icmPrem,spr,sprZone}=R;
   const flags=getMode().coachFlags||{};
@@ -2698,7 +2820,7 @@ function updateCoach(p){
     if($('raiseCtl').style.visibility!=='hidden'){
       const sl=$('raiseSlider');
       if(rec==='ALLIN') setRaiseExact(p.bet+p.chips);
-      else if(R.solver) setRaiseExact(clamp(coachT,+sl.min,+sl.max));
+      else if(R.solver||R.preflopGto) setRaiseExact(coachT);
       else{ clearRaiseExact(); sl.value=clamp(coachT,+sl.min,+sl.max); updateRaiseLabel(); }
     }
   }
@@ -2719,23 +2841,28 @@ function updateCoach(p){
     `<button class="chart-link" id="chartViewBtn">${T('viewRange')}</button></div>`:'';
   const allReasons=[...why,...extra].map(s=>(s||'').trim()).filter(Boolean);
   const keyReason=allReasons.shift()||'';
+  const solverDecision=Boolean(R.solver);
   /* When nobody has entered the pot, matching the big blind would be a limp,
      not a priced call. Show the actual strategic question instead of presenting
      showdown equity and 1-BB pot odds as the reason to open or fold. */
   const openingDecision=state.stage==='preflop'&&state.currentBet<=state.bb&&limperCount(p)===0&&p.bet<state.bb;
   const priceMetric=callAmt>0?`${T('need')}${pct(odds)} · ${usd(callAmt)} → ${usd(pot)}`:'';
-  const impliedRow=R.impliedInfo
+  const impliedRow=!solverDecision&&R.impliedInfo
     ?`<div class="coach-row"><span>${T('impliedOdds')}</span><b>~${pct(R.impliedInfo.realisticNeed)} ${T('realisticNeed')}<br>${pct(R.impliedInfo.bestCaseNeed)} ${T('bestCaseNeed')} · ${usd(R.impliedInfo.maxFuture)} max</b></div>`:'';
-  const effectiveRow=callAmt>0&&R.needEq!=null&&Math.abs(R.needEq-odds)>=.005
+  const effectiveRow=!solverDecision&&callAmt>0&&R.needEq!=null&&Math.abs(R.needEq-odds)>=.005
     ?`<div class="coach-row"><span>${T('effectiveNeed')}</span><b>~${pct(R.needEq)}<small class="coach-row-note">${T('effectiveNeedNote')}</small></b></div>`:'';
-  const bluffRow=R.bluffBreakEven!=null
+  const bluffRow=!solverDecision&&R.bluffBreakEven!=null
     ?`<div class="coach-row"><span>${T('bluffBreakEven')}</span><b>${pct(R.bluffBreakEven)}<small class="coach-row-note">${T('bluffBreakEvenNote')(Math.round(R.bluffBreakEven*100),Math.round((R.modeledFoldEquity||0)*100))}</small></b></div>`:'';
-  const liveMathRows=drawRow+impliedRow+sprRow+effectiveRow+bluffRow;
+  const liveMathRows=solverDecision?sprRow:drawRow+impliedRow+sprRow+effectiveRow+bluffRow;
   const usableEq=clamp(R.eqAdj==null?eq:R.eqAdj,0,1);
   const decisionNeed=R.needEq==null?odds:R.needEq;
   const chartExcludedFold=state.stage==='preflop'&&rec==='FOLD'&&R.chartInfo&&
     !(R.chartInfo.list||[]).includes(R.code)&&!(R.chartInfo.list2||[]).includes(R.code);
-  const beginnerRead=R.drySidePot
+  const beginnerRead=R.preflopGto
+    ?T('preflopEquilibriumRead')
+    :solverDecision
+    ?T('beginnerSolver')
+    :R.drySidePot
     ?T('beginnerDrySidePot')
     :openingDecision
     ?(rec==='FOLD'?T('beginnerOpenFold'):T('beginnerAgg'))
@@ -2759,14 +2886,21 @@ function updateCoach(p){
     `<div class="coach-decision"><span class="coach-decision-label">${coachDecisionLabel()}</span><div class="rec ${rec}">${recLabel}</div></div>`+
     `<div class="coach-glance">`+
       coachMetric(T('yourHand'),handDesc,'wide')+
-      (openingDecision
+      (R.preflopGto
+        ?coachMetric(T('strategyLabel'),T('strategyGtoBaseline'),'emphasis')
+        :openingDecision
         ?coachMetric(T('playersBehind'),String(opps),'emphasis')+
           coachMetric(T('openingDecision'),T('raiseOrFold'))
+        :solverDecision
+        ?(Number.isFinite(eq)
+          ?coachMetric(T('winChance'),`~${pct(eq)} ${T('vs')} ${opps} ${opps===1?T('opp'):T('opps')}`,'emphasis')
+          :coachMetric(T('strategyLabel'),T('strategySolver'),'emphasis'))
         :coachMetric(T('winChance'),`~${pct(eq)} ${T('vs')} ${opps} ${opps===1?T('opp'):T('opps')}`,'emphasis')+
           coachMetric(T('potOdds'),priceMetric))+
     `</div>`+
     coachConfidenceHtml(R)+
-    (typeof solverPanelHtml==='function'?`<div id="gtoBox">${solverPanelHtml(R)}</div>`:'')+
+    (R.preflopGto?`<div id="gtoBox" data-provider="preflop-equilibrium">${preflopGtoPanelHtml(R)}</div>`:
+      (typeof solverPanelHtml==='function'?`<div id="gtoBox">${solverPanelHtml(R)}</div>`:''))+
     `<div class="coach-beginner-read"><span>💡</span><p>${beginnerRead}</p></div>`+
     (liveMathRows?`<div class="coach-live-math"><span class="coach-live-math-title">${coachMathLabel()}</span>${liveMathRows}</div>`:'')+
     coachBluffHtml(R.bluffInfo)+
@@ -2807,6 +2941,7 @@ function updateCoach(p){
   const fallbackRangeSummaries=rangeCharts.slice(0,3).map(info=>({
     pos:info.pos||'',sourceKind:info.sourceKind||'estimated',nodeReach:info.nodeReach===true,
     reachSource:info.reachSource||null,rangeSource:info.rangeSource||null,
+    rangeExactFrequencies:info.rangeExactFrequencies===true,
     cap:info.cap,floor:info.floor,sample:info.sample||0,
     sampleConfidence:info.sampleConfidence||'',
     actionHistory:(info.actionHistory||info.model?.history||[]).map(h=>({...h})),
@@ -2814,20 +2949,22 @@ function updateCoach(p){
   }));
   const solved=R.solver;
   const solverMeta=solved?{
-    engine:solved.engine,engineCommit:solved.engineCommit,exploitability:solved.exploitability,
+    providerVersion:solved.providerVersion,engine:solved.engine,engineCommit:solved.engineCommit,
+    wasmCommit:solved.wasmCommit,exploitability:solved.exploitability,
     targetExploitability:solved.targetExploitability,converged:solved.converged,
     iterations:solved.iterations,compactTree:solved.compactTree,rangeSource:solved.rangeSource,rangeLine:solved.rangeLine,
     rangeExactFrequencies:solved.rangeExactFrequencies,rangeNodes:solved.rangeNodes,reachSource:solved.reachSource,
     selectionRule:solved.selectionRule,abstraction:solved.abstraction
   }:null;
-  coachRecNow={rec,stage:state.stage,evs,coachT:R.coachT,eq,eqAdj:R.eqAdj??eq,odds,needEq:R.needEq,callAmt,pot,
+  coachRecNow={rec,stage:state.stage,evs,coachT:R.coachT,eq,eqAdj:R.eqAdj??eq,equitySource:R.equitySource||null,odds,needEq:R.needEq,callAmt,pot,
     airPen:R.airPen||0,opps,pos,confidenceKind:coachConfidence(R).kind,rangeCharts,heroCode:R.code,
     strategyProvider:R.strategyProvider||'heuristic',strategyMode:R.strategyMode||'baseline',
     solverSupport:R.solverSupport||null,heuristicRec:R.heuristicRec||null,
     actionIntent:R.actionIntent||null,concepts:(R.concepts||[]).slice(),
     reasoning:[...(R.why||[]),...(R.extra||[])],bluffInfo:R.bluffInfo?{...R.bluffInfo}:null,
     icmInfo:R.icmInfo?{...R.icmInfo}:null,fallbackRangeSummaries,solverMeta,
-    solverMix:solved?.branches||null,solverBranches:solved?.branches||null};
+    preflopGto:preflopPolicyAuditRecord(R.preflopGto,R.policyBranches),
+    solverMix:R.policyBranches||solved?.branches||null,solverBranches:R.policyBranches||solved?.branches||null};
   if(typeof solverRequestCoachStrategy==='function'){
     const turnToken=state.handNum+'-'+state.stage+'-'+state.turnIdx+'-'+state.currentBet;
     solverRequestCoachStrategy(p,R).then(changed=>{
@@ -2971,7 +3108,9 @@ function counterfactualModel(d){
 }
 function counterfactualVisibleDecisions(hand){
   const stageIndex={preflop:0,flop:1,turn:2,river:3};
-  return (hand?.myDecisions||[]).filter(d=>(stageIndex[d.stage]??3)<=rpStreet);
+  return (hand?.myDecisions||[]).filter(d=>(stageIndex[d.stage]??3)<=rpStreet&&
+    !d.preflopGto&&!d.solver&&d.strategyProvider!=='solver'&&
+    !String(d.equitySource||'').startsWith('solver-')&&d.equitySource!=='heuristic-display-only');
 }
 function counterfactualActionLabel(key,d){
   if(key==='FOLD')return recWord('FOLD');
@@ -3111,7 +3250,7 @@ function clearRaiseExact(){
 function setRaiseExact(amt){
   const sl=$('raiseSlider'); if(!sl)return;
   sl.dataset.exact=String(amt);
-  sl.value=Math.min(+sl.max, amt);
+  sl.value=amt;
   updateRaiseLabel();
 }
 function syncRaiseAmountInput(value){
@@ -3285,7 +3424,8 @@ function humanAct(type,amount){
     const solverBranches=coachRecNow.solverBranches;
     const solverBranch=solverBranchForHumanAction(solverBranches,type,amount,callNow);
     const solverDecision=Array.isArray(solverBranches)&&solverBranches.length>0;
-    const followed = solverDecision ? Boolean(solverBranch&&solverBranch.frequency>=0.005)
+    const minimumMixFrequency=coachRecNow.preflopGto?0.000001:0.005;
+    const followed = solverDecision ? Boolean(solverBranch&&solverBranch.frequency>=minimumMixFrequency)
       : r==='FOLD' ? type==='fold'
       : (r==='CALL'||r==='CHECK') ? type==='call'
       : type==='raise';
@@ -3306,10 +3446,13 @@ function humanAct(type,amount){
     const decisionContext={stage:state.stage,rec:r,action:type,followed,evLoss,spot,opps,
       pos:coachRecNow.pos||'',confidenceKind:coachRecNow.confidenceKind||'heuristic',
       pot:coachRecNow.pot,callAmt:coachRecNow.callAmt,eq:coachRecNow.eq,needEq:coachRecNow.needEq,
+      equitySource:coachRecNow.equitySource||null,
       eqAdj:coachRecNow.eqAdj,raiseTo:coachRecNow.coachT||0,
       evs:coachRecNow.evs?{FOLD:coachRecNow.evs.FOLD,CALL:coachRecNow.evs.CALL,RAISE:coachRecNow.evs.RAISE}:null,
       heroCode:coachRecNow.heroCode||'',strategyProvider:coachRecNow.strategyProvider||'heuristic',
       solverMix:coachRecNow.solverMix||null,chosenRaiseTo:type==='raise'?(Number(amount)||0):0,
+      preflopGto:coachRecNow.preflopGto?{...coachRecNow.preflopGto,
+        policyBranches:(coachRecNow.preflopGto.policyBranches||[]).map(branch=>({...branch}))}:null,
       solverSizeMismatch:solverDecision&&type==='raise'&&!solverBranch,
       stackBB:state.bb>0?Math.round((p.chips+p.bet)/state.bb*10)/10:0,potType,tableSize:alive().length,
       heroCards:p.hole.map(c=>RANK_CH[c.r]+'shdc'[c.s]),board:state.board.map(c=>RANK_CH[c.r]+'shdc'[c.s]),
@@ -3381,7 +3524,12 @@ function saveGameRecord(won,place){
       place:cash?0:(won?1:(place||0)),hands:state.handNum,rebuys:cash?(state.cashRebuys||0):0,
       net,evLost:state.sessStats?(state.sessStats.evLost||0):0,
       startBlind,startBB,bbNet,bbPer100,
-      decisions:(state.gameDecisions||[]).slice(),
+      decisions:(state.gameDecisions||[]).map(decision=>{
+        const compact={...decision};
+        ['opponents','reasoning','bluffInfo','icmInfo','fallbackRangeSummaries','rangeSnapshots',
+          'solver','matchedSolverBranch','preflopGto','solverMix'].forEach(key=>delete compact[key]);
+        return compact;
+      }),
       series:(gameSeries||[]).slice(-300)});
     while(a2.length>200)a2.shift();
     localStorage.setItem('sg_poker_games',JSON.stringify(a2));

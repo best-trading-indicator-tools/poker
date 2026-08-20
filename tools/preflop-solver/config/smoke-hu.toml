@@ -1,0 +1,17 @@
+name = "smoke-hu-12bb"
+players = 2
+stack_bb = 12
+small_blind_units = 1
+big_blind_units = 2
+iterations = 200
+seed = 73918241
+checkpoint_every = 100
+discount_every = 50
+# All-in remains an explicit branch after this ordinary-raise cap.
+max_non_all_in_raises_per_street = 1
+preflop_open_bb = 3.0
+preflop_reraise_multiplier = 3.0
+postflop_bet_pot_fraction = 0.5
+postflop_raise_pot_fraction = 0.75
+postflop_buckets = 16
+max_infosets = 100000

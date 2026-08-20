@@ -24,10 +24,10 @@ futLast:' After the flop you will be LAST to act — you see everyone’s move b
 futMid:(o,n)=>` After the flop you will act ${o} of ${n} — middling position, so don’t over-commit with marginal holdings.`,
 stFirst:' You act first on this street (out of position) — opponents get to react to you, so lean toward checking marginal hands.',
 stLast:' You act last on this street (in position) — everyone has already spoken, so their checks are extra information you can use.',
-pfShove:(bb,c,pr,t,p)=>`At ${bb} BB you're in push/fold territory. ${c} (${pr}) is inside the ~${t}% Nash shoving range from ${p} — shove rather than raise small: it maximizes fold equity and avoids being blinded out.`,
+pfShove:(bb,c,pr,t,p)=>`At ${bb} BB you're in push/fold territory. ${c} (${pr}) is inside the bundled ~${t}% heuristic shoving chart from ${p} — shove rather than raise small: it maximizes fold equity and avoids being blinded out.`,
 pfShortCheck:(c,p)=>`${c} is below the shoving range for ${p}, but checking is free.`,
 pfShortCall:(c,e,o)=>`${c} is below a standard shoving range, but your simulated equity (${e}) comfortably beats the price (${o}).`,
-pfShortFold:(bb,c,pr,t,p)=>`At ${bb} BB, ${c} (${pr}) is outside the ~${t}% Nash range for ${p}. Fold and wait — even short, patience beats spew.`,
+pfShortFold:(bb,c,pr,t,p)=>`At ${bb} BB, ${c} (${pr}) is outside the bundled ~${t}% heuristic chart for ${p}. Fold and wait — even short, patience beats spew.`,
 huPush:(bb,c,pr,t,p)=>`Heads-up at ${bb} BB effective, folding or limping gives up too much to the blinds. ${c} (${pr}) is near the bottom of the ~${t}% shove range from ${p}, but it is still a profitable all-in: you can win the pot immediately when the big blind folds, and you retain equity when called. The displayed win chance is your showdown equity if called — it is not the only reason to shove.`,
 huOpen:(bb,c,p)=>`Heads-up at ${bb} BB effective is deep enough to play postflop. ${c} is playable from ${p}, but it is not a pure shove spot — open small and keep weaker hands in.`,
 huCall:(bb,c,e,o)=>`Heads-up at ${bb} BB effective, calling ranges widen because there is no ladder pressure left. ${c} has about ${e} equity versus the price ${o}, so continue.`,
@@ -68,7 +68,7 @@ postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Suggested postflop raise size: ${amt} 
 callOk:(amt,pt,o,e,disc,ea,need)=>`The call costs ${amt} to win a ${pt} pot, so the immediate price needs ${o} equity. After position, prize pressure and realistic implied odds, the effective requirement is ~${need}; you have ~${e}${disc?` (counted as ~${ea} after hand-strength discounts)`:''}. Calling is profitable long-term, but raising would risk too much with a non-premium hand.`,
 foldAdv:(o,amt,pt,ea,resp,need)=>`The immediate price needs ${o} equity to call (${amt} into ${pt}). After position, prize pressure and realistic implied odds, the effective requirement is ~${need}, but your usable equity is only ~${ea}${resp?' once this bet size is respected':''}. Fold and wait for a better spot.`,
 impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Implied odds: the immediate price needs ${now}. With about ${hit} to hit a clean out and up to ${max} still available behind, the coach conservatively credits about ${future} of future payment; that lowers the realistic break-even price to ~${real}. The absolute best case is ${best} if every remaining chip is paid${reverse?' — but the non-nut draw also carries reverse-implied-odds risk, so that best case is not used':''}.`,
-chart3bet:(c,e)=>`${c} is in the re-raise (3-bet) chart against ${e?'an early-position raiser':'a late-position raiser'} — solver ranges re-raise these hands instead of just calling: the big pairs for value, and hands like A5s as "blocker bluffs" (your ace makes his monster hands less likely). Flat-calling would let players behind you in cheaply.`,
+chart3bet:(c,e)=>`${c} is in the bundled re-raise (3-bet) chart against ${e?'an early-position raiser':'a late-position raiser'} — this heuristic chart re-raises big pairs for value and hands like A5s as "blocker bluffs" (your ace makes monster hands less likely). Flat-calling would let players behind you in cheaply.`,
 shortAllInValue:(c,b,n)=>`${c} is strong enough to isolate this ${b} BB all-in for value. The all-in player cannot fold, so this is not a chart bluff: the raise charges the ${n} live player${n!==1?'s':''} behind for entering the main pot.`,
 shortAllInCall:(c,b,r,u,n,x)=>`${c} has enough equity to call this ${b} BB all-in at the offered price. Raw equity is ${r} and remains about ${u} because the main pot is guaranteed to reach showdown${n?`; the adjusted ${x} requirement still includes the risk from ${n} live player${n!==1?'s':''} behind`:''}. Call — do not turn a hand with adequate price into a 3-bet bluff against someone who cannot fold.`,
 shortAllInFold:(c,b,r,u,n,x)=>`${c} cannot profitably call this ${b} BB all-in. The all-in player cannot fold or offer future implied odds: raw equity is ${r}, about ${u} after the remaining risk, below the adjusted ${x} requirement${n?` with ${n} live player${n!==1?'s':''} still involved`:''}. Fold; the ordinary 3-bet bluff chart does not apply to an all-in.`,
@@ -89,17 +89,17 @@ pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} may look playabl
 pfMultiwayValue:(c,n)=>`${n} caller${n>1?'s':''} improve the immediate price for ${c}. This hand retains its equity relatively well multiway and can make a strong disguised hand, so the coach gives it a small, capped implied-odds credit when stacks are deep enough. The benefit is not unlimited: every extra opponent still lowers raw equity and adds non-nut and reverse-implied-odds risk.`,
 chartIcmFold:(c,e,o)=>`${c} is normally a call here, but right now your simulated win chance (${e}) doesn't cover the price (${o}) once prize pressure and this raiser's range are counted. The chart is a guide — the math of THIS table says fold.`,
 chartFoldVs:(c,r,b,d)=>`${c} is outside both the re-raise and calling ranges versus this ${r||'position'} open.${d?' A weak suited ace is often dominated by the opener’s stronger aces, creating costly reverse implied odds.':''}${b?` ${b} player${b>1?'s':''} behind can still squeeze or enter the pot.`:''} The equity estimate is close, but equity alone does not override the position-specific range — fold.`,
-broadwayFlat:(c,o,s,b)=>`${c} is a connected or one-gap high-card hand facing a small ${o} BB raise. Under the wider multiway-building strategy, call this price with ${s} BB behind${b?` even though ${b} player${b>1?'s':''} can still enter`:''}. This is an intentional loose/exploit adjustment, not the standard solver chart; fold the same hand to a larger raise or with a shorter stack.`,
-chartOpen:(c,p)=>`${c} is in the ${p} opening chart — a hand list taken from solver-computed ranges: raising it first-in from this seat is profitable in the long run. Come in raising, not limping.`,
-chartIso:(c,p,n)=>`${c} is in the ${p} iso chart — solver-style ranges for raising over ${n} limper${n>1?'s':''}. Isolate with a raise; calling behind limpers bleeds chips.`,
+broadwayFlat:(c,o,s,b)=>`${c} is a connected or one-gap high-card hand facing a small ${o} BB raise. Under the wider multiway-building strategy, call this price with ${s} BB behind${b?` even though ${b} player${b>1?'s':''} can still enter`:''}. This is an intentional loose/exploit adjustment, not the bundled baseline chart; fold the same hand to a larger raise or with a shorter stack.`,
+chartOpen:(c,p)=>`${c} is in the bundled ${p} opening chart — a heuristic baseline for first-in decisions. Come in raising, not limping.`,
+chartIso:(c,p,n)=>`${c} is in the bundled ${p} iso chart — a heuristic range for raising over ${n} limper${n>1?'s':''}. Isolate with a raise; calling behind limpers bleeds chips.`,
 chartNotInIso:(c,p)=>`${c} is not in the ${p} iso chart — even over limpers, this hand loses money as a raise long-term. Fold, or make a very tight exception only with a huge stack edge.`,
 limpPotNote:n=>` ${n} limper${n>1?'s':''} — dead money widens iso-raise ranges slightly, but speculative suited connectors need position/depth before you build a big pot.`,
 pfRaiseSize:(amt,bb,pos,callers,anteAdj,depthAdj,effBB)=>` Suggested preflop size: ${amt} (${bb}). ${pos==='IP'?'In position, start at 3 BB':'Out of position, start at 4 BB'} and add 1 BB per limper (${callers} here)${anteAdj?'; antes add dead money':''}${depthAdj>0?'; deep effective stacks support a small increase':effBB?`; the ~${effBB} BB effective stack needs no deep-stack increase`:''}.`,
 pfOpenSize:(amt,bb,pos,antes)=>` Suggested open size: ${amt} (${bb}). ${pos==='IP'?(antes?'Antes add enough dead money to move the in-position baseline from 3 BB to 4 BB.':'With no antes, the in-position first-in baseline is 3 BB.'):'The out-of-position first-in baseline remains 4 BB.'}`,
 threeBetSize:(amt,bb,open,callers,pos)=>` Suggested 3-bet size: ${amt} (${bb}) — ${pos==='IP'?'3× in position':'4× out of position'} over the ${open} opening raise${callers?`, plus 1× for each of the ${callers} flat caller${callers>1?'s':''}`:''}.`,
 fourBetSize:(amt,bb,x)=>` Suggested 4-bet size: ${amt} (${bb}), about ${x}x the 3-bet. This is deliberately much smaller than a 3x 3-bet sizing; if that size would commit roughly 40% of the effective stack, the clean choice with a value hand is all-in instead.`,
-chartNotIn:(c,p)=>`${c} is not in the ${p} opening chart — solver-computed ranges say this hand loses money when raised from this seat over the long run. Folding now saves chips for a better spot.`,
-chartShove:(c,bb,p)=>`At ${bb} BB, ${c} is in the ${p} all-in chart (solver-computed shove ranges for short stacks). Going all-in maximizes your chance of winning the blinds and antes uncontested.`,
+chartNotIn:(c,p)=>`${c} is not in the bundled ${p} heuristic opening chart. Folding now saves chips for a better spot.`,
+chartShove:(c,bb,p)=>`At ${bb} BB, ${c} is in the bundled ${p} heuristic all-in chart. Going all-in maximizes your chance of winning the blinds and antes uncontested.`,
 chartNotInShove:(c,p)=>`${c} is not in the ${p} all-in chart for this stack depth — shoving it loses money long-term. Fold and wait: even one round of patience usually offers a better hand.`,
 benchProg:(i,n)=>`Running… tournament ${i} of ${n}`,
 benchResult:(g,np,w,rw,im,ri,av,rav)=>`Over ${g} simulated ${np}-player tournaments, a bot following the coach's advice on EVERY decision: 🏆 won ${w}% of tournaments (a random player would win ${rw}%) · 💰 finished in the money ${im}% (random: ${ri}%) · average finish ${av} of ${np} (random: ${rav}). The coach can't beat luck in one game — but this is its long-term edge.`,
@@ -193,10 +193,10 @@ futLast:' Après le flop vous parlerez en DERNIER — vous verrez les décisions
 futMid:(o,n)=>` Après le flop vous parlerez ${o} sur ${n} — position moyenne : ne vous engagez pas trop avec des mains marginales.`,
 stFirst:' Vous parlez en premier sur cette rue (hors de position) — les adversaires réagissent après vous : privilégiez le check avec les mains marginales.',
 stLast:' Vous parlez en dernier sur cette rue (en position) — tout le monde s’est exprimé : leurs checks sont une information à exploiter.',
-pfShove:(bb,c,pr,t,p)=>`À ${bb} BB vous êtes en zone push/fold. ${c} (${pr}) est dans la range de shove Nash d’environ ${t}% depuis ${p} — partez à tapis plutôt que de min-relancer : cela maximise la fold equity et évite de fondre sur les blinds.`,
+pfShove:(bb,c,pr,t,p)=>`À ${bb} BB vous êtes en zone push/fold. ${c} (${pr}) figure dans la charte heuristique de shove embarquée (~${t}%) depuis ${p} — partez à tapis plutôt que de min-relancer : cela maximise la fold equity et évite de fondre sur les blinds.`,
 pfShortCheck:(c,p)=>`${c} est sous la range de shove pour ${p}, mais le check est gratuit.`,
 pfShortCall:(c,e,o)=>`${c} est sous une range de shove standard, mais votre équité simulée (${e}) bat largement le prix (${o}).`,
-pfShortFold:(bb,c,pr,t,p)=>`À ${bb} BB, ${c} (${pr}) est hors de la range Nash (~${t}%) pour ${p}. Couchez-vous et attendez — même court, la patience bat le spew.`,
+pfShortFold:(bb,c,pr,t,p)=>`À ${bb} BB, ${c} (${pr}) est hors de la charte heuristique embarquée (~${t}%) pour ${p}. Couchez-vous et attendez — même court, la patience bat le spew.`,
 huPush:(bb,c,pr,t,p)=>`Heads-up à ${bb} BB effectives : folder ou limper abandonne trop de valeur aux blindes. ${c} (${pr}) est près du bas de la range de tapis (~${t}%) depuis ${p}, mais le all-in reste rentable : vous gagnez immédiatement quand la grosse blinde passe et conservez de l'équité quand elle paie. Le pourcentage de victoire affiché est votre équité à l'abattage si vous êtes payé — ce n'est pas la seule raison de faire tapis.`,
 huOpen:(bb,c,p)=>`Heads-up à ${bb} BB effectives : c'est assez deep pour jouer postflop. ${c} est jouable depuis ${p}, mais ce n'est pas un shove pur — ouvrez petit et gardez les mains faibles dedans.`,
 huCall:(bb,c,e,o)=>`Heads-up à ${bb} BB effectives, les ranges de call s'élargissent car il n'y a plus de pression de palier. ${c} a environ ${e} d'équité pour un prix de ${o}, donc continuez.`,
@@ -237,7 +237,7 @@ postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Taille de relance postflop suggérée 
 callOk:(amt,pt,o,e,disc,ea,need)=>`Le call coûte ${amt} pour gagner un pot de ${pt} : le prix immédiat demande ${o} d'équité. Après la position, la pression des prix et les cotes implicites réalistes, le seuil effectif est d'environ ${need} ; vous avez ~${e}${disc?` (compté ~${ea} après les décotes liées à la main)`:''}. Caller est rentable à long terme, mais relancer risquerait trop avec une main non premium.`,
 foldAdv:(o,amt,pt,ea,resp,need)=>`Le prix immédiat demande ${o} d'équité pour payer (${amt} dans ${pt}). Après la position, la pression des prix et les cotes implicites réalistes, le seuil effectif monte à ~${need}, mais votre équité utilisable n'est que de ~${ea}${resp?' une fois cette taille de mise respectée':''}. Couchez-vous et attendez un meilleur spot.`,
 impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Cotes implicites : le prix immédiat demande ${now}. Avec environ ${hit} de chances de toucher un out propre et jusqu'à ${max} encore disponible derrière, le coach crédite prudemment environ ${future} de paiement futur ; le seuil réaliste descend ainsi à ~${real}. Le meilleur cas absolu serait ${best} si tous les jetons restants étaient payés${reverse?' — mais le tirage non max comporte aussi des cotes implicites inverses, donc ce meilleur cas n\'est pas utilisé':''}.`,
-chart3bet:(c,e)=>`${c} figure dans la charte de sur-relance (3-bet) contre ${e?'un relanceur en début de parole':'un relanceur en fin de parole'} — les ranges solveur sur-relancent ces mains au lieu de suivre : les grosses paires pour la valeur, et des mains comme A5s en « bluff à blocker » (votre as rend ses monstres moins probables). Suivre laisserait entrer les joueurs derrière à bas prix.`,
+chart3bet:(c,e)=>`${c} figure dans la charte heuristique embarquée de sur-relance (3-bet) contre ${e?'un relanceur en début de parole':'un relanceur en fin de parole'} — elle sur-relance les grosses paires pour la valeur et des mains comme A5s en « bluff à blocker ». Suivre laisserait entrer les joueurs derrière à bas prix.`,
 shortAllInValue:(c,b,n)=>`${c} est assez forte pour isoler ce tapis de ${b} BB pour la valeur. Le joueur à tapis ne peut pas se coucher : ce n’est donc pas un bluff de charte ; la relance fait payer cher aux ${n} joueur${n!==1?'s':''} encore actif${n!==1?'s':''} derrière l’entrée dans le pot principal.`,
 shortAllInCall:(c,b,r,u,n,x)=>`${c} a assez d’équité pour payer ce tapis de ${b} BB au prix proposé. L’équité brute est de ${r} et reste proche de ${u}, car le pot principal ira forcément à l’abattage${n?` ; le seuil ajusté de ${x} conserve le risque créé par ${n} joueur${n!==1?'s':''} encore actif${n!==1?'s':''} derrière`:''}. Payez sans transformer une main correctement cotée en bluff 3-bet contre quelqu’un qui ne peut pas folder.`,
 shortAllInFold:(c,b,r,u,n,x)=>`${c} ne peut pas payer rentablement ce tapis de ${b} BB. Le joueur à tapis ne peut ni folder ni offrir de cotes implicites futures : l’équité brute est de ${r}, environ ${u} après le risque restant, sous le seuil ajusté de ${x}${n?` avec ${n} joueur${n!==1?'s':''} encore actif${n!==1?'s':''}`:''}. Couchez-vous : la charte ordinaire de bluff 3-bet ne s’applique pas à un tapis.`,
@@ -258,17 +258,17 @@ pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} peut sembler jou
 pfMultiwayValue:(c,n)=>`${n} caller${n>1?'s':''} améliore${n>1?'nt':''} le prix immédiat pour ${c}. Cette main conserve relativement bien son équité en multiway et peut toucher une grosse main cachée : le coach lui accorde donc un petit crédit de cotes implicites, plafonné, si les tapis sont assez profonds. Le bénéfice n'est pas illimité : chaque adversaire supplémentaire réduit toujours l'équité brute et augmente les risques de main non max et de cotes implicites inverses.`,
 chartIcmFold:(c,e,o)=>`${c} serait normalement un call ici, mais votre chance de gain simulée (${e}) ne couvre pas le prix (${o}) une fois la pression des prix et la range de ce relanceur comptées. La charte est un guide — le calcul de CETTE table dit de se coucher.`,
 chartFoldVs:(c,r,b,d)=>`${c} est hors des ranges de sur-relance et de call face à cette ouverture de ${r||'cette position'}.${d?' Un As suité faible est souvent dominé par les meilleurs As de l’ouvreur, avec de coûteuses cotes implicites inverses.':''}${b?` ${b} joueur${b>1?'s':''} derrière peu${b>1?'vent':'t'} encore squeeze ou entrer dans le pot.`:''} L’estimation d’équité est proche, mais elle ne remplace pas la range propre à la position — couchez-vous.`,
-broadwayFlat:(c,o,s,b)=>`${c} est une main haute connectée ou à un écart face à une petite relance de ${o} BB. Selon la stratégie élargie de construction de pots multiway, payez ce prix avec ${s} BB derrière${b?`, même si ${b} joueur${b>1?'s peuvent':' peut'} encore entrer`:''}. C’est un ajustement volontairement loose/exploit, pas la charte solveur standard ; couchez la même main face à une relance plus grosse ou avec un tapis plus court.`,
-chartOpen:(c,p)=>`${c} figure dans la charte d'ouverture ${p} — une liste de mains issue de ranges calculées par solveur : la relancer en premier depuis ce siège est rentable à long terme. Entrez en relançant, pas en limpant.`,
-chartIso:(c,p,n)=>`${c} figure dans la charte iso ${p} — ranges pour relancer sur ${n} limpeur${n>1?'s':''}. Isolez en relançant ; suivre derrière des limps perd des jetons.`,
+broadwayFlat:(c,o,s,b)=>`${c} est une main haute connectée ou à un écart face à une petite relance de ${o} BB. Selon la stratégie élargie de construction de pots multiway, payez ce prix avec ${s} BB derrière${b?`, même si ${b} joueur${b>1?'s peuvent':' peut'} encore entrer`:''}. C’est un ajustement volontairement loose/exploit, pas la charte baseline embarquée ; couchez la même main face à une relance plus grosse ou avec un tapis plus court.`,
+chartOpen:(c,p)=>`${c} figure dans la charte d'ouverture ${p} embarquée — une baseline heuristique pour les décisions first-in. Entrez en relançant, pas en limpant.`,
+chartIso:(c,p,n)=>`${c} figure dans la charte iso ${p} embarquée — une range heuristique pour relancer sur ${n} limpeur${n>1?'s':''}. Isolez en relançant ; suivre derrière des limps perd des jetons.`,
 chartNotInIso:(c,p)=>`${c} n'est pas dans la charte iso ${p} — même sur des limps, cette main perd de l'argent en relance. Couchez-vous.`,
 limpPotNote:n=>` ${n} limpeur${n>1?'s':''} — l'argent mort élargit un peu les ranges d'iso, mais les connecteurs assortis spéculatifs ont besoin de position/profondeur avant de grossir le pot.`,
 pfRaiseSize:(amt,bb,pos,callers,anteAdj,depthAdj,effBB)=>` Taille préflop suggérée : ${amt} (${bb}). ${pos==='IP'?'En position, partez de 3 BB':'Hors position, partez de 4 BB'} et ajoutez 1 BB par limpeur (${callers} ici)${anteAdj?' ; les antes ajoutent de l’argent mort':''}${depthAdj>0?' ; un tapis effectif profond justifie une petite hausse':effBB?` ; le tapis effectif d’environ ${effBB} BB ne nécessite aucune hausse pour profondeur`:''}.`,
 pfOpenSize:(amt,bb,pos,antes)=>` Taille d'ouverture suggérée : ${amt} (${bb}). ${pos==='IP'?(antes?'Les antes ajoutent assez d’argent mort pour faire passer la base en position de 3 BB à 4 BB.':'Sans antes, la base d’ouverture en position est de 3 BB.'):'La base d’ouverture hors position reste à 4 BB.'}`,
 threeBetSize:(amt,bb,open,callers,pos)=>` Taille de 3-bet suggérée : ${amt} (${bb}) — ${pos==='IP'?'3× en position':'4× hors position'} sur la relance d’ouverture à ${open}${callers?`, plus 1× pour chacun des ${callers} caller${callers>1?'s':''}`:''}.`,
 fourBetSize:(amt,bb,x)=>` Taille de 4-bet suggérée : ${amt} (${bb}), soit environ ${x}x le 3-bet. C'est volontairement bien moins que la formule 3x d'un 3-bet ; si cette taille engage environ 40 % du tapis effectif, le choix propre avec une main de valeur est le tapis.`,
-chartNotIn:(c,p)=>`${c} ne figure pas dans la charte d'ouverture ${p} — les ranges calculées par solveur indiquent que cette main perd de l'argent relancée depuis ce siège. Se coucher maintenant garde des jetons pour un meilleur spot.`,
-chartShove:(c,bb,p)=>`À ${bb} BB, ${c} figure dans la charte de tapis ${p} (ranges de shove calculées par solveur pour tapis courts). Partir à tapis maximise vos chances de gagner blinds et antes sans bagarre.`,
+chartNotIn:(c,p)=>`${c} ne figure pas dans la charte heuristique d'ouverture ${p} embarquée. Se coucher maintenant garde des jetons pour un meilleur spot.`,
+chartShove:(c,bb,p)=>`À ${bb} BB, ${c} figure dans la charte heuristique de tapis ${p} embarquée. Partir à tapis maximise vos chances de gagner blinds et antes sans bagarre.`,
 chartNotInShove:(c,p)=>`${c} ne figure pas dans la charte de tapis ${p} à cette profondeur — la jouer à tapis perd de l'argent à long terme. Couchez-vous : un tour de patience offre souvent une meilleure main.`,
 benchProg:(i,n)=>`Simulation… tournoi ${i} sur ${n}`,
 benchResult:(g,np,w,rw,im,ri,av,rav)=>`Sur ${g} tournois simulés à ${np} joueurs, un bot suivant les conseils du coach à CHAQUE décision : 🏆 a gagné ${w}% des tournois (un joueur aléatoire en gagnerait ${rw}%) · 💰 fini dans les places payées ${im}% (aléatoire : ${ri}%) · place moyenne ${av} sur ${np} (aléatoire : ${rav}). Le coach ne bat pas la chance sur une partie — mais voilà son avantage à long terme.`,
@@ -362,10 +362,10 @@ futLast:' Después del flop serás el ÚLTIMO en hablar — verás la decisión 
 futMid:(o,n)=>` Después del flop hablarás ${o} de ${n} — posición intermedia: no te comprometas demasiado con manos marginales.`,
 stFirst:' Hablas primero en esta calle (fuera de posición) — los rivales reaccionan después de ti: tiende a pasar con manos marginales.',
 stLast:' Hablas último en esta calle (en posición) — todos ya hablaron: sus pases son información extra que puedes usar.',
-pfShove:(bb,c,pr,t,p)=>`Con ${bb} BB estás en territorio push/fold. ${c} (${pr}) está dentro del rango Nash de all-in (~${t}%) desde ${p} — ve all-in en vez de subir poco: maximiza la fold equity y evita que las ciegas te coman.`,
+pfShove:(bb,c,pr,t,p)=>`Con ${bb} BB estás en territorio push/fold. ${c} (${pr}) está dentro de la tabla heurística de all-in incluida (~${t}%) desde ${p} — ve all-in en vez de subir poco: maximiza la fold equity y evita que las ciegas te coman.`,
 pfShortCheck:(c,p)=>`${c} está por debajo del rango de all-in para ${p}, pero pasar es gratis.`,
 pfShortCall:(c,e,o)=>`${c} está por debajo de un rango estándar de all-in, pero tu equidad simulada (${e}) supera con holgura el precio (${o}).`,
-pfShortFold:(bb,c,pr,t,p)=>`Con ${bb} BB, ${c} (${pr}) queda fuera del rango Nash (~${t}%) para ${p}. Retírate y espera — incluso corto de fichas, la paciencia gana al despilfarro.`,
+pfShortFold:(bb,c,pr,t,p)=>`Con ${bb} BB, ${c} (${pr}) queda fuera de la tabla heurística incluida (~${t}%) para ${p}. Retírate y espera — incluso corto de fichas, la paciencia gana al despilfarro.`,
 huPush:(bb,c,pr,t,p)=>`Heads-up con ${bb} BB efectivas: retirarse o completar cede demasiado valor a las ciegas. ${c} (${pr}) está cerca de la parte baja del rango de all-in (~${t}%) desde ${p}, pero el all-in sigue siendo rentable: ganas el bote cuando la ciega grande se retira y conservas equity cuando paga. El porcentaje de victoria mostrado es tu equity al showdown si te pagan; no es la única razón para ir all-in.`,
 huOpen:(bb,c,p)=>`Heads-up con ${bb} BB efectivas hay suficiente profundidad para jugar postflop. ${c} es jugable desde ${p}, pero no es un shove puro — abre pequeño y mantén manos peores dentro.`,
 huCall:(bb,c,e,o)=>`Heads-up con ${bb} BB efectivas, los rangos de call se amplían porque ya no hay presión de saltos de premio. ${c} tiene aprox. ${e} equity contra el precio ${o}, así que continúa.`,
@@ -406,7 +406,7 @@ postflopRaiseSize:(amt,bb,x,bet,ratio)=>` Tamaño de subida postflop sugerido: $
 callOk:(amt,pt,o,e,disc,ea,need)=>`La llamada cuesta ${amt} para ganar un bote de ${pt}: el precio inmediato exige ${o} de equity. Tras posición, presión de premios y odds implícitas realistas, el requisito efectivo es ~${need}; tienes ~${e}${disc?` (contado como ~${ea} después de los descuentos de la mano)`:''}. Igualar es rentable a largo plazo, pero subir arriesgaría demasiado con una mano no premium.`,
 foldAdv:(o,amt,pt,ea,resp,need)=>`El precio inmediato exige ${o} de equity para igualar (${amt} en ${pt}). Tras posición, presión de premios y odds implícitas realistas, el requisito efectivo es ~${need}, pero tu equity utilizable es solo ~${ea}${resp?' una vez respetado este tamaño de apuesta':''}. Retírate y espera un mejor momento.`,
 impliedOddsNote:(now,real,best,future,max,hit,reverse)=>` Odds implícitas: el precio inmediato exige ${now}. Con cerca de ${hit} de ligar un out limpio y hasta ${max} aún disponibles detrás, el coach acredita prudentemente unos ${future} de pago futuro; así, el umbral realista baja a ~${real}. El mejor caso absoluto sería ${best} si se pagaran todas las fichas restantes${reverse?' — pero el proyecto no máximo también tiene riesgo de odds implícitas inversas, así que no se usa ese mejor caso':''}.`,
-chart3bet:(c,e)=>`${c} está en la tabla de resubida (3-bet) contra ${e?'quien sube desde posición temprana':'quien sube desde posición tardía'} — los rangos de solver resuben estas manos en vez de solo igualar: las parejas grandes por valor, y manos como A5s como "farol con blocker" (tu as hace menos probables sus monstruos). Solo igualar dejaría entrar barato a los de detrás.`,
+chart3bet:(c,e)=>`${c} está en la tabla heurística incluida de resubida (3-bet) contra ${e?'quien sube desde posición temprana':'quien sube desde posición tardía'} — resube las parejas grandes por valor y manos como A5s como "farol con blocker". Solo igualar dejaría entrar barato a los de detrás.`,
 shortAllInValue:(c,b,n)=>`${c} es lo bastante fuerte para aislar por valor este all-in de ${b} BB. El jugador all-in no puede retirarse, así que no es un farol de tabla: la subida cobra a los ${n} jugador${n!==1?'es':''} activo${n!==1?'s':''} detrás por entrar en el bote principal.`,
 shortAllInCall:(c,b,r,u,n,x)=>`${c} tiene equity suficiente para pagar este all-in de ${b} BB al precio ofrecido. La equity bruta es ${r} y se mantiene cerca de ${u} porque el bote principal llegará necesariamente al showdown${n?`; el requisito ajustado de ${x} aún incluye el riesgo de ${n} jugador${n!==1?'es':''} activo${n!==1?'s':''} detrás`:''}. Paga; no conviertas una mano con precio suficiente en un farol 3-bet contra alguien que no puede retirarse.`,
 shortAllInFold:(c,b,r,u,n,x)=>`${c} no puede pagar rentablemente este all-in de ${b} BB. El jugador all-in no puede retirarse ni ofrecer odds implícitas futuras: la equity bruta es ${r}, cerca de ${u} tras el riesgo restante, por debajo del requisito ajustado de ${x}${n?` con ${n} jugador${n!==1?'es':''} aún activo${n!==1?'s':''}`:''}. Retírate: la tabla normal de faroles 3-bet no se aplica contra un all-in.`,
@@ -427,17 +427,17 @@ pfContextFold:(c,raw,usable,need,open,eff,pos,behind,sq)=>`${c} puede parecer ju
 pfMultiwayValue:(c,n)=>`${n} caller${n>1?'s':''} mejora${n>1?'n':''} el precio inmediato para ${c}. Esta mano conserva relativamente bien su equity multiway y puede ligar una mano fuerte y escondida, así que el coach le concede un pequeño crédito de odds implícitas, limitado, si los stacks son suficientemente profundos. El beneficio no es ilimitado: cada rival adicional sigue reduciendo la equity bruta y añade riesgo de mano no máxima y odds implícitas inversas.`,
 chartIcmFold:(c,e,o)=>`${c} normalmente sería una llamada aquí, pero tu probabilidad simulada (${e}) no cubre el precio (${o}) contando la presión de premios y el rango de quien sube. La tabla es una guía — las cuentas de ESTA mesa dicen retirarse.`,
 chartFoldVs:(c,r,b,d)=>`${c} queda fuera de los rangos de resubida y call contra esta apertura desde ${r||'esa posición'}.${d?' Un as suited débil suele estar dominado por los ases mejores de quien abre, creando costosas odds implícitas inversas.':''}${b?` ${b} jugador${b>1?'es':''} detrás todavía puede${b>1?'n':''} hacer squeeze o entrar en el bote.`:''} La estimación de equity está cerca, pero por sí sola no invalida el rango específico por posición — retírate.`,
-broadwayFlat:(c,o,s,b)=>`${c} es una mano alta conectada o con un hueco ante una subida pequeña de ${o} BB. Con la estrategia ampliada de construir botes multiway, paga este precio con ${s} BB detrás${b?`, aunque ${b} jugador${b>1?'es':''} todavía puede${b>1?'n':''} entrar`:''}. Es un ajuste loose/exploit intencional, no la tabla solver estándar; tira la misma mano ante una subida mayor o con un stack más corto.`,
-chartOpen:(c,p)=>`${c} está en la tabla de apertura de ${p} — una lista de manos sacada de rangos calculados por solver: subirla primero desde este asiento es rentable a largo plazo. Entra subiendo, no de limp.`,
-chartIso:(c,p,n)=>`${c} está en la tabla iso de ${p} — rangos para subir sobre ${n} limper${n>1?'s':''}. Aísla con subida; pagar detrás de limps pierde fichas.`,
+broadwayFlat:(c,o,s,b)=>`${c} es una mano alta conectada o con un hueco ante una subida pequeña de ${o} BB. Con la estrategia ampliada de construir botes multiway, paga este precio con ${s} BB detrás${b?`, aunque ${b} jugador${b>1?'es':''} todavía puede${b>1?'n':''} entrar`:''}. Es un ajuste loose/exploit intencional, no la tabla base incluida; tira la misma mano ante una subida mayor o con un stack más corto.`,
+chartOpen:(c,p)=>`${c} está en la tabla de apertura incluida de ${p}, una base heurística para decisiones first-in. Entra subiendo, no de limp.`,
+chartIso:(c,p,n)=>`${c} está en la tabla iso incluida de ${p}, un rango heurístico para subir sobre ${n} limper${n>1?'s':''}. Aísla con subida; pagar detrás de limps pierde fichas.`,
 chartNotInIso:(c,p)=>`${c} no está en la tabla iso de ${p} — incluso sobre limps, subir pierde dinero a largo plazo. Retírate.`,
 limpPotNote:n=>` ${n} limper${n>1?'s':''} — el dinero muerto amplía un poco los rangos de iso, pero los conectores suited especulativos necesitan posición/profundidad antes de inflar el bote.`,
 pfRaiseSize:(amt,bb,pos,callers,anteAdj,depthAdj,effBB)=>` Tamaño preflop sugerido: ${amt} (${bb}). ${pos==='IP'?'En posición, empieza en 3 BB':'Fuera de posición, empieza en 4 BB'} y añade 1 BB por limper (${callers} aquí)${anteAdj?'; los antes añaden dinero muerto':''}${depthAdj>0?'; los stacks efectivos profundos permiten un pequeño aumento':effBB?`; el stack efectivo de ~${effBB} BB no requiere aumento por profundidad`:''}.`,
 pfOpenSize:(amt,bb,pos,antes)=>` Tamaño de apertura sugerido: ${amt} (${bb}). ${pos==='IP'?(antes?'Los antes añaden suficiente dinero muerto para mover la base en posición de 3 BB a 4 BB.':'Sin antes, la base de apertura en posición es de 3 BB.'):'La base de apertura fuera de posición se mantiene en 4 BB.'}`,
 threeBetSize:(amt,bb,open,callers,pos)=>` Tamaño de 3-bet sugerido: ${amt} (${bb}) — ${pos==='IP'?'3× en posición':'4× fuera de posición'} sobre la subida inicial a ${open}${callers?`, más 1× por cada uno de los ${callers} caller${callers>1?'s':''}`:''}.`,
 fourBetSize:(amt,bb,x)=>` Tamaño de 4-bet sugerido: ${amt} (${bb}), unas ${x}x el 3-bet. Es deliberadamente mucho menor que una fórmula 3x de 3-bet; si ese tamaño compromete cerca del 40 % del stack efectivo, con una mano de valor la opción limpia es ir all-in.`,
-chartNotIn:(c,p)=>`${c} no está en la tabla de apertura de ${p} — los rangos calculados por solver dicen que esta mano pierde dinero subida desde este asiento. Retirarse ahora guarda fichas para un momento mejor.`,
-chartShove:(c,bb,p)=>`Con ${bb} BB, ${c} está en la tabla de all-in de ${p} (rangos de shove calculados por solver para stacks cortos). Ir all-in maximiza tus opciones de llevarte ciegas y antes sin pelea.`,
+chartNotIn:(c,p)=>`${c} no está en la tabla heurística de apertura incluida de ${p}. Retirarse ahora guarda fichas para un momento mejor.`,
+chartShove:(c,bb,p)=>`Con ${bb} BB, ${c} está en la tabla heurística de all-in incluida de ${p}. Ir all-in maximiza tus opciones de llevarte ciegas y antes sin pelea.`,
 chartNotInShove:(c,p)=>`${c} no está en la tabla de all-in de ${p} a esta profundidad — jugarla all-in pierde dinero a largo plazo. Retírate: una ronda de paciencia suele traer una mano mejor.`,
 benchProg:(i,n)=>`Simulando… torneo ${i} de ${n}`,
 benchResult:(g,np,w,rw,im,ri,av,rav)=>`En ${g} torneos simulados de ${np} jugadores, un bot que sigue el consejo del coach en CADA decisión: 🏆 ganó el ${w}% de los torneos (un jugador aleatorio ganaría el ${rw}%) · 💰 terminó en premios el ${im}% (aleatorio: ${ri}%) · puesto medio ${av} de ${np} (aleatorio: ${rav}). El coach no vence a la suerte en una partida — pero esta es su ventaja a largo plazo.`,
@@ -524,7 +524,7 @@ function holeCode(hole){
   if(a.r===b.r) return CODE_R[a.r]+CODE_R[b.r];
   return CODE_R[hi.r]+CODE_R[lo.r]+(a.s===b.s?'s':'o');
 }
-/* GTO-style thresholds (fraction of all hands) */
+/* Heuristic baseline thresholds (fraction of all hands). */
 const OPEN_THR ={EP:0.12,MP:0.16,HJ:0.21,CO:0.27,BTN:0.42,SB:0.36,BB:0.10};
 const PUSH_THR ={EP:0.13,MP:0.16,HJ:0.20,CO:0.25,BTN:0.33,SB:0.42,BB:0.35};
 function posBucket(pos){
@@ -1603,7 +1603,7 @@ function hasTopPairOrBetter(score,hole,board){
   const boardMax=Math.max(...board.map(c=>c.r));
   return score[1]===boardMax&&hole.some(c=>c.r===score[1]);
 }
-/* external GTO chart lookup (charts.js) — returns null when unavailable, callers fall back */
+/* Bundled heuristic chart lookup (charts.js); returns null when unavailable. */
 function chartFor(kind,key){
   try{
     if(typeof GTO_CHARTS==='undefined'||!GTO_CHARTS[kind])return null;
@@ -2057,8 +2057,59 @@ function headsUpFinalProfile(p){
     openThr:headsUpOpenThreshold(pos,effBB)
   };
 }
+
+function coachPreflopGtoResult(p,decision){
+  const callAmt=Math.min(state.currentBet-p.bet,p.chips);
+  const pot=state.players.reduce((sum,player)=>sum+player.totalBet,0);
+  const opponents=inHand().filter(player=>player!==p);
+  const opps=opponents.length;
+  const ord=postflopOrder().filter(player=>player===p||!player.allIn);
+  const ordIdx=ord.indexOf(p);
+  const actsFirst=ordIdx===0,actsLast=ordIdx===ord.length-1&&ord.length>1;
+  const code=holeCode(p.hole);
+  const strength=handPct[code]||1;
+  /* This number is display-only. The recommendation and every listed action
+     frequency come directly from the validated policy pack above. */
+  const eq=typeof preflopEq==='function'
+    ?preflopEq(p.hole,Math.max(2,inHand().length))
+    :clamp(0.92-strength*0.72,0.08,0.90);
+  const handDesc=`${RANK_CH[p.hole[0].r]}${SUIT_CH[p.hole[0].s]} ${RANK_CH[p.hole[1].r]}${SUIT_CH[p.hole[1].s]} — ${code}`+
+    `<small class="coach-metric-note">${T('preflopRank')(Math.round(strength*100))} · ${T('lowerStronger')}</small>`;
+  const pos=p.pos||'';
+  const early=/^(UTG|MP)/.test(pos),late=/(BTN|CO|HJ)/.test(pos);
+  const aliveN=alive().length;
+  const orbitCost=state.sb+state.bb+state.ante*aliveN;
+  const M=(p.chips+p.bet)/Math.max(orbitCost,1);
+  const mZone=M>20?'G':M>10?'Y':M>5?'O':'R';
+  const odds=callAmt>0?callAmt/(pot+callAmt):0;
+  const visibleMix=decision.policyBranches.filter(branch=>branch.frequency>=0.0005)
+    .sort((a,b)=>b.frequency-a.frequency)
+    .map(branch=>`${branch.label}${branch.target&&['raise','allin'].includes(branch.rec)?` ${bbs(branch.target)}`:''} ${Math.round(branch.frequency*1000)/10}%`)
+    .join(' · ');
+  const digest=String(decision.packSha256||'').slice(0,12);
+  const result={
+    rec:decision.rec,coachT:decision.coachT,evs:null,
+    why:[T('preflopGtoWhy')(visibleMix)],
+    extra:[T('preflopGtoExtra')(digest)],
+    handDesc,drawRow:'',eq,eqAdj:eq,equitySource:'heuristic-display-only',
+    airPen:0,underpairPen:0,underpairInfo:null,flushInfo:null,odds,callAmt,pot,opps,pos,early,late,
+    actsFirst,actsLast,ordIdx,ordLen:ord.length,M,mZone,icmPrem:0,icmActive:false,icmInfo:null,
+    chartInfo:null,rangeCharts:[],code,spr:null,sprZone:null,preflopCallInfo:null,drawInfo:null,
+    impliedInfo:null,drySidePot:false,sidePotInfo:null,multiwayContinueInfo:null,needEq:null,
+    strategyProvider:decision.strategyProvider,strategyMode:'equilibrium-baseline',solverSupport:null,
+    rangeExactFrequencies:true,gtoBaseline:decision.gtoBaseline,preflopGto:decision,
+    policyBranches:decision.policyBranches.map(branch=>({...branch})),heuristicRec:null,
+    bluffBreakEven:null,modeledFoldEquity:0,bluffInfo:null,
+    actionIntent:decision.actionIntent,concepts:['exactPreflopPolicy'],postSizePlan:null,
+  };
+  return result;
+}
 /* the coach BRAIN: pure decision logic, runs headless (also powers the benchmark bot) */
 function coachDecide(p){
+  if(state.stage==='preflop'&&typeof gtoPreflopCoachDecision==='function'){
+    const exact=gtoPreflopCoachDecision(p);
+    if(exact&&exact.ok===true)return coachPreflopGtoResult(p,exact);
+  }
   const sims=BENCH?180:500;
   const callAmt=Math.min(state.currentBet-p.bet,p.chips);
   const pot=state.players.reduce((s,q)=>s+q.totalBet,0);
@@ -2274,7 +2325,7 @@ function coachDecide(p){
     const pushMode=stackBB<=10||(hu&&hu.active);
     if(hu&&hu.active&&hu.covers) extra.push(C('stackDomNote',Math.round(hu.coverRatio*10)/10,1,1));
     if(pushMode){
-      /* push/fold territory: heads-up uses effective stack; larger tables use solver charts first */
+      /* push/fold territory: heads-up uses effective stack; larger tables use bundled heuristic charts first */
       const baseThr=PUSH_THR[pushBucket]||PUSH_THR[bucket];
       const thr=hu?hu.shoveThr:baseThr;
       const shoveCharts=chartFor('shove',shoveChartKey(pushBB));
@@ -2354,7 +2405,7 @@ function coachDecide(p){
         extra.push(C('limpPotNote',nLimps));
         thrEff=Math.min(Math.max(openCap,0.65),thrEff*(1+0.04*Math.min(nLimps,3)));
       }
-      /* solver chart: iso over limpers, else raise-first-in */
+      /* heuristic fallback chart: iso over limpers, else raise-first-in */
       /* The BB has a free check after limpers, but strong hands still belong in
          an isolation range. The chart data has no dedicated BB key, so use its
          tightest existing iso range instead of falling through to a check. */
@@ -2874,7 +2925,13 @@ function coachDecide(p){
           preflopCallInfo,drawInfo,impliedInfo,drySidePot,sidePotInfo,multiwayContinueInfo,needEq:decisionNeed,
           strategyMode,bluffBreakEven,modeledFoldEquity:bluffInfo?bluffInfo.estimatedFolds:0,
           bluffInfo,actionIntent:bluffInfo?bluffInfo.intent:rec.toLowerCase(),concepts,postSizePlan};
-  return typeof solverApplyCoachStrategy==='function'?solverApplyCoachStrategy(p,result):result;
+  const routed=typeof solverApplyCoachStrategy==='function'?solverApplyCoachStrategy(p,result):result;
+  if(state.stage==='preflop'){
+    routed.strategyProvider=routed.strategyMode==='exploit'?'heuristic-exploit':'heuristic-preflop';
+    routed.rangeExactFrequencies=false;
+    routed.gtoBaseline=null;
+  }
+  return routed;
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */
@@ -3114,7 +3171,8 @@ function rangeSnapshot(info){
       classDrawFeatures:plain(m.classDrawFeatures),effective:m.effective,legal:m.legal}};
 }
 function rangeMatrixTitle(info){
-  return T(info?.sourceKind==='solver'?'chartTitleSolverRange':'chartTitleRange');
+  if(info?.sourceKind!=='solver')return T('chartTitleRange');
+  return T(info.rangeExactFrequencies===true?'chartTitleSolverRange':'chartTitleSolverConditionalRange');
 }
 function rangeMatrixLegend(){
   return `<div class="range-heat-legend"><span><i class="rw1"></i>${T('rangeFringe')}</span><span><i class="rw2"></i>${T('rangePossible')}</span><span><i class="rw3"></i>${T('rangeLikely')}</span><span><i class="rw4"></i>${T('rangeVeryLikely')}</span></div>`;
@@ -3188,7 +3246,8 @@ function rangeComboBaseline(code){
 function rangeCellWeightReason(info,code,lift,active,available){
   const history=info.actionHistory?.length?info.actionHistory:(info.model?.history||[]),last=history.at(-1),action=last?.action||'';
   const direction=lift>=1.15?'up':lift<=0.75?'down':'flat';
-  if(info.sourceKind==='solver')return T('rangeWeightSolver')(Math.round(lift*10)/10,code)+
+  if(info.sourceKind==='solver')return T(info.rangeExactFrequencies===true
+    ?'rangeWeightSolver':'rangeWeightSolverConditional')(Math.round(lift*10)/10,code)+
     (available<rangeComboBaseline(code)?` ${T('rangeBlockerImpact')(rangeComboBaseline(code)-available)}`:'')+
     (active<available?` ${T('rangeActionRemoved')(available-active)}`:'');
   const actionKey=action==='raise'?'rangeWeightRaise':action==='call'?'rangeWeightCall':
@@ -3206,8 +3265,11 @@ function rangeMatrixMetaHtml(info,controls=false,mode='density'){
   const sampleLine=info.sample!=null
     ?`<div class="range-line"><b>${T('readConfidence')}:</b> ${T('readSample')(info.sample)} · ${T('readConfidence'+
       (info.sampleConfidence==='reliable'?'Reliable':info.sampleConfidence==='tentative'?'Tentative':'Early'))}</div>`:'';
+  const sourceKey=info.rangeExactFrequencies===true
+    ?(info.nodeReach?'rangeSolverNode':'rangeSolverStreet')
+    :(info.nodeReach?'rangeSolverConditionalNode':'rangeSolverConditionalStreet');
   const sourceLine=info.sourceKind==='solver'
-    ?`<div class="range-line range-solver-source"><b>${T('rangeSource')}:</b> ${T(info.nodeReach?'rangeSolverNode':'rangeSolverStreet')}</div>`:'';
+    ?`<div class="range-line range-solver-source"><b>${T('rangeSource')}:</b> ${T(sourceKey)}</div>`:'';
   return `<div class="range-meta"><span>≈${metrics.effective} ${T('rangeEffective')}</span>`+
     (controls?`<span class="range-mode"><button data-range-mode="density" class="${mode==='density'?'on':''}">${T('rangeDensity')}</button><button data-range-mode="mass" class="${mode==='mass'?'on':''}">${T('rangeClassProb')}</button></span>`:`<span>${T('rangeDensity')}</span>`)+
     `</div>${sourceLine}${sampleLine}${trail?`<div class="range-line"><b>${T('rangeLine')}:</b> ${trail}</div>`:''}`+

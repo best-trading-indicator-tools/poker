@@ -73,3 +73,39 @@ const result=vm.runInContext(`(()=>{
 
 console.log(JSON.stringify(result,null,2));
 assert.equal(result.sidePots.reduce((a,b)=>a+b,0),1000);
+
+const solverGate=await vm.runInContext(`(async()=>{
+  const saved={render,armTurnTimer,showActions,hideActions,solverRequestCoachStrategy};
+  const events=[];
+  let release;
+  try{
+    newGame({gameType:'cash',numPlayers:2,startBB:100,startBlind:20,ante:0,speed:'standard',difficulty:'hard',seed:'solver-gate'});
+    const p=state.players[0],q=state.players[1];
+    for(const player of state.players){
+      player.out=false;player.folded=false;player.allIn=false;player.acted=true;player.bet=0;
+    }
+    p.acted=false;
+    Object.assign(state,{stage:'flop',handNum:7,handOver:false,gameOver:false,turnIdx:p.i,currentBet:0,lastRaiseSize:state.bb});
+    render=()=>{};
+    armTurnTimer=()=>events.push('timer');
+    showActions=()=>events.push('actions');
+    hideActions=()=>events.push('hidden');
+    solverRequestCoachStrategy=()=>{
+      events.push('solver');
+      return new Promise(resolve=>{release=resolve;});
+    };
+    promptNext();
+    await Promise.resolve();
+    if(events.includes('timer')||events.includes('actions'))
+      throw new Error('human controls or timer opened before solver completion '+JSON.stringify(events));
+    release(true);
+    await new Promise(resolve=>setTimeout(resolve,0));
+    if(events.join(',')!=='hidden,solver,timer,actions')
+      throw new Error('human solver gate ordering regression '+JSON.stringify(events));
+    return events;
+  }finally{
+    render=saved.render;armTurnTimer=saved.armTurnTimer;showActions=saved.showActions;
+    hideActions=saved.hideActions;solverRequestCoachStrategy=saved.solverRequestCoachStrategy;
+  }
+})()`,context);
+assert.deepEqual(Array.from(solverGate),['hidden','solver','timer','actions']);

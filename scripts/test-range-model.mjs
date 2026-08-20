@@ -252,7 +252,7 @@ const result=vm.runInContext(`(()=>{
     rangeLine:'single-raised',rangeNodes:[[],[]],rangeExactFrequencies:false,
     rangeRaw:[startVillain,startHero],actionHistory:[],actions:[]};
   state.solverStreet=matrixStreet;
-  const solvedMatrixNode={converged:true,rec:'check',target:0,rangeSource:'test-gto',rangeLine:'single-raised',
+  const solvedMatrixNode={converged:true,rec:'check',target:0,equity:.42,rangeSource:'test-gto',rangeLine:'single-raised',
     rangeNodes:[[],[]],rangeExactFrequencies:false,reachSource:'solver-equilibrium-node',rangeHistory:[],
     branches:[{label:'Check',rec:'check',target:0,frequency:1,ev:0}],
     reachSeats:[phil.i,hero.i],reachRangesPacked:JSON.parse(JSON.stringify([
@@ -269,16 +269,32 @@ const result=vm.runInContext(`(()=>{
       throw new Error('solver-covered root matrix must use solver reach, never Bayesian '+JSON.stringify(pendingMass));
     solverCachedResult=()=>solvedMatrixNode;
     const applied=solverApplyCoachStrategy(hero,{rec:'FOLD',coachT:0,evs:{},why:[],extra:[],
+      eq:.99,eqAdj:.98,equitySource:'bayesian-test',drawRow:'bayesian-draw',drawInfo:{},
+      impliedInfo:{},needEq:.7,airPen:.2,underpairPen:.2,underpairInfo:{},flushInfo:{},
+      multiwayContinueInfo:{},bluffBreakEven:.4,modeledFoldEquity:.5,
+      concepts:['overcardCbet','riverBlockerBluff'],
       rangeCharts:[pendingChart],chartInfo:pendingChart});
     const nodeChart=applied.rangeCharts[0],nodeMass=rangeMatrixMetrics(nodeChart).mass;
     if(Math.abs((nodeMass.QJs||0)-1)>1e-9||(nodeMass.AKs||0)!==0||(nodeMass['72o']||0)!==0)
       throw new Error('solved matrix must use current-node reach, not street/Bayesian weights '+JSON.stringify(nodeMass));
     if(nodeChart.sourceKind!=='solver'||nodeChart.nodeReach!==true||applied.chartInfo!==nodeChart)
       throw new Error('solver range provenance/detail chart not updated '+JSON.stringify({source:nodeChart.sourceKind,nodeReach:nodeChart.nodeReach}));
+    if(applied.eq!==.42||applied.eqAdj!==.42||applied.equitySource!=='solver-equilibrium-node'||
+        applied.drawRow!==''||applied.drawInfo!==null||applied.impliedInfo!==null||applied.needEq!==null||
+        applied.airPen!==0||applied.underpairPen!==0||applied.underpairInfo!==null||
+        applied.flushInfo!==null||applied.multiwayContinueInfo!==null||applied.bluffBreakEven!==null||
+        applied.modeledFoldEquity!==0||applied.concepts.length!==0)
+      throw new Error('solver decision retained Bayesian/profile math '+JSON.stringify(applied));
     const meta=rangeMatrixMetaHtml(nodeChart),snapshot=rangeSnapshot(nodeChart);
-    if(!meta.includes('Current-node reach weights')||meta.includes('Read confidence')||
-        rangeMatrixTitle(nodeChart)!=='GTO solver range at this node'||snapshot.sourceKind!=='solver'||snapshot.model!==null)
+    if(!meta.includes('conditioned on heuristic preflop chart ranges')||meta.includes('Read confidence')||
+        rangeMatrixTitle(nodeChart)!=='postflop solver reach (heuristic preflop prior)'||
+        snapshot.sourceKind!=='solver'||snapshot.model!==null||snapshot.rangeExactFrequencies!==false)
       throw new Error('solver matrix labeling/snapshot leaked estimated-range metadata '+JSON.stringify({meta,title:rangeMatrixTitle(nodeChart),snapshot}));
+    const auditedPriorChart={...nodeChart,rangeExactFrequencies:true};
+    if(rangeMatrixTitle(auditedPriorChart)!=='postflop solver reach at this node'||
+        !rangeMatrixMetaHtml(auditedPriorChart).includes('Current-node reach weights')||
+        rangeMatrixMetaHtml(auditedPriorChart).includes('heuristic preflop'))
+      throw new Error('audited-prior solver matrix must retain distinct provenance');
     matrixStreet.actions=[{seat:phil.i,street:'flop',action:'bet',target:120,ratio:.5}];
     solverCachedResult=()=>null;
     const pendingAfterAction=coachRangeChartInfo(phil,hero,false,'hard');

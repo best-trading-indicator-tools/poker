@@ -48,15 +48,19 @@ The current suite passes **464 / 464 checks**.
 This audit catches contradictions, illegal actions, impossible numbers and strategically
 obvious failures. It is deliberately deterministic and reproducible.
 
-This Node audit exercises the chart, range, ICM, and heuristic fallback providers; it
-does **not** run the browser-only WASM worker. In a supported heads-up postflop chip-EV
-node, a converged b-inary result with an exactly replayed line replaces the audited
-fallback recommendation. The UI identifies the provider and describes solved output as
-an equilibrium for personality-free baseline reach ranges rather than universal GTO.
-Those ranges enter the exact provider only when the bundled preflop abstraction covers
-the complete public line: a single-raised pot or an ordinary heads-up RFI/3-bet/call
-pot. Later streets also require reach propagated from the preceding converged tree.
-Personality-conditioned estimates remain confined to the fallback coach.
+This Node audit exercises the policy-pack boundary, chart, range, ICM, and heuristic
+fallback providers; it does **not** run the browser-only WASM worker. The pack tests
+verify embedded trust, exact configuration matching, runtime legality, real engine
+action hooks, mixed reach propagation, and fail-closed off-tree behavior. No production
+pack is currently bundled, so the shipping preflop provider remains heuristic.
+
+In a supported heads-up postflop chip-EV node, a converged b-inary result with an exactly
+replayed line replaces the fallback recommendation. A future audited preflop pack may
+supply exact-frequency reach only for its declared configuration and action tree. The
+bundled charts can currently seed supported single-raised or ordinary RFI/3-bet/call
+trees, but those solves are explicitly labelled as conditional on heuristic priors—not
+end-to-end GTO. Later streets require reach propagated from the preceding converged
+tree. Personality-conditioned estimates remain confined to the fallback coach.
 
 Upstream publishes a same-tree comparison against PioSOLVER and GTO+ with closely
 matching frequencies and EVs. Product-specific validation can still compare an exported

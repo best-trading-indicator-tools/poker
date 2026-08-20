@@ -155,7 +155,7 @@ const bbDefend = {
 };
 
 G._source =
-  'Personality-free abstractions of published solver/Nash ranges. rfi = raise-first-in; facing = 3-bet/call vs a raise; vs3bet = opener response to a 3-bet; iso = isolate limpers; bbDefend = BB 3-bet/call vs steals; shove = all-in by BB depth. Lists are not a complete mixed-frequency preflop equilibrium.';
+  'Bundled personality-free heuristic ranges. rfi = raise-first-in; facing = 3-bet/call vs a raise; vs3bet = opener response to a 3-bet; iso = isolate limpers; bbDefend = BB 3-bet/call vs steals; shove = all-in by BB depth. These lists are not solver output or a complete mixed-frequency preflop equilibrium.';
 G.facing = { ...facingPos, vsEarly: vsE, vsLate: vsL };
 G.iso = iso;
 G.bbDefend = bbDefend;
@@ -163,7 +163,7 @@ G.vs3bet = vs3bet;
 G.shove = { ...G.shove, 8: shove8, 12: shove12, 15: shove15, 20: shove20 };
 
 const out =
-  '/* GTO preflop range charts — external data file. Loaded via <script src>; the game falls back\n' +
+  '/* Heuristic preflop range charts — external data file. Loaded via <script src>; the game falls back\n' +
   '   to its percentile engine if this file is missing. Edit freely: hand codes like AA, AKs, T9o. */\n' +
   'var GTO_CHARTS=' +
   JSON.stringify(G) +

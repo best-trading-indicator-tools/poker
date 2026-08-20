@@ -1,7 +1,7 @@
 {
   "name": "Sit & Go Hold'em",
   "short_name": "Poker",
-  "description": "Single-file No-Limit Texas Hold'em vs AI with a live GTO coach",
+  "description": "Single-file No-Limit Texas Hold'em vs AI with a live strategy coach",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b0e13",

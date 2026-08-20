@@ -9,35 +9,38 @@ The upstream open-source project has been development-frozen since October 2023.
 ## Strategy-provider flow
 
 ```text
-uniform 1,326-combo priors + public preflop actions
+audited, app-pinned pack for the exact configuration
+        | exact mixed actions + 1,326-combo reaches
+        |                            OR
+        +------ unavailable ------> labeled heuristic charts
+                                      (never solver/GTO-labeled)
                          |
                          v
-          independent baseline reach tracker
-                         |
-                         v
-                  support router
-                   /          \
- covered heads-up chip-EV      uncovered line / multiway / ICM / error
-             |                                  |
-             v                                  v
-  b-inary WASM worker/direct host        explicit fallback provider
-             |
+              heads-up postflop support router
+                   /                       \
+ covered chip-EV tree                     multiway / ICM / all-in /
+             |                            off-tree / unavailable host
+             v                                      |
+  b-inary WASM worker/direct host                    v
+             |                              explicit fallback provider
              v
- converged hand mix + action EVs + both players' reach weights
+ converged hand mix + action EVs + both players' node reaches
              |
              +---- exact action + runout propagation to next street
              +---- current-node equilibrium range matrices
-             +---- conditional coach override
-             +---- cached bot mixed-strategy sample
-             +---- saved decision provenance
+             +---- conditional coach override and bot mix
+             +---- saved prior provenance and validation evidence
 ```
 
-`js/solver.js` owns this boundary. `js/coach.js` still produces a complete fallback result first; a cached solved strategy replaces its action, native sizing, EVs, confidence, mix, explanation, and displayed opponent ranges only when the support router accepts the chip-EV model, the real line replays exactly, and the exploitability target was reached. A solver-covered node never displays the personality/Bayesian posterior as if it were solver output. At an action-free street root the matrix uses the solver input reach; after any current-street action it waits for extraction of that node's converged reach weights. Unsupported poker domains may still show the explicitly labeled estimated fallback matrix, while transient failures in a covered domain remain pending and retry the exact engine.
+`js/preflop-policy-pack.js` is the strict preflop trust and decoding boundary. A pack must match the exact table configuration, pass schema/tree/probability/checksum/convergence checks, and have its manifest hash pinned by the application. The shipping allowlist is empty and no production pack is bundled, so current preflop play uses the explicitly labeled heuristic charts. The local Rust trainer is research-only and its exports cannot self-promote into this path.
+
+`js/solver.js` owns the postflop boundary. `js/coach.js` still produces a complete fallback result first; a cached solved strategy replaces its action, native sizing, EVs, confidence, mix, explanation, and displayed opponent ranges only when the support router accepts the chip-EV model, the real line replays exactly, and the exploitability target was reached. A solver-covered node never displays the personality/Bayesian posterior as if it were solver output. At an action-free street root the matrix uses the solver input reach; after any current-street action it waits for extraction of that node's converged reach weights. The UI distinguishes a postflop equilibrium conditioned on an audited exact-frequency pack from one conditioned on heuristic, personality-free chart reaches.
 
 ## Inputs and tree abstraction
 
-- Every seat begins with the same unconditioned 1,326-combination prior. Public preflop actions multiply that range by the independent baseline policy; player personalities, observed tendencies, and `rangeModel` are never read by the solver provider.
-- The bundled preflop policy covers only 80–120 BB, ante-free cash single-raised pots and ordinary heads-up RFI/3-bet/call pots represented by `charts.js`. Because those charts are pure/overlap action abstractions rather than a complete mixed-frequency blueprint, the UI does not call them universal GTO. An unsupported node invalidates solver eligibility for the hand.
+- A validated pack starts every seat with all 1,326 exact private-card combinations. Each observed action multiplies the actor's unnormalized reach by that combo's exact mixed frequency. Pack lookup is keyed by table size, ordered stacks, blinds, ante, rake, positions, action tree, and exact history. No nearest configuration or action is substituted.
+- `charts.js` is only a personality-free heuristic fallback. It contains hand lists rather than a solved mixed-frequency tree and carries `exactFrequencies:false`. It may seed a useful heads-up postflop subgame, but neither the recommendation nor the resulting conditional solve is labeled as an end-to-end GTO solution.
+- Player personalities, observed tendencies, and Bayesian `rangeModel` state are never read by either the audited-pack path or the postflop solver. Exploit recommendations remain a separate, explicitly labeled provider.
 - The board, starting pot, effective stack, and exact ordered action history are captured at the beginning of every street.
 - At a street transition, the exact previous action history and actual turn/river card are replayed into the converged tree. The worker's full-combo reach weights become the next street's input ranges. If the previous tree was unavailable, nonconverged, off-tree, or lacked the actual runout, no turn/river solve is promoted.
 - At every solved decision node, both players' full-combo reach arrays are extracted from the WASM result. The range explorer maps them with the solver's rank-major/reversed-suit card indexing, then applies only known board/hero blockers before normalization. It does not call the Bayesian posterior or personality model.
@@ -47,7 +50,7 @@ uniform 1,326-combo priors + public preflop actions
 - Every eligible street is solved before action resumes, preserving an authoritative tree for exact turn/river reach propagation. A tree estimated above 512 MB is rebuilt with one baseline bet size per street plus sizes required by the observed line; the compact exact tree is then allowed to allocate the memory it reports.
 - Transient worker, asset, WASM, extraction, and allocation failures restart from a clean engine. Covered bot decisions wait for the resolved strategy instead of racing the solver against a heuristic timeout.
 
-The private-card postflop game is not bucketed. The result is a converged equilibrium for the full-combo, discrete action tree and supplied personality-free baseline reach ranges; it is not a continuous no-limit solution or a claim that the bundled preflop chart abstraction is universal GTO.
+The private-card postflop game is not bucketed. The result is a converged equilibrium for the full-combo, discrete action tree and supplied reach ranges. With heuristic chart priors it is only a conditional postflop equilibrium; with an audited pack it is a validated approximate equilibrium of the combined declared abstractions. Neither case is a continuous, unrestricted no-limit solution.
 
 ## Cache and invalidation
 
@@ -57,6 +60,7 @@ The memory LRU stores at most 48 compact node results; `localStorage` keeps the 
 - street and board;
 - starting pot and effective stack;
 - hashes of both full ranges;
+- exact-frequency flag plus full preflop source, line, and policy-node provenance;
 - action-tree configuration;
 - ordered action history;
 - acting seat and exact private cards.
@@ -67,11 +71,12 @@ Changing any material game input naturally invalidates the hit. Cached data cont
 
 | Spot | Authoritative provider | Reason |
 |---|---|---|
-| Covered heads-up postflop cash/chip-EV | Range-resolved WASM solver | Independent preflop baseline and exact reach chain are available |
-| Preflop | Existing position/stack chart provider | Vendored engine is postflop-only |
-| Covered RFI/3-bet/call postflop | Range-resolved WASM solver | Both personality-free ranges and the ordinary 3-bet size are covered |
+| Exact-config preflop with an app-pinned audited pack | Validated approximate-equilibrium policy pack | Mixed frequencies and exact action node passed every trust/coverage gate |
+| Preflop without such a pack | Heuristic position/stack charts | The vendored engine is postflop-only; charts are not solver output |
+| Covered heads-up postflop with audited pack reaches | Range-resolved WASM solver | Exact-frequency preflop prior and postflop reach chain are available |
+| Covered heads-up postflop with chart reaches | Range-resolved WASM solver, labeled conditional | The node converged, but its preflop prior remains heuristic |
 | Limped pot | Range-aware heuristic | Deep limped trees exceed the browser budget even with an impractically narrow no-raise action abstraction |
-| Squeeze, 4-bet, unsupported defence, non-cash or off-policy hero range | Range-aware heuristic | Bundled preflop baseline has no trustworthy node/frequency data |
+| Squeeze, 4-bet, unsupported defence, non-cash or off-policy hero range | Range-aware heuristic | No exact matching audited policy node is available |
 | Turn/river without a preceding converged tree and exact runout replay | Range-aware heuristic | Equilibrium reach cannot be reconstructed honestly |
 | Multiway postflop | Range-aware heuristic | Standard postflop solver models are heads-up |
 | Payout-sensitive tournament with more than two players alive | ICM-aware heuristic | A chip-EV solution would optimize the wrong objective, including checked-to betting nodes |

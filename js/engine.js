@@ -3,7 +3,7 @@ const BASE_BB = 100;
 const AI_NAMES   = ['Viktor','Mia','Doyle','Selma','Ivan','Nora','Phil','Daria'];
 /* personality styles: margin = extra equity needed to call, raiseT = raise threshold shift,
    raiseF = raise frequency shift, bluff = bluff freq shift, size = bet sizing multiplier,
-   openMult = preflop open-range width vs GTO, raiseCap = top-% of hands they'll raise with,
+   openMult = preflop open-range width vs the heuristic baseline, raiseCap = top-% of hands they'll raise with,
    foldRaise = extra fold bias when facing raises */
 /* adapt = how strongly this profile reacts to tournament/blind pressure (0=ignores it, 1=fully adjusts) */
 const STYLES=[
@@ -278,8 +278,22 @@ function promptNext(){
   const p=state.players[j];
   render();
   if(p.isHuman){
-    armTurnTimer(p);
-    showActions(p);
+    const handNum=state.handNum,stage=state.stage,currentBet=state.currentBet,playerBet=p.bet;
+    const reveal=()=>{
+      if(!state||state.gameOver||state.handOver||state.handNum!==handNum||state.stage!==stage||
+          state.turnIdx!==p.i||state.currentBet!==currentBet||p.bet!==playerBet||findNextActor()!==p.i)return;
+      armTurnTimer(p);
+      showActions(p);
+    };
+    /* A covered postflop node must be resolved before the human can act. This
+       prevents a click or turn timeout from racing the asynchronous solver and
+       recording an interim heuristic recommendation as authoritative. */
+    if(state.stage!=='preflop'&&typeof solverRequestCoachStrategy==='function'){
+      if(typeof hideActions==='function')hideActions();
+      let request;
+      try{request=solverRequestCoachStrategy(p,null);}catch(_){reveal();return;}
+      Promise.resolve(request).catch(()=>false).then(reveal);
+    }else reveal();
   }else if(p.remote){
     armTurnTimer(p);
     /* remote human: the snapshot broadcast tells their client it's their turn; we wait.
@@ -733,7 +747,7 @@ function finishHand(pause){
       const auditOnly=['heroCards','board','heroChipsBehind','heroStreetBet','currentBet','minRaiseTo',
         'lastRaiseSize','activePlayers','dealerSeat','streetRaiseCount','preflopRaiseCount','opponents',
         'strategyMode','solverSupport','heuristicRec','actionIntent','concepts','reasoning','bluffInfo',
-        'icmInfo','fallbackRangeSummaries','solver','matchedSolverBranch'];
+        'icmInfo','fallbackRangeSummaries','rangeSnapshots','solver','matchedSolverBranch','preflopGto','solverMix'];
       const replayEntry={...entry,myDecisions:entry.myDecisions.map(decision=>{
         const compact={...decision};
         auditOnly.forEach(key=>delete compact[key]);
@@ -1125,6 +1139,15 @@ function restoreMidHand(mh){
   state.handStartStacks=(mh.handStartStacks||state.players.map(p=>p.chips+p.totalBet)).slice();
   state.humanPlayed=mh.humanPlayed??true;
   state.humanHandStats=mh.humanHandStats||{vpip:false,pfr:false,aBets:0,aCalls:0,sd:false,sdWon:false};
+  /* A policy pack's private reach state and a postflop tree are not serialized.
+     Resuming must therefore fail closed instead of silently rebuilding a root
+     policy from already-mutated stacks or attaching a mislabeled solver. */
+  state.gtoPreflop={
+    handId:state.handNum||0,mode:'resume-unavailable',valid:false,exact:false,
+    reason:'gto-unavailable:resumed-midhand',
+    gtoUnavailableReason:'gto-unavailable:resumed-midhand',actions:[],players:{},
+  };
+  state.solverStreet=null;
   state.humanWonAmt=0; state.resultText=''; state.noActionHand=false;
   logLines=state.handLog.slice();
   prevBoardLen=state.board.length;

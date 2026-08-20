@@ -164,6 +164,13 @@ const result=vm.runInContext(`(()=>{
     throw new Error('estimated counterfactual EV regression '+JSON.stringify(cfEstimated));
   if(counterfactualActionKey('fold')!=='FOLD'||counterfactualActionKey('call')!=='CALL'||counterfactualActionKey('raise')!=='RAISE')
     throw new Error('counterfactual action normalization regression');
+  rpStreet=3;
+  const visibleCounterfactuals=counterfactualVisibleDecisions({myDecisions:[
+    {stage:'flop',evs:{FOLD:0,CALL:1,RAISE:2}},
+    {stage:'turn',strategyProvider:'solver',equitySource:'solver-equilibrium-node',evs:{FOLD:0,CALL:3,RAISE:4}},
+  ]});
+  if(visibleCounterfactuals.length!==1||visibleCounterfactuals[0].stage!=='flop')
+    throw new Error('solver decisions must not receive heuristic counterfactual explanations');
 
   return {actual,balanced,custom,fallback,randomIds,multiplayerBots:multiplayerBots.map(p=>p.style.id),
     blindDisplay,raisedBlindDisplay,tournamentBlinds,cashBlinds,screenshotExample,

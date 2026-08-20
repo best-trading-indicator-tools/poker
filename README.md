@@ -2,8 +2,6 @@
 
 A free No-Limit Texas Hold'em tournament game vs AI. No install, no ads, works offline — open `poker.html` in any browser (loads `js/*.js` modules; optional single-file bundle via `node scripts/build.mjs bundle`). Plays on desktop and mobile.
 
-![Gameplay — live coach with per-game stats, GTO advice and order-of-action awareness](docs/screenshot.png)
-
 ## Quick start
 
 Double-click `poker.html`, or serve it from any static host. Set up your table (players, blinds, buy-in, ante, blind speed, AI difficulty) and play.
@@ -20,13 +18,14 @@ Game logic is split from `poker.html` into ordered modules (shared global scope)
 | `js/modes/cash.js` | Cash game rules: fixed blinds, auto-rebuy, session P&L |
 | `js/engine.js` | Shared NLHE core: game state, hand flow (`startHand`, `applyAction`, showdown/side pots), sound/haptics/chip animations, resume snapshots |
 | `js/solver.js` | Strategy-provider layer, b-inary WASM solver bridge, action-tree replay, result cache, and explicit fallback routing |
-| `js/preflop-blueprint.js` | Personality-free preflop reach tracker, strict chart-node coverage, and 1,326-combo baseline ranges |
+| `js/preflop-policy-pack.js` | Strict local policy-pack registry: schema/config/checksum/convergence gates and deterministic 169→1,326 expansion |
+| `js/preflop-blueprint.js` | Preflop policy routing, exact mixed-frequency reach tracking, and explicitly labeled heuristic fallback ranges |
 | `js/coach.js` | Preflop charts, `mcEquityR`, `coachDecide`, ICM, fallback logic, coach prose (EN/FR/ES) |
 | `js/ai.js` | AI profiles (`STYLES`), `aiDecide`, range/equity reads |
 | `js/mp.js` | PeerJS multiplayer, host migration, public checkpoints, P2P snapshots |
 | `js/ui.js` | i18n UI strings, rendering, coach panel display, replayer, session review, init/wiring |
 
-`poker.html` holds HTML/CSS plus `<script src="js/…">` tags. `charts.js` remains separate (GTO chart data).
+`poker.html` holds HTML/CSS plus `<script src="js/…">` tags. `charts.js` remains separate as heuristic fallback chart data; it is not an exact-frequency equilibrium pack.
 
 ### Build
 
@@ -46,7 +45,7 @@ Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel s
 - **Configurable Sit & Go**: 2–9 players, starting blinds ($10/$20 up to $100/$200 — the whole blind ladder scales), buy-in in BB (50–200), ante as a fraction of the BB (none / 5% / 10% / 20%), turbo/standard/slow blind schedule (turbo raises blinds every 5 hands)
 - **Cash game mode** (solo vs AI): choose **Cash Game** on the start screen — same NLHE rules with **fixed SB/BB every hand** (blinds do not escalate; no antes). Starting stack in BB (50–200), auto-rebuy on bust, live **session P&L** in the top bar, resume mid-session, quit anytime for a session summary. Multiplayer stays Sit & Go only for now.
 - **Money display**: $ and BB shown everywhere, casino-style chip stacks
-- **Live Coach** (toggleable): position-aware preflop advice from GTO charts, range-conditioned equity postflop, order-of-action awareness (first/last to talk, including your *future* postflop position when advising preflop), bet-size-aware range reading, plain-English reasoning
+- **Live Coach** (toggleable): validated local preflop policies when an exact configuration pack is registered, clearly labeled chart fallback otherwise, range-conditioned equity postflop, order-of-action awareness, bet-size-aware range reading, and plain-English reasoning
 - **Visible ICM teaching**: tournament calls affected by prize value receive a dedicated Live Coach section showing stack rank, stack at risk, coverage and the exact increase from chip-odds break-even to the ICM-adjusted threshold; cash games never show it
 - **Bluff break-even teaching**: recommended bets and raises show `risk ÷ (pot + risk)`, the fold rate a pure bluff needs, beside the coach's modeled fold rate; showdown equity is explicitly treated as additional value rather than double-counted
 - **Strategy intent labels**: every recommendation identifies itself as a balanced baseline or an exploitative adjustment driven by opponent profiles and observed action
@@ -56,6 +55,7 @@ Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel s
 - **Dedicated bluff assessment**: every live recommendation is classified as value, protection, semi-bluff, pure bluff, range aggression, bluff-catch or “do not bluff”; the panel explains fold drivers and risks, compares required with estimated folds, shows equity when called, and gives a response plan. Persistent opponent reads learn who folds or calls under pressure across hands, with small-sample smoothing and difficulty-scaled influence
 - **Draw Engine 2.0**: the coach distinguishes open-ended straights, single gutshots, double gutshots, ace-low edge cases and runner-runner straight/flush backdoors; exact outs are deduplicated across combined draws, filtered for dirty cards and never produce negative usable equity after risk discounts
 - **Full-combo postflop solver**: b-inary's open-source Rust CFR engine resolves covered heads-up postflop spots from an independent preflop baseline, carries equilibrium reach through later actions/runouts, shows the mixed strategy and per-action EVs, and drives the range explorer from both players' current-node reach weights after strict line replay and convergence checks
+- **Local preflop solver pipeline**: a headless Rust research trainer plays its abstract game through the river, checkpoints deterministically, and exports provenance-rich floating-point policies. Browser policy packs are accepted only after strict configuration, tree, checksum, coverage, and convergence gates; research exports cannot silently become coach recommendations.
 - **Stats & training**: post-hand feedback, session + lifetime stats (persisted), full hand-history export to JSON, plus an internal admin `.txt` audit export of up to 20 hands from the current game with action context and AI-coach/solver metadata for recommendation debugging; starting a fresh game resets this audit buffer while resuming preserves it
 - **Blunder report**: every decision is scored against the coach's line in chip-EV; deviations show their estimated EV cost live, the coach panel tracks total "EV leaked" this game, and the game-over screen lists your top 5 costliest mistakes ("Hand #14 · turn — coach: FOLD, you: CALL — −$1,800")
 - **Hand replayer**: browse every hand of the current game and step through it street by street — board reveals progressively, hole cards shown, action log per street. After quitting (or any time), "Review past hands" on the start screen replays your full saved history, timestamped per hand
@@ -63,7 +63,7 @@ Edit the modules under `js/`, then run `multifile` (or deploy as-is — Vercel s
 - **Prominent raise sizing**: the coach's recommendation button reads "RAISE TO $60 · 3 BB" and the bet slider pre-sets to the suggested size — pressing R takes exactly the coach's line
 - **Per-game poker stats**: VPIP, PFR, aggression factor and won-at-showdown tracked live in the coach panel
 - **Resume tournament**: progress is saved at every hand boundary; refreshing, closing the tab, or using **Quit** mid-game offers a resume button on the start screen (permanent abandonment remains under **Clear saved data**)
-- **Mid-hand resume (solo)**: progress is also saved after every action — refresh mid-pot and pick up exactly where you left off (cards, board, bets, whose turn)
+- **Mid-hand resume (solo)**: progress is saved after every action — refresh mid-pot and recover cards, board, bets, and whose turn. Because lossless policy reach is not yet serialized, equilibrium tracking fails closed for that resumed hand instead of inventing a range.
 - **Session Review 2.0**: finished games are logged with win rate, ITM %, avg finish, total net and cumulative EV leaked; repeated leaks are ranked by total cost and frequency, individual mistakes can be filtered by spot/street/recent sessions, and every listed decision opens its exact hand in the replayer
 - **Focused scenario replay**: launch a drill directly from a prioritized Session Review leak and answer up to 10 comparable saved decisions before seeing the coach's recommendation; new decisions preserve pot, price, position, opponent count and prior-action context
 - **Coach confidence labels**: every live recommendation states whether it comes primarily from a preflop chart, exact pot math plus simulated range equity, or a broader multiway range heuristic, with high / medium / limited confidence explained in plain language
@@ -101,7 +101,7 @@ The big lever is **judgment noise**: Easy "feels" its hand is much better or wor
 
 ### Player profiles
 
-On top of difficulty, every bot is dealt a random temperament (shown on its seat). Each profile has its own **preflop opening range** (scaled from GTO charts by position), bet-sizing multiplier, and decision biases — not just label tweaks on the same formula:
+On top of difficulty, every bot is dealt a random temperament (shown on its seat). Each profile has its own **heuristic preflop opening range** (scaled from the bundled position charts), bet-sizing multiplier, and decision biases — not just label tweaks on the same formula:
 
 | Profile | Opens (~UTG→BTN) | Raises with | Bluffs | Bet size | Short stack |
 |---|---|---|---|---|---|
@@ -145,15 +145,17 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 
 **Setup:** players, blind level ($10/$20 … $100/$200), starting stack (BB), difficulty, optional turn timer. Ante, blind speed, and multiplayer are hidden in cash.
 
-**Coach in cash:** GTO charts, equity, pot odds, and postflop buckets unchanged. Tournament-only prose (ICM, Harrington M, “blinds up in N hands”) is off. At **50+ BB**, the coach adds deep-stack cash notes (implied odds, IP steals). **SPR** (stack-to-pot ratio) appears postflop with zone-specific prose. **BB defense charts** vs CO/BTN/SB steals. Iso charts apply only when someone **limped** — the big blind alone does not count.
+**Coach in cash:** heuristic preflop charts, equity, pot odds, and postflop buckets unchanged. Tournament-only prose (ICM, Harrington M, “blinds up in N hands”) is off. At **50+ BB**, the coach adds deep-stack cash notes (implied odds, IP steals). **SPR** (stack-to-pot ratio) appears postflop with zone-specific prose. **BB defense charts** vs CO/BTN/SB steals. Iso charts apply only when someone **limped** — the big blind alone does not count.
 
 **Cash stats:** live panel shows **BB/100**, net in BB, and rebuys. Session review filters All / Cash / Sit & Go with cash-specific BB/100 summary.
 
 **AI in cash:** bots use **depth-based** ranges instead of escalating-blind pressure — wider opens IP when deep (100 BB), more postflop c-bets and calls from stations, push/fold only under ~14 BB. Rocks stay tight; maniacs bluff more with deep stacks.
 
-## Coach & GTO solver
+## Coach & equilibrium solvers
 
-- **Preflop**: hands are ranked against all 169 starting hands; advice uses position-based GTO opening ranges scaled by tournament pressure (stack depth in M/BB, antes, and the profiles left to act), 3-bet/fold logic against raises, and Nash push/fold under ~10 BB. The coach shows your M-ratio and Harrington zone, warns before a blind level drops you a zone, and tells you whether you'll act first or last *after* the flop.
+- **Preflop, strict path**: an audited, app-pinned production policy pack supplies the mixed action frequencies for the current cards, complete stack vector, blinds, table size, action history, and discrete tree. The current game has no rake, ante, or straddle, and the production gate rejects packs that claim rules the engine does not implement. The coach and bots consume the same accepted mix before any profile, Bayesian, chart, or equity heuristic. Raise sizes, round termination, and acting seats must match the real engine state exactly. The shipping trust allowlist is currently empty, so no self-declared pack can acquire a solver label.
+- **Preflop, current shipping state**: no production pack is bundled yet. The existing position/depth charts therefore remain an explicitly labeled heuristic fallback, including their tournament-pressure, 3-bet/fold, and push/fold adjustments. They are not presented as exact-frequency GTO.
+- **Local trainer**: `tools/preflop-solver` is an AGPL headless Rust MCCFR/DCFR research engine for 2–9 players. It uses real fold/showdown/side-pot payoffs through the river rather than an equity tax, but its postflop cards and bet sizes are abstracted. Its exports are hard-coded `production_ready: false` until a separate exploitability/deviation validator and full coverage gates exist. See [`tools/preflop-solver/README.md`](tools/preflop-solver/README.md).
 - **Postflop**: equity is simulated against opponents' *realistic ranges* — each call/raise narrows their assumed range, scaled by their profile **and by bet size** (a pot-sized raise or overbet is read far tighter than a small stab), not random cards.
 - **Big-bet discipline**: facing large bets the coach discounts raw equity (big bets are usually made hands), warns against chasing 4-out gutshots into them, and never tells you to "take a free card" on the river — street-aware advice throughout.
 - **Order of action**: every recommendation shows whether you're first or last to talk on the current street (or the upcoming flop when preflop).
@@ -164,20 +166,25 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 - **Blockers & playability**: ace blockers vs big bets, nut-flush blockers, suited-connector playability beyond raw rankings.
 - **Postflop exploitation**: bluff-catching decisions adjust to WHO is betting (rocks don't bluff; maniacs do; stations' raises are real).
 - **Range-resolved equilibrium provider** (heads-up postflop): uses [`b-inary/postflop-solver`](https://github.com/b-inary/postflop-solver) through the official [`b-inary/wasm-postflop`](https://github.com/b-inary/wasm-postflop) build. It solves all 1,326 private-card combinations without hand-strength buckets or rollout-valued leaves and returns the mixed strategy, action EVs, and both players' current-node reach weights. Those exact reach weights now feed the 13×13 solver matrix. Personality-conditioned `rangeModel` posteriors cannot enter either the solver provider or a solver-labeled matrix.
-- **Reach propagation**: the preflop tracker starts every seat from the same unconditioned 1,326-combo prior and applies only public action-policy weights. On turn and river, the app extracts both players' reach weights from the previously converged tree after replaying every exact action and the actual dealt card. If that chain is missing, the next street is a labeled fallback rather than a fresh heuristic range solve.
-- **Strict preflop coverage**: the bundled data is still a chart abstraction, not a complete frequency blueprint. Exact postflop-provider coverage is limited to 80–120 BB, ante-free cash single-raised pots and heads-up RFI/3-bet/call pots with ordinary sizing whose nodes exist in `charts.js`. Limps, squeezes, 4-bets, unsupported defences, all-ins, tournaments, off-policy hero hands, and resumed hands do not receive a solver label. This expands useful coverage without pretending the approximate chart file is universal preflop GTO.
-- **Practical action abstraction**: flop uses 33%/67%, turn 50%/75%, river 50%/75%/100%, plus 2.5× raises and all-ins. An observed custom size is added to the next tree when needed. Results are therefore exact for the configured discrete game tree, not for every possible continuous bet size.
+- **Reach propagation**: validated packs start every seat from all 1,326 exact private-card combinations and multiply the acting player's reach by the selected action frequency without renormalizing. The HU postflop solver then extracts both players' current-node reach after exact replay. When no production pack is present, the older chart reach may still feed a useful HU postflop solve, but provenance remains `heuristic-preflop-chart` and `exactFrequencies:false`.
+- **Strict coverage**: policy packs are keyed by the exact table size and full game configuration; no 9-max position compression, nearest-stack substitution, or off-tree size snapping is allowed. The current postflop engine is heads-up only. A hand that began 3–9 handed is not handed off as an audited equilibrium line after folds because folded-card bunching is not yet represented.
+- **Practical action abstraction**: flop uses 33%/67%, turn 50%/75%, river 50%/75%/100%, plus 2.5× raises and all-ins. An observed custom size is added to the next tree when needed. Action matching is exact inside that discrete tree; the converged result is still an approximate equilibrium of the configured abstraction, not unrestricted poker.
 - **Validated strategy override**: converged output overrides the heuristic recommendation, feeds native action sizes and frequencies into the mix panel, is cached by board/ranges/stacks/history/hand, and can be sampled by bots. The primary displayed action is the highest-frequency branch; every displayed mixed branch remains valid. The old 8-bucket “GTO-lite” CFR implementation has been removed.
-- **Honest fallbacks**: preflop remains chart-backed; uncovered preflop lines, a missing prior-street equilibrium reach, multiway pots, payout-sensitive tournament play, all-in nodes, non-replayable lines, and hosts without WebAssembly use the range-aware/ICM-aware heuristic provider and are labeled as fallbacks rather than GTO. Transient failures in an otherwise covered node restart the exact solver instead of permanently promoting the heuristic.
+- **Honest fallbacks**: missing/mismatched/research-only preflop packs, uncovered lines, a missing prior-street equilibrium reach, multiway pots, payout-sensitive tournament play, all-in nodes, non-replayable lines, and hosts without WebAssembly use explicitly labeled heuristic or unavailable states rather than GTO. Deterministic solver errors fail closed; only transient runtime failures retry.
 - **Runtime model**: a single-thread Web Worker is preferred, while hosts that block or omit workers run the same pinned WASM engine directly on the main thread. Large trees retry with a compact exact action set, and convergence continues to the exploitability target rather than stopping at an arbitrary iteration ceiling. Exact solving requires HTTP(S); opening the HTML directly still runs the rest of the game with labeled fallbacks.
 - **License**: the solver is AGPL-3.0, so this integrated application is distributed under AGPL-3.0-or-later. Exact upstream commits and vendored checksums are recorded in `vendor/wasm-postflop/README.md` and `THIRD_PARTY_NOTICES.md`.
 
 ## Changelog
 
+### 2026-08-20 — Local equilibrium-first preflop foundation
+- Added a strict, checksum-verified policy-pack boundary with exact configuration matching, mixed-frequency actions, 1,326-combo reach propagation, and fail-closed off-tree routing
+- Routed the coach and bots through the same validated baseline before all exploit/profile logic; retained the existing charts only as an explicitly heuristic fallback
+- Added a headless 2–9-player Rust full-hand abstract-game trainer with deterministic checkpoints and research-only exports; no production pack is claimed yet
+
 ### 2026-08-20 — Exact solver-reach range matrices
 - Replaced Bayesian/personality matrices in solver-covered nodes with the two full-combo reach distributions extracted from the converged CFR node
-- Solver street roots show the supplied equilibrium reach; after a current-street action the matrix waits for exact node extraction instead of briefly showing a Bayesian or stale root range
-- Added explicit GTO-solver provenance, removed read-confidence metadata from solver matrices, and preserved the distinction in saved range snapshots and audit exports
+- Solver street roots show the supplied reach; after a current-street action the matrix waits for exact node extraction instead of briefly showing a Bayesian or stale root range
+- Added explicit solver provenance (including whether the preflop prior is audited or heuristic), removed read-confidence metadata from solver matrices, and preserved the distinction in saved range snapshots and audit exports
 - Added lossless sparse/dense Float32 reach caching, invalidated the old result schema, and capped disk usage independently from the in-memory LRU
 
 ### 2026-08-18 — Heads-up 3-bet-pot solver coverage
@@ -186,7 +193,7 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 - Kept limped pots, squeezes, 4-bets, all-ins, multiway pots, and payout-sensitive ICM spots on explicitly labeled non-solver providers; deep limped trees exceed the browser memory budget even under an impractically narrow action tree
 - Split coach strategy labels into preflop chart, all-in range/equity, ICM-adjusted, custom heuristic, exploitative, and resolved-equilibrium sources
 
-### 2026-08-10 — Exact Rust/WASM GTO strategy provider
+### 2026-08-10 — Full-combo Rust/WASM postflop strategy provider
 - Replaced the 8-bucket display-only CFR mini-solver with b-inary's full-combo postflop solver
 - Solver recommendations now override the coach in supported heads-up chip-EV nodes and expose the real mixed frequencies and action EVs
 - Added a shared solver cache/path for bot decisions, explicit chart/heuristic/ICM fallback labels, worker progress, memory limits, PWA assets, and EN/FR/ES UI copy
@@ -227,7 +234,7 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 ### 2026-06-12 — Coach teaching: leaks, micro-lessons, multiway, dirty outs
 - **Leak finder** (session review): groups EV lost by spot — preflop opens, facing raises, c-bet defense, multiway, river calls (with high-card subtotals); persisted per game in `decisions[]`
 - **Post-hand micro-lesson**: immediate one-line why when you deviate from the coach (uses discounted equity vs pot odds / air penalty)
-- **Multiway postflop buckets**: checked-to-you, facing c-bet, wet/dry board guidance when 2+ opponents (fills GTO HU-only gap)
+- **Multiway postflop buckets**: checked-to-you, facing c-bet, wet/dry board guidance when 2+ opponents (an explicitly heuristic fallback where the solver is HU-only)
 - **Dirty outs**: tainted outs row (pairs board, 4th flush card) alongside clean outs
 
 ### 2026-06-12 — Coach: draw outs listed
@@ -274,7 +281,7 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 - **PWA install**: static manifest link, `theme-color`, and `apple-touch-icon` in `<head>`
 
 ### 2026-06-12 — Profile-specific AI ranges & behavior
-- **Distinct preflop ranges per profile**: rocks open ~6–21%, stations ~16–57%, sharks ~12–48% (wider steals on CO/BTN), maniacs ~17–61% — scaled by position from GTO charts, not shared equity thresholds
+- **Distinct preflop ranges per profile**: rocks open ~6–21%, stations ~16–57%, sharks ~12–48% (wider steals on CO/BTN), maniacs ~17–61% — scaled by position from bundled heuristic charts, not shared equity thresholds
 - **Stations never bluff** and only raise with top ~15%; **rocks over-fold to raises** and bet at 0.70× sizing; **maniac aggression varies** (~22% check-back, randomized raise frequency); **sharks widen steals** from late position under blind pressure
 - **Short-stack modes** (<12 BB): profile-specific push/fold — rocks tight, stations call too wide, maniacs shove any two from late position
 
@@ -303,15 +310,15 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 - BB added to the short-stack shove charts (the chart button now appears in the big blind too)
 
 ### 2026-06-11 — Vs-raise charts, matrix viewer & resizable panel
-- **3-bet / call / fold charts**: when someone raises before you, the coach now consults vs-raise solver matrices (different ranges vs an early-position raiser and a late-position one) — big pairs re-raise for value, hands like A5s re-raise as "blocker bluffs", a teal middle tier flat-calls, the rest folds, each explained in plain words. ICM can still override a chart call near the bubble, and the coach says so
+- **3-bet / call / fold charts**: when someone raises before you, the fallback coach now consults bundled heuristic vs-raise matrices (different ranges vs an early-position raiser and a late-position one) — big pairs re-raise for value, hands like A5s re-raise as "blocker bluffs", a teal middle tier flat-calls, the rest folds, each explained in plain words. ICM can still override a chart call near the bubble, and the coach says so
 - **Two-tier matrix viewer**: the 13×13 grid now shows gold = re-raise, teal = call, dark = fold for vs-raise spots
 - **Drag-resizable coach panel (desktop)**: grab the panel's right edge and drag — 240 to 620px, the table reflows live, width remembered across sessions
 
-### 2026-06-11 — Solver range charts (external data file)
-- **`charts.js`**: real per-position GTO range matrices now live in an external, human-editable data file — raise-first-in charts for all 8 positions (UTG 11% → BTN 41%) and short-stack all-in charts at 10 BB and 5 BB depths, approximating published solver/Nash ranges
+### 2026-06-11 — Heuristic range charts (external data file)
+- **`charts.js`**: heuristic per-position range matrices live in an external, human-editable data file — raise-first-in charts for all 8 positions (UTG 11% → BTN 41%) and short-stack all-in charts at 10 BB and 5 BB depths
 - **`charts.js` expanded**: per-raiser-position 3-bet/call matrices (UTG through SB), **iso-over-limp** ranges, and shove ladders at 5 / 8 / 10 / 12 / 15 / 20 BB; coach picks the nearest depth automatically
-- The coach consults the chart FIRST ("77 is in the MP opening chart — solver-computed ranges say raising it is profitable") and falls back to the percentile engine when no chart covers the spot (facing raises, missing file) — so the single-file copy still works standalone
-- Unlike a single hand ranking with cutoffs, true matrices capture solver non-linearities (suited connectors and small pairs enter ranges "early", weak offsuit broadways late)
+- The fallback coach consults the bundled chart first and uses the percentile engine when no chart covers the spot (facing raises, missing file), with both paths labeled heuristic
+- Unlike a single hand-ranking cutoff, matrix lists can encode non-linear shapes (suited connectors and small pairs enter ranges "early", weak offsuit broadways late)
 - Tournament-pressure scaling, antes, profiles, ICM and all postflop logic apply unchanged on top
 
 ### 2026-06-11 — Coach benchmark
@@ -329,7 +336,7 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 
 ### 2026-06-11 — Tournament pressure & live training
 - **M-ratio & Harrington zones in the coach**: every recommendation shows "M = 14 · yellow zone", with a warning when the next blind level will drop you a zone ("look for spots now rather than being forced later")
-- **Stack-depth steal scaling**: late-position opening ranges widen progressively from 25 BB down to 10 BB (BTN ~42% → ~60%), early position stays disciplined — matching Harrington zone theory and solver stack-depth ranges
+- **Stack-depth steal scaling**: the heuristic fallback widens late-position opening ranges progressively from 25 BB down to 10 BB (BTN ~42% → ~60%) while keeping early position disciplined; this is a coaching abstraction, not solver output
 - **Ante-aware opens**: dead money from antes widens recommended opening ranges proportionally
 - **Profile-aware stealing**: the coach reads the profiles still to act — steal wider when rocks/tights wait behind, tighter into stations and maniacs who defend or 3-bet
 - **🧮 Live mental math teaching**: facing any bet, the coach shows how to compute the price (call ÷ (pot + call)), estimate win% with the ×4/×2 outs rule, and apply the same discounts it uses — so you can do it at a real table
@@ -342,10 +349,10 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 
 ### 2026-06-10 — Languages
 - **French and Spanish**: language selector on the landing page and the game header — translates the full UI chrome, coach labels and recommendations, stats, blunder report, replayer and game-over screens
-- **Fully translated coach reasoning**: all ~40 advice templates (preflop charts, push/fold, set-mining, pot odds, big-bet discounts, stabs, river logic), localized hand names, draw names, board-texture warnings and GTO solver notes — in all three languages
+- **Fully translated coach reasoning**: all ~40 advice templates (preflop charts, push/fold, set-mining, pot odds, big-bet discounts, stabs, river logic), localized hand names, draw names, board-texture warnings and solver provenance notes — in all three languages
 
 ### 2026-06-10 — Reading the action & offline play
-- **Checks carry information**: range floors trim opponents' top hands on checks (scaled by personality), check-raises read as traps and narrow ranges hard, stab recommendation when checked to in position — all flowing into the equity sim and the CFR solver
+- **Checks carry information**: range floors trim opponents' top hands on checks (scaled by personality), check-raises read as traps and narrow ranges hard, stab recommendation when checked to in position — all flowing into the heuristic equity simulation and exploit model, never into the CFR solver's input ranges
 - **No-hand call discipline**: the coach no longer recommends "pot-odds" calls with high cards and no draw against bets — equity is discounted ~15% in those spots and the panel explains why
 - **Pocket-pair implied odds**: deep stacks (40 BB+) widen pair opens (set-mining value); 15-to-1 set-mine calls vs raises
 - **Offline mode (PWA)**: service worker + manifest — the hosted game keeps working without internet and can be installed as an app

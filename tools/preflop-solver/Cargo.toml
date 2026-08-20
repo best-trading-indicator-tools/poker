@@ -1,0 +1,28 @@
+[package]
+name = "poker-ai-preflop-solver"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+publish = false
+build = "build.rs"
+
+[dependencies]
+anyhow = "1.0"
+bincode = "1.3"
+clap = { version = "4.5", features = ["derive"] }
+hex = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+toml = "0.8"
+
+[dev-dependencies]
+tempfile = "3.13"
+
+[build-dependencies]
+hex = "0.4"
+sha2 = "0.10"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

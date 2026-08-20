@@ -1,0 +1,17 @@
+name = "cash-hu-100bb-r0-a0-v1"
+players = 2
+stack_bb = 100
+small_blind_units = 1
+big_blind_units = 2
+iterations = 1000000
+seed = 73918241
+checkpoint_every = 10000
+discount_every = 1000
+# All-in remains an explicit branch after this ordinary-raise cap.
+max_non_all_in_raises_per_street = 2
+preflop_open_bb = 3.0
+preflop_reraise_multiplier = 3.0
+postflop_bet_pot_fraction = 0.5
+postflop_raise_pot_fraction = 0.75
+postflop_buckets = 64
+max_infosets = 2000000

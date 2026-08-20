@@ -1401,6 +1401,14 @@ function aiHardPostflopVsBet(p,eq,odds,callAmt,pot,d,st,pfAdj){
 }
 
 function aiDecide(p){
+  if(state.stage==='preflop'&&typeof gtoPreflopSampleDecision==='function'){
+    const exact=gtoPreflopSampleDecision(p);
+    if(exact&&exact.ok===true)return {
+      type:exact.type,amount:exact.amount,source:'preflop-equilibrium-policy-pack',
+      strategyProvider:exact.strategyProvider,strategyMode:'equilibrium-baseline',
+      packId:exact.packId,packSha256:exact.packSha256,nodeId:exact.nodeId,mix:exact.mix
+    };
+  }
   if(typeof solverSampleCachedDecision==='function'){
     const solverIcm=typeof aiIcmPressure==='function'?aiIcmPressure(p):null;
     const solved=solverSampleCachedDecision(p,{icmPrem:solverIcm?.active?(solverIcm.callPremium||0):0});

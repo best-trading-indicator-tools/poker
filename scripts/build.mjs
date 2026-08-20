@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 const HTML = path.join(ROOT, 'poker.html');
 const JS_DIR = path.join(ROOT, 'js');
-const ASSET_VERSION = 95;
+const ASSET_VERSION = 96;
 
 const BOOT = `"use strict";
 const HAS_DOM = (typeof document !== 'undefined');
@@ -50,7 +50,7 @@ const MODULE_RANGES = {
   'ui.js': [[718, 888], [2347, 2680], [3172, 3624], [4203, 4474]],
 };
 
-const LOAD_ORDER = ['eval.js', 'preflop-blueprint.js', 'modes/registry.js', 'modes/tournament.js', 'modes/cash.js', 'engine.js', 'rewards.js', 'solver.js', 'coach.js', 'ai.js', 'mp.js', 'ui.js'];
+const LOAD_ORDER = ['eval.js', 'preflop-policy-pack.js', 'preflop-blueprint.js', 'modes/registry.js', 'modes/tournament.js', 'modes/cash.js', 'engine.js', 'rewards.js', 'solver.js', 'coach.js', 'ai.js', 'mp.js', 'ui.js'];
 
 function readLines() {
   const html = fs.readFileSync(HTML, 'utf8');
