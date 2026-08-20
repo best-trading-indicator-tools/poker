@@ -236,6 +236,67 @@ const result=vm.runInContext(`(()=>{
   if(underpairDecision.rec!=='FOLD'||underpairDecision.underpairPen<.08||underpairDecision.evs.CALL>=0)
     throw new Error('33/K96 vs 80% c-bet must fold '+JSON.stringify({rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL}));
 
+  /* A solver-covered matrix has exactly one authoritative weight source. The
+     three deliberately disjoint ranges below catch Bayesian leakage, wrong
+     solver/app combo indexing, and failure to replace street-root reach with
+     the current solved node. */
+  const startHero=new Float32Array(1326),startVillain=new Float32Array(1326);
+  const nodeHero=new Float32Array(1326),nodeVillain=new Float32Array(1326);
+  const startAK=H(C(14,3),C(13,3)),nodeQJ=H(C(12,3),C(11,3)),bayes72=H(C(7,0),C(2,1));
+  const solverAt=hole=>solverPairIndex(solverCardId(hole[0]),solverCardId(hole[1]));
+  startHero[solverAt(hero.hole)]=1;nodeHero[solverAt(hero.hole)]=1;
+  startVillain[solverAt(startAK)]=1;nodeVillain[solverAt(nodeQJ)]=1;
+  const bayesWeights=new Array(1326).fill(0);bayesWeights[rangeComboIndex(bayes72)]=1;
+  phil.rangeModel={v:2,weights:bayesWeights,history:[]};
+  const matrixStreet={stage:'flop',supported:true,playerSeats:[phil.i,hero.i],rangeSource:'test-gto',
+    rangeLine:'single-raised',rangeNodes:[[],[]],rangeExactFrequencies:false,
+    rangeRaw:[startVillain,startHero],actionHistory:[],actions:[]};
+  state.solverStreet=matrixStreet;
+  const solvedMatrixNode={converged:true,rec:'check',target:0,rangeSource:'test-gto',rangeLine:'single-raised',
+    rangeNodes:[[],[]],rangeExactFrequencies:false,reachSource:'solver-equilibrium-node',rangeHistory:[],
+    branches:[{label:'Check',rec:'check',target:0,frequency:1,ev:0}],
+    reachSeats:[phil.i,hero.i],reachRangesPacked:JSON.parse(JSON.stringify([
+      solverPackReachRange(nodeVillain),solverPackReachRange(nodeHero)
+    ]))};
+  const savedSolverSupport=solverSupport,savedSolverCachedResult=solverCachedResult;
+  let solverMatrixCheck=null;
+  try{
+    solverSupport=()=>({ok:true,street:matrixStreet});
+    solverCachedResult=()=>null;
+    const pendingChart=coachRangeChartInfo(phil,hero,false,'hard');
+    const pendingMass=rangeMatrixMetrics(pendingChart).mass;
+    if(Math.abs((pendingMass.AKs||0)-1)>1e-9||(pendingMass['72o']||0)!==0)
+      throw new Error('solver-covered root matrix must use solver reach, never Bayesian '+JSON.stringify(pendingMass));
+    solverCachedResult=()=>solvedMatrixNode;
+    const applied=solverApplyCoachStrategy(hero,{rec:'FOLD',coachT:0,evs:{},why:[],extra:[],
+      rangeCharts:[pendingChart],chartInfo:pendingChart});
+    const nodeChart=applied.rangeCharts[0],nodeMass=rangeMatrixMetrics(nodeChart).mass;
+    if(Math.abs((nodeMass.QJs||0)-1)>1e-9||(nodeMass.AKs||0)!==0||(nodeMass['72o']||0)!==0)
+      throw new Error('solved matrix must use current-node reach, not street/Bayesian weights '+JSON.stringify(nodeMass));
+    if(nodeChart.sourceKind!=='solver'||nodeChart.nodeReach!==true||applied.chartInfo!==nodeChart)
+      throw new Error('solver range provenance/detail chart not updated '+JSON.stringify({source:nodeChart.sourceKind,nodeReach:nodeChart.nodeReach}));
+    const meta=rangeMatrixMetaHtml(nodeChart),snapshot=rangeSnapshot(nodeChart);
+    if(!meta.includes('Current-node reach weights')||meta.includes('Read confidence')||
+        rangeMatrixTitle(nodeChart)!=='GTO solver range at this node'||snapshot.sourceKind!=='solver'||snapshot.model!==null)
+      throw new Error('solver matrix labeling/snapshot leaked estimated-range metadata '+JSON.stringify({meta,title:rangeMatrixTitle(nodeChart),snapshot}));
+    matrixStreet.actions=[{seat:phil.i,street:'flop',action:'bet',target:120,ratio:.5}];
+    solverCachedResult=()=>null;
+    const pendingAfterAction=coachRangeChartInfo(phil,hero,false,'hard');
+    if(pendingAfterAction!==null)
+      throw new Error('current-street action must suppress stale root/Bayesian matrix until node reach is solved');
+    /* WASM card ids are rank-major clubs-first: Qc=40 and Ac=48. Hard-code
+       those ids so a self-consistent but wrong app/solver suit mapping fails. */
+    const clubSolverWeights=new Float32Array(1326);
+    clubSolverWeights[solverPairIndex(40,48)]=1;
+    const clubSolverInfo={kind:'range',sourceKind:'solver',rawWeights:clubSolverWeights,
+      board:[C(3,3),C(5,3),C(7,3)],dead:[C(9,0),C(2,1)],list:[],model:null};
+    const clubSolverMetrics=rangeMatrixMetrics(clubSolverInfo);
+    if(Math.abs((clubSolverMetrics.mass.AQs||0)-1)>1e-9||Math.abs((clubSolverMetrics.composition.flush||0)-1)>1e-9)
+      throw new Error('solver clubs-first card mapping must preserve exact-suit made hands '+JSON.stringify(clubSolverMetrics));
+    solverMatrixCheck={root:Object.keys(pendingMass).filter(k=>pendingMass[k]>0),
+      node:Object.keys(nodeMass).filter(k=>nodeMass[k]>0),hardcodedClubFlush:clubSolverMetrics.composition.flush};
+  }finally{solverSupport=savedSolverSupport;solverCachedResult=savedSolverCachedResult;}
+
   /* Heads-up flop after a BTN open: AK with two live overcards is a small c-bet,
      not "pure air" that must auto-check merely because the BB is a station. */
   newGame({...cfg,numPlayers:6,difficulty:'hard'});
@@ -946,6 +1007,7 @@ const result=vm.runInContext(`(()=>{
       actsLast:overcardCbetDecision.actsLast,firstToAct:firstToActCbetDecision.rec},
     effective:metrics.effective,legal:metrics.legal,underpair,withBackdoor,smallIp,
     underpairDecision:{rec:underpairDecision.rec,eqAdj:underpairDecision.eqAdj,pen:underpairDecision.underpairPen,callEv:underpairDecision.evs.CALL},
+    solverMatrixCheck,
     flushDecision:{rec:flushDecision.rec,higher:flushDecision.flushInfo.higherCount,
       danger:flushDecision.flushInfo.anyBetter,continued:flushDecision.flushInfo.aheadWhenContinued},
     nutFlush:{higher:nutFlushInfo.higherCount,caution:nutFlushInfo.caution,

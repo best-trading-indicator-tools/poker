@@ -20,18 +20,19 @@ uniform 1,326-combo priors + public preflop actions
  covered heads-up chip-EV      uncovered line / multiway / ICM / error
              |                                  |
              v                                  v
-      b-inary WASM worker                explicit fallback provider
+  b-inary WASM worker/direct host        explicit fallback provider
              |
              v
  converged hand mix + action EVs + both players' reach weights
              |
              +---- exact action + runout propagation to next street
+             +---- current-node equilibrium range matrices
              +---- conditional coach override
              +---- cached bot mixed-strategy sample
              +---- saved decision provenance
 ```
 
-`js/solver.js` owns this boundary. `js/coach.js` still produces a complete fallback result first; a cached solved strategy replaces its action, native sizing, EVs, confidence, mix, and explanation only when the support router accepts the chip-EV model, the real line replays exactly, and the exploitability target was reached. This keeps poker-domain fallbacks independent from the WASM runtime and prevents a worker or memory failure from blocking the game.
+`js/solver.js` owns this boundary. `js/coach.js` still produces a complete fallback result first; a cached solved strategy replaces its action, native sizing, EVs, confidence, mix, explanation, and displayed opponent ranges only when the support router accepts the chip-EV model, the real line replays exactly, and the exploitability target was reached. A solver-covered node never displays the personality/Bayesian posterior as if it were solver output. At an action-free street root the matrix uses the solver input reach; after any current-street action it waits for extraction of that node's converged reach weights. Unsupported poker domains may still show the explicitly labeled estimated fallback matrix, while transient failures in a covered domain remain pending and retry the exact engine.
 
 ## Inputs and tree abstraction
 
@@ -39,16 +40,18 @@ uniform 1,326-combo priors + public preflop actions
 - The bundled preflop policy covers only 80–120 BB, ante-free cash single-raised pots and ordinary heads-up RFI/3-bet/call pots represented by `charts.js`. Because those charts are pure/overlap action abstractions rather than a complete mixed-frequency blueprint, the UI does not call them universal GTO. An unsupported node invalidates solver eligibility for the hand.
 - The board, starting pot, effective stack, and exact ordered action history are captured at the beginning of every street.
 - At a street transition, the exact previous action history and actual turn/river card are replayed into the converged tree. The worker's full-combo reach weights become the next street's input ranges. If the previous tree was unavailable, nonconverged, off-tree, or lacked the actual runout, no turn/river solve is promoted.
+- At every solved decision node, both players' full-combo reach arrays are extracted from the WASM result. The range explorer maps them with the solver's rank-major/reversed-suit card indexing, then applies only known board/hero blockers before normalization. It does not call the Bayesian posterior or personality model.
 - OOP and IP receive the same baseline action set: 33%/67% flop bets, 50%/75% turn bets, 50%/75%/100% river bets, 2.5× raises, and solver-managed all-ins.
 - A custom size already used in the real line is added only to that street and actor's action set. The compact retry preserves observed sizes. If the exact action and target still cannot be replayed, the result is rejected rather than mapped to a nearby node.
-- The solver runs compressed, single-threaded DCFR in a Worker. It targets 0.3% of the starting pot in exploitability, with the upstream default ceiling of 1,000 iterations.
-- A tree estimated above 512 MB is retried with one baseline bet size per street plus the sizes required by the observed line. If it remains too large, the provider returns the labeled memory fallback.
+- The solver runs compressed, single-threaded DCFR in a Worker when the host permits one. Embedded hosts without a usable Worker run the same pinned WASM engine directly rather than dropping to a heuristic. It targets 0.3% of the starting pot in exploitability and continues until that target is reached instead of abandoning the solve at an arbitrary iteration count.
+- Every eligible street is solved before action resumes, preserving an authoritative tree for exact turn/river reach propagation. A tree estimated above 512 MB is rebuilt with one baseline bet size per street plus sizes required by the observed line; the compact exact tree is then allowed to allocate the memory it reports.
+- Transient worker, asset, WASM, extraction, and allocation failures restart from a clean engine. Covered bot decisions wait for the resolved strategy instead of racing the solver against a heuristic timeout.
 
 The private-card postflop game is not bucketed. The result is a converged equilibrium for the full-combo, discrete action tree and supplied personality-free baseline reach ranges; it is not a continuous no-limit solution or a claim that the bundled preflop chart abstraction is universal GTO.
 
 ## Cache and invalidation
 
-The LRU cache stores at most 48 compact node results in memory and `localStorage`. A key includes:
+The memory LRU stores at most 48 compact node results; `localStorage` keeps the newest subset that fits the separate disk ceiling. A key includes:
 
 - provider schema plus pinned solver and WASM commits;
 - street and board;
@@ -58,7 +61,7 @@ The LRU cache stores at most 48 compact node results in memory and `localStorage
 - ordered action history;
 - acting seat and exact private cards.
 
-Changing any material game input naturally invalidates the hit. Cached data contains only mixed frequencies, action EVs, sizing, exploitability, and provenance—not full game trees.
+Changing any material game input naturally invalidates the hit. Cached data contains mixed frequencies, action EVs, sizing, exploitability, provenance, and both current-node reach arrays—not full game trees. Reach arrays use an adaptive sparse/dense, lossless Float32 binary encoding. Disk persistence is capped independently from the 48-entry memory LRU so this rebuildable cache cannot crowd out hand-resume data.
 
 ## Deliberate fallbacks
 
@@ -75,8 +78,9 @@ Changing any material game input naturally invalidates the hit. Cached data cont
 | Facing an all-in | Range/equity or ICM-aware provider | Shove/call decisions need range equity and, in tournaments, prize utility—not a postflop chip-EV tree |
 | Player already all-in with no remaining betting decision | Equity/runout logic | No strategic action remains |
 | Resume began mid-street without solver history | Range-aware heuristic | Cannot reconstruct a trustworthy root pot/range snapshot |
-| Worker, browser, or memory failure | Range-aware heuristic | Game remains responsive and the UI names the fallback |
-| Nonconverged tree or exact line/sizing unavailable | Range-aware heuristic | Approximate output is never promoted to a solved recommendation |
+| Worker unavailable or blocked | Same range-resolved WASM solver on the main thread | Exact solving remains available in constrained embedded browser hosts |
+| WebAssembly or browser protocol unavailable | Range-aware heuristic | The engine cannot execute in that host; the UI names the fallback |
+| Transient engine failure or interrupted solve | Automatic exact-solver restart | A covered node remains pending and is never permanently promoted as heuristic |
 
 ## Licensing and deployment
 

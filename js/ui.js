@@ -142,16 +142,17 @@ mpConnFail:"Could not connect to the room. Phone networks sometimes block direct
 mpJoined:n=>`${n} joined the room`,mpGone:n=>`${n} disconnected — their hand is folded`,
 mpYou:"(you · host)",mpYouG:"(you)",chatPh:"Message…",
 viewChart:"📊 View this position's chart",chartTitleOpen:"opening chart",chartTitleIso:"iso vs limpers chart",chartTitleShove:"all-in chart",chartTitleFacing:"chart vs this raise",chartTitleBbDefend:"BB defense chart",chartTitleFourBet:"response vs 3-bet",
-showRange:"📊 Show opponent range",hideRange:"▴ Hide opponent range",viewRange:"🔎 Open interactive Range Explorer",chartTitleRange:"estimated range right now",legendRange:"hands he could still have",rangeFringe:"Fringe",rangePossible:"Possible",rangeLikely:"Likely",rangeVeryLikely:"Very likely",
+showRange:"📊 Show opponent range",hideRange:"▴ Hide opponent range",viewRange:"🔎 Open interactive Range Explorer",chartTitleRange:"estimated range right now",chartTitleSolverRange:"GTO solver range at this node",legendRange:"hands he could still have",rangeFringe:"Fringe",rangePossible:"Possible",rangeLikely:"Likely",rangeVeryLikely:"Very likely",
 rangeExplore:"Explore range",rangeFilter:"Show",rangeFilterAll:"All hands",rangeFilterMade:"Made hands",rangeFilterDraws:"Draws",rangeFilterNut:"Nut draws",rangeFilterNonNut:"Non-nut draws",rangeFilterBackdoor:"Backdoors",rangeFilterAir:"Air / bluffs",rangePick:"Select a hand class in the grid to understand why it remains possible.",rangeCellShare:(h,p,a,c)=>`${h} represents about ${p}% of this opponent range. ${a} exact combo${a!==1?'s':''} remain weighted out of ${c} unblocked suit combination${c!==1?'s':''}.`,rangeCellDensity:n=>`Each available ${n} combo is weighted relative to an average legal combo.`,rangeCellMix:"What these combos currently make",rangeUnavailable:"This hand class has no remaining weighted combinations after blockers and the action line.",revExploreRange:"Explore range",
-rangeDensity:"Per-combo likelihood",rangeClassProb:"Class probability",rangeEffective:"effective combos",rangeLine:"Action line",rangeTopCard:"Top-card hands now",rangeTopHands:"Top candidates",rangeOpen:"Open",rangeOfRange:"of range",rangeCombos:"available combos",rangeAvgCombo:"average combo likelihood",
+rangeDensity:"Per-combo likelihood",rangeClassProb:"Class probability",rangeEffective:"effective combos",rangeLine:"Action line",rangeSource:"Range source",rangeSolverNode:"Current-node reach weights extracted from the converged CFR equilibrium for this configured tree",rangeSolverStreet:"Street-root reach supplied to this configured CFR tree; no current-street action has occurred yet",rangeTopCard:"Top-card hands now",rangeTopHands:"Top candidates",rangeOpen:"Open",rangeOfRange:"of range",rangeCombos:"available combos",rangeAvgCombo:"average combo likelihood",
 rangeComposition:"Exact hand mix",rangeFullHousePlus:"Full house or better",rangeMadeFlushes:"Made flushes",rangeStraights:"Straights",rangeTrips:"Trips",rangeTwoPair:"Two pair",rangeOnePair:"One pair",rangeDrawOnly:"Draw only",rangeAir:"Air / bluff candidates",rangeBoardOnly:"Playing the board",
 rangeDrawBreakdown:"Exact draw texture",rangeComboDraw:"Combo draws",rangeNutFlushDraw:"Nut flush draws",rangeNonNutFlushDraw:"Non-nut flush draws",rangeStraightDraw:"Straight draws",rangePairPlusDraw:"Pair + draw",rangeBackdoorDraw:"Backdoor-only draws",
 rangeWeightRaise:(d,x,h)=>d==='up'?`${h} gained weight (${x}× average): the latest aggressive action is more consistent with its value or semi-bluff potential.`:d==='down'?`${h} lost weight (${x}× average): the latest aggressive action is less consistent with this class than with stronger value hands or credible draws.`:`${h} stayed near its prior weight (${x}× average) after the latest aggressive action.`,
 rangeWeightCall:(d,x,h)=>d==='up'?`${h} gained weight (${x}× average): calling fits this class's showdown value or draw realization.`:d==='down'?`${h} lost weight (${x}× average): this class continues less often than the opponent's stronger calls and draws.`:`${h} stayed near its prior weight (${x}× average) after the call.`,
 rangeWeightCheck:(d,x,h)=>d==='up'?`${h} gained weight (${x}× average): checking is consistent with its medium-strength or give-up profile.`:d==='down'?`${h} lost weight (${x}× average): checking makes strong value versions of this class less likely.`:`${h} stayed near its prior weight (${x}× average) after the check.`,
 rangeWeightPrior:(d,x,h)=>`${h} is weighted at ${x}× an average legal combo from the current position, profile and prior range.`,
-rangeBlockerImpact:n=>`Known cards remove ${n} exact combo${n!==1?'s':''}.`,rangeActionRemoved:n=>`The modeled action line reduces ${n} other unblocked combo${n!==1?'s':''} to zero weight.`,
+rangeWeightSolver:(x,h)=>`${h} has ${x}× the average legal-combo reach in the solver equilibrium.`,
+rangeBlockerImpact:n=>`Known cards remove ${n} exact combo${n!==1?'s':''}.`,rangeActionRemoved:n=>`The action line reduces ${n} other unblocked combo${n!==1?'s':''} to zero weight.`,
 rangeIso:"Iso-raise",rangeSqueeze:"Squeeze",rangeLimp:"Limp",rangeOption:"Check option",rangeEntering:s=>`Range entering ${s} — opponent has not acted yet`,
 legendOpen:"raise first-in",legendShove:"go all-in",legendFold:"fold",legendYou:"your hand",legend3bet:"re-raise (3-bet)",legendFourBet:"4-bet",legendCall:"call",
 benchConfirm:"Simulate 25 full 9-player tournaments where a bot plays PURE coach advice, to measure how good the coach really is. Takes a minute or two. Run it?",
@@ -306,16 +307,17 @@ mpConnFail:"Connexion au salon impossible. Les réseaux mobiles bloquent parfois
 mpJoined:n=>`${n} a rejoint le salon`,mpGone:n=>`${n} s'est déconnecté — sa main est couchée`,
 mpYou:"(vous · hôte)",mpYouG:"(vous)",chatPh:"Message…",
 viewChart:"📊 Voir la charte de cette position",chartTitleOpen:"charte d'ouverture",chartTitleIso:"charte iso vs limps",chartTitleShove:"charte de tapis",chartTitleFacing:"charte face à cette relance",chartTitleBbDefend:"charte défense BB",chartTitleFourBet:"réponse face au 3-bet",
-showRange:"📊 Afficher la range adverse",hideRange:"▴ Masquer la range adverse",viewRange:"🔎 Ouvrir le Range Explorer interactif",chartTitleRange:"range estimée en ce moment",legendRange:"mains qu'il peut encore avoir",rangeFringe:"Marginal",rangePossible:"Possible",rangeLikely:"Probable",rangeVeryLikely:"Très probable",
+showRange:"📊 Afficher la range adverse",hideRange:"▴ Masquer la range adverse",viewRange:"🔎 Ouvrir le Range Explorer interactif",chartTitleRange:"range estimée en ce moment",chartTitleSolverRange:"range du solveur GTO à ce nœud",legendRange:"mains qu'il peut encore avoir",rangeFringe:"Marginal",rangePossible:"Possible",rangeLikely:"Probable",rangeVeryLikely:"Très probable",
 rangeExplore:"Explorer la range",rangeFilter:"Afficher",rangeFilterAll:"Toutes les mains",rangeFilterMade:"Mains faites",rangeFilterDraws:"Tirages",rangeFilterNut:"Tirages max",rangeFilterNonNut:"Tirages non max",rangeFilterBackdoor:"Backdoors",rangeFilterAir:"Air / bluffs",rangePick:"Sélectionnez une classe de mains dans la grille pour comprendre pourquoi elle reste possible.",rangeCellShare:(h,p,a,c)=>`${h} représente environ ${p} % de cette range adverse. ${a} combo${a!==1?'s':''} exact${a!==1?'s':''} reste${a!==1?'nt':''} pondéré${a!==1?'s':''} parmi ${c} combinaison${c!==1?'s':''} de couleurs non bloquée${c!==1?'s':''}.`,rangeCellDensity:n=>`Chaque combo disponible de ${n} est pondéré par rapport à un combo légal moyen.`,rangeCellMix:"Ce que ces combos ont actuellement",rangeUnavailable:"Cette classe de mains n’a plus aucune combinaison pondérée après les bloqueurs et la ligne d’action.",revExploreRange:"Explorer la range",
-rangeDensity:"Probabilité par combo",rangeClassProb:"Probabilité de la classe",rangeEffective:"combos effectifs",rangeLine:"Ligne d'actions",rangeTopCard:"Mains avec la top card",rangeTopHands:"Candidats principaux",rangeOpen:"Open",rangeOfRange:"de la range",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilité moyenne d'un combo",
+rangeDensity:"Probabilité par combo",rangeClassProb:"Probabilité de la classe",rangeEffective:"combos effectifs",rangeLine:"Ligne d'actions",rangeSource:"Source de la range",rangeSolverNode:"Poids de reach du nœud courant extraits de l’équilibre CFR convergé de cet arbre configuré",rangeSolverStreet:"Reach à la racine de la street fourni à cet arbre CFR configuré ; aucune action n’a encore eu lieu sur cette street",rangeTopCard:"Mains avec la top card",rangeTopHands:"Candidats principaux",rangeOpen:"Open",rangeOfRange:"de la range",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilité moyenne d'un combo",
 rangeComposition:"Répartition exacte",rangeFullHousePlus:"Full ou mieux",rangeMadeFlushes:"Couleurs faites",rangeStraights:"Quintes",rangeTrips:"Brelans",rangeTwoPair:"Deux paires",rangeOnePair:"Une paire",rangeDrawOnly:"Tirage seul",rangeAir:"Air / bluffs possibles",rangeBoardOnly:"Board joué",
 rangeDrawBreakdown:"Texture exacte des tirages",rangeComboDraw:"Combo draws",rangeNutFlushDraw:"Tirages couleur max",rangeNonNutFlushDraw:"Tirages couleur non max",rangeStraightDraw:"Tirages quinte",rangePairPlusDraw:"Paire + tirage",rangeBackdoorDraw:"Tirages backdoor uniquement",
 rangeWeightRaise:(d,x,h)=>d==='up'?`${h} gagne du poids (${x}× la moyenne) : la dernière action agressive correspond mieux à sa valeur ou à son potentiel de semi-bluff.`:d==='down'?`${h} perd du poids (${x}× la moyenne) : cette action agressive correspond moins à cette classe qu'aux mains fortes et tirages crédibles.`:`${h} reste proche de son poids initial (${x}× la moyenne) après la dernière action agressive.`,
 rangeWeightCall:(d,x,h)=>d==='up'?`${h} gagne du poids (${x}× la moyenne) : payer correspond à sa valeur à l'abattage ou à la réalisation de son tirage.`:d==='down'?`${h} perd du poids (${x}× la moyenne) : cette classe continue moins souvent que les calls forts et les tirages adverses.`:`${h} reste proche de son poids initial (${x}× la moyenne) après le call.`,
 rangeWeightCheck:(d,x,h)=>d==='up'?`${h} gagne du poids (${x}× la moyenne) : checker correspond à son profil de force moyenne ou d'abandon.`:d==='down'?`${h} perd du poids (${x}× la moyenne) : le check rend les versions fortes de cette classe moins probables.`:`${h} reste proche de son poids initial (${x}× la moyenne) après le check.`,
 rangeWeightPrior:(d,x,h)=>`${h} pèse ${x}× un combo légal moyen selon la position, le profil et la range initiale.`,
-rangeBlockerImpact:n=>`Les cartes connues retirent ${n} combo${n!==1?'s':''} exact${n!==1?'s':''}.`,rangeActionRemoved:n=>`La ligne d'action modélisée réduit ${n} autre${n!==1?'s':''} combo${n!==1?'s':''} non bloqué${n!==1?'s':''} à un poids nul.`,
+rangeWeightSolver:(x,h)=>`${h} a un reach de ${x}× celui d’un combo légal moyen dans l’équilibre du solveur.`,
+rangeBlockerImpact:n=>`Les cartes connues retirent ${n} combo${n!==1?'s':''} exact${n!==1?'s':''}.`,rangeActionRemoved:n=>`La ligne d'action réduit ${n} autre${n!==1?'s':''} combo${n!==1?'s':''} non bloqué${n!==1?'s':''} à un poids nul.`,
 rangeIso:"Relance d'isolation",rangeSqueeze:"Squeeze",rangeLimp:"Limp",rangeOption:"Check gratuit",rangeEntering:s=>`Range à l'entrée du ${s} — l'adversaire n'a pas encore agi`,
 legendOpen:"relancer en premier",legendShove:"partir à tapis",legendFold:"se coucher",legendYou:"votre main",legend3bet:"sur-relancer (3-bet)",legendFourBet:"4-bet",legendCall:"suivre",
 benchConfirm:"Simuler 25 tournois complets à 9 joueurs où un bot suit UNIQUEMENT les conseils du coach, pour mesurer sa vraie valeur. Compte une à deux minutes. Lancer ?",
@@ -470,16 +472,17 @@ mpConnFail:"No se pudo conectar a la sala. Las redes móviles a veces bloquean c
 mpJoined:n=>`${n} entró en la sala`,mpGone:n=>`${n} se desconectó — su mano se retira`,
 mpYou:"(tú · anfitrión)",mpYouG:"(tú)",chatPh:"Mensaje…",
 viewChart:"📊 Ver la tabla de esta posición",chartTitleOpen:"tabla de apertura",chartTitleIso:"tabla iso vs limps",chartTitleShove:"tabla de all-in",chartTitleFacing:"tabla contra esta subida",chartTitleBbDefend:"tabla defensa BB",chartTitleFourBet:"respuesta frente al 3-bet",
-showRange:"📊 Mostrar rango rival",hideRange:"▴ Ocultar rango rival",viewRange:"🔎 Abrir el explorador de rangos interactivo",chartTitleRange:"rango estimado ahora mismo",legendRange:"manos que aún puede tener",rangeFringe:"Marginal",rangePossible:"Posible",rangeLikely:"Probable",rangeVeryLikely:"Muy probable",
+showRange:"📊 Mostrar rango rival",hideRange:"▴ Ocultar rango rival",viewRange:"🔎 Abrir el explorador de rangos interactivo",chartTitleRange:"rango estimado ahora mismo",chartTitleSolverRange:"rango del solver GTO en este nodo",legendRange:"manos que aún puede tener",rangeFringe:"Marginal",rangePossible:"Posible",rangeLikely:"Probable",rangeVeryLikely:"Muy probable",
 rangeExplore:"Explorar rango",rangeFilter:"Mostrar",rangeFilterAll:"Todas las manos",rangeFilterMade:"Manos hechas",rangeFilterDraws:"Proyectos",rangeFilterNut:"Proyectos máximos",rangeFilterNonNut:"Proyectos no máximos",rangeFilterBackdoor:"Backdoors",rangeFilterAir:"Aire / faroles",rangePick:"Selecciona una clase de manos en la cuadrícula para entender por qué sigue siendo posible.",rangeCellShare:(h,p,a,c)=>`${h} representa aproximadamente el ${p}% de este rango rival. Quedan ponderados ${a} combo${a!==1?'s':''} exacto${a!==1?'s':''} de ${c} combinaciones de palos no bloqueadas.`,rangeCellDensity:n=>`Cada combo disponible de ${n} se pondera frente a un combo legal medio.`,rangeCellMix:"Qué forman actualmente estos combos",rangeUnavailable:"Esta clase de manos ya no tiene combinaciones ponderadas tras los bloqueadores y la línea de acción.",revExploreRange:"Explorar rango",
-rangeDensity:"Probabilidad por combo",rangeClassProb:"Probabilidad de la clase",rangeEffective:"combos efectivos",rangeLine:"Línea de acciones",rangeTopCard:"Manos con la carta más alta",rangeTopHands:"Candidatos principales",rangeOpen:"Open",rangeOfRange:"del rango",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilidad media de un combo",
+rangeDensity:"Probabilidad por combo",rangeClassProb:"Probabilidad de la clase",rangeEffective:"combos efectivos",rangeLine:"Línea de acciones",rangeSource:"Fuente del rango",rangeSolverNode:"Pesos de alcance del nodo actual extraídos del equilibrio CFR convergido de este árbol configurado",rangeSolverStreet:"Alcance de la raíz de la calle suministrado a este árbol CFR configurado; aún no hubo acción en esta calle",rangeTopCard:"Manos con la carta más alta",rangeTopHands:"Candidatos principales",rangeOpen:"Open",rangeOfRange:"del rango",rangeCombos:"combos disponibles",rangeAvgCombo:"la probabilidad media de un combo",
 rangeComposition:"Distribución exacta",rangeFullHousePlus:"Full o mejor",rangeMadeFlushes:"Colores hechos",rangeStraights:"Escaleras",rangeTrips:"Tríos",rangeTwoPair:"Doble pareja",rangeOnePair:"Una pareja",rangeDrawOnly:"Solo proyecto",rangeAir:"Aire / posibles faroles",rangeBoardOnly:"Juega la mesa",
 rangeDrawBreakdown:"Textura exacta de proyectos",rangeComboDraw:"Proyectos combinados",rangeNutFlushDraw:"Proyectos de color máximo",rangeNonNutFlushDraw:"Proyectos de color no máximo",rangeStraightDraw:"Proyectos de escalera",rangePairPlusDraw:"Pareja + proyecto",rangeBackdoorDraw:"Solo proyectos backdoor",
 rangeWeightRaise:(d,x,h)=>d==='up'?`${h} gana peso (${x}× la media): la última acción agresiva encaja mejor con su valor o potencial de semifarol.`:d==='down'?`${h} pierde peso (${x}× la media): la acción agresiva encaja menos con esta clase que con manos fuertes y proyectos creíbles.`:`${h} queda cerca de su peso previo (${x}× la media) tras la última acción agresiva.`,
 rangeWeightCall:(d,x,h)=>d==='up'?`${h} gana peso (${x}× la media): pagar encaja con su valor al showdown o la realización de su proyecto.`:d==='down'?`${h} pierde peso (${x}× la media): esta clase continúa menos que las igualadas fuertes y los proyectos rivales.`:`${h} queda cerca de su peso previo (${x}× la media) tras pagar.`,
 rangeWeightCheck:(d,x,h)=>d==='up'?`${h} gana peso (${x}× la media): pasar encaja con su fuerza media o perfil de abandono.`:d==='down'?`${h} pierde peso (${x}× la media): pasar hace menos probables las versiones fuertes de esta clase.`:`${h} queda cerca de su peso previo (${x}× la media) tras pasar.`,
 rangeWeightPrior:(d,x,h)=>`${h} pesa ${x}× un combo legal medio según posición, perfil y rango previo.`,
-rangeBlockerImpact:n=>`Las cartas conocidas eliminan ${n} combo${n!==1?'s':''} exacto${n!==1?'s':''}.`,rangeActionRemoved:n=>`La línea de acción modelada reduce ${n} combo${n!==1?'s':''} no bloqueado${n!==1?'s':''} adicional${n!==1?'es':''} a peso cero.`,
+rangeWeightSolver:(x,h)=>`${h} tiene ${x}× el alcance de un combo legal medio en el equilibrio del solver.`,
+rangeBlockerImpact:n=>`Las cartas conocidas eliminan ${n} combo${n!==1?'s':''} exacto${n!==1?'s':''}.`,rangeActionRemoved:n=>`La línea de acción reduce ${n} combo${n!==1?'s':''} no bloqueado${n!==1?'s':''} adicional${n!==1?'es':''} a peso cero.`,
 rangeIso:"Subida de aislamiento",rangeSqueeze:"Squeeze",rangeLimp:"Limp",rangeOption:"Check gratis",rangeEntering:s=>`Rango al entrar en ${s} — el rival aún no ha actuado`,
 legendOpen:"subir de primeras",legendShove:"ir all-in",legendFold:"retirarse",legendYou:"tu mano",legend3bet:"resubir (3-bet)",legendFourBet:"4-bet",legendCall:"igualar",
 benchConfirm:"Simular 25 torneos completos de 9 jugadores donde un bot sigue SOLO los consejos del coach, para medir lo bueno que es de verdad. Tarda uno o dos minutos. ¿Lanzar?",
@@ -1179,8 +1182,9 @@ function aiCoachReviewText(history){
     `Hands included: ${hands.length} (oldest to newest)`,
     'All numeric bet, pot and stack amounts below are exact engine chips.',
     'Opponent hole cards are omniscient end-of-hand audit data; the live coach did NOT see hidden cards.',
-    'fallback/display ranges are profile-conditioned coach estimates and are NOT solver inputs.',
-    'solver.rangeSource/rangeNodes identify the independent baseline ranges actually supplied to a solved node.',
+    'Displayed ranges marked sourceKind=solver are equilibrium reach weights from the solved node (or its action-free street root).',
+    'Only ranges marked sourceKind=estimated are profile-conditioned coach estimates; they are never solver inputs.',
+    'solver.rangeSource/rangeNodes identify the independent baseline ranges supplied to the tree; solver.reachSource identifies current-node extraction.',
     ''
   ];
   if(!hands.length){
@@ -1239,7 +1243,7 @@ function aiCoachReviewText(history){
       if(decision.solver){
         const solver=decision.solver;
         lines.push(`  Solver: ${solver.engine||'unknown'} @ ${solver.engineCommit||'unknown'} | converged=${solver.converged} | iterations=${aiReviewNum(solver.iterations)} | exploitability=${aiReviewNum(solver.exploitability)} chips | compact tree=${!!solver.compactTree}`);
-        lines.push(`  Solver range source: ${solver.rangeSource||'unknown'} | preflop line=${solver.rangeLine||'unknown'} | exact frequencies=${solver.rangeExactFrequencies??'unknown'} | selection=${solver.selectionRule||'unknown'}`);
+        lines.push(`  Solver range source: ${solver.rangeSource||'unknown'} | node reach=${solver.reachSource||'unknown'} | preflop line=${solver.rangeLine||'unknown'} | exact frequencies=${solver.rangeExactFrequencies??'unknown'} | selection=${solver.selectionRule||'unknown'}`);
         lines.push(`  Solver baseline range nodes: ${aiReviewJson(solver.rangeNodes)}`);
         lines.push(`  Solver tree abstraction: ${aiReviewJson(solver.abstraction)}`);
       }
@@ -1254,9 +1258,11 @@ function aiCoachReviewText(history){
       }
       const ranges=Array.isArray(decision.fallbackRangeSummaries)?decision.fallbackRangeSummaries:[];
       if(ranges.length){
-        lines.push('  Fallback/display ranges (profile-conditioned; NOT solver inputs):');
+        lines.push('  Displayed opponent range matrices:');
         ranges.forEach(range=>lines.push(
-          `    - ${range.pos||'unknown'} cap=${aiReviewNum(range.cap)} floor=${aiReviewNum(range.floor)}`+
+          `    - ${range.pos||'unknown'} sourceKind=${range.sourceKind||'estimated'} nodeReach=${!!range.nodeReach}`+
+          ` reachSource=${range.reachSource||'n/a'} rootSource=${range.rangeSource||'n/a'}`+
+          ` cap=${aiReviewNum(range.cap)} floor=${aiReviewNum(range.floor)}`+
           ` sample=${range.sample||0} confidence=${range.sampleConfidence||'unknown'}`+
           ` | top hands: ${(range.topHands||[]).join(', ')||'n/a'}`+
           ` | action history: ${aiReviewJson(range.actionHistory||[])}`
@@ -2709,7 +2715,7 @@ function updateCoach(p){
   const rangePanel=rangeCharts.length?`<button class="chart-link range-toggle" id="rangeToggleBtn" aria-expanded="${coachRangeVisible}">${T(coachRangeVisible?'hideRange':'showRange')}</button>`+
     `<div id="coachRangeDisclosure" class="${coachRangeVisible?'':'hidden'}"><div class="coach-range-inline">`+
     (rangeCharts.length>1?`<div class="coach-range-tabs">${rangeCharts.map((x,i)=>`<button type="button" data-range-index="${i}" class="${i===0?'on':''}">${x.pos}</button>`).join('')}</div>`:'')+
-    `<b id="coachRangeTitle">${rangeCharts[0].pos} — ${T('chartTitleRange')}</b><div id="coachRangeMeta">${rangeMatrixMetaHtml(rangeCharts[0])}</div><div id="coachRangeMatrix">${rangeMatrixCells(rangeCharts[0],R.code,true)}</div>${rangeMatrixLegend()}</div>`+
+    `<b id="coachRangeTitle">${rangeCharts[0].pos} — ${rangeMatrixTitle(rangeCharts[0])}</b><div id="coachRangeMeta">${rangeMatrixMetaHtml(rangeCharts[0])}</div><div id="coachRangeMatrix">${rangeMatrixCells(rangeCharts[0],R.code,true)}</div>${rangeMatrixLegend()}</div>`+
     `<button class="chart-link" id="chartViewBtn">${T('viewRange')}</button></div>`:'';
   const allReasons=[...why,...extra].map(s=>(s||'').trim()).filter(Boolean);
   const keyReason=allReasons.shift()||'';
@@ -2789,7 +2795,7 @@ function updateCoach(p){
       activeChart=info;
       $('coachBody').querySelectorAll('[data-range-index]').forEach(b=>b.classList.toggle('on',b===btn));
       const title=$('coachRangeTitle'),meta=$('coachRangeMeta'),matrix=$('coachRangeMatrix');
-      if(title)title.textContent=`${info.pos} — ${T('chartTitleRange')}`;
+      if(title)title.textContent=`${info.pos} — ${rangeMatrixTitle(info)}`;
       if(meta)meta.innerHTML=rangeMatrixMetaHtml(info);
       if(matrix)matrix.innerHTML=rangeMatrixCells(info,R.code,true);
     });
@@ -2799,9 +2805,11 @@ function updateCoach(p){
     if(cb) cb.onclick=()=>showChartMatrix(activeChart,R.code);
   }
   const fallbackRangeSummaries=rangeCharts.slice(0,3).map(info=>({
-    pos:info.pos||'',cap:info.cap,floor:info.floor,sample:info.sample||0,
+    pos:info.pos||'',sourceKind:info.sourceKind||'estimated',nodeReach:info.nodeReach===true,
+    reachSource:info.reachSource||null,rangeSource:info.rangeSource||null,
+    cap:info.cap,floor:info.floor,sample:info.sample||0,
     sampleConfidence:info.sampleConfidence||'',
-    actionHistory:(info.model?.history||[]).map(h=>({...h})),
+    actionHistory:(info.actionHistory||info.model?.history||[]).map(h=>({...h})),
     topHands:typeof rangeMostLikelyCodes==='function'?rangeMostLikelyCodes(info,12):[]
   }));
   const solved=R.solver;
@@ -2809,7 +2817,7 @@ function updateCoach(p){
     engine:solved.engine,engineCommit:solved.engineCommit,exploitability:solved.exploitability,
     targetExploitability:solved.targetExploitability,converged:solved.converged,
     iterations:solved.iterations,compactTree:solved.compactTree,rangeSource:solved.rangeSource,rangeLine:solved.rangeLine,
-    rangeExactFrequencies:solved.rangeExactFrequencies,rangeNodes:solved.rangeNodes,
+    rangeExactFrequencies:solved.rangeExactFrequencies,rangeNodes:solved.rangeNodes,reachSource:solved.reachSource,
     selectionRule:solved.selectionRule,abstraction:solved.abstraction
   }:null;
   coachRecNow={rec,stage:state.stage,evs,coachT:R.coachT,eq,eqAdj:R.eqAdj??eq,odds,needEq:R.needEq,callAmt,pot,

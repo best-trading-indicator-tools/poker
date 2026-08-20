@@ -11,11 +11,12 @@ const GTO_ENGINE_META = Object.freeze({
   mode: 'heads-up postflop chip-EV',
 });
 
-const GTO_PROVIDER_VERSION = 4;
-const GTO_CACHE_KEY = 'sg_solver_cache_v4';
+const GTO_PROVIDER_VERSION = 5;
+const GTO_CACHE_KEY = 'sg_solver_cache_v5';
 const GTO_CACHE_LIMIT = 48;
+const GTO_CACHE_DISK_CHAR_LIMIT = 800000;
 const GTO_MEMORY_LIMIT = 512 * 1024 * 1024;
-const GTO_ASSET_VERSION = 93;
+const GTO_ASSET_VERSION = 95;
 const GTO_WORKER_INIT_TIMEOUT = 15000;
 const GTO_HAS_BROWSER = typeof window !== 'undefined' && typeof document !== 'undefined';
 
@@ -24,12 +25,16 @@ let gtoProxy = null;
 let gtoHandler = null;
 let gtoHandlerPromise = null;
 let gtoComlinkPromise = null;
+let gtoDirectModulePromise = null;
+let gtoHandlerTransport = null;
+let gtoPreferDirect = false;
 let gtoActive = null;
 let gtoPending = null;
 let gtoGeneration = 0;
 let gtoCacheLoaded = false;
 let gtoPanelResult = null;
 let gtoNodeQueue = Promise.resolve();
+const gtoRequestJobs = new Map();
 const gtoMemoryCache = new Map();
 const gtoRuntime = {
   phase: 'idle',
@@ -46,6 +51,7 @@ function solverText(key) {
       title: 'Postflop equilibrium solver',
       ready: 'Solved with b-inary postflop-solver.',
       pending: 'Solving this node in the browser…',
+      retrying: 'The exact solve was interrupted. Restarting it automatically…',
       loading: 'Loading the solver…',
       building: 'Building the game tree…',
       memory: 'Allocating solver memory…',
@@ -75,6 +81,7 @@ function solverText(key) {
       title: 'Solveur d’équilibre post-flop',
       ready: 'Résolu avec b-inary postflop-solver.',
       pending: 'Résolution de ce nœud dans le navigateur…',
+      retrying: 'La résolution exacte a été interrompue. Redémarrage automatique…',
       loading: 'Chargement du solveur…',
       building: 'Construction de l’arbre de jeu…',
       memory: 'Allocation de la mémoire…',
@@ -104,6 +111,7 @@ function solverText(key) {
       title: 'Solver de equilibrio postflop',
       ready: 'Resuelto con b-inary postflop-solver.',
       pending: 'Resolviendo este nodo en el navegador…',
+      retrying: 'La resolución exacta se interrumpió. Reiniciándola automáticamente…',
       loading: 'Cargando el solver…',
       building: 'Construyendo el árbol…',
       memory: 'Reservando memoria del solver…',
@@ -149,8 +157,13 @@ function solverLoadCache() {
   gtoCacheLoaded = true;
   if (!GTO_HAS_BROWSER) return;
   try {
+    /* These are rebuildable solver caches. Older schemas do not contain the
+       current-node reach matrices and must never be mistaken for v5 output. */
+    localStorage.removeItem('sg_solver_cache_v3');
+    localStorage.removeItem('sg_solver_cache_v4');
     const parsed = JSON.parse(localStorage.getItem(GTO_CACHE_KEY) || '[]');
-    parsed.forEach(entry => {
+    const entries = Array.isArray(parsed) ? parsed.slice(-GTO_CACHE_LIMIT) : [];
+    entries.forEach(entry => {
       if (entry && entry.key && entry.value) gtoMemoryCache.set(entry.key, entry.value);
     });
   } catch (_) { /* an unavailable cache must never disable coaching */ }
@@ -164,11 +177,20 @@ function solverSaveCache(key, value) {
     gtoMemoryCache.delete(gtoMemoryCache.keys().next().value);
   }
   if (!GTO_HAS_BROWSER) return;
-  try {
-    localStorage.setItem(GTO_CACHE_KEY, JSON.stringify(
-      [...gtoMemoryCache.entries()].map(([cacheKey, cacheValue]) => ({ key: cacheKey, value: cacheValue })),
-    ));
-  } catch (_) { /* memory cache remains usable */ }
+  let entries = [...gtoMemoryCache.entries()].map(([cacheKey, cacheValue]) => ({ key: cacheKey, value: cacheValue }));
+  /* Node reach is persisted as compact binary, but keep a firm disk ceiling so
+     this rebuildable cache cannot crowd out hand-resume data. Prefer newest LRU
+     entries and retain the full in-memory cache even if storage is constrained. */
+  while (entries.length > 1 && JSON.stringify(entries).length > GTO_CACHE_DISK_CHAR_LIMIT) entries.shift();
+  while (entries.length) {
+    try {
+      localStorage.setItem(GTO_CACHE_KEY, JSON.stringify(entries));
+      break;
+    } catch (_) {
+      if (entries.length === 1) break;
+      entries.splice(0, Math.max(1, Math.ceil(entries.length / 4)));
+    }
+  }
 }
 
 function solverReadCache(key) {
@@ -190,6 +212,113 @@ function solverPairIndex(cardA, cardB) {
   let c1 = Math.min(cardA, cardB);
   let c2 = Math.max(cardA, cardB);
   return c1 * (101 - c1) / 2 + c2 - 1;
+}
+
+const SOLVER_REACH_COMBOS = 1326;
+const SOLVER_BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+function solverBytesToBase64(bytes) {
+  if (typeof btoa === 'function') {
+    let binary = '';
+    for (let offset = 0; offset < bytes.length; offset += 0x4000)
+      binary += String.fromCharCode(...bytes.subarray(offset, Math.min(offset + 0x4000, bytes.length)));
+    return btoa(binary);
+  }
+  let encoded = '';
+  for (let index = 0; index < bytes.length; index += 3) {
+    const first = bytes[index];
+    const hasSecond = index + 1 < bytes.length;
+    const hasThird = index + 2 < bytes.length;
+    const second = hasSecond ? bytes[index + 1] : 0;
+    const third = hasThird ? bytes[index + 2] : 0;
+    encoded += SOLVER_BASE64_ALPHABET[first >>> 2];
+    encoded += SOLVER_BASE64_ALPHABET[((first & 3) << 4) | (second >>> 4)];
+    encoded += hasSecond ? SOLVER_BASE64_ALPHABET[((second & 15) << 2) | (third >>> 6)] : '=';
+    encoded += hasThird ? SOLVER_BASE64_ALPHABET[third & 63] : '=';
+  }
+  return encoded;
+}
+
+function solverBase64ToBytes(encoded) {
+  if (typeof encoded !== 'string' || encoded.length % 4 !== 0 ||
+      !/^[A-Za-z0-9+/]*={0,2}$/.test(encoded) || /=[A-Za-z0-9+/]/.test(encoded)) return null;
+  try {
+    if (typeof atob === 'function') {
+      const binary = atob(encoded);
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+      return bytes;
+    }
+  } catch (_) { return null; }
+  const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
+  const bytes = new Uint8Array(encoded.length / 4 * 3 - padding);
+  let cursor = 0;
+  for (let index = 0; index < encoded.length; index += 4) {
+    const first = SOLVER_BASE64_ALPHABET.indexOf(encoded[index]);
+    const second = SOLVER_BASE64_ALPHABET.indexOf(encoded[index + 1]);
+    const third = encoded[index + 2] === '=' ? 0 : SOLVER_BASE64_ALPHABET.indexOf(encoded[index + 2]);
+    const fourth = encoded[index + 3] === '=' ? 0 : SOLVER_BASE64_ALPHABET.indexOf(encoded[index + 3]);
+    if (first < 0 || second < 0 || third < 0 || fourth < 0) return null;
+    const value = (first << 18) | (second << 12) | (third << 6) | fourth;
+    if (cursor < bytes.length) bytes[cursor++] = value >>> 16;
+    if (cursor < bytes.length) bytes[cursor++] = value >>> 8 & 255;
+    if (cursor < bytes.length) bytes[cursor++] = value & 255;
+  }
+  return bytes;
+}
+
+/* Reach arrays are duplicated across cached hero-card queries. Preserve every
+   Float32 bit while choosing a sparse representation when it is actually
+   smaller. The explicit little-endian format is stable across runtimes. */
+function solverPackReachRange(raw) {
+  if (!raw || Number(raw.length) !== SOLVER_REACH_COMBOS) return null;
+  let positive = 0;
+  for (let index = 0; index < SOLVER_REACH_COMBOS; index++) {
+    const value = Number(raw[index]);
+    if (!Number.isFinite(value) || value < 0) return null;
+    if (value > 0) positive++;
+  }
+  const sparse = positive * 6 < SOLVER_REACH_COMBOS * 4;
+  const bytes = new Uint8Array(sparse ? positive * 6 : SOLVER_REACH_COMBOS * 4);
+  const view = new DataView(bytes.buffer);
+  let cursor = 0;
+  for (let index = 0; index < SOLVER_REACH_COMBOS; index++) {
+    const value = Number(raw[index]);
+    if (sparse && !(value > 0)) continue;
+    if (sparse) {
+      view.setUint16(cursor, index, true);
+      view.setFloat32(cursor + 2, value, true);
+      cursor += 6;
+    } else {
+      view.setFloat32(index * 4, value, true);
+    }
+  }
+  return { v: 1, f: sparse ? 's' : 'd', b: solverBytesToBase64(bytes) };
+}
+
+function solverUnpackReachRange(packed) {
+  if (!packed || packed.v !== 1 || !['s', 'd'].includes(packed.f)) return null;
+  const bytes = solverBase64ToBytes(packed.b);
+  if (!bytes || (packed.f === 'd' ? bytes.length !== SOLVER_REACH_COMBOS * 4 : bytes.length % 6 !== 0)) return null;
+  const raw = new Float32Array(SOLVER_REACH_COMBOS);
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (packed.f === 'd') {
+    for (let index = 0; index < SOLVER_REACH_COMBOS; index++) {
+      const value = view.getFloat32(index * 4, true);
+      if (!Number.isFinite(value) || value < 0) return null;
+      raw[index] = value;
+    }
+    return raw;
+  }
+  let previous = -1;
+  for (let cursor = 0; cursor < bytes.length; cursor += 6) {
+    const index = view.getUint16(cursor, true);
+    const value = view.getFloat32(cursor + 2, true);
+    if (index <= previous || index >= SOLVER_REACH_COMBOS || !Number.isFinite(value) || !(value > 0)) return null;
+    raw[index] = value;
+    previous = index;
+  }
+  return raw;
 }
 
 function solverRangeSignature(raw) {
@@ -279,6 +408,20 @@ async function solverCarryReach(previousStreet, nextBoard) {
   return job;
 }
 
+function solverCompletedRangeHistory(previousStreet, playerSeats) {
+  if (typeof state === 'undefined') return [];
+  if (state.stage === 'flop') {
+    const seats = new Set(playerSeats || []);
+    const actions = state.gtoPreflop && Array.isArray(state.gtoPreflop.actions) ? state.gtoPreflop.actions : [];
+    return actions.filter(action => action && action.action !== 'fold' && seats.has(action.seat)).map(action => ({
+      ...action, street: 'preflop', targetBB: Number(action.targetBB || 0), callBB: Number(action.callBB || 0),
+      raiseOrdinal: action.action === 'raise' ? Number(action.raisesBefore || 0) + 1 : 0,
+    }));
+  }
+  if (!previousStreet) return [];
+  return [...(previousStreet.actionHistory || []), ...(previousStreet.actions || [])].map(action => ({ ...action }));
+}
+
 async function solverBeginStreet() {
   if (typeof state === 'undefined') return;
   if (state.stage === 'preflop' || state.stage === 'showdown') {
@@ -309,11 +452,18 @@ async function solverBeginStreet() {
     rangeLine: supported ? (baseline.line || null) : null,
     rangeNodes: supported ? (baseline.nodes || []) : [],
     rangeExactFrequencies: supported && baseline.exactFrequencies === true,
+    actionHistory: solverCompletedRangeHistory(previousStreet, ordered.map(player => player.i)),
     actions: [],
     supported,
     reason: supported ? null : (String(baselineReason).startsWith('preflop-') ? 'ranges' : baselineReason),
     rangeReason: supported ? null : baseline.reason || null,
   };
+  /* Finish the range-resolved base tree before action resumes. Besides ensuring
+     that the first recommendation is solved, this keeps an authoritative tree
+     alive so the exact reach can always be carried to the next runout. */
+  const decisionPlayer = ordered.find(player => !player.allIn);
+  if (decisionPlayer && solverSupport(decisionPlayer, null).ok)
+    await solverEnsureBaseReliable(state.solverStreet);
 }
 
 function solverObserveAction(player, action, rangeContext) {
@@ -332,6 +482,7 @@ function solverObserveAction(player, action, rangeContext) {
       : action;
   street.actions.push({
     seat: player.i,
+    street: state.stage,
     action: canonical,
     target: Math.max(0, Math.round(player.bet || 0)),
     invested: Math.max(0, Math.round((rangeContext && rangeContext.investment) || 0)),
@@ -353,7 +504,10 @@ function solverTournamentIcmActive(result) {
 }
 
 function solverRuntimeUnavailableReason(environment = {}) {
-  if (!environment.browser || !environment.worker || !environment.webAssembly) return 'browser';
+  /* A Worker is preferred, but it is not a hard requirement. Some embedded
+     browser hosts omit or block Worker while still providing WebAssembly. In
+     that case the same pinned single-thread engine runs on the main thread. */
+  if (!environment.browser || !environment.webAssembly) return 'browser';
   if (environment.protocol === 'file:') return 'protocol';
   return null;
 }
@@ -453,6 +607,15 @@ function solverRequestSignature(street, player) {
   return `${street.handId}|${street.stage}|${board}|${actions}|${player.i}|${cards}`;
 }
 
+function solverTerminalNodeFailureReason(error) {
+  const message = String(error && error.message || error || '');
+  if (/^(unmapped-action|solver-player-mismatch|solver-action-state-mismatch|solver-no-legal-action)/.test(message))
+    return 'line';
+  if (/^(solver-hand-not-in-range|solver-empty-strategy|solver-invalid-strategy|solver-empty-reach)/.test(message))
+    return 'ranges';
+  return null;
+}
+
 function solverSetRuntime(patch) {
   Object.assign(gtoRuntime, patch);
   if (!GTO_HAS_BROWSER) return;
@@ -463,10 +626,15 @@ function solverSetRuntime(patch) {
 
 function solverTerminate() {
   if (gtoWorker) gtoWorker.terminate();
+  if (gtoHandlerTransport === 'direct' && gtoHandler && gtoHandler.game &&
+      typeof gtoHandler.game.free === 'function') {
+    try { gtoHandler.game.free(); } catch (_) { /* the WASM instance may already be gone */ }
+  }
   gtoWorker = null;
   gtoProxy = null;
   gtoHandler = null;
   gtoHandlerPromise = null;
+  gtoHandlerTransport = null;
   gtoActive = null;
 }
 
@@ -505,6 +673,90 @@ async function solverEnsureComlink() {
   return gtoComlinkPromise;
 }
 
+/* The upstream browser package exposes its single-thread wasm-bindgen module
+   through a small webpack chunk. Capture that module factory so environments
+   without a usable Worker can still run the exact same pinned engine. */
+async function solverLoadDirectModule(retry = false) {
+  if (gtoDirectModulePromise && !retry) return gtoDirectModulePromise;
+  const load = (async () => {
+    const chunkName = 'webpackChunkwasm_postflop';
+    const previousChunk = globalThis[chunkName];
+    const captured = [];
+    globalThis[chunkName] = { push: payload => { captured.push(payload); return captured.length; } };
+    try {
+      const chunkUrl = new URL('vendor/wasm-postflop/7a023623e45ca364f00b.js', document.baseURI);
+      chunkUrl.searchParams.set('v', String(GTO_ASSET_VERSION));
+      if (retry) chunkUrl.searchParams.set('retry', String(Date.now()));
+      await solverLoadScript(chunkUrl);
+    } finally {
+      if (previousChunk === undefined) delete globalThis[chunkName];
+      else globalThis[chunkName] = previousChunk;
+    }
+    const modules = captured.find(payload => payload && payload[1] && payload[1][1825])?.[1];
+    const factory = modules && modules[1825];
+    if (typeof factory !== 'function') throw new Error('solver-direct-module-missing');
+    const exports = {};
+    const wasmUrl = new URL('vendor/wasm-postflop/solver-st.wasm', document.baseURI);
+    wasmUrl.searchParams.set('v', String(GTO_ASSET_VERSION));
+    const require = moduleId => {
+      if (Number(moduleId) === 4875) return String(wasmUrl);
+      throw new Error(`solver-direct-require:${moduleId}`);
+    };
+    require.b = document.baseURI;
+    require.r = target => {
+      Object.defineProperty(target, '__esModule', { value: true });
+      if (typeof Symbol !== 'undefined' && Symbol.toStringTag)
+        Object.defineProperty(target, Symbol.toStringTag, { value: 'Module' });
+    };
+    require.d = (target, definitions) => {
+      for (const key of Object.keys(definitions))
+        if (!Object.prototype.hasOwnProperty.call(target, key))
+          Object.defineProperty(target, key, { enumerable: true, get: definitions[key] });
+    };
+    factory({}, exports, require);
+    if (typeof exports.default !== 'function' || !exports.GameManager)
+      throw new Error('solver-direct-exports-missing');
+    await exports.default(String(wasmUrl));
+    return exports;
+  })();
+  const guarded = load.catch(error => {
+    if (gtoDirectModulePromise === guarded) gtoDirectModulePromise = null;
+    throw error;
+  });
+  gtoDirectModulePromise = guarded;
+  return gtoDirectModulePromise;
+}
+
+function solverDirectHandler(mod) {
+  const game = mod.GameManager.new();
+  return {
+    game,
+    init(...args) { return game.init(...args); },
+    privateCards(player) { return game.private_cards(player); },
+    memoryUsage(enableCompression) { return Number(game.memory_usage(enableCompression)); },
+    allocateMemory(enableCompression) { game.allocate_memory(enableCompression); },
+    iterate(iteration) { game.solve_step(iteration); },
+    exploitability() { return game.exploitability(); },
+    finalize() { return game.finalize(); },
+    applyHistory(history) { game.apply_history(history); },
+    totalBetAmount(append) { return game.total_bet_amount(append); },
+    currentPlayer() { return game.current_player(); },
+    numActions() { return game.num_actions(); },
+    actionsAfter(append) { return game.actions_after(append); },
+    possibleCards() { return game.possible_cards(); },
+    getResults() { return game.get_results(); },
+    getChanceReports(append, numActions) { return game.get_chance_reports(append, numActions); },
+  };
+}
+
+async function solverCreateDirectHandler(retry = false) {
+  const mod = await solverLoadDirectModule(retry);
+  const handler = solverDirectHandler(mod);
+  gtoHandler = handler;
+  gtoHandlerTransport = 'direct';
+  return handler;
+}
+
 function solverWithTimeout(promise, timeoutMs, message) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
@@ -516,6 +768,7 @@ function solverWithTimeout(promise, timeoutMs, message) {
 }
 
 async function solverCreateHandlerAttempt(retry = false) {
+  if (gtoPreferDirect || typeof Worker === 'undefined') return solverCreateDirectHandler(retry);
   const comlink = await solverEnsureComlink();
   const workerUrl = new URL('vendor/wasm-postflop/worker.js', document.baseURI);
   workerUrl.searchParams.set('v', String(GTO_ASSET_VERSION));
@@ -535,6 +788,7 @@ async function solverCreateHandlerAttempt(retry = false) {
   );
   if (gtoWorker !== worker) throw new Error('solver-superseded');
   gtoHandler = handler;
+  gtoHandlerTransport = 'worker';
   return handler;
 }
 
@@ -550,8 +804,22 @@ async function solverCreateHandler() {
       gtoWorker = null;
       gtoProxy = null;
       gtoHandler = null;
+      gtoHandlerTransport = null;
       if (firstError && firstError.message === 'solver-superseded') throw firstError;
-      return solverCreateHandlerAttempt(true);
+      try {
+        return await solverCreateHandlerAttempt(true);
+      } catch (secondError) {
+        if (gtoWorker) gtoWorker.terminate();
+        gtoWorker = null;
+        gtoProxy = null;
+        gtoHandler = null;
+        gtoHandlerTransport = null;
+        if (secondError && secondError.message === 'solver-superseded') throw secondError;
+        /* A CSP or embedded host can expose Worker but reject construction.
+           Preserve exact solving by falling back to direct WASM execution. */
+        gtoPreferDirect = true;
+        return solverCreateDirectHandler(true);
+      }
     }
   })();
   try {
@@ -594,38 +862,28 @@ async function solverSolveBase(street) {
       config = solverTreeConfig(street, true);
       initialized = await solverInitTree(street, config);
     }
-    if (initialized.memoryBytes > GTO_MEMORY_LIMIT) {
-      solverTerminate();
-      const error = new Error('memory-limit');
-      error.solverReason = 'memoryFail';
-      throw error;
-    }
     solverSetRuntime({
       phase: 'memory', message: solverText('memory'), memoryBytes: initialized.memoryBytes,
       iterations: 0, exploitability: null, compactTree: compact,
     });
     await initialized.handler.allocateMemory(true);
-    const maxIterations = 1000;
     const target = Math.max(0.01, street.startingPot * 0.003);
     let exploitability = Number(await initialized.handler.exploitability());
     let iterations = 0;
-    for (let iteration = 0; iteration < maxIterations && exploitability > target; iteration++) {
+    while (exploitability > target) {
       if (generation !== gtoGeneration) throw new Error('solver-superseded');
-      await initialized.handler.iterate(iteration);
-      iterations = iteration + 1;
-      if ((iteration + 1) % 10 === 0) {
+      await initialized.handler.iterate(iterations);
+      iterations++;
+      if (iterations % 10 === 0) {
         exploitability = Number(await initialized.handler.exploitability());
+        if (!Number.isFinite(exploitability)) throw new Error('solver-invalid-exploitability');
         solverSetRuntime({
-          phase: 'iterating', message: solverText('iterating'), iterations: iteration + 1, exploitability,
+          phase: 'iterating', message: solverText('iterating'), iterations, exploitability,
         });
         await new Promise(resolve => setTimeout(resolve, 0));
       }
     }
-    if (!Number.isFinite(exploitability) || exploitability > target) {
-      const error = new Error(`solver-not-converged:${exploitability}`);
-      error.solverReason = 'convergence';
-      throw error;
-    }
+    if (!Number.isFinite(exploitability)) throw new Error('solver-invalid-exploitability');
     await initialized.handler.finalize();
     const baseKey = solverBaseKey(street, config);
     gtoActive = {
@@ -654,6 +912,37 @@ async function solverEnsureBase(street) {
   return promise;
 }
 
+function solverStreetIsCurrent(street) {
+  return typeof state === 'undefined' || state.solverStreet === street;
+}
+
+async function solverRetryPause(attempt) {
+  const delay = Math.min(2000, 150 * Math.pow(2, Math.min(attempt, 4)));
+  await new Promise(resolve => setTimeout(resolve, delay));
+}
+
+/* Supported exact nodes do not permanently degrade after a transient worker,
+   asset, allocation, or WASM failure. They rebuild from a clean engine and
+   continue until solved or until the game moves to a different street. */
+async function solverEnsureBaseReliable(street, isCurrent = () => solverStreetIsCurrent(street)) {
+  let attempt = 0;
+  while (isCurrent()) {
+    try {
+      return await solverEnsureBase(street);
+    } catch (error) {
+      if (error && error.message === 'solver-superseded' && !isCurrent()) return null;
+      attempt++;
+      solverTerminate();
+      solverSetRuntime({
+        phase: 'retrying', message: solverText('retrying'),
+        error: String(error && error.message || error), retryAttempt: attempt,
+      });
+      await solverRetryPause(attempt);
+    }
+  }
+  return null;
+}
+
 function solverParseActions(text) {
   if (!text) return [];
   return text.split('/').filter(Boolean).map((token, index) => {
@@ -666,7 +955,11 @@ function solverMatchAction(actions, observed) {
   const exactType = actions.filter(action => action.type === observed.action);
   if (!['bet', 'raise', 'allin'].includes(observed.action)) return exactType[0] || null;
   const target = Math.round(Number(observed.target) || 0);
-  return exactType.find(action => Math.round(action.amount) === target) || null;
+  const exact = exactType.find(action => Math.round(action.amount) === target);
+  if (exact) return exact;
+  /* The upstream tree converts percentage sizings back to integer chips. Treat
+     its possible one-chip rounding difference as the same configured action. */
+  return exactType.find(action => Math.abs(Math.round(action.amount) - target) <= 1) || null;
 }
 
 async function solverReplayHistory(handler, actions) {
@@ -741,6 +1034,13 @@ async function solverExtractNode(active, player, street) {
   const numActions = Number(await active.handler.numActions());
   const resultBuffer = await active.handler.getResults();
   const parsed = solverParseResults(resultBuffer, cardsOop, cardsIp, currentIndex, numActions);
+  const reachRanges = [
+    solverReachRange(cardsOop, parsed.weights[0]),
+    solverReachRange(cardsIp, parsed.weights[1]),
+  ];
+  const reachRangesPacked = reachRanges.map(solverPackReachRange);
+  if (!reachRanges[0] || !reachRanges[1] || !reachRangesPacked[0] || !reachRangesPacked[1])
+    throw new Error('solver-empty-reach');
   const handCards = player.hole.map(solverCardId).sort((a, b) => a - b);
   const encoded = handCards[0] | (handCards[1] << 8);
   const privateCards = currentIndex === 0 ? cardsOop : cardsIp;
@@ -757,6 +1057,8 @@ async function solverExtractNode(active, player, street) {
       legal: solverActionLegal(mapped, player),
     };
   });
+  if (allBranches.some(branch => !Number.isFinite(branch.frequency) || !Number.isFinite(branch.ev)))
+    throw new Error('solver-invalid-strategy');
   if (allBranches.some(branch => !branch.legal && branch.frequency > 0.000001)) {
     throw new Error('solver-action-state-mismatch');
   }
@@ -770,9 +1072,11 @@ async function solverExtractNode(active, player, street) {
     (branch.frequency === best.frequency && Number.isFinite(branch.ev) && branch.ev > best.ev) ? branch : best
   ), branches[0]);
   return {
+    providerVersion: GTO_PROVIDER_VERSION,
     engine: GTO_ENGINE_META.name,
     engineCommit: GTO_ENGINE_META.engineCommit,
     source: 'solver',
+    decisionSeat: player.i,
     rec: chosen.rec,
     target: Math.round(chosen.target || 0),
     ev: chosen.ev,
@@ -785,6 +1089,10 @@ async function solverExtractNode(active, player, street) {
     rangeLine: street.rangeLine || null,
     rangeExactFrequencies: street.rangeExactFrequencies === true,
     rangeNodes: (street.rangeNodes || []).map(nodes => Array.isArray(nodes) ? nodes.slice() : []),
+    reachSource: 'solver-equilibrium-node',
+    reachSeats: street.playerSeats.slice(),
+    reachRangesPacked,
+    rangeHistory: [...(street.actionHistory || []), ...(street.actions || [])].map(action => ({ ...action })),
     selectionRule: 'highest-frequency',
     abstraction: active.config,
     branches: branches.map(branch => ({
@@ -809,10 +1117,101 @@ function solverCachedResult(player) {
   if (!support.ok) return null;
   for (const compact of [false, true]) {
     const baseKey = solverBaseKey(support.street, solverTreeConfig(support.street, compact));
-    const cached = solverReadCache(solverSpotKey(support.street, player, baseKey));
-    if (cached) return cached;
+    const cacheKey = solverSpotKey(support.street, player, baseKey);
+    const cached = solverReadCache(cacheKey);
+    if (cached && solverCachedResultValid(cached, support.street, player)) return cached;
+    if (cached) gtoMemoryCache.delete(cacheKey);
   }
   return null;
+}
+
+function solverCachedResultValid(result, street, player) {
+  if (!result || result.providerVersion !== GTO_PROVIDER_VERSION || result.source !== 'solver' ||
+      result.engine !== GTO_ENGINE_META.name || result.engineCommit !== GTO_ENGINE_META.engineCommit ||
+      result.converged !== true || result.decisionSeat !== (player && player.i) ||
+      !Number.isFinite(result.ev) || !Number.isFinite(result.exploitability) ||
+      !Number.isFinite(result.targetExploitability) || !Number.isFinite(result.iterations) || result.iterations < 0 ||
+      !['fold', 'check', 'call', 'raise', 'allin'].includes(result.rec) ||
+      !Number.isFinite(result.target) || result.target < 0 || !Array.isArray(result.branches) || !result.branches.length ||
+      !street || !Array.isArray(street.playerSeats) || !Array.isArray(result.reachSeats) ||
+      result.reachSeats.length !== 2 || result.reachSeats[0] !== street.playerSeats[0] ||
+      result.reachSeats[1] !== street.playerSeats[1] || result.reachSeats[0] === result.reachSeats[1]) return false;
+  let frequencyTotal = 0;
+  for (const branch of result.branches) {
+    if (!branch || !['fold', 'check', 'call', 'raise', 'allin'].includes(branch.rec) ||
+        !Number.isFinite(branch.target) || branch.target < 0 || !Number.isFinite(branch.frequency) ||
+        branch.frequency < 0 || branch.frequency > 1 || !Number.isFinite(branch.ev)) return false;
+    frequencyTotal += branch.frequency;
+  }
+  if (Math.abs(frequencyTotal - 1) > 0.000001 ||
+      !result.branches.some(branch => branch.rec === result.rec && Math.round(branch.target || 0) === Math.round(result.target || 0)))
+    return false;
+  return Boolean(solverResultReachRanges(result));
+}
+
+function solverResultReachRanges(result) {
+  if (!result || !Array.isArray(result.reachSeats) || result.reachSeats.length !== 2) return null;
+  let ranges = null;
+  if (Array.isArray(result.reachRangesPacked) && result.reachRangesPacked.length === 2)
+    ranges = result.reachRangesPacked.map(solverUnpackReachRange);
+  /* Plain arrays are accepted for deterministic fixtures and forward-compatible
+     importers, but production cache entries use the compact binary fields. */
+  else if (Array.isArray(result.reachRanges) && result.reachRanges.length === 2)
+    ranges = result.reachRanges.map(raw => raw && Number(raw.length) === SOLVER_REACH_COMBOS ? Float32Array.from(raw) : null);
+  if (!ranges || !ranges[0] || !ranges[1]) return null;
+  for (const raw of ranges) {
+    let positive = false;
+    for (let index = 0; index < raw.length; index++) {
+      const value = Number(raw[index]);
+      if (!Number.isFinite(value) || value < 0) return null;
+      if (value > 0) positive = true;
+    }
+    if (!positive) return null;
+  }
+  return ranges;
+}
+
+/* Authoritative matrix data for a solver-covered decision. At a street root,
+   the supplied equilibrium reach is already the current range. Once an action
+   has occurred, never substitute the Bayesian model while node extraction is
+   pending: the matrix stays hidden until exact current-node reach is cached. */
+function solverRangeChartData(targetPlayer, decisionPlayer, solved = undefined) {
+  const support = solverSupport(decisionPlayer, null);
+  if (!support.ok) return { covered: false, reason: support.reason || 'state' };
+  const street = support.street;
+  const seatIndex = street.playerSeats.indexOf(targetPlayer && targetPlayer.i);
+  if (seatIndex < 0) return { covered: true, pending: true, reason: 'seat' };
+  if (solved === undefined) solved = solverCachedResult(decisionPlayer);
+  let weights = null;
+  let nodeReach = false;
+  if (solved && solved.converged === true) {
+    const ranges = solverResultReachRanges(solved);
+    const solvedIndex = Array.isArray(solved.reachSeats) ? solved.reachSeats.indexOf(targetPlayer.i) : -1;
+    if (ranges && solvedIndex >= 0) {
+      weights = ranges[solvedIndex];
+      nodeReach = true;
+    }
+  }
+  if (!weights) {
+    if ((street.actions || []).length) return { covered: true, pending: true, reason: 'node-reach' };
+    weights = street.rangeRaw[seatIndex];
+  }
+  if (!weights || Number(weights.length) !== SOLVER_REACH_COMBOS)
+    return { covered: true, pending: true, reason: 'range' };
+  const history = nodeReach && Array.isArray(solved.rangeHistory)
+    ? solved.rangeHistory : [...(street.actionHistory || []), ...(street.actions || [])];
+  return {
+    covered: true,
+    pending: false,
+    weights,
+    nodeReach,
+    reachSource: nodeReach ? (solved.reachSource || 'solver-equilibrium-node') : 'solver-street-root',
+    rangeSource: (solved && solved.rangeSource) || street.rangeSource || 'personality-free-baseline',
+    rangeLine: (solved && solved.rangeLine) || street.rangeLine || null,
+    rangeNodes: ((solved && solved.rangeNodes) || street.rangeNodes || []).map(nodes => Array.isArray(nodes) ? nodes.slice() : []),
+    rangeExactFrequencies: ((solved && solved.rangeExactFrequencies) ?? street.rangeExactFrequencies) === true,
+    actionHistory: history.map(action => ({ ...action })),
+  };
 }
 
 function solverMixText(result) {
@@ -829,8 +1228,21 @@ function solverApplyCoachStrategy(player, fallbackResult) {
   result.solverSupport = support.reason || null;
   if (!support.ok) return result;
   const solved = solverCachedResult(player);
-  if (!solved) return result;
-  if (solved.converged !== true) return result;
+  const installSolverRanges = solvedResult => {
+    if (typeof coachSolverRangeCharts !== 'function') return;
+    const charts = coachSolverRangeCharts(player, solvedResult);
+    result.rangeCharts = charts;
+    result.chartInfo = charts[0] || null;
+  };
+  if (!solved) {
+    installSolverRanges(null);
+    return result;
+  }
+  if (solved.converged !== true) {
+    installSolverRanges(null);
+    return result;
+  }
+  installSolverRanges(solved);
   result.heuristicRec = result.rec;
   result.rec = solved.rec.toUpperCase();
   result.coachT = solved.target;
@@ -863,25 +1275,52 @@ async function solverRequestCoachStrategy(player, fallbackResult) {
     playerSeats: support.street.playerSeats.slice(),
     rangeRaw: support.street.rangeRaw.slice(),
     rangeNodes: (support.street.rangeNodes || []).map(nodes => Array.isArray(nodes) ? nodes.slice() : []),
+    actionHistory: (support.street.actionHistory || []).map(action => ({ ...action })),
     actions: support.street.actions.map(action => ({ ...action })),
   };
   const requestSignature = solverRequestSignature(street, player);
-  solverSetRuntime({ phase: 'pending', message: solverText('pending') });
-  try {
-    const active = await solverEnsureBase(street);
-    const result = await solverQueueNode(active, player, street);
-    const key = solverSpotKey(street, player, active.baseKey);
-    solverSaveCache(key, result);
-    solverSetRuntime({ phase: 'ready', message: solverText('ready') });
-    if (typeof state === 'undefined') return true;
-    const currentSignature = solverRequestSignature(state.solverStreet, player);
-    return requestSignature === currentSignature;
-  } catch (error) {
-    if (error && error.message === 'solver-superseded') return false;
-    const lineError = error && /^(unmapped-action|solver-action-state-mismatch|solver-no-legal-action|solver-empty-strategy)/.test(error.message || '');
-    const reason = error && error.solverReason ? error.solverReason : lineError ? 'line' : 'error';
-    solverSetRuntime({ phase: 'error', message: solverText(reason), error: String(error && error.message || error) });
+  const existing = gtoRequestJobs.get(requestSignature);
+  if (existing) return existing;
+  const isCurrent = () => typeof state === 'undefined' ||
+    requestSignature === solverRequestSignature(state.solverStreet, player);
+  const request = (async () => {
+    let nodeAttempt = 0;
+    solverSetRuntime({ phase: 'pending', message: solverText('pending'), retryAttempt: 0, error: '' });
+    while (isCurrent()) {
+      const active = await solverEnsureBaseReliable(street, isCurrent);
+      if (!active || !isCurrent()) return false;
+      try {
+        const result = await solverQueueNode(active, player, street);
+        const key = solverSpotKey(street, player, active.baseKey);
+        solverSaveCache(key, result);
+        solverSetRuntime({ phase: 'ready', message: solverText('ready'), retryAttempt: 0, error: '' });
+        return isCurrent();
+      } catch (error) {
+        if (error && error.message === 'solver-superseded' && !isCurrent()) return false;
+        const terminalReason = solverTerminalNodeFailureReason(error);
+        if (terminalReason) {
+          solverSetRuntime({
+            phase: 'unavailable', message: solverText(terminalReason),
+            error: String(error && error.message || error), retryAttempt: nodeAttempt,
+          });
+          return false;
+        }
+        nodeAttempt++;
+        solverTerminate();
+        solverSetRuntime({
+          phase: 'retrying', message: solverText('retrying'),
+          error: String(error && error.message || error), retryAttempt: nodeAttempt,
+        });
+        await solverRetryPause(nodeAttempt);
+      }
+    }
     return false;
+  })();
+  gtoRequestJobs.set(requestSignature, request);
+  try {
+    return await request;
+  } finally {
+    if (gtoRequestJobs.get(requestSignature) === request) gtoRequestJobs.delete(requestSignature);
   }
 }
 
@@ -915,7 +1354,7 @@ function solverPanelHtml(result) {
   } else if (!support.ok) {
     body = escapeHtml(solverText(support.reason || 'error'));
     className += ' fallback';
-  } else if (gtoRuntime.phase === 'error') {
+  } else if (gtoRuntime.phase === 'unavailable') {
     body = escapeHtml(gtoRuntime.message || solverText('error'));
     className += ' fallback';
   } else {

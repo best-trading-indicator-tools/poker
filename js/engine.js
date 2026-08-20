@@ -311,11 +311,9 @@ function promptNext(){
       if(typeof solverRequestCoachStrategy==='function'&&state.stage!=='preflop'){
         const icmRead=typeof aiIcmPressure==='function'?aiIcmPressure(p):null;
         const solverContext={icmPrem:icmRead?.active?(icmRead.callPremium||0):0};
-        const request=solverRequestCoachStrategy(p,solverContext)
+        solverRequestCoachStrategy(p,solverContext)
           .then(()=>typeof solverSampleCachedDecision==='function'?solverSampleCachedDecision(p,solverContext):null)
-          .catch(()=>null);
-        const budget=fastFwd()?80:900;
-        Promise.race([request,new Promise(resolve=>setTimeout(()=>resolve(null),budget))]).then(useDecision);
+          .catch(()=>null).then(useDecision);
       }else useDecision(null);
     },delay);
   }
@@ -1038,6 +1036,8 @@ function writeResumeSnapshot(snap){
      small localStorage quota. Resume state takes priority over that cache. */
   try{
     localStorage.removeItem('sg_solver_cache_v3');
+    localStorage.removeItem('sg_solver_cache_v4');
+    localStorage.removeItem('sg_solver_cache_v5');
     localStorage.setItem(RESUME_STORAGE_KEY,serialized);
     return true;
   }catch(e){}

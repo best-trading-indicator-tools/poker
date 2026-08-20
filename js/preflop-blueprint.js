@@ -174,6 +174,7 @@ function gtoPreflopObserveAction(player, action, context) {
     action: observed,
     raisesBefore,
     targetBB: Number(contextData.targetBB || 0),
+    callBB: callAmount / Math.max(1, Number(state.bb || 1)),
   };
   tracker.actions.push(record);
   if (!tracker.valid) return;

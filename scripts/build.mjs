@@ -13,6 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 const HTML = path.join(ROOT, 'poker.html');
 const JS_DIR = path.join(ROOT, 'js');
+const ASSET_VERSION = 95;
 
 const BOOT = `"use strict";
 const HAS_DOM = (typeof document !== 'undefined');
@@ -22,7 +23,10 @@ let lang = 'en';
 const TAIL = `
 /* ---------- offline mode (PWA): cache the game so it runs with no internet ---------- */
 if(HAS_DOM && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
-  try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
+  try{
+    navigator.serviceWorker.register('sw.js',{updateViaCache:'none'})
+      .then(registration=>registration.update()).catch(()=>{});
+  }catch(e){}
 }
 
 /* ---------- exports for node testing ---------- */
@@ -82,9 +86,9 @@ function extractFromHtml() {
 }
 
 function findScriptBlock(html) {
-  const marker = '<script src="charts.js"></script>';
-  const open = html.indexOf(marker);
-  if (open < 0) throw new Error('charts.js script tag not found');
+  const match = html.match(/<script src="charts\.js(?:\?v=\d+)?"><\/script>/);
+  const open = match ? match.index : -1;
+  if (open == null || open < 0) throw new Error('charts.js script tag not found');
   const close = html.lastIndexOf('</script>');
   return { before: html.slice(0, open), after: html.slice(close + '</script>'.length) };
 }
@@ -92,15 +96,15 @@ function findScriptBlock(html) {
 function scriptTags() {
   return LOAD_ORDER.map((f) => (
     f === 'solver.js'
-      ? `  <script src="vendor/wasm-postflop/comlink.js"></script>\n  <script src="js/${f}"></script>`
-      : `  <script src="js/${f}"></script>`
+      ? `  <script src="vendor/wasm-postflop/comlink.js?v=${ASSET_VERSION}"></script>\n  <script src="js/${f}?v=${ASSET_VERSION}"></script>`
+      : `  <script src="js/${f}?v=${ASSET_VERSION}"></script>`
   )).join('\n');
 }
 
 function writeMultifileHtml() {
   const { before, after } = findScriptBlock(fs.readFileSync(HTML, 'utf8'));
   const mid =
-    `<script src="charts.js"></script>\n` +
+    `<script src="charts.js?v=${ASSET_VERSION}"></script>\n` +
     scriptTags() +
     `\n<script>\n${TAIL.trim()}\n</script>`;
   fs.writeFileSync(HTML, before + mid + after);
@@ -113,7 +117,7 @@ function bundleSingleFile() {
   let html = fs.readFileSync(HTML, 'utf8');
   const { before, after } = findScriptBlock(html);
   const marker = '<!-- bundled:single-file -->\n';
-  const mid = marker + `<script src="charts.js"></script>\n<script src="vendor/wasm-postflop/comlink.js"></script>\n<script>\n${inline.trim()}\n</script>`;
+  const mid = marker + `<script src="charts.js?v=${ASSET_VERSION}"></script>\n<script src="vendor/wasm-postflop/comlink.js?v=${ASSET_VERSION}"></script>\n<script>\n${inline.trim()}\n</script>`;
   fs.writeFileSync(HTML, before + mid + after);
   console.log('poker.html → single-file bundle');
 }

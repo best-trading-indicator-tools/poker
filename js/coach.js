@@ -2788,16 +2788,13 @@ function coachDecide(p){
   }
   /* Every live opponent gets a matrix. Current aggressor first, then checked/acted players. */
   if(state.stage!=='preflop'){
-    const villains=inHand().filter(q=>q!==p).sort((a,b)=>{
-      const relevance=q=>(q.i===state.lastAggIdx?1000:0)+(q.checkedStreet?100:0)+(q.acted?25:0)+(q.checkStreets||[]).length*10;
-      return relevance(b)-relevance(a);
-    });
-    rangeCharts=villains.map(v=>coachRangeChartInfo(v,p,difficultyApplies,difficulty));
+    const villains=coachRelevantVillains(p);
+    rangeCharts=villains.map(v=>coachRangeChartInfo(v,p,difficultyApplies,difficulty)).filter(Boolean);
     if(rangeCharts.length){
       chartInfo=rangeCharts[0];
       rangeCharts.slice(0,3).forEach((info,i)=>{
         const likely=rangeMostLikelyCodes(info,6);
-        if(likely.length)extra.push(C('rangeLikelyHands',villains[i].name,likely.join(', ')));
+        if(likely.length)extra.push(C('rangeLikelyHands',info.playerName||villains[i]?.name||info.pos,likely.join(', ')));
       });
     }
   }
@@ -2881,7 +2878,26 @@ function coachDecide(p){
 }
 
 /* 13×13 range-matrix viewer: shows the chart the coach just used, hero's hand outlined */
-function coachRangeChartInfo(villain,hero,difficultyApplies,difficulty){
+function coachRelevantVillains(hero){
+  return inHand().filter(q=>q!==hero).sort((a,b)=>{
+    const relevance=q=>(q.i===state.lastAggIdx?1000:0)+(q.checkedStreet?100:0)+(q.acted?25:0)+(q.checkStreets||[]).length*10;
+    return relevance(b)-relevance(a);
+  });
+}
+function coachRangeChartInfo(villain,hero,difficultyApplies,difficulty,solved=undefined){
+  const solverRange=typeof solverRangeChartData==='function'
+    ?solverRangeChartData(villain,hero,solved):null;
+  if(solverRange?.covered){
+    if(solverRange.pending)return null;
+    return {kind:'range',sourceKind:'solver',nodeReach:solverRange.nodeReach,
+      reachSource:solverRange.reachSource,rangeSource:solverRange.rangeSource,
+      rangeLine:solverRange.rangeLine,rangeNodes:solverRange.rangeNodes,
+      rangeExactFrequencies:solverRange.rangeExactFrequencies,
+      rawWeights:solverRange.weights,actionHistory:solverRange.actionHistory,
+      seat:villain.i,playerName:villain.name,
+      pos:`${villain.name}${villain.pos?' ('+villain.pos+')':''}`,list:[],model:null,cap:1,floor:0,
+      board:state.board.slice(),dead:hero.hole.slice(),sample:null,sampleConfidence:null};
+  }
   let cap=clamp(villain.rangeCap||1,0.03,1),floor=clamp(villain.rangeFloor||0,0,0.25);
   if(difficultyApplies){const adjusted=coachDifficultyRange(villain,cap,floor,difficulty);cap=adjusted.cap;floor=adjusted.floor;}
   floor=Math.min(floor,cap*0.5);
@@ -2889,9 +2905,15 @@ function coachRangeChartInfo(villain,hero,difficultyApplies,difficulty){
   const tendency=typeof rangeTendencyRead==='function'?rangeTendencyRead(villain):null;
   const sample=Math.max(0,tendency?.sample??villain.observedActions??0);
   const sampleConfidence=sample>=60?'reliable':sample>=15?'tentative':'early';
-  return {kind:'range',pos:`${villain.name}${villain.pos?' ('+villain.pos+')':''}`,list,
+  return {kind:'range',sourceKind:'estimated',seat:villain.i,playerName:villain.name,
+    pos:`${villain.name}${villain.pos?' ('+villain.pos+')':''}`,list,
     model:villain.rangeModel?Object.assign({},villain.rangeModel):null,cap,floor,
     board:state.board.slice(),dead:hero.hole.slice(),sample,sampleConfidence};
+}
+function coachSolverRangeCharts(hero,solved){
+  return coachRelevantVillains(hero)
+    .map(villain=>coachRangeChartInfo(villain,hero,false,'hard',solved))
+    .filter(info=>info&&info.sourceKind==='solver');
 }
 function rangeComboDrawOrAir(hole,board){
   if(board.length<5){
@@ -3002,8 +3024,12 @@ function rangeMatrixMetrics(info){
     if(dead.has(a.r*4+a.s)||dead.has(b.r*4+b.s))continue;
     const code=holeCode([a,b]);available[code]=(available[code]||0)+1;legal++;
     let w=null;
-    if(info.model&&typeof rangeModelPosteriorWeight==='function')w=rangeModelPosteriorWeight(info.model,[a,b]);
-    if(w===null){
+    if(info.sourceKind==='solver'){
+      const solverIndex=typeof solverPairIndex==='function'&&typeof solverCardId==='function'
+        ?solverPairIndex(solverCardId(a),solverCardId(b)):-1;
+      w=solverIndex>=0?Math.max(0,Number(info.rawWeights?.[solverIndex])||0):0;
+    }else if(info.model&&typeof rangeModelPosteriorWeight==='function')w=rangeModelPosteriorWeight(info.model,[a,b]);
+    if(w===null&&info.sourceKind!=='solver'){
       if(info.model&&typeof rangeModelComboWeight==='function')w=rangeModelComboWeight(info.model,[a,b],info.board||[],info.cap,info.floor);
       else w=(info.list||[]).includes(holeCode([a,b]))?1:0;
     }
@@ -3074,29 +3100,39 @@ function rangeMatrixCells(info,heroCode,compact=false,mode='density',filter='all
 function rangeSnapshot(info){
   if(!info||info.kind!=='range')return null;
   const m=rangeMatrixMetrics(info),plain=x=>JSON.parse(JSON.stringify(x||{}));
-  return {kind:'range',pos:info.pos,cap:info.cap,floor:info.floor,
+  return {kind:'range',pos:info.pos,seat:info.seat,playerName:info.playerName,
+    sourceKind:info.sourceKind||'estimated',nodeReach:info.nodeReach===true,
+    reachSource:info.reachSource||null,rangeSource:info.rangeSource||null,
+    rangeLine:info.rangeLine||null,rangeNodes:plain(info.rangeNodes||[]),
+    rangeExactFrequencies:info.rangeExactFrequencies===true,cap:info.cap,floor:info.floor,
     board:(info.board||[]).map(c=>({r:c.r,s:c.s})),dead:(info.dead||[]).map(c=>({r:c.r,s:c.s})),
-    model:{history:plain(info.model?.history||[])},
+    actionHistory:plain(info.actionHistory||[]),
+    model:info.sourceKind==='solver'?null:{history:plain(info.model?.history||[])},
     snapshotMetrics:{mass:plain(m.mass),available:plain(m.available),active:plain(m.active),
       composition:plain(m.composition),
       classMass:plain(m.classMass),drawFeatures:plain(m.drawFeatures),
       classDrawFeatures:plain(m.classDrawFeatures),effective:m.effective,legal:m.legal}};
 }
+function rangeMatrixTitle(info){
+  return T(info?.sourceKind==='solver'?'chartTitleSolverRange':'chartTitleRange');
+}
 function rangeMatrixLegend(){
   return `<div class="range-heat-legend"><span><i class="rw1"></i>${T('rangeFringe')}</span><span><i class="rw2"></i>${T('rangePossible')}</span><span><i class="rw3"></i>${T('rangeLikely')}</span><span><i class="rw4"></i>${T('rangeVeryLikely')}</span></div>`;
 }
 function rangeActionTrail(info){
-  const history=info.model?.history||[];
+  const history=info.actionHistory?.length?info.actionHistory:(info.model?.history||[]);
   return history.map(h=>{
     const street=h.street==='preflop'?T('preflop'):h.street==='flop'?T('flop'):h.street==='turn'?T('turnSt'):T('riverSt');
-    if(h.action==='raise'){
-      const size=h.targetBB?` ${h.targetBB} BB`:h.actionPotRatio?` ${Math.round(h.actionPotRatio*100)}% pot`:h.betRatio?` ${Math.round(h.betRatio*100)}% pot`:'';
+    if(['raise','bet','allin'].includes(h.action)){
+      const ratio=h.actionPotRatio||h.ratio||h.betRatio||0;
+      const size=h.targetBB?` ${Math.round(h.targetBB*10)/10} BB`:ratio?` ${Math.round(ratio*100)}% pot`:'';
       if(h.street==='preflop'){
         const action=h.nodeType==='limpedPot'?T('rangeIso'):h.nodeType==='squeeze'?T('rangeSqueeze'):
           h.raiseOrdinal===1?T('rangeOpen'):h.raiseOrdinal===2?'3-bet':h.raiseOrdinal===3?'4-bet':h.raiseOrdinal>=4?'5-bet':T('raiseW');
         return `${action}${size}`;
       }
-      return `${h.raisesBefore>0?T('raiseW'):T('betW')} ${street}${size}`;
+      const action=h.action==='allin'?T('allin'):(h.action==='raise'||h.raisesBefore>0?T('raiseW'):T('betW'));
+      return `${action} ${street}${size}`;
     }
     if(h.action==='check')return h.street==='preflop'?`${T('rangeOption')} ${T('preflop')}`:`${T('check')} ${street}`;
     if(h.action==='call'){
@@ -3111,7 +3147,7 @@ function rangeCurrentStreet(info){
   return n<3?'preflop':n===3?'flop':n===4?'turn':'river';
 }
 function rangeEnteringStreetHtml(info){
-  const current=rangeCurrentStreet(info),history=info.model?.history||[],last=history.at(-1);
+  const current=rangeCurrentStreet(info),history=info.actionHistory?.length?info.actionHistory:(info.model?.history||[]),last=history.at(-1);
   if(current==='preflop'||last?.street===current)return '';
   const street=current==='flop'?T('flop'):current==='turn'?T('turnSt'):T('riverSt');
   return `<div class="range-line range-entering">${T('rangeEntering')(street)}</div>`;
@@ -3150,8 +3186,11 @@ function rangeComboBaseline(code){
   return code.length===2?6:code.endsWith('s')?4:12;
 }
 function rangeCellWeightReason(info,code,lift,active,available){
-  const history=info.model?.history||[],last=history.at(-1),action=last?.action||'';
+  const history=info.actionHistory?.length?info.actionHistory:(info.model?.history||[]),last=history.at(-1),action=last?.action||'';
   const direction=lift>=1.15?'up':lift<=0.75?'down':'flat';
+  if(info.sourceKind==='solver')return T('rangeWeightSolver')(Math.round(lift*10)/10,code)+
+    (available<rangeComboBaseline(code)?` ${T('rangeBlockerImpact')(rangeComboBaseline(code)-available)}`:'')+
+    (active<available?` ${T('rangeActionRemoved')(available-active)}`:'');
   const actionKey=action==='raise'?'rangeWeightRaise':action==='call'?'rangeWeightCall':
     action==='check'?'rangeWeightCheck':'rangeWeightPrior';
   return T(actionKey)(direction,Math.round(lift*10)/10,code)+
@@ -3167,9 +3206,11 @@ function rangeMatrixMetaHtml(info,controls=false,mode='density'){
   const sampleLine=info.sample!=null
     ?`<div class="range-line"><b>${T('readConfidence')}:</b> ${T('readSample')(info.sample)} · ${T('readConfidence'+
       (info.sampleConfidence==='reliable'?'Reliable':info.sampleConfidence==='tentative'?'Tentative':'Early'))}</div>`:'';
+  const sourceLine=info.sourceKind==='solver'
+    ?`<div class="range-line range-solver-source"><b>${T('rangeSource')}:</b> ${T(info.nodeReach?'rangeSolverNode':'rangeSolverStreet')}</div>`:'';
   return `<div class="range-meta"><span>≈${metrics.effective} ${T('rangeEffective')}</span>`+
     (controls?`<span class="range-mode"><button data-range-mode="density" class="${mode==='density'?'on':''}">${T('rangeDensity')}</button><button data-range-mode="mass" class="${mode==='mass'?'on':''}">${T('rangeClassProb')}</button></span>`:`<span>${T('rangeDensity')}</span>`)+
-    `</div>${sampleLine}${trail?`<div class="range-line"><b>${T('rangeLine')}:</b> ${trail}</div>`:''}`+
+    `</div>${sourceLine}${sampleLine}${trail?`<div class="range-line"><b>${T('rangeLine')}:</b> ${trail}</div>`:''}`+
     rangeEnteringStreetHtml(info)+
     rangeCompositionHtml(metrics.composition)+
     rangeDrawFeaturesHtml(metrics.drawFeatures)+
@@ -3224,7 +3265,7 @@ function showChartMatrix(info,heroCode,alternatives=null){
     $('chartRangeMeta').querySelectorAll('[data-range-filter]').forEach(btn=>btn.onclick=()=>{filter=btn.dataset.rangeFilter;selected='';paint();});
     $('chartRangeMeta').querySelectorAll('[data-range-opponent]').forEach(btn=>btn.onclick=()=>{
       active=ranges[Number(btn.dataset.rangeOpponent)]||active;selected='';paint();
-      $('chartTitle').textContent=`${active.pos} — ${T('chartTitleRange')}`;
+      $('chartTitle').textContent=`${active.pos} — ${rangeMatrixTitle(active)}`;
     });
     $('chartGrid').querySelectorAll('[data-range-code]').forEach(cell=>{
       const choose=()=>{selected=cell.dataset.rangeCode;$('chartCellDetail').innerHTML=detail(selected);
@@ -3235,8 +3276,8 @@ function showChartMatrix(info,heroCode,alternatives=null){
     if(active.kind==='range')$('chartLegend').innerHTML=rangeMatrixLegend();
   };
   paint();
-  const titleKey=active.kind==='rfi'?'chartTitleOpen':active.kind==='iso'?'chartTitleIso':active.kind==='facing'?'chartTitleFacing':active.kind==='bbDefend'?'chartTitleBbDefend':active.kind==='fourBet'?'chartTitleFourBet':active.kind==='range'?'chartTitleRange':'chartTitleShove';
-  $('chartTitle').textContent=`${active.pos} — ${T(titleKey)}`;
+  const titleKey=active.kind==='rfi'?'chartTitleOpen':active.kind==='iso'?'chartTitleIso':active.kind==='facing'?'chartTitleFacing':active.kind==='bbDefend'?'chartTitleBbDefend':active.kind==='fourBet'?'chartTitleFourBet':'chartTitleShove';
+  $('chartTitle').textContent=`${active.pos} — ${active.kind==='range'?rangeMatrixTitle(active):T(titleKey)}`;
   if(active.kind!=='range'){
     $('chartRangeMeta').innerHTML='';
     $('chartLegend').innerHTML=
