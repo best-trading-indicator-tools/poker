@@ -174,6 +174,16 @@ const result=vm.runInContext(`(()=>{
 
 assert.ok(result);
 const html=fs.readFileSync(path.join(ROOT,'poker.html'),'utf8');
+const blindSetup=html.match(/<select id="startBlind">([\s\S]*?)<\/select>/)?.[1]||'';
+const blindOptions=[...blindSetup.matchAll(/<option value="(\d+)"[^>]*>\$(\d+) \/ \$(\d+)<\/option>/g)]
+  .map(([,value,sb,bb])=>({value:Number(value),sb:Number(sb),bb:Number(bb)}));
+assert.equal(blindOptions.length,4,'expected four starting-blind options');
+for(const option of blindOptions){
+  assert.equal(option.value,option.bb,'starting-blind option values must be display-dollar amounts');
+  assert.equal(option.sb,option.bb/2,'starting-blind labels must use a 1:2 blind ratio');
+}
+assert.equal(vm.runInContext('usd(engineAmount(100))',context),'$100',
+  'a $100 setup big blind must display as $100 at the table');
 for(const id of ['tableScenarioSel','tableScenarioPreview','tableCustom','tableRoleRock','tableRoleStation','tableRoleShark','tableRoleManiac'])
   assert.match(html,new RegExp(`id=["']${id}["']`),`missing setup control ${id}`);
 for(const scenario of ['balanced','tight','loose','aggressive','wild','random','custom'])
@@ -193,4 +203,9 @@ assert.match(uiSource,/id="rpCounterfactual"/,
   'replayer must render the counterfactual explorer');
 assert.match(uiSource,/coachIcmHtml\(R\.icmInfo\)/,
   'Live Coach must render the dedicated ICM explanation when tournament value changes a decision');
+assert.match(uiSource,/startBlind:engineAmount\(\+\$\('startBlind'\)\.value\)/,
+  'single-player setup must convert display-dollar blinds to engine chips');
+const mpSource=fs.readFileSync(path.join(ROOT,'js','mp.js'),'utf8');
+assert.match(mpSource,/startBlind:engineAmount\(\+\$\('startBlind'\)\.value\)/,
+  'multiplayer setup must convert display-dollar blinds to engine chips');
 console.log(JSON.stringify(result,null,2));

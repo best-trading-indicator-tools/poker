@@ -3871,7 +3871,7 @@ function initUI(){
       const el=$(id);
       if(el&&Array.from(el.options).some(option=>String(option.value)===String(value)))el.value=String(value);
     };
-    setSelect('startBlind',cfg.startBlind);
+    setSelect('startBlind',displayAmount(cfg.startBlind));
     setSelect('startBB',cfg.startBB);
     if($('timerChk'))$('timerChk').checked=!!cfg.timer;
     difficulty=['easy','medium','hard'].includes(cfg.difficulty)?cfg.difficulty:'medium';
@@ -3927,7 +3927,7 @@ function initUI(){
       gameType:setupGameType,
       numPlayers,
       startBB:+$('startBB').value,
-      startBlind:+$('startBlind').value,
+      startBlind:engineAmount(+$('startBlind').value),
       timer:$('timerChk').checked,
       difficulty
     };

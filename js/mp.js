@@ -349,7 +349,7 @@ function mpStartGame(){
   const cfg={
     numPlayers:total,
     gameType:typeof setupGameType!=='undefined'?setupGameType:'sng',
-    startBB:+$('startBB').value, startBlind:+$('startBlind').value,
+    startBB:+$('startBB').value, startBlind:engineAmount(+$('startBlind').value),
     ante:(typeof setupGameType!=='undefined'&&setupGameType==='cash')?0:+$('anteSel').value,
     speed:document.querySelector('input[name=speed]:checked').value,
     koBonus:(typeof setupGameType!=='undefined'&&setupGameType==='cash')?false:$('koBonusChk').checked,

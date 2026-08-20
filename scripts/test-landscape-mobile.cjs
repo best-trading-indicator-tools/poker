@@ -33,6 +33,10 @@ const VIEWPORT = { width: 844, height: 390 };
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: VIEWPORT });
   await page.goto(base, { waitUntil: 'networkidle' });
+  const blindSelection = await page.$eval('#startBlind', select=>({
+    value:select.value,
+    label:select.selectedOptions[0]?.textContent?.trim()
+  }));
   await page.check('#fourColorChk');
   const deckMetrics = await page.evaluate(() => {
     const probe=document.createElement('div');
@@ -75,6 +79,10 @@ const VIEWPORT = { width: 844, height: 390 };
     const seatScale = felt ? getComputedStyle(felt).getPropertyValue('--seatScale').trim() : '';
     const lls = document.body.classList.contains('lls');
     const mobile = typeof isMobile === 'function' && isMobile();
+    const blindConfig=state?.cfg?.startBlind;
+    const blinds=[state?.sb,state?.bb];
+    const blindText=document.getElementById('tBlinds')?.textContent;
+    const potText=document.getElementById('pot')?.textContent;
     const center = document.getElementById('centerArea');
     const cz = typeof centerRectDOM === 'function' ? centerRectDOM(center) : null;
     let centerOverlaps = [];
@@ -99,9 +107,12 @@ const VIEWPORT = { width: 844, height: 390 };
     }
     return {
       W, H, n, overlaps, centerOverlaps, cardW, namePx, seatScale, lls, mobile,
+      blindConfig, blinds, blindText, potText,
       pass:
         mobile && lls && n === 6 && overlaps === 0 && centerOverlaps.length === 0 &&
-        cardW >= 48 && namePx >= 13,
+        cardW >= 48 && namePx >= 13 && blindConfig === 500 &&
+        blinds[0] === 250 && blinds[1] === 500 && blindText === '$50/$100' &&
+        potText === 'Pot: $150 · 1.5 BB',
     };
   });
 
@@ -128,7 +139,7 @@ const VIEWPORT = { width: 844, height: 390 };
       pass:ellipse<=1.01&&betDistance<seatDistance&&getComputedStyle(bet).visibility!=='hidden'};
   });
 
-  console.log(JSON.stringify({fourColorDeck:deckMetrics,landscape:metrics,halfScreenPortrait:portraitMetrics}, null, 2));
+  console.log(JSON.stringify({blindSelection,fourColorDeck:deckMetrics,landscape:metrics,halfScreenPortrait:portraitMetrics}, null, 2));
   await page.screenshot({ path: '/tmp/poker-landscape-mobile.png' });
   await portraitPage.close();
   await browser.close();
