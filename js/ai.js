@@ -155,12 +155,18 @@ function rangeProfilePrior(p){
   return RANGE_PROFILE_PRIORS[sid]||RANGE_PROFILE_PRIORS.neutral;
 }
 function rangeTendencyStatsEnsure(p){
-  const defaults={v:1,hands:0,vpipHands:0,pfrHands:0,lastHand:0,handVpip:false,handPfr:false,
+  const defaults={v:2,hands:0,vpipHands:0,pfrHands:0,lastHand:0,handVpip:false,handPfr:false,
     preActions:0,postActions:0,postRaises:0,postChecks:0,
     faced:0,folds:0,calls:0,faceRaises:0,riverFaced:0,riverFolds:0,riverCalls:0,
     sizeN:0,sizeSum:0};
-  if(!p.rangeTendencies||p.rangeTendencies.v!==1)
-    p.rangeTendencies=Object.assign({},defaults,p.rangeTendencies||{});
+  if(!p.rangeTendencies)p.rangeTendencies={...defaults};
+  else if(p.rangeTendencies.v!==2){
+    /* v1 counted routine in-flow checks as passive postflop samples. Those
+       aggregate-only counters cannot be separated after the fact, so reset
+       the affected postflop sample while preserving unrelated observations. */
+    p.rangeTendencies=Object.assign({},defaults,p.rangeTendencies,
+      {v:2,postActions:0,postRaises:0,postChecks:0});
+  }
   else for(const [k,v] of Object.entries(defaults))
     if(p.rangeTendencies[k]===undefined)p.rangeTendencies[k]=v;
   return p.rangeTendencies;
@@ -204,6 +210,7 @@ function rangeModelStyle(p,learned=false){
 function rangeTendencyObserve(p,type,ctx){
   if(!p)return;
   const s=rangeTendencyStatsEnsure(p),pre=(ctx.stage||state.stage)==='preflop';
+  if(!pre&&type==='call'&&(ctx.callAmt||0)<=0&&ctx.inFlowCheck)return;
   if(pre){
     if(s.lastHand!==state.handNum){
       s.hands++;s.lastHand=state.handNum;s.handVpip=false;s.handPfr=false;
@@ -245,7 +252,8 @@ function rangeModelInit(p){
   p.rangeModel={
     v:2,cap:1,floor:0,preCap:1,preFloor:0,strong:0,capped:0,passive:0,aggr:0,
     calls:0,raises:0,checks:0,limps:0,trap:st.trap,bluff:st.bluff,
-    lastAction:'',lastStreet:'',lastBetRatio:0,weights:rangePosteriorPrior(),history:[],effectiveCombos:1326
+    lastAction:'',lastActionInFlow:false,lastStreet:'',lastBetRatio:0,
+    weights:rangePosteriorPrior(),history:[],effectiveCombos:1326
   };
   return p.rangeModel;
 }
@@ -571,11 +579,21 @@ function rangePostflopSizingLikelihood(p,ctx,info){
 function rangeActionLikelihood(p,m,type,ctx,hole,knownInfo){
   const action=type==='call'&&(ctx.callAmt||0)<=0?'check':type;
   const pre=(ctx.stage||state.stage)==='preflop';
+  /* Checking to the previous street's aggressor while OOP is range-neutral.
+     Keep every legal combo at its prior relative weight. */
+  if(!pre&&action==='check'&&ctx.inFlowCheck)return 1;
   const info=knownInfo||(pre?rangePreflopShape(hole):rangeModelComboInfo(hole,state.board||[]));
   const policy=pre?rangePreflopActionPolicy(p,ctx,hole,info):rangePostflopActionPolicy(p,m,ctx,hole,info);
   let likelihood=policy[action]||0.0005;
   if(action==='raise')likelihood*=pre?rangePreflopSizingLikelihood(p,ctx,hole,info):rangePostflopSizingLikelihood(p,ctx,info);
   return clamp(likelihood,0.00005,0.9999);
+}
+function rangeWeakHistoryCheckCount(history){
+  const rows=history||[],aggressiveStreets=new Set(rows
+    .filter(x=>x.street!=='preflop'&&['raise','bet','allin'].includes(x.action))
+    .map(x=>x.street));
+  return rows.filter(x=>x.action==='check'&&x.street!=='preflop'&&!x.inFlowCheck&&
+    !aggressiveStreets.has(x.street)).length;
 }
 let RANGE_PREFLOP_META=null;
 function rangeSizeBucket(ratio){
@@ -626,7 +644,7 @@ function rangePosteriorApply(p,m,type,ctx){
     posterior:true,
     _rangeStyle:rangeModelStyle(p,true),
     nodeType:(ctx.stage||state.stage)==='preflop'?rangePreflopNode(p,ctx):ctx.lineType||'postflop',
-    rangePriorPostChecks:(m.history||[]).filter(x=>x.action==='check'&&x.street!=='preflop').length,
+    rangePriorPostChecks:rangeWeakHistoryCheckCount(m.history),
     rangeCheckedTo:(ctx.cbBefore||0)<=0&&((ctx.checkedBefore||0)>0||state.players.some(q=>q!==p&&!q.folded&&!q.out&&q.checkedStreet))
   });
   const next=new Array(1326); let sum=0,k=0;
@@ -653,6 +671,7 @@ function rangePosteriorApply(p,m,type,ctx){
     raisesBefore:ctx.raisesBefore||0,price:Math.round((ctx.price||0)*1000)/1000,
     lastAggPos:ctx.lastAggPos||'',effectiveStackBB:Math.round((ctx.effectiveStackBB||0)*10)/10,
     activePlayers:ctx.activePlayers||0,inPosition:!!ctx.inPosition,lineType:ctx.lineType||'',facedLine:ctx.facedLine||'',
+    inFlowCheck:!!ctx.inFlowCheck,inFlowAggressorPos:ctx.inFlowAggressorPos||'',
     nodeType:evidence.nodeType,limpersBefore:ctx.limpersBefore||0,callersAtLevel:ctx.callersAtLevel||0,
     actionPotRatio:Math.round(actionRatio*100)/100,facedBetRatio:Math.round((ctx.facedBetRatio||0)*100)/100,
     sizeBucket:rangeSizeBucket(actionRatio),spr:Math.round((ctx.spr||0)*10)/10,
@@ -706,21 +725,23 @@ function rangeModelApplyAction(p,type,ctx={}){
   if(type==='raise'){
     m.raises++; m.aggr=clamp(m.aggr+0.25+ratio*0.35,0,1);
     const trap=p.checkedStreet?0.30:0;
+    if(p.checkedStreet&&!hasInFlowCheck(p,state.stage))m.checks=Math.max(0,m.checks-1);
     m.strong=clamp(m.strong+0.24+ratio*0.36+trap,0,1);
     m.capped=p.checkedStreet?clamp(m.capped*0.35,0,1):clamp(m.capped*0.55,0,1);
     m.passive=clamp(m.passive*0.55,0,1);
-    if(ratio>=0.75)m.floor=clamp(Math.min(m.floor,0.04),0,0.25);
+    m.floor=0;
   }else if(type==='call'){
     if((ctx.callAmt||0)>0){
       m.calls++; m.passive=clamp(m.passive+0.12,0,1);
       m.strong=clamp(m.strong+0.10+ratio*0.10,0,1);
       m.capped=clamp(m.capped*0.75,0,1);
-    }else{
+    }else if(!ctx.inFlowCheck){
       m.checks++; m.passive=clamp(m.passive+0.18,0,1);
       m.capped=clamp(m.capped+0.20*(1-m.trap),0,1);
       m.strong=clamp(m.strong*0.82,0,1);
     }
   }
+  m.lastActionInFlow=modelAction==='check'&&!!ctx.inFlowCheck;
   rangeModelSyncLegacy(p,m);
 }
 function rangeModelComboInfo(hole,board){
@@ -989,7 +1010,7 @@ function aiActorPressureBias(p, eq){
   if(sid==='maniac') return value?1.05:1.35;
   return value?0.85:0.75;
 }
-const AI_HUMAN_MODEL_STORE='sg_poker_human_model_v1';
+const AI_HUMAN_MODEL_STORE='sg_poker_human_model_v2';
 const AI_HUMAN_MODEL_FIELDS=['actions','preActions','preRaises','facing','folds','postActions','postBets','postCalls','postChecks'];
 const AI_ADAPT_PROFILE={
   easy:{strength:.15,minActions:18,fullSample:70},
@@ -997,10 +1018,13 @@ const AI_ADAPT_PROFILE={
   hard:{strength:1,minActions:5,fullSample:28}
 };
 function aiHumanModelDefault(){
-  return Object.fromEntries(AI_HUMAN_MODEL_FIELDS.map(k=>[k,0]));
+  return {v:2,...Object.fromEntries(AI_HUMAN_MODEL_FIELDS.map(k=>[k,0]))};
 }
 function aiHumanModelNormalize(raw){
   const m=aiHumanModelDefault();
+  /* The v1 aggregate cannot distinguish natural checks to the aggressor from
+     informative checks. Start a clean read instead of carrying false passivity. */
+  if(!raw||raw.v!==2)return m;
   for(const k of AI_HUMAN_MODEL_FIELDS)m[k]=Math.max(0,Math.round(Number(raw?.[k])||0));
   m.preRaises=Math.min(m.preRaises,m.preActions);
   m.folds=Math.min(m.folds,m.facing);
@@ -1021,6 +1045,7 @@ function aiHumanModelAge(m){
 }
 function aiObserveAction(p,type,ctx){
   if(!p?.isHuman||!state?.humanModel)return;
+  if(state.stage!=='preflop'&&type==='call'&&(ctx.callAmt||0)<=0&&ctx.inFlowCheck)return;
   const m=state.humanModel;
   m.actions++;
   if(state.stage==='preflop'){
@@ -1079,8 +1104,9 @@ function aiVillainFoldChance(actor,q,betSize,potBefore,d,tex){
     const r=aiHumanRead(d);
     if(r.reliable)f+=clamp((r.fold-0.40)*0.65,-0.12,0.22)*r.effective;
   }
-  if(q.checkedStreet||(q.checkStreets||[]).includes(state.stage)) f+=0.12;
-  if((q.checkStreets||[]).length>=2) f+=0.08;
+  const weakChecks=weakCheckStreetList(q);
+  if(hasWeakCheck(q,state.stage)) f+=0.12;
+  if(weakChecks.length>=2) f+=0.08;
   f+=clamp(q.rangeFloor||0,0,0.25)*0.75;       // capped top range = easier to push off
   f-=clamp(0.35-(q.rangeCap||1),0,0.30)*0.75; // recently strong range = sticky
   if(d==='hard'&&q.rangeModel){
@@ -1088,7 +1114,7 @@ function aiVillainFoldChance(actor,q,betSize,potBefore,d,tex){
     f+=r.capped*0.12+r.bluffy*0.10-r.strong*0.14;
     if((q.rangeModel.calls||0)>=2)f-=0.04;
     if(q.rangeModel.lastAction==='call'&&(q.rangeModel.lastBetRatio||0)>=0.65)f-=0.06;
-    if(q.rangeModel.lastAction==='check'&&(q.rangeModel.checks||0)>=2)f+=0.06;
+    if(q.rangeModel.lastAction==='check'&&!q.rangeModel.lastActionInFlow&&weakChecks.length>=2)f+=0.06;
   }
   if(q.lineRead==='cbet') f+=0.04;
   else if(q.lineRead==='barrel2'||q.lineRead==='barrel3'||q.lineRead==='checkraise'||q.lineRead==='donk') f-=0.12;
@@ -1198,11 +1224,12 @@ function aiRiverBoardKickerValueSpot(p,d){
   const opps=inHand().filter(q=>q!==p&&!q.allIn);
   if(!opps.length)return null;
   const checkedInFront=opps.filter(q=>q.checkedStreet||(q.checkStreets||[]).includes('river')).length;
+  const weakCheckedInFront=opps.filter(q=>hasWeakCheck(q,'river')).length;
   const ord=aiPostflopOrder().filter(q=>!q.allIn);
   const idx=ord.indexOf(p);
   const actorsLeft=idx<0?0:ord.slice(idx+1).filter(q=>q!==p&&!q.allIn).length;
   let freq=d==='hard'?0.72:d==='medium'?0.58:0.38;
-  if(checkedInFront>0)freq+=0.12;
+  if(weakCheckedInFront>0)freq+=0.12;
   if(actorsLeft===0)freq+=0.10;
   else if(actorsLeft===1)freq+=0.03;
   else freq-=0.10;
@@ -1216,7 +1243,7 @@ function aiRiverBoardKickerValueSpot(p,d){
   else if(sid==='shark')freq+=0.08;
   else if(sid==='maniac')freq+=0.05;
   freq-=Math.max(0,opps.length-2)*0.07;
-  return {...info,checkedInFront,actorsLeft,freq:clamp(freq,0.18,0.94)};
+  return {...info,checkedInFront,weakCheckedInFront,actorsLeft,freq:clamp(freq,0.18,0.94)};
 }
 function aiThinRiverValueTarget(p,pot,d,spot){
   const sid=aiEffectiveStyle(p)?.id;
@@ -1282,7 +1309,7 @@ function aiHardPostflopNoBet(p,eq,pot,d,st,pfAdj){
   const opps=inHand().filter(q=>q!==p&&!q.allIn);
   if(!opps.length)return null;
   const hu=aiHeadsUpPressure(p);
-  const checked=opps.filter(q=>q.checkedStreet||(q.checkStreets||[]).includes(state.stage)).length;
+  const checked=opps.filter(q=>hasWeakCheck(q,state.stage)).length;
   const score=evalBest(p.hole.concat(state.board));
   const boardMax=Math.max(...state.board.map(c=>c.r));
   const usesHole=score[0]>=1&&score[0]<=2&&p.hole.some(c=>c.r===score[1]||c.r===score[2]);
@@ -1294,7 +1321,7 @@ function aiHardPostflopNoBet(p,eq,pot,d,st,pfAdj){
   const draw=state.stage!=='river'?detectDraws(p.hole,state.board):null;
   const modeledCap=opps.reduce((s,q)=>s+rangeModelRead(q).capped,0)/Math.max(1,opps.length);
   const modeledStrong=opps.reduce((s,q)=>s+rangeModelRead(q).strong,0)/Math.max(1,opps.length);
-  const capped=checked>0||modeledCap>=0.22||opps.some(q=>(q.checkStreets||[]).length>=2);
+  const capped=checked>0||modeledCap>=0.22||opps.some(q=>weakCheckStreetList(q).length>=2);
   const madeFloor=score[0]>=2?0.28:topPair?0.24:0.34;
   const cappedMade=valueHand&&capped&&opps.length<=3&&eq>=madeFloor;
   const value=(eq>=(opps.length>2?0.57:0.50)&&valueHand)||cappedMade;

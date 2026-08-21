@@ -2,7 +2,8 @@
 const CPROSE={
 en:{
 rangesNote:(n,c)=>` Equity is simulated against realistic ranges: ${n} opponent${n>1?'s have':' has'} shown strength and ${n>1?'are':'is'} modeled on roughly the top ${c}% of hands, not random cards.`,
-checksNote:n=>` ${n===1?'One opponent has':n+' opponents have'} checked — checks usually deny a strong hand, so the very top of ${n===1?'that range':'those ranges'} is trimmed in the simulation (watch out for traps, though).`,
+checksNote:n=>` ${n===1?'One opponent has made an informative check':'Several opponents have made informative checks'} outside the normal in-flow sequence, so the very top of ${n===1?'that range':'those ranges'} is trimmed in the simulation (watch out for traps, though).`,
+flowChecksNote:n=>` ${n===1?'One opponent has':'Several opponents have'} checked in flow to the previous street's aggressor. ${n===1?'That routine out-of-position check is':'Those routine out-of-position checks are'} treated as neutral and ${n===1?'does':'do'} not trim the top of the range.`,
 madeBoardPair:' — careful: that pair sits entirely on the board, so every opponent has it too.',
 madeOverpair:' — an overpair, very strong.',madeUnderPair:' — a pocket pair below the top board card.',madeTopPair:' — top pair, solid.',
 madeTwoPair:(a,b)=>` — real two pair (${a} and ${b}), strong enough to bet when checked to.`,
@@ -23,7 +24,7 @@ futFirst:' After the flop you will be FIRST to act — playing every street out 
 futLast:' After the flop you will be LAST to act — you see everyone’s move before deciding, which lets you play a few more hands profitably.',
 futMid:(o,n)=>` After the flop you will act ${o} of ${n} — middling position, so don’t over-commit with marginal holdings.`,
 stFirst:' You act first on this street (out of position) — opponents get to react to you, so lean toward checking marginal hands.',
-stLast:' You act last on this street (in position) — everyone has already spoken, so their checks are extra information you can use.',
+stLast:' You act last on this street (in position) — everyone has already spoken. Checks outside the normal in-flow sequence can add information; routine checks to the aggressor do not.',
 pfShove:(bb,c,pr,t,p)=>`At ${bb} BB you're in push/fold territory. ${c} (${pr}) is inside the bundled ~${t}% heuristic shoving chart from ${p} — shove rather than raise small: it maximizes fold equity and avoids being blinded out.`,
 pfShortCheck:(c,p)=>`${c} is below the shoving range for ${p}, but checking is free.`,
 pfShortCall:(c,e,o)=>`${c} is below a standard shoving range, but your simulated equity (${e}) comfortably beats the price (${o}).`,
@@ -44,9 +45,9 @@ pfFoldRange:(ct,p,c,pr,e,o)=>`Against a raise, the ~top ${ct}% continues from ${
 valRiver:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're likely best at showdown. Bet for value — a check wins you nothing extra, and worse hands may still pay you off.`,
 valBet:(e,n)=>`With ~${e} to win against ${n} opponent${n>1?'s':''}, you're likely ahead. Bet for value — checking gives weaker hands and draws a free card to outdraw you.`,
 protectBet:(h,e,n)=>`${h} is strong but vulnerable. Bet for value/protection: worse pairs, pair+draws, and straight/flush draws can pay, and checking gives them a free card. Raw equity is only ~${e} vs ${n} opponent${n>1?'s':''} because they share many outs, but betting is still better than giving a free card.`,
-overcardCbet:(c,e,checked)=>`${c} has two live overcards and about ${e} equity heads-up. You were the preflop aggressor${checked?', and the blind has checked a capped range to you':''}, so make a small continuation bet: worse high cards and draws can call, while weak hands may fold. This is not empty air, but slow down if raised.`,
-sidePotOvercardCbet:(c,e,s)=>`${c} has two live overcards, and ${s} is already in a side pot against the only opponent who can still act. They checked a capped range to the preflop aggressor, so make a small continuation bet for protection and fold equity. The displayed ~${e} includes the all-in player and understates this heads-up side-pot opportunity; slow down if raised.`,
-stab:e=>`Everyone has checked to you, and checks usually mean weakness — their ranges look capped. With ~${e} plus all that fold equity, a stab takes this pot down often. If anyone calls or check-raises, slow down: that's real strength.`,
+overcardCbet:(c,e,weakCheck)=>`${c} has two live overcards and about ${e} equity heads-up. You were the preflop aggressor${weakCheck?', and the blind made an informative check with a capped range':''}, so make a small continuation bet: worse high cards and draws can call, while weak hands may fold. Slow down if raised.`,
+sidePotOvercardCbet:(c,e,s)=>`${c} has two live overcards, and ${s} is already in a side pot against the only opponent who can still act. They checked to the preflop aggressor, so make a small continuation bet for protection and fold equity; that routine check itself does not cap their range. The displayed ~${e} includes the all-in player and understates this heads-up side-pot opportunity; slow down if raised.`,
+stab:e=>`Everyone has made an informative check outside the normal in-flow sequence, so their ranges look capped. With ~${e} plus that fold equity, a stab takes this pot down often. If anyone calls or check-raises, slow down: that's real strength.`,
 checkedDownStab:(e,n)=>`${n===1?'Villain has':'Opponents have'} checked the free preflop option and then kept checking down. That line is heavily capped, so with ~${e} and a hand that is not pure trash, make a small stab — you do not need a big bet to pressure nothing.`,
 probeStab:(e,n,o)=>`${n===1?'Villain has':'Opponents have'} checked multiple streets, so the line is capped. Even ${o?'out of position, ':''}with ~${e} and no bet to call, a small bluff/probe bet can fold air and weak showdown hands — keep it small, then shut down if raised.`,
 midRiver:e=>`A decent but unspectacular ~${e}. The board is complete — betting mostly gets called by better hands. Check and try to get to showdown cheaply.`,
@@ -110,7 +111,7 @@ cashModeNote:` Fixed blinds in cash — chip EV equals real money EV here (no IC
 diffEasy:` AI difficulty: Easy opponents are noisier and call too wide, but their big aggression is usually less balanced. The coach trusts exact range reads less, value-bets thinner, and bluffs less.`,
 diffHard:` AI difficulty: Hard opponents are more position-aware and balanced. Their aggression can include more bluffs, so the coach gives c-bets and late-position pressure less automatic credit.`,
 cashDeepNote:bb=>` At ${bb} BB deep in cash, implied odds matter: pocket pairs and suited connectors play bigger than their rank suggests, and you can widen steals in position — but blinds never rise, so play for value and avoid bloating pots out of position without equity.`,
-cashDeepIp:bb=>` In position at ${bb} BB, you can open wider and stab after checks — deep stacks let callers continue with medium hands, so pressure capped ranges; still fold trash to big raises.`,
+cashDeepIp:bb=>` In position at ${bb} BB, you can open wider and stab after informative checks or check-backs — deep stacks let callers continue with medium hands, so pressure genuinely capped ranges; still fold trash to big raises.`,
 sprDeep:s=>` SPR ~${s} (deep) — implied odds are live: sets and draws can win big pots; one pair alone is rarely worth stacking off unless the board is dry.`,
 sprMid:s=>` SPR ~${s} (medium) — top pair+ can stack off vs aggression; draws need correct odds; don't inflate pots OOP with marginal made hands.`,
 sprLow:s=>` SPR ~${s} (low) — you're committed territory: one pair or better often has to get the money in; don't float wide hoping to improve.`,
@@ -171,7 +172,8 @@ mixTrap:'Raising is the money play — but with a hand this strong you can occas
 coachErr:'Coach unavailable this turn.'},
 fr:{
 rangesNote:(n,c)=>` L'équité est simulée contre des ranges réalistes : ${n} adversaire${n>1?'s ont':' a'} montré de la force et ${n>1?'sont modélisés':'est modélisé'} sur environ le top ${c}% des mains, pas des cartes aléatoires.`,
-checksNote:n=>` ${n===1?'Un adversaire a':n+' adversaires ont'} fait parole — un check exclut généralement une main très forte, donc le haut de ${n===1?'sa range':'leurs ranges'} est retiré de la simulation (attention aux pièges quand même).`,
+checksNote:n=>` ${n===1?'Un adversaire a fait un check informatif':'Plusieurs adversaires ont fait des checks informatifs'} hors de la séquence normale « in flow » ; le haut de ${n===1?'sa range':'leurs ranges'} est donc retiré de la simulation (attention aux pièges).`,
+flowChecksNote:n=>` ${n===1?'Un adversaire a':'Plusieurs adversaires ont'} checké « in flow » vers l'agresseur de la street précédente. ${n===1?'Ce check hors de position est traité':'Ces checks hors de position sont traités'} comme neutre${n===1?'':'s'} et ne retire${n===1?'':'nt'} pas le haut de la range.`,
 madeBoardPair:' — attention : cette paire est entièrement sur le board, tous vos adversaires l’ont aussi.',
 madeOverpair:' — une overpair, très forte.',madeUnderPair:' — une paire servie sous la plus haute carte du board.',madeTopPair:' — top paire, solide.',
 madeTwoPair:(a,b)=>` — vraie double paire (${a} et ${b}), assez forte pour miser quand on checke jusqu’à vous.`,
@@ -192,7 +194,7 @@ futFirst:' Après le flop vous parlerez en PREMIER — jouer chaque rue hors de 
 futLast:' Après le flop vous parlerez en DERNIER — vous verrez les décisions de tous avant la vôtre, ce qui rend plus de mains jouables.',
 futMid:(o,n)=>` Après le flop vous parlerez ${o} sur ${n} — position moyenne : ne vous engagez pas trop avec des mains marginales.`,
 stFirst:' Vous parlez en premier sur cette rue (hors de position) — les adversaires réagissent après vous : privilégiez le check avec les mains marginales.',
-stLast:' Vous parlez en dernier sur cette rue (en position) — tout le monde s’est exprimé : leurs checks sont une information à exploiter.',
+stLast:' Vous parlez en dernier sur cette rue (en position) — tout le monde s’est exprimé. Les checks hors de la séquence « in flow » peuvent informer ; les checks routiniers vers l’agresseur sont neutres.',
 pfShove:(bb,c,pr,t,p)=>`À ${bb} BB vous êtes en zone push/fold. ${c} (${pr}) figure dans la charte heuristique de shove embarquée (~${t}%) depuis ${p} — partez à tapis plutôt que de min-relancer : cela maximise la fold equity et évite de fondre sur les blinds.`,
 pfShortCheck:(c,p)=>`${c} est sous la range de shove pour ${p}, mais le check est gratuit.`,
 pfShortCall:(c,e,o)=>`${c} est sous une range de shove standard, mais votre équité simulée (${e}) bat largement le prix (${o}).`,
@@ -213,9 +215,9 @@ pfFoldRange:(ct,p,c,pr,e,o)=>`Face à une relance, seul le top ~${ct}% continue 
 valRiver:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':''}, vous êtes probablement devant à l’abattage. Misez pour la valeur — un check ne rapporte rien de plus, et des mains moins bonnes peuvent encore payer.`,
 valBet:(e,n)=>`Avec ~${e} de chances de gain contre ${n} adversaire${n>1?'s':''}, vous êtes probablement devant. Misez pour la valeur — checker offre une carte gratuite aux mains plus faibles et aux tirages.`,
 protectBet:(h,e,n)=>`${h} est forte mais vulnérable. Misez pour value/protection : des paires moins bonnes, paire+tirage et tirages quinte/couleur peuvent payer, et checker leur donne une carte gratuite. L’équité brute n’est que ~${e} contre ${n} adversaire${n>1?'s':''} car ils partagent beaucoup d’outs, mais miser reste mieux que donner une carte gratuite.`,
-overcardCbet:(c,e,checked)=>`${c} a deux overcards vivantes et environ ${e} d'équité en heads-up. Vous étiez l'agresseur préflop${checked?', et la grosse blinde a checké une range plafonnée jusqu’à vous':''} : faites un petit continuation bet. Des hauteurs et tirages inférieurs peuvent payer, tandis que les mains faibles peuvent folder. Ce n'est pas de l'air pur, mais ralentissez face à une relance.`,
-sidePotOvercardCbet:(c,e,s)=>`${c} a deux overcards vivantes, et ${s} se trouve déjà dans un side pot contre le seul adversaire pouvant encore agir. Sa range plafonnée a checké vers l'agresseur préflop : faites un petit continuation bet pour protection et fold equity. Les ~${e} affichés incluent le joueur à tapis et sous-estiment ce duel pour le side pot ; ralentissez face à une relance.`,
-stab:e=>`Tout le monde a checké jusqu’à vous, et les checks trahissent souvent la faiblesse — leurs ranges semblent plafonnées. Avec ~${e} plus toute cette fold equity, une mise ramasse souvent ce pot. Si quelqu’un paie ou check-relance, ralentissez : c’est de la vraie force.`,
+overcardCbet:(c,e,weakCheck)=>`${c} a deux overcards vivantes et environ ${e} d'équité en heads-up. Vous étiez l'agresseur préflop${weakCheck?', et la grosse blinde a fait un check informatif avec une range plafonnée':''} : faites un petit continuation bet. Des hauteurs et tirages inférieurs peuvent payer, tandis que les mains faibles peuvent folder. Ralentissez face à une relance.`,
+sidePotOvercardCbet:(c,e,s)=>`${c} a deux overcards vivantes, et ${s} se trouve déjà dans un side pot contre le seul adversaire pouvant encore agir. Il a checké vers l'agresseur préflop : faites un petit continuation bet pour protection et fold equity ; ce check routinier ne plafonne pas sa range. Les ~${e} affichés incluent le joueur à tapis et sous-estiment ce duel pour le side pot ; ralentissez face à une relance.`,
+stab:e=>`Tout le monde a fait un check informatif hors de la séquence « in flow » : les ranges semblent plafonnées. Avec ~${e} et cette fold equity, une mise ramasse souvent le pot. Si quelqu’un paie ou check-relance, ralentissez : c’est de la vraie force.`,
 checkedDownStab:(e,n)=>`${n===1?'Vilain a':'Les adversaires ont'} checké l'option gratuite préflop puis continué à checker. Cette ligne est très capée : avec ~${e} et une main pas totalement poubelle, faites une petite mise — inutile de miser gros pour faire pression sur rien.`,
 probeStab:(e,n,o)=>`${n===1?'Vilain a':'Les adversaires ont'} checké plusieurs streets, donc la ligne est capée. Même ${o?'hors de position, ':''}avec ~${e} et aucune mise à payer, une petite mise bluff/probe peut faire folder l'air et les mains faibles de showdown — gardez-la petite, puis abandonnez si ça relance.`,
 midRiver:e=>`Un score correct mais quelconque : ~${e}. Le board est complet — miser ne se fait payer que par mieux. Checkez et essayez d’atteindre l’abattage à bas prix.`,
@@ -279,7 +281,7 @@ cashModeNote:` Blinds fixes en cash — l'EV en jetons = l'argent réel (pas d'I
 diffEasy:` Niveau IA : les adversaires faciles sont plus imprécis et paient trop large, mais leurs grosses agressions sont rarement équilibrées. Le coach fait moins confiance aux lectures exactes, value plus finement, et bluffe moins.`,
 diffHard:` Niveau IA : les adversaires difficiles sont plus conscients de la position et plus équilibrés. Leur agressivité contient plus de bluffs, donc le coach respecte moins automatiquement les c-bets et la pression en position tardive.`,
 cashDeepNote:bb=>` À ${bb} BB en cash, les cotes implicites comptent : paires et connecteurs assortis jouent plus fort que leur rang, et vous pouvez élargir les steals en position — mais les blinds ne montent jamais : jouez pour la valeur, évitez de gonfler les pots hors position sans équité.`,
-cashDeepIp:bb=>` En position à ${bb} BB, ouvrez plus large et stabe après checks — les tapis profonds laissent suivre avec des mains moyennes ; couchez quand même le trash face aux grosses relances.`,
+cashDeepIp:bb=>` En position à ${bb} BB, ouvrez plus large et misez après des checks informatifs ou des check-backs — les tapis profonds laissent suivre avec des mains moyennes ; couchez quand même le trash face aux grosses relances.`,
 sprDeep:s=>` SPR ~${s} (profond) — les cotes implicites comptent : sets et tirages peuvent gagner gros ; une paire seule ne suffit souvent pas pour tout miser.`,
 sprMid:s=>` SPR ~${s} (moyen) — top paire+ peut aller au tapis sous pression ; les tirages ont besoin des bonnes cotes ; ne gonflez pas les pots hors position.`,
 sprLow:s=>` SPR ~${s} (bas) — zone d'engagement : une paire ou mieux doit souvent aller chercher l'argent ; ne flottez pas large en espérant vous améliorer.`,
@@ -340,7 +342,8 @@ mixTrap:'Relancer est le jeu rentable — mais avec une main aussi forte, vous p
 coachErr:'Coach indisponible pour ce tour.'},
 es:{
 rangesNote:(n,c)=>` La equidad se simula contra rangos realistas: ${n} rival${n>1?'es han':' ha'} mostrado fuerza y se ${n>1?'modelan':'modela'} sobre aproximadamente el top ${c}% de manos, no cartas aleatorias.`,
-checksNote:n=>` ${n===1?'Un rival ha':n+' rivales han'} pasado — pasar suele descartar una mano muy fuerte, así que la parte alta de ${n===1?'ese rango':'esos rangos'} se recorta en la simulación (ojo con las trampas, eso sí).`,
+checksNote:n=>` ${n===1?'Un rival ha hecho un check informativo':'Varios rivales han hecho checks informativos'} fuera de la secuencia normal «in flow», así que la parte alta de ${n===1?'ese rango':'esos rangos'} se recorta en la simulación (ojo con las trampas).`,
+flowChecksNote:n=>` ${n===1?'Un rival ha':'Varios rivales han'} pasado «in flow» ante el agresor de la calle anterior. ${n===1?'Ese check rutinario fuera de posición se trata':'Esos checks rutinarios fuera de posición se tratan'} como neutral${n===1?'':'es'} y no recorta${n===1?'':'n'} la parte alta del rango.`,
 madeBoardPair:' — cuidado: esa pareja está entera en la mesa, todos tus rivales también la tienen.',
 madeOverpair:' — una overpair, muy fuerte.',madeUnderPair:' — una pareja de mano por debajo de la carta más alta de la mesa.',madeTopPair:' — top pair, sólida.',
 madeTwoPair:(a,b)=>` — doble pareja real (${a} y ${b}), bastante fuerte para apostar cuando pasan hasta ti.`,
@@ -361,7 +364,7 @@ futFirst:' Después del flop serás el PRIMERO en hablar — jugar cada calle fu
 futLast:' Después del flop serás el ÚLTIMO en hablar — verás la decisión de todos antes de la tuya, lo que hace rentables algunas manos más.',
 futMid:(o,n)=>` Después del flop hablarás ${o} de ${n} — posición intermedia: no te comprometas demasiado con manos marginales.`,
 stFirst:' Hablas primero en esta calle (fuera de posición) — los rivales reaccionan después de ti: tiende a pasar con manos marginales.',
-stLast:' Hablas último en esta calle (en posición) — todos ya hablaron: sus pases son información extra que puedes usar.',
+stLast:' Hablas último en esta calle (en posición) — todos ya hablaron. Los checks fuera de la secuencia «in flow» pueden aportar información; los checks rutinarios al agresor son neutrales.',
 pfShove:(bb,c,pr,t,p)=>`Con ${bb} BB estás en territorio push/fold. ${c} (${pr}) está dentro de la tabla heurística de all-in incluida (~${t}%) desde ${p} — ve all-in en vez de subir poco: maximiza la fold equity y evita que las ciegas te coman.`,
 pfShortCheck:(c,p)=>`${c} está por debajo del rango de all-in para ${p}, pero pasar es gratis.`,
 pfShortCall:(c,e,o)=>`${c} está por debajo de un rango estándar de all-in, pero tu equidad simulada (${e}) supera con holgura el precio (${o}).`,
@@ -382,9 +385,9 @@ pfFoldRange:(ct,p,c,pr,e,o)=>`Contra una subida, solo continúa el ~top ${ct}% d
 valRiver:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, probablemente eres el mejor en el showdown. Apuesta por valor — pasar no te gana nada extra, y manos peores aún pueden pagarte.`,
 valBet:(e,n)=>`Con ~${e} de probabilidad contra ${n} rival${n>1?'es':''}, probablemente vas por delante. Apuesta por valor — pasar regala una carta gratis a manos peores y proyectos.`,
 protectBet:(h,e,n)=>`${h} es fuerte pero vulnerable. Apuesta por valor/protección: parejas peores, pareja+proyecto y proyectos de escalera/color pueden pagar, y pasar les regala una carta. La equity bruta es solo ~${e} contra ${n} rival${n>1?'es':''} porque comparten muchos outs, pero apostar sigue siendo mejor que dar carta gratis.`,
-overcardCbet:(c,e,checked)=>`${c} tiene dos overcards vivas y cerca de ${e} de equity heads-up. Fuiste el agresor preflop${checked?', y la ciega grande ha pasado una range limitada hasta ti':''}, así que haz una pequeña apuesta de continuación: alturas y proyectos peores pueden pagar, mientras las manos débiles pueden retirarse. No es aire puro, pero frena si te resuben.`,
-sidePotOvercardCbet:(c,e,s)=>`${c} tiene dos overcards vivas y ya hay ${s} en un bote lateral contra el único rival que aún puede actuar. Su rango limitado ha pasado ante el agresor preflop, así que haz una pequeña apuesta de continuación por protección y fold equity. El ~${e} mostrado incluye al jugador all-in y subestima este duelo por el bote lateral; frena si te resuben.`,
-stab:e=>`Todos han pasado hasta ti, y pasar suele significar debilidad — sus rangos parecen limitados. Con ~${e} más toda esa fold equity, una apuesta se lleva este bote a menudo. Si alguien iguala o sube tras pasar, frena: eso es fuerza de verdad.`,
+overcardCbet:(c,e,weakCheck)=>`${c} tiene dos overcards vivas y cerca de ${e} de equity heads-up. Fuiste el agresor preflop${weakCheck?', y la ciega grande hizo un check informativo con un rango limitado':''}, así que haz una pequeña apuesta de continuación: alturas y proyectos peores pueden pagar, mientras las manos débiles pueden retirarse. Frena si te resuben.`,
+sidePotOvercardCbet:(c,e,s)=>`${c} tiene dos overcards vivas y ya hay ${s} en un bote lateral contra el único rival que aún puede actuar. Pasó ante el agresor preflop, así que haz una pequeña apuesta de continuación por protección y fold equity; ese check rutinario no limita su rango. El ~${e} mostrado incluye al jugador all-in y subestima este duelo por el bote lateral; frena si te resuben.`,
+stab:e=>`Todos hicieron un check informativo fuera de la secuencia «in flow», así que sus rangos parecen limitados. Con ~${e} y esa fold equity, una apuesta se lleva el bote a menudo. Si alguien iguala o sube tras pasar, frena: eso es fuerza de verdad.`,
 checkedDownStab:(e,n)=>`${n===1?'El rival ha':'Los rivales han'} pasado la opción gratis preflop y luego siguieron pasando. Esa línea está muy limitada, así que con ~${e} y una mano que no es basura pura, haz una apuesta pequeña: no necesitas apostar grande para presionar aire.`,
 probeStab:(e,n,o)=>`${n===1?'El rival ha':'Los rivales han'} pasado varias calles, así que su línea está limitada. Incluso ${o?'fuera de posición, ':''}con ~${e} y sin apuesta que pagar, una apuesta pequeña de bluff/probe puede tirar aire y manos débiles de showdown — mantenla pequeña y abandona si resuben.`,
 midRiver:e=>`Un ~${e} decente pero sin más. La mesa está completa — apostar solo lo pagan manos mejores. Pasa e intenta llegar barato al showdown.`,
@@ -448,7 +451,7 @@ cashModeNote:` Ciegas fijas en cash — el EV en fichas = dinero real (sin ICM n
 diffEasy:` Dificultad IA: los rivales fáciles son más ruidosos y pagan demasiado amplio, pero su gran agresión suele estar menos equilibrada. El coach confía menos en lecturas exactas, apuesta por valor más fino y farolea menos.`,
 diffHard:` Dificultad IA: los rivales difíciles entienden mejor la posición y son más equilibrados. Su agresión incluye más faroles, así que el coach da menos crédito automático a c-bets y presión desde posición tardía.`,
 cashDeepNote:bb=>` Con ${bb} BB en cash, las odds implícitas importan: parejas y conectores suited juegan mejor que su ranking; puedes ampliar robos en posición — pero las ciegas no suben: juega por valor y no hinches botes fuera de posición sin equity.`,
-cashDeepIp:bb=>` En posición con ${bb} BB, abre más ancho y apuesta tras checks — stacks profundos permiten calls con manos medias; retírate igual ante subidas grandes con basura.`,
+cashDeepIp:bb=>` En posición con ${bb} BB, abre más ancho y apuesta tras checks informativos o check-backs — stacks profundos permiten calls con manos medias; retírate igual ante subidas grandes con basura.`,
 sprDeep:s=>` SPR ~${s} (profundo) — las odds implícitas importan: sets y proyectos pueden ganar botes grandes; un par solo rara vez basta para apilar.`,
 sprMid:s=>` SPR ~${s} (medio) — top pair+ puede ir all-in bajo presión; los proyectos necesitan odds correctas; no hinches botes fuera de posición.`,
 sprLow:s=>` SPR ~${s} (bajo) — territorio de compromiso: un par o mejor suele tener que meter el dinero; no flotes ancho esperando mejorar.`,
@@ -1265,7 +1268,7 @@ function coachRiverNutBlockerBluff(p,score,opps){
   if(suit<0||!p.hole.some(c=>c.r===14&&c.s===suit))return null;
   const villain=inHand().find(q=>q!==p);
   if(villain?.style?.id==='station')return null;
-  const passive=!!(villain&&(villain.checkedStreet||passiveLineLen(villain.checkStreets)>=2));
+  const passive=!!(villain&&(hasWeakCheck(villain,state.stage)||passiveLineLen(weakCheckStreetList(villain))>=2));
   return passive?{suit}:null;
 }
 function coachBluffAssessment(p,ctx){
@@ -1282,7 +1285,8 @@ function coachBluffAssessment(p,ctx){
   const villains=inHand().filter(q=>q!==p);
   const station=villains.some(q=>q.style?.id==='station');
   const tight=villains.length>0&&villains.every(q=>q.style?.id==='rock');
-  const passive=villains.length>0&&villains.every(q=>q.checkedStreet||passiveLineLen(q.checkStreets)>=2);
+  const passive=villains.length>0&&villains.every(q=>
+    hasWeakCheck(q,state.stage)||passiveLineLen(weakCheckStreetList(q))>=2);
   const texture=postflop?boardTexture(state.board):null;
   const boardSuits=[0,0,0,0];if(postflop)for(const c of state.board)boardSuits[c.s]++;
   const nutSuit=boardSuits.findIndex(n=>n>=3);
@@ -1376,7 +1380,7 @@ function coachMultiwayBuckets(p,extra,opps,callAmt,actsFirst,actsLast){
   const tex=boardTexture(state.board);
   const agg=state.lastAggIdx>=0?state.players[state.lastAggIdx]:null;
   const cbet=agg&&(agg.lineRead==='cbet'||(state.stage==='flop'&&state.pfAggIdx===agg.i));
-  const checkedToMe=callAmt===0&&inHand().filter(q=>q!==p&&!q.allIn).some(q=>q.checkedStreet);
+  const checkedToMe=callAmt===0&&inHand().filter(q=>q!==p&&!q.allIn).some(q=>hasWeakCheck(q,state.stage));
   const potBB=state.players.reduce((s,q)=>s+q.totalBet,0)/state.bb;
   if(actsLast) extra.push(C('bucketMWIP',opps));
   else if(actsFirst) extra.push(C('bucketMWOOP',opps));
@@ -1525,7 +1529,7 @@ function coachFlushRelativeStrength(p,board,opponentRanges,pot,betRatio=0.66){
       facedBetRatio:betRatio,betRatio,activePlayers:(opponentRanges||[]).length+1,
       inPosition:villainOrd>=0&&heroOrd>=0?villainOrd>heroOrd:false,
       facedLine:'lead',spr:villain?Math.max(0,villain.chips)/(Math.max(pot,1)*(1+betRatio)):8,
-      posterior:true,rangePriorPostChecks:(villain?.checkStreets||[]).length,
+      posterior:true,rangePriorPostChecks:weakCheckStreetList(villain).length,
       _rangeStyle:villain&&typeof rangeModelStyle==='function'?rangeModelStyle(villain,true):undefined
     };
     for(const combo of dist){
@@ -1943,19 +1947,19 @@ function checkedDownVillains(p){
   return inHand().filter(q=>{
     if(q===p||q.allIn)return false;
     const s=new Set(q.checkStreets||[]);
-    return needed.every(st=>s.has(st));
+    return needed.every(st=>st==='preflop'?s.has(st):hasWeakCheck(q,st));
   });
 }
 function passiveStreetVillains(p,minLen=2){
   if(state.stage==='preflop')return [];
-  return inHand().filter(q=>q!==p&&!q.allIn&&passiveLineLen(q.checkStreets)>=minLen);
+  return inHand().filter(q=>q!==p&&!q.allIn&&passiveLineLen(weakCheckStreetList(q))>=minLen);
 }
 function coachPassiveLines(p,extra){
   if(state.stage==='preflop')return;
   const villains=inHand().filter(q=>q!==p&&!q.allIn);
   let tablePassive=0;
   for(const q of villains){
-    const len=passiveLineLen(q.checkStreets);
+    const len=passiveLineLen(weakCheckStreetList(q));
     if(len<2)continue;
     tablePassive++;
     const sid=q.style?.id;
@@ -2005,7 +2009,7 @@ function coachDifficultyRange(q,cap,floor,diff){
   if(diff==='hard'){
     const late=/^(CO|BTN|SB|SB\/BTN)$/.test(q.pos||'');
     const balanced=state.stage!=='preflop'&&(q.lineRead==='cbet'||late||q.style?.id==='shark'||q.style?.id==='maniac');
-    const checked=q.checkedStreet||(q.checkStreets||[]).includes(state.stage);
+    const checked=hasWeakCheck(q,state.stage);
     return {
       cap:clamp(cap*(balanced?1.18:1.06),0.03,1),
       floor:clamp(floor*(checked?0.75:0.90),0,0.25)
@@ -2147,9 +2151,11 @@ function coachDecide(p){
   let madeScore=null,flushInfo=null,drawInfo=null,impliedInfo=null,drySidePot=false,sidePotInfo=null;
   let multiwayContinueInfo=null;
   const tightOpps=oppCaps.filter(o=>o.cap<1).length;
-  const weakOpps=oppCaps.filter(o=>o.floor>0).length;
+  const weakOpps=oppCaps.filter(o=>o.floor>0&&weakCheckStreetList(o.villain).length>0).length;
+  const flowOpps=state.stage==='preflop'?0:oppCaps.filter(o=>hasInFlowCheck(o.villain,state.stage)).length;
   if(tightOpps>0) extra.push(C('rangesNote',tightOpps,Math.round(Math.min(...oppCaps.map(o=>o.cap))*100)));
   if(weakOpps>0) extra.push(C('checksNote',weakOpps));
+  if(flowOpps>0) extra.push(C('flowChecksNote',flowOpps));
   coachPassiveLines(p,extra);
   const flags=getMode().coachFlags||{};
   if(difficultyApplies) extra.push(C(difficulty==='hard'?'diffHard':'diffEasy'));
@@ -2644,8 +2650,9 @@ function coachDecide(p){
     }
   }else if(callAmt===0){
     const river=state.stage==='river';
-    const checkedToMe=actsLast&&inHand().filter(q=>q!==p&&!q.allIn).some(q=>q.checkedStreet);
+    const weakCheckedToMe=actsLast&&inHand().filter(q=>q!==p&&!q.allIn).some(q=>hasWeakCheck(q,state.stage));
     const checkedInFront=inHand().filter(q=>q!==p&&!q.allIn&&q.checkedStreet).length;
+    const weakCheckedInFront=inHand().filter(q=>q!==p&&!q.allIn&&hasWeakCheck(q,state.stage)).length;
     const checkedDown=actsLast?checkedDownVillains(p):[];
     const passiveStabbers=opps<=2?passiveStreetVillains(p,2):[];
     const passiveMajority=passiveStabbers.length>=Math.max(1,Math.ceil(opps*0.75));
@@ -2657,7 +2664,7 @@ function coachDecide(p){
     const boardKickerValue=river&&typeof boardTwoPairKickerInfo==='function'
       ?boardTwoPairKickerInfo(p.hole,state.board)
       :null;
-    const thinBoardKickerValue=boardKickerValue&&checkedInFront>0&&boardKickerValue.kicker>=13;
+    const thinBoardKickerValue=boardKickerValue&&weakCheckedInFront>0&&boardKickerValue.kicker>=13;
     const strongMade=realTwoPairOrBetter(madeScore,p.hole);
     sidePotInfo=coachExistingSidePot(p);
     drySidePot=state.players.some(q=>q!==p&&!q.folded&&!q.out&&q.allIn)&&
@@ -2703,7 +2710,7 @@ function coachDecide(p){
       if(sidePotOvercardCbet){
         concepts.push('sidePotCbet');
         why.push(C('sidePotOvercardCbet',code,pct(eq),usd(sidePotInfo.amount)));
-      }else why.push(C('overcardCbet',code,pct(eq),checkedInFront>0));
+      }else why.push(C('overcardCbet',code,pct(eq),weakCheckedInFront>0));
     }else if(multiwayDrawCaution){
       rec='CHECK';
       why.push(C('drawMwCheck',opps));
@@ -2716,7 +2723,7 @@ function coachDecide(p){
       rec='RAISE';
       smallStab=true;
       why.push(C('checkedDownStab',pct(eq),checkedDown.length));
-    }else if(!river&&checkedToMe&&eq>stabMin&&!(stationPresent&&pureAirFree)){
+    }else if(!river&&weakCheckedToMe&&eq>stabMin&&!(stationPresent&&pureAirFree)){
       rec='RAISE';
       smallStab=true;
       why.push(C('stab',pct(eq)));
@@ -3192,7 +3199,8 @@ function rangeActionTrail(info){
       const action=h.action==='allin'?T('allin'):(h.action==='raise'||h.raisesBefore>0?T('raiseW'):T('betW'));
       return `${action} ${street}${size}`;
     }
-    if(h.action==='check')return h.street==='preflop'?`${T('rangeOption')} ${T('preflop')}`:`${T('check')} ${street}`;
+    if(h.action==='check')return h.street==='preflop'?`${T('rangeOption')} ${T('preflop')}`:
+      `${T(h.inFlowCheck?'rangeFlowCheck':'check')} ${street}`;
     if(h.action==='call'){
       if(h.street==='preflop'&&h.nodeType==='open'&&(h.cbBB||0)<=1)return `${T('rangeLimp')} ${T('preflop')}`;
       return `${T('call')} ${h.callBB||''}${h.callBB?' BB ':''}${street}`;
@@ -3248,6 +3256,9 @@ function rangeCellWeightReason(info,code,lift,active,available){
   const direction=lift>=1.15?'up':lift<=0.75?'down':'flat';
   if(info.sourceKind==='solver')return T(info.rangeExactFrequencies===true
     ?'rangeWeightSolver':'rangeWeightSolverConditional')(Math.round(lift*10)/10,code)+
+    (available<rangeComboBaseline(code)?` ${T('rangeBlockerImpact')(rangeComboBaseline(code)-available)}`:'')+
+    (active<available?` ${T('rangeActionRemoved')(available-active)}`:'');
+  if(action==='check'&&last?.inFlowCheck)return T('rangeWeightFlowCheck')(Math.round(lift*10)/10,code)+
     (available<rangeComboBaseline(code)?` ${T('rangeBlockerImpact')(rangeComboBaseline(code)-available)}`:'')+
     (active<available?` ${T('rangeActionRemoved')(available-active)}`:'');
   const actionKey=action==='raise'?'rangeWeightRaise':action==='call'?'rangeWeightCall':

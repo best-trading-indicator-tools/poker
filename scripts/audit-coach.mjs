@@ -227,7 +227,7 @@ const audit=vm.runInContext(`(()=>{
       pos:'BTN',style:'shark',difficulty,seed});
     const v=state.players[1];
     v.checkedStreet=true;v.checkStreets=['turn','river'];
-    v.rangeTendencies={v:1,hands:Math.max(1,riverFaced),preActions:riverFaced,
+    v.rangeTendencies={v:2,hands:Math.max(1,riverFaced),preActions:riverFaced,
       postActions:riverFaced*2,postRaises:0,postChecks:riverFaced,
       faced:riverFaced,folds:riverFolds,calls:Math.max(0,riverFaced-riverFolds),faceRaises:0,
       riverFaced,riverFolds,riverCalls:Math.max(0,riverFaced-riverFolds),sizeN:0,sizeSum:0};

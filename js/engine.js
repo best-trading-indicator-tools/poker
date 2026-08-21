@@ -101,11 +101,11 @@ function newGame(cfg){
     currentBet:0, lastRaiseSize:0, streetRaiseCount:0, preflopRaiseCount:0, turnIdx:0, players:[],
     gameOver:false, bb:startBlind, sb:startBlind/2, ante:0, handOver:false,
     humanModel:typeof aiLoadHumanModel==='function'?aiLoadHumanModel():
-      {actions:0,preActions:0,preRaises:0,facing:0,folds:0,postActions:0,postBets:0,postCalls:0,postChecks:0}
+      {v:2,actions:0,preActions:0,preRaises:0,facing:0,folds:0,postActions:0,postBets:0,postCalls:0,postChecks:0}
   };
   mode.initState(cfg,state);
   const stack=cfg.startBB*startBlind;
-  const mk=(i,name,avatar,isHuman)=>({i,name,avatar,isHuman,chips:stack,hole:[],folded:false,out:false,allIn:false,bet:0,totalBet:0,acted:false,lastAct:'',revealed:false,place:0,bank:TT_BANK});
+  const mk=(i,name,avatar,isHuman)=>({i,name,avatar,isHuman,chips:stack,hole:[],folded:false,out:false,allIn:false,bet:0,totalBet:0,acted:false,lastAct:'',lastActionType:'',lastActionStreet:'',revealed:false,place:0,bank:TT_BANK});
   state.players.push(mk(0, cfg.allAI?'Bot-You':'You', '😎', !cfg.allAI));
   const names=shuffle(AI_NAMES.map((n,k)=>[n,AI_AVATARS[k]]));
   for(let k=1;k<cfg.numPlayers;k++){
@@ -140,6 +140,42 @@ function newGame(cfg){
 
 const alive =()=>state.players.filter(p=>!p.out&&!p.sittingOut);
 const inHand=()=>state.players.filter(p=>!p.out&&!p.sittingOut&&!p.folded);
+const PREVIOUS_STREET={flop:'preflop',turn:'flop',river:'turn'};
+/* A routine "check in flow" is a factual check, but not evidence of weakness.
+   It occurs when a player ended the immediately preceding street by calling the
+   live aggressor, then acts before that same aggressor on the next street. */
+function inFlowCheckAggressor(p,street=state?.stage){
+  const previous=PREVIOUS_STREET[street];
+  if(!state||!p||!previous||state.currentBet!==0)return null;
+  const agg=state.lastAggIdx>=0?state.players[state.lastAggIdx]:null;
+  if(!agg||agg===p||agg.out||agg.folded||agg.allIn||agg.acted)return null;
+  if(previous==='preflop'){
+    if(state.pfAggIdx!==agg.i)return null;
+  }else if(!(agg.aggStreets||[]).includes(previous))return null;
+  const calledPrevious=p.lastActionType==='call'&&p.lastActionStreet===previous;
+  /* Older mid-hand snapshots predate the typed action marker. Their display
+     action is still enough to recover an immediately preceding paid call. */
+  if(!calledPrevious&&(p.lastActionType||!/^Call\b/.test(p.lastAct||'')))return null;
+  const order=[];
+  for(let k=1;k<=state.players.length;k++){
+    const q=state.players[(state.dealerIdx+k)%state.players.length];
+    if(!q.out&&!q.sittingOut&&!q.folded&&!q.allIn)order.push(q);
+  }
+  const checkerIndex=order.indexOf(p),aggressorIndex=order.indexOf(agg);
+  return checkerIndex>=0&&aggressorIndex>checkerIndex?agg:null;
+}
+function hasInFlowCheck(p,street=state?.stage){
+  return !!p&&!!street&&(p.inFlowCheckStreets||[]).includes(street);
+}
+function weakCheckStreetList(p){
+  const flow=new Set(p?.inFlowCheckStreets||[]);
+  const aggression=new Set(p?.aggStreets||[]);
+  return (p?.checkStreets||[]).filter(street=>
+    street!=='preflop'&&!flow.has(street)&&!aggression.has(street));
+}
+function hasWeakCheck(p,street=state?.stage){
+  return !!p&&!!street&&weakCheckStreetList(p).includes(street);
+}
 /* fast-forward when the human is no longer involved in decisions this hand */
 const fastFwd=()=>!state.cfg.allAI&&!state.cfg.mpRemotes&&(state.players[0].folded||state.players[0].out);
 function nextSeat(from,pred){
@@ -212,8 +248,9 @@ function startHand(){
   state.deck=shuffle(makeDeck());
   for(const p of state.players){
     p.hole=[]; p.folded=p.out||p.sittingOut; p.allIn=false; p.bet=0; p.totalBet=0;
-    p.acted=false; p.lastAct=''; p.revealed=false; p.rangeCap=1; p.rangeFloor=0; p.checkedStreet=false;p.aiPlan=null;
-    p.aggStreets=[]; p.checkStreets=[]; p.lineRead=''; p.rangeModel=null;
+    p.acted=false; p.lastAct=''; p.lastActionType=''; p.lastActionStreet=''; p.revealed=false;
+    p.rangeCap=1; p.rangeFloor=0; p.checkedStreet=false;p.aiPlan=null;
+    p.aggStreets=[]; p.checkStreets=[]; p.inFlowCheckStreets=[]; p.lineRead=''; p.rangeModel=null;
   }
   state.dealerIdx=nextSeat(state.dealerIdx,p=>!p.out);
   const n=alive().length;
@@ -357,6 +394,7 @@ function applyAction(p,type,amt){
   const effectiveStack=Math.min(p.chips+p.bet,lastAgg?(lastAgg.chips+lastAgg.bet):p.chips+p.bet);
   const postOrder=state.stage!=='preflop'&&typeof postflopOrder==='function'?postflopOrder().filter(q=>!q.allIn):[];
   const postIdx=postOrder.indexOf(p),actorsAfter=postIdx<0?0:postOrder.slice(postIdx+1).length;
+  const flowAggressor=type==='call'&&callAmt<=0?inFlowCheckAggressor(p):null;
   const icmRead=typeof aiIcmPressure==='function'?aiIcmPressure(p):null;
   const rangeCtx={stage:state.stage,callAmt,cbBefore,playerBetBefore:p.bet,potBefore,
     streetPotBefore:Math.max(0,potBefore-streetBetsBefore),raiseSize:0,target:0,betRatio:0,
@@ -371,7 +409,9 @@ function applyAction(p,type,amt){
     facedBetRatio:callAmt>0?callAmt/Math.max(potBefore-callAmt,state.bb):0,
     limpersBefore:state.stage==='preflop'?inHand().filter(q=>q!==p&&q.bet===state.bb&&q.i!==state.lastAggIdx&&(q.pos||'')!=='BB').length:0,
     callersAtLevel:inHand().filter(q=>q!==p&&q.i!==state.lastAggIdx&&q.bet===cbBefore).length,
-    checkedBefore:state.stage==='preflop'?0:inHand().filter(q=>q!==p&&q.checkedStreet).length};
+    checkedBefore:state.stage==='preflop'?0:inHand().filter(q=>q!==p&&q.checkedStreet).length,
+    inFlowCheck:!!flowAggressor,inFlowAggressorIdx:flowAggressor?.i??-1,
+    inFlowAggressorPos:flowAggressor?.pos||''};
   if(typeof aiObserveAction==='function')aiObserveAction(p,type,rangeCtx);
   if(type==='fold'){
     p.folded=true; p.lastAct='Fold'; sfx('fold');
@@ -387,10 +427,14 @@ function applyAction(p,type,amt){
       narrowRange(p, state.stage==='preflop'?0.35:0.50);
       p.rangeFloor=(p.rangeFloor||0)*0.5;   // calling after checking: medium strength, weakness read fades
     }else{
-      if(state.stage!=='preflop') weakenRange(p); // a check usually means no strong hand postflop
+      if(state.stage!=='preflop'&&!rangeCtx.inFlowCheck) weakenRange(p);
       p.checkedStreet=true;
       if(!p.checkStreets)p.checkStreets=[];
       if(!p.checkStreets.includes(state.stage))p.checkStreets.push(state.stage);
+      if(rangeCtx.inFlowCheck){
+        if(!p.inFlowCheckStreets)p.inFlowCheckStreets=[];
+        if(!p.inFlowCheckStreets.includes(state.stage))p.inFlowCheckStreets.push(state.stage);
+      }
     }
   }else if(type==='raise'){
     let target=Math.min(amt,p.bet+p.chips);
@@ -454,6 +498,8 @@ function applyAction(p,type,amt){
     state.streetRaiseCount=raisesBefore+1;
     if(state.stage==='preflop')state.preflopRaiseCount=(state.preflopRaiseCount||0)+1;
   }
+  p.lastActionType=type==='call'?(callAmt<=0?'check':'call'):type;
+  p.lastActionStreet=state.stage;
   p.acted=true;
   log(`${p.name}: ${p.lastAct}`);
   saveResume();
@@ -465,7 +511,7 @@ function narrowRange(p,cap){
   const mult = p.style ? ({rock:0.7,station:1.4,shark:1.0,maniac:1.7})[p.style.id]||1 : 1;
   p.rangeCap=clamp(Math.min(p.rangeCap, cap*mult),0.03,1);
 }
-/* a check usually denies a strong hand: trim the TOP of the assumed range.
+/* An informative (non-flow) check usually denies a strong hand: trim the TOP of the assumed range.
    Maniacs/stations bet whenever strong, so their checks say the most;
    sharks trap sometimes, so theirs say the least. */
 function weakenRange(p){
@@ -1078,7 +1124,7 @@ function saveResume(){
       localStorage.removeItem('sg_poker_resume'); return;
     }
     const snap={
-      v:2, t:Date.now(), cfg:state.cfg, gameId:state.gameId,
+      v:3, t:Date.now(), cfg:state.cfg, gameId:state.gameId,
       humanModel:state.humanModel?{...state.humanModel}:null,
       handNum:state.handNum, dealerIdx:state.dealerIdx,
       sessStats:state.sessStats,
@@ -1105,11 +1151,13 @@ function saveResume(){
         players:state.players.map(q=>({
           hole:q.hole.map(cardToCode), pos:q.pos||'', bet:q.bet, totalBet:q.totalBet,
           folded:q.folded, allIn:q.allIn, acted:q.acted, lastAct:q.lastAct||'',
+          lastActionType:q.lastActionType||'',lastActionStreet:q.lastActionStreet||'',
           revealed:q.revealed, rangeCap:q.rangeCap, rangeFloor:q.rangeFloor,
           rangeModel:packResumeRangeModel(q.rangeModel),
           rangeTendencies:q.rangeTendencies?{...q.rangeTendencies}:null,
           checkedStreet:!!q.checkedStreet, aggStreets:(q.aggStreets||[]).slice(),
-          checkStreets:(q.checkStreets||[]).slice(), lineRead:q.lineRead||'', bank:q.bank??TT_BANK
+          checkStreets:(q.checkStreets||[]).slice(),
+          inFlowCheckStreets:(q.inFlowCheckStreets||[]).slice(), lineRead:q.lineRead||'', bank:q.bank??TT_BANK
         }))
       };
     }
@@ -1157,7 +1205,8 @@ function restoreMidHand(mh){
     p.hole=codesToCards(q.hole);
     p.bet=q.bet; p.totalBet=q.totalBet;
     p.folded=q.folded; p.allIn=q.allIn; p.acted=q.acted;
-    p.lastAct=q.lastAct||''; p.revealed=q.revealed;
+    p.lastAct=q.lastAct||''; p.lastActionType=q.lastActionType||'';
+    p.lastActionStreet=q.lastActionStreet||''; p.revealed=q.revealed;
     p.pos=q.pos||'';
     p.rangeCap=q.rangeCap??1; p.rangeFloor=q.rangeFloor??0;
     p.rangeTendencies=q.rangeTendencies?{...q.rangeTendencies}:p.rangeTendencies;
@@ -1166,6 +1215,7 @@ function restoreMidHand(mh){
     p.checkedStreet=!!q.checkedStreet;
     p.aggStreets=(q.aggStreets||[]).slice();
     p.checkStreets=(q.checkStreets||[]).slice();
+    p.inFlowCheckStreets=(q.inFlowCheckStreets||[]).slice();
     p.lineRead=q.lineRead||'';
     p.bank=q.bank??TT_BANK;
   });
@@ -1208,6 +1258,9 @@ function applyResumeSnapshot(sv){
   renderStats();
   updateOrient();
   showEmoteBtn();
+  /* v1/v2 mid-hand saves predate neutral in-flow evidence. Their already
+     aggregated posterior cannot be reconstructed without discarding the live
+     hand, so preserve that one hand; every subsequent action/save uses v3. */
   if(sv.midHand) restoreMidHand(sv.midHand);
   else setTimeout(startHand,400);
 }

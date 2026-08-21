@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 const HTML = path.join(ROOT, 'poker.html');
 const JS_DIR = path.join(ROOT, 'js');
-const ASSET_VERSION = 96;
+const ASSET_VERSION = 97;
 
 const BOOT = `"use strict";
 const HAS_DOM = (typeof document !== 'undefined');

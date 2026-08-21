@@ -16,7 +16,7 @@ const GTO_CACHE_KEY = 'sg_solver_cache_v5';
 const GTO_CACHE_LIMIT = 48;
 const GTO_CACHE_DISK_CHAR_LIMIT = 800000;
 const GTO_MEMORY_LIMIT = 512 * 1024 * 1024;
-const GTO_ASSET_VERSION = 96;
+const GTO_ASSET_VERSION = 97;
 const GTO_WORKER_INIT_TIMEOUT = 15000;
 const GTO_HAS_BROWSER = typeof window !== 'undefined' && typeof document !== 'undefined';
 

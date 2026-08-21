@@ -81,11 +81,17 @@ const result=vm.runInContext(`(()=>{
     throw new Error('profile prior must change marginal opening frequency');
 
   const learner=state.players[2];learner.style=STYLES.find(x=>x.id==='shark');
-  learner.rangeTendencies={hands:20,vpipHands:8,pfrHands:7,preActions:20,postActions:60,postRaises:45,postChecks:8,
+  learner.rangeTendencies={v:2,hands:20,vpipHands:8,pfrHands:7,preActions:20,postActions:60,postRaises:45,postChecks:8,
     faced:30,folds:8,calls:10,faceRaises:12,sizeN:30,sizeSum:27};
   const fixedProfile=rangeModelStyle(learner,false),learnedProfile=rangeModelStyle(learner,true);
   if(!(learnedProfile.raise>fixedProfile.raise&&learnedProfile.bluff>fixedProfile.bluff&&learnedProfile.size>fixedProfile.size))
     throw new Error('observed aggression did not move the profile '+JSON.stringify({fixedProfile,learnedProfile}));
+  const legacyTendencyHolder={rangeTendencies:{v:1,hands:12,preActions:18,
+    postActions:40,postRaises:9,postChecks:24,faced:7,folds:3}};
+  const migratedTendencies=rangeTendencyStatsEnsure(legacyTendencyHolder);
+  if(migratedTendencies.v!==2||migratedTendencies.preActions!==18||migratedTendencies.faced!==7||
+      migratedTendencies.postActions!==0||migratedTendencies.postRaises!==0||migratedTendencies.postChecks!==0)
+    throw new Error('legacy tendency passivity was not reset cleanly '+JSON.stringify(migratedTendencies));
 
   const riverLearner=state.players[5];
   riverLearner.rangeTendencies=null;
@@ -312,6 +318,245 @@ const result=vm.runInContext(`(()=>{
     solverMatrixCheck={root:Object.keys(pendingMass).filter(k=>pendingMass[k]>0),
       node:Object.keys(nodeMass).filter(k=>nodeMass[k]>0),hardcodedClubFlush:clubSolverMetrics.composition.flush};
   }finally{solverSupport=savedSolverSupport;solverCachedResult=savedSolverCachedResult;}
+
+  /* A caller who checks OOP to the previous street's still-to-act aggressor is
+     checking in flow. The physical action remains observable and replayable,
+     but the heuristic range/read model must not manufacture weakness from it.
+     Exercise the whole x/c flop -> x/c turn -> x river sequence so repeated
+     routine checks cannot leak into passive-line or tendency counters. */
+  newGame({...cfg,gameType:'cash',numPlayers:4,difficulty:'hard',allAI:true});
+  state.stage='flop';state.currentBet=0;state.dealerIdx=0;
+  const multiFlowBefore=state.players[1],multiFlowAggressor=state.players[2],multiFlowAfter=state.players[3];
+  state.lastAggIdx=multiFlowAggressor.i;state.pfAggIdx=multiFlowAggressor.i;
+  for(const x of state.players){
+    x.out=false;x.folded=false;x.allIn=false;x.acted=false;
+    x.lastActionType='call';x.lastActionStreet='preflop';
+  }
+  if(inFlowCheckAggressor(multiFlowBefore)!==multiFlowAggressor||
+      inFlowCheckAggressor(multiFlowAfter)!==null)
+    throw new Error('multiway in-flow classifier ignored postflop action order');
+  multiFlowAggressor.acted=true;
+  if(inFlowCheckAggressor(multiFlowBefore)!==null)
+    throw new Error('a previous aggressor who already acted cannot receive an in-flow check');
+  multiFlowAggressor.acted=false;multiFlowAggressor.allIn=true;
+  if(inFlowCheckAggressor(multiFlowBefore)!==null)
+    throw new Error('an all-in previous aggressor cannot receive an in-flow check');
+
+  newGame({...cfg,gameType:'cash',numPlayers:2,difficulty:'hard',allAI:true});
+  const flowAggressor=state.players[0],flowCaller=state.players[1];
+  state.handNum=1;state.bb=100;state.sb=50;state.ante=0;state.dealerIdx=flowAggressor.i;
+  flowAggressor.pos='BTN';flowCaller.pos='BB';
+  flowAggressor.style=STYLES.find(x=>x.id==='shark');
+  flowCaller.style=STYLES.find(x=>x.id==='shark');
+  flowAggressor.hole=['Ad','Ks'].map(parseCardCode);
+  flowCaller.hole=['Jh','Tc'].map(parseCardCode);
+  for(const x of state.players){
+    x.out=false;x.folded=false;x.allIn=false;x.chips=10000;x.bet=0;x.totalBet=0;x.acted=false;
+    x.checkedStreet=false;x.aggStreets=[];x.checkStreets=[];x.inFlowCheckStreets=[];
+    x.rangeCap=1;x.rangeFloor=0;x.lastActionType='';x.lastActionStreet='';x.lineRead='';
+    rangeModelInit(x);
+  }
+  flowAggressor.bet=50;flowAggressor.totalBet=50;
+  flowCaller.bet=100;flowCaller.totalBet=100;
+  Object.assign(state,{stage:'preflop',board:[],currentBet:100,lastRaiseSize:100,
+    streetRaiseCount:0,preflopRaiseCount:0,lastAggIdx:-1,pfAggIdx:-1});
+  applyAction(flowAggressor,'raise',300);
+  applyAction(flowCaller,'call');
+  if(flowCaller.lastActionType!=='call'||flowCaller.lastActionStreet!=='preflop'||
+      state.pfAggIdx!==flowAggressor.i||state.lastAggIdx!==flowAggressor.i)
+    throw new Error('preflop raise/call did not establish the in-flow lineage '+JSON.stringify({
+      action:flowCaller.lastActionType,street:flowCaller.lastActionStreet,
+      pfAggIdx:state.pfAggIdx,lastAggIdx:state.lastAggIdx}));
+
+  const legalPosterior=(model,board)=>{
+    const dead=new Set(board.map(rangeCardId)),weights=new Array(1326).fill(0);
+    let total=0,k=0;
+    for(let i=0;i<FULL_DECK.length;i++)for(let j=i+1;j<FULL_DECK.length;j++,k++){
+      if(dead.has(i)||dead.has(j))continue;
+      const w=Number.isFinite(model.weights[k])?Math.max(0,model.weights[k]):0;
+      weights[k]=w;total+=w;
+    }
+    if(total>0)for(let i=0;i<weights.length;i++)weights[i]/=total;
+    return weights;
+  };
+  const flowRead=q=>{
+    const posterior=legalPosterior(q.rangeModel,state.board),infos=rangeComboInfoVector();
+    let strongMass=0;for(let i=0;i<posterior.length;i++)if(infos[i]?.strong)strongMass+=posterior[i];
+    return {posterior,strongMass,floor:q.rangeFloor,cap:q.rangeCap,
+      passive:q.rangeModel.passive,capped:q.rangeModel.capped,strong:q.rangeModel.strong,
+      checks:q.rangeModel.checks,postActions:q.rangeTendencies.postActions,
+      postChecks:q.rangeTendencies.postChecks};
+  };
+  const assertNeutralFlowCheck=(street,before)=>{
+    const after=flowRead(flowCaller),history=flowCaller.rangeModel.history.at(-1);
+    const scalarKeys=['floor','cap','passive','capped','strong','checks','postActions','postChecks'];
+    const changed=scalarKeys.filter(key=>after[key]!==before[key]);
+    let posteriorDelta=0;
+    for(let i=0;i<after.posterior.length;i++)posteriorDelta=Math.max(posteriorDelta,
+      Math.abs(after.posterior[i]-before.posterior[i]));
+    if(changed.length||posteriorDelta>1e-12||Math.abs(after.strongMass-before.strongMass)>1e-12)
+      throw new Error(street+' in-flow check changed the range/read model '+JSON.stringify({
+        changed,posteriorDelta,strongBefore:before.strongMass,strongAfter:after.strongMass}));
+    if(!flowCaller.checkedStreet||flowCaller.lastAct!=='Check'||
+        flowCaller.lastActionType!=='check'||flowCaller.lastActionStreet!==street||
+        !flowCaller.checkStreets.includes(street)||!hasInFlowCheck(flowCaller,street)||
+        hasWeakCheck(flowCaller,street)||weakCheckStreetList(flowCaller).length!==0||
+        history?.street!==street||history?.action!=='check'||history?.inFlowCheck!==true||
+        history?.inFlowAggressorPos!=='BTN'||flowCaller.rangeModel.lastActionInFlow!==true)
+      throw new Error(street+' in-flow check lost factual/neutral metadata '+JSON.stringify({
+        checkedStreet:flowCaller.checkedStreet,lastAct:flowCaller.lastAct,
+        lastAction:[flowCaller.lastActionType,flowCaller.lastActionStreet],
+        checkStreets:flowCaller.checkStreets,flowStreets:flowCaller.inFlowCheckStreets,
+        weakStreets:weakCheckStreetList(flowCaller),history}));
+    return after;
+  };
+  const beginFlowStreet=(street,cards)=>{
+    for(const x of state.players){x.bet=0;x.acted=false;x.checkedStreet=false;}
+    state.stage=street;state.board=cards.map(parseCardCode);state.currentBet=0;
+    state.lastRaiseSize=state.bb;state.streetRaiseCount=0;
+    state._rangeComboInfoCache=Object.create(null);state._rangeBoardTextureCache=Object.create(null);
+  };
+
+  beginFlowStreet('flop',['3s','7h','9d']);
+  state.solverStreet={stage:'flop',playerSeats:[flowCaller.i,flowAggressor.i],actions:[]};
+  const flowFlopBefore=flowRead(flowCaller);
+  applyAction(flowCaller,'call');
+  assertNeutralFlowCheck('flop',flowFlopBefore);
+  const solverFlowCheck=state.solverStreet.actions[0];
+  if(state.solverStreet.actions.length!==1||solverFlowCheck?.action!=='check'||
+      solverFlowCheck?.seat!==flowCaller.i||solverFlowCheck?.street!=='flop')
+    throw new Error('solver must retain the physical in-flow check '+JSON.stringify(state.solverStreet.actions));
+  state.solverStreet=null;
+  const hostFlowSnapshot=mpSnapshotFor(flowAggressor.i),guestFlowSnapshot=mpSnapshotFor(flowCaller.i);
+  const hostViewCaller=hostFlowSnapshot.players[flowCaller.i],guestViewCaller=guestFlowSnapshot.players[0];
+  if(hostViewCaller?.lastActionType!=='check'||hostViewCaller?.lastActionStreet!=='flop'||
+      hostViewCaller?.inFlowCheckStreets?.join(',')!=='flop'||
+      guestViewCaller?.lastActionType!=='check'||guestViewCaller?.lastActionStreet!=='flop'||
+      guestViewCaller?.inFlowCheckStreets?.join(',')!=='flop'||
+      guestFlowSnapshot.lastAggIdx!==1||guestFlowSnapshot.pfAggIdx!==1)
+    throw new Error('rotated multiplayer snapshot lost in-flow lineage '+JSON.stringify({
+      hostViewCaller,guestViewCaller,lastAggIdx:guestFlowSnapshot.lastAggIdx,
+      pfAggIdx:guestFlowSnapshot.pfAggIdx}));
+
+  const savedFlowEquity=mcEquityR;mcEquityR=()=>.55;
+  const flowCoachDecision=coachDecide(flowAggressor);
+  mcEquityR=savedFlowEquity;
+  const flowCoachExtra=flowCoachDecision.extra.join(' '),flowCoachWhy=flowCoachDecision.why.join(' ');
+  if(flowCoachDecision.rec!=='RAISE'||!flowCoachWhy.includes('continuation bet')||
+      !flowCoachExtra.includes('checked in flow')||!flowCoachExtra.includes('treated as neutral')||
+      !flowCoachExtra.includes('does not trim the top of the range')||
+      flowCoachExtra.includes('outside the normal in-flow sequence, so the very top')||
+      /capped range|checks usually mean weakness/i.test(flowCoachWhy)||
+      flowCoachDecision.bluffInfo?.reasons.includes('passive'))
+    throw new Error('coach mislabeled the flop in-flow check as weakness '+JSON.stringify({
+      rec:flowCoachDecision.rec,why:flowCoachDecision.why,extra:flowCoachDecision.extra,
+      bluff:flowCoachDecision.bluffInfo}));
+  const flowFoldChance=aiVillainFoldChance(flowAggressor,flowCaller,200,600,'hard',aiTextureForFE());
+  const savedFlowStreets=flowCaller.inFlowCheckStreets.slice();
+  flowCaller.inFlowCheckStreets=[];
+  const weakCounterfactualFoldChance=aiVillainFoldChance(flowAggressor,flowCaller,200,600,'hard',aiTextureForFE());
+  flowCaller.inFlowCheckStreets=savedFlowStreets;
+  if(!(weakCounterfactualFoldChance>flowFoldChance+.10))
+    throw new Error('in-flow check still received the ordinary weak-check fold-equity bonus '+JSON.stringify({
+      flowFoldChance,weakCounterfactualFoldChance}));
+
+  applyAction(flowAggressor,'raise',200);
+  applyAction(flowCaller,'call');
+  beginFlowStreet('turn',['3s','7h','9d','2c']);
+  const flowTurnBefore=flowRead(flowCaller);
+  applyAction(flowCaller,'call');
+  assertNeutralFlowCheck('turn',flowTurnBefore);
+  applyAction(flowAggressor,'raise',300);
+  applyAction(flowCaller,'call');
+  beginFlowStreet('river',['3s','7h','9d','2c','4s']);
+  const flowRiverBefore=flowRead(flowCaller);
+  applyAction(flowCaller,'call');
+  assertNeutralFlowCheck('river',flowRiverBefore);
+  const callerFlowHistory=flowCaller.rangeModel.history.filter(h=>h.action==='check');
+  if(callerFlowHistory.map(h=>h.street).join(',')!=='flop,turn,river'||
+      callerFlowHistory.some(h=>!h.inFlowCheck)||flowCaller.checkStreets.join(',')!=='flop,turn,river'||
+      flowCaller.inFlowCheckStreets.join(',')!=='flop,turn,river'||
+      flowCaller.rangeModel.checks!==0||flowCaller.rangeTendencies.postChecks!==0||
+      flowCaller.rangeTendencies.postActions!==2||
+      !rangeActionTrail({model:flowCaller.rangeModel}).includes('Check in flow River'))
+    throw new Error('multi-street in-flow checks leaked into passive history '+JSON.stringify({
+      history:callerFlowHistory,checkStreets:flowCaller.checkStreets,
+      flowStreets:flowCaller.inFlowCheckStreets,modelChecks:flowCaller.rangeModel.checks,
+      tendencies:flowCaller.rangeTendencies,trail:rangeActionTrail({model:flowCaller.rangeModel})}));
+  const savedFlowLanguage=lang;
+  for(const language of ['en','fr','es']){
+    lang=language;
+    const localizedTrail=rangeActionTrail({model:flowCaller.rangeModel});
+    const localizedReason=rangeCellWeightReason({model:flowCaller.rangeModel},'AKs',1,4,4);
+    if(typeof T('rangeWeightFlowCheck')!=='function'||!T('rangeFlowCheck')||
+        !localizedTrail||!localizedReason||/undefined/.test(localizedTrail+localizedReason))
+      throw new Error(language+' in-flow range explanation is missing '+JSON.stringify({
+        localizedTrail,localizedReason}));
+  }
+  lang=savedFlowLanguage;
+  /* A flow check-raise must not erase an informative check counted on an
+     earlier street merely because the current physical check was a trap. */
+  flowCaller.rangeModel.checks=1;
+  const beforeFlowCheckRaiseStrong=flowCaller.rangeModel.strong;
+  applyAction(flowAggressor,'raise',300);
+  applyAction(flowCaller,'raise',900);
+  if(flowCaller.lineRead!=='checkraise'||flowCaller.lastActionType!=='raise'||
+      !flowCaller.checkedStreet||!hasInFlowCheck(flowCaller,'river')||
+      flowCaller.rangeModel.checks!==1||!(flowCaller.rangeModel.strong>beforeFlowCheckRaiseStrong))
+    throw new Error('neutral physical check no longer supports a later check-raise trap '+JSON.stringify({
+      lineRead:flowCaller.lineRead,lastActionType:flowCaller.lastActionType,
+      checkedStreet:flowCaller.checkedStreet,flowStreets:flowCaller.inFlowCheckStreets,
+      modelChecks:flowCaller.rangeModel.checks,
+      strongBefore:beforeFlowCheckRaiseStrong,strongAfter:flowCaller.rangeModel.strong}));
+
+  /* Converse: the prior-street bettor checking the turn is not in flow. It
+     should keep the old weakness update, including posterior and tendencies. */
+  newGame({...cfg,gameType:'cash',numPlayers:2,difficulty:'hard',allAI:true});
+  const weakIp=state.players[0],weakChecker=state.players[1];
+  state.handNum=2;state.bb=100;state.sb=50;state.ante=0;state.dealerIdx=weakIp.i;
+  weakIp.pos='BTN';weakChecker.pos='BB';
+  weakIp.hole=['As','Td'].map(parseCardCode);weakChecker.hole=['Qh','Jc'].map(parseCardCode);
+  for(const x of state.players){
+    x.out=false;x.folded=false;x.allIn=false;x.chips=10000;x.bet=0;x.totalBet=500;x.acted=false;
+    x.checkedStreet=false;x.aggStreets=[];x.checkStreets=[];x.inFlowCheckStreets=[];
+    x.rangeCap=1;x.rangeFloor=0;x.lastActionType='';x.lastActionStreet='';x.lineRead='';
+    x.style=STYLES.find(y=>y.id==='shark');rangeModelInit(x);
+  }
+  Object.assign(state,{stage:'turn',board:['Ks','6h','4d','2c'].map(parseCardCode),currentBet:0,
+    lastRaiseSize:100,streetRaiseCount:0,preflopRaiseCount:1,pfAggIdx:weakIp.i,lastAggIdx:weakChecker.i});
+  weakChecker.aggStreets=['flop'];weakChecker.lastActionType='raise';weakChecker.lastActionStreet='flop';
+  weakChecker.rangeModel.history=[{street:'flop',action:'raise'}];
+  weakChecker.rangeModel.lastAction='raise';weakChecker.rangeModel.strong=.5;
+  state._rangeComboInfoCache=Object.create(null);state._rangeBoardTextureCache=Object.create(null);
+  const weakBefore=flowRead(weakChecker);
+  applyAction(weakChecker,'call');
+  const weakAfter=flowRead(weakChecker),weakHistory=weakChecker.rangeModel.history.at(-1);
+  if(!(weakAfter.floor>weakBefore.floor&&weakAfter.passive>weakBefore.passive&&
+      weakAfter.capped>weakBefore.capped&&weakAfter.strong<weakBefore.strong&&
+      weakAfter.strongMass<weakBefore.strongMass&&weakAfter.checks===weakBefore.checks+1&&
+      weakAfter.postActions===weakBefore.postActions+1&&weakAfter.postChecks===weakBefore.postChecks+1)||
+      hasInFlowCheck(weakChecker,'turn')||!hasWeakCheck(weakChecker,'turn')||
+      weakCheckStreetList(weakChecker).join(',')!=='turn'||weakHistory?.inFlowCheck!==false)
+    throw new Error('non-flow turn check no longer weakens the range/read model '+JSON.stringify({
+      before:{floor:weakBefore.floor,passive:weakBefore.passive,capped:weakBefore.capped,
+        strong:weakBefore.strong,strongMass:weakBefore.strongMass,checks:weakBefore.checks,
+        postActions:weakBefore.postActions,postChecks:weakBefore.postChecks},
+      after:{floor:weakAfter.floor,passive:weakAfter.passive,capped:weakAfter.capped,
+        strong:weakAfter.strong,strongMass:weakAfter.strongMass,checks:weakAfter.checks,
+        postActions:weakAfter.postActions,postChecks:weakAfter.postChecks},
+      weakStreets:weakCheckStreetList(weakChecker),flowStreets:weakChecker.inFlowCheckStreets,
+      history:weakHistory}));
+  applyAction(weakIp,'raise',300);
+  applyAction(weakChecker,'raise',900);
+  if(weakChecker.lineRead!=='checkraise'||weakChecker.rangeFloor!==0||
+      hasWeakCheck(weakChecker,'turn')||weakCheckStreetList(weakChecker).length!==0||
+      weakChecker.rangeModel.checks!==0||rangeWeakHistoryCheckCount(weakChecker.rangeModel.history)!==0)
+    throw new Error('check-raise trap retained the original check weakness read '+JSON.stringify({
+      lineRead:weakChecker.lineRead,floor:weakChecker.rangeFloor,
+      checkStreets:weakChecker.checkStreets,aggStreets:weakChecker.aggStreets,
+      modelChecks:weakChecker.rangeModel.checks,
+      historyChecks:rangeWeakHistoryCheckCount(weakChecker.rangeModel.history),
+      weakStreets:weakCheckStreetList(weakChecker)}));
 
   /* Heads-up flop after a BTN open: AK with two live overcards is a small c-bet,
      not "pure air" that must auto-check merely because the BB is a station. */
@@ -859,8 +1104,11 @@ const result=vm.runInContext(`(()=>{
   if(!['FOLD','CALL','RAISE'].includes(customScenario.rec)||
       !(customScenario.eq>=0&&customScenario.eq<=1)||customScenario.stage!=='flop')
     throw new Error('custom scenario analysis invalid '+JSON.stringify(customScenario));
-  const adaptiveModel={actions:80,preActions:28,preRaises:12,facing:30,folds:20,
+  const adaptiveModel={v:2,actions:80,preActions:28,preRaises:12,facing:30,folds:20,
     postActions:52,postBets:24,postCalls:8,postChecks:20};
+  const migratedHumanModel=aiHumanModelNormalize({...adaptiveModel,v:1});
+  if(migratedHumanModel.v!==2||migratedHumanModel.actions!==0||migratedHumanModel.postChecks!==0)
+    throw new Error('legacy human passivity model was not reset cleanly '+JSON.stringify(migratedHumanModel));
   const adaptiveReads=['easy','medium','hard'].map(d=>aiHumanRead(d,adaptiveModel));
   if(!adaptiveReads.every(r=>r.reliable)||
       !(adaptiveReads[0].effective<adaptiveReads[1].effective&&adaptiveReads[1].effective<adaptiveReads[2].effective))

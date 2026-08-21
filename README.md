@@ -159,7 +159,7 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 - **Postflop**: equity is simulated against opponents' *realistic ranges* — each call/raise narrows their assumed range, scaled by their profile **and by bet size** (a pot-sized raise or overbet is read far tighter than a small stab), not random cards.
 - **Big-bet discipline**: facing large bets the coach discounts raw equity (big bets are usually made hands), warns against chasing 4-out gutshots into them, and never tells you to "take a free card" on the river — street-aware advice throughout.
 - **Order of action**: every recommendation shows whether you're first or last to talk on the current street (or the upcoming flop when preflop).
-- **Checks as information**: a check trims the top of an opponent's assumed range (personality-scaled — a maniac's check says more than a shark's); check-raises read as traps; checked-to-you in position triggers stab recommendations at capped ranges.
+- **Checks in context**: routine out-of-position checks to the previous street's aggressor after calling are neutral and leave the range intact; informative checks outside that flow trim the top of the assumed range (personality-scaled), while check-raises still read as traps.
 - **No-hand discipline**: with no made hand (high cards only, or just the board's pair) and no real draw, the coach heavily discounts equity when facing bets — bettors usually have at least a pair, and "pot-odds correct" high-card calls are a classic leak.
 - **ICM / prize pressure**: real payout structures with Malmuth-Harville prize-equity math; calls that risk tournament life require extra equity near the bubble, shown and explained in the panel.
 - **Line reading**: continuation bets, double/triple barrels, donk bets and check-raises each narrow opponent ranges differently — and the coach explains each in plain language.
@@ -175,6 +175,12 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 - **License**: the solver is AGPL-3.0, so this integrated application is distributed under AGPL-3.0-or-later. Exact upstream commits and vendored checksums are recorded in `vendor/wasm-postflop/README.md` and `THIRD_PARTY_NOTICES.md`.
 
 ## Changelog
+
+### 2026-08-21 — Neutral checks in flow
+- Classified an out-of-position check as neutral when the player called the previous street's aggressor and checks before that same aggressor acts on the next street
+- Preserved every physical check for action order, solver replay, and check-raise detection while excluding neutral flow checks from range caps, Bayesian evidence, fold-equity boosts, passive-line reads, and adaptation counters; legacy aggregate passivity samples reset once because they could not be separated accurately
+- Added explicit coach and range-explorer explanations in English, French, and Spanish, with regression coverage through flop, turn, and river check/call sequences
+- Resume snapshots now use schema v3; an older snapshot already saved after a natural check keeps that unrecoverable read for the remainder of the resumed hand rather than discarding the live tournament
 
 ### 2026-08-20 — Local equilibrium-first preflop foundation
 - Added a strict, checksum-verified policy-pack boundary with exact configuration matching, mixed-frequency actions, 1,326-combo reach propagation, and fail-closed off-tree routing
@@ -241,7 +247,7 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 - **Live coach outs row**: when you have a draw, the coach lists the exact cards that complete it (e.g. all four 2s for a gutshot)
 
 ### 2026-06-12 — Coach: multi-street passive lines
-- **Check–check reads**: tracks `checkStreets` per player; coach calls out 2+ consecutive passive streets with **profile-specific** prose (🪨 capped / 🔥 air / 🦈 trap risk / 📞 medium pairs) and multiway “table looks weak” notes
+- **Check–check reads**: tracks factual checks separately from neutral `inFlowCheckStreets`; the coach calls out 2+ genuinely passive streets with **profile-specific** prose (🪨 capped / 🔥 air / 🦈 trap risk / 📞 medium pairs) and multiway “table looks weak” notes
 
 ### 2026-06-12 — Mobile collapsible action menu
 - **Tap-to-open action panel (landscape right)**: on phones in forced/native landscape, a scrollable panel slides in from the **landscape right** (inside the rotated game frame); tap **◀ Menu** / **◀ Your turn**, tap the table to dismiss
@@ -352,7 +358,7 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 - **Fully translated coach reasoning**: all ~40 advice templates (preflop charts, push/fold, set-mining, pot odds, big-bet discounts, stabs, river logic), localized hand names, draw names, board-texture warnings and solver provenance notes — in all three languages
 
 ### 2026-06-10 — Reading the action & offline play
-- **Checks carry information**: range floors trim opponents' top hands on checks (scaled by personality), check-raises read as traps and narrow ranges hard, stab recommendation when checked to in position — all flowing into the heuristic equity simulation and exploit model, never into the CFR solver's input ranges
+- **Informative checks carry information**: range floors trim opponents' top hands only outside the routine in-flow sequence (scaled by personality); neutral flow checks remain available for action order and check-raise detection, while check-raises read as traps and narrow ranges hard — all in the heuristic model, never the CFR solver's input ranges
 - **No-hand call discipline**: the coach no longer recommends "pot-odds" calls with high cards and no draw against bets — equity is discounted ~15% in those spots and the panel explains why
 - **Pocket-pair implied odds**: deep stacks (40 BB+) widen pair opens (set-mining value); 15-to-1 set-mine calls vs raises
 - **Offline mode (PWA)**: service worker + manifest — the hosted game keeps working without internet and can be installed as an app
@@ -368,7 +374,7 @@ Pick **Cash Game** on the start screen (Sit & Go is still the default). Cash use
 
 ### 2026-06-10 — Smarter coach & table setup
 - Coach reads **bet size as information**: pot-sized raises and overbets narrow the opponent's assumed range sharply; raw equity is discounted against big bets, with an explicit warning against chasing gutshots into them
-- Coach reads **checks as information too**: a check trims the top of an opponent's assumed range (scaled by personality — a maniac's check says more than a shark's), check-raises read as traps and narrow ranges hard, and when everyone checks to you in position the coach recommends stabbing at capped ranges
+- Coach reads **checks in context too**: an informative check outside the normal in-flow sequence trims the top of an opponent's assumed range (scaled by personality), while routine checks to the aggressor stay neutral; check-raises still read as traps and narrow ranges hard
 - **Order-of-action awareness**: every recommendation shows first/last to act on the current street, and preflop advice accounts for your *future* postflop position
 - Street-aware advice — no more "take a free card" on the river
 - Start menu: selectable **starting blinds** (whole ladder scales), **buy-in in BB**, **ante** (% of BB)
